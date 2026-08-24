@@ -6,6 +6,7 @@
   "palette": {
     "foreground": "#e4f0fb",
     "background": "#1b1e28",
+    "black": "#171922",
     "grayDark": "#303340",
     "gray": "#506477",
     "grayLight": "#767C9D",
@@ -25,7 +26,8 @@
     "textSecondary": "{palette.gray}",
     "accentPrimary": "{palette.green}",
     "accentSecondary": "{palette.blue}",
-    "border": "{palette.purple}",
+    "border": "{palette.grayDark}",
+    "tooltip": "{palette.black}",
     "success": "{palette.greenLight}",
     "charging": "{palette.yellow}",
     "warning": "{palette.yellow}",

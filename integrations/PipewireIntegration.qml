@@ -14,6 +14,13 @@ QtObject {
     readonly property bool muted: sink && sink.audio ? sink.audio.muted : false
     readonly property string description: sink ? (sink.description || sink.name) : "No audio output"
 
+    function setVolume(percent) {
+        if (availability !== "available" || !sink || !sink.audio) return false;
+        const clamped = Math.max(0, Math.min(100, Math.round(percent)));
+        sink.audio.volume = clamped / 100;
+        return true;
+    }
+
     property PwObjectTracker tracker: PwObjectTracker {
         objects: [root.sink]
     }

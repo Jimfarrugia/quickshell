@@ -9,3 +9,7 @@ singleton NetworkService 1.0 NetworkService.qml
 singleton PowerService 1.0 PowerService.qml
 singleton TimeService 1.0 TimeService.qml
 singleton TrayService 1.0 TrayService.qml
+singleton SystemMetricsService 1.0 SystemMetricsService.qml
+singleton BrightnessService 1.0 BrightnessService.qml
+singleton BluetoothService 1.0 BluetoothService.qml
+singleton IdleService 1.0 IdleService.qml

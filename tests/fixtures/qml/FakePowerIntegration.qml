@@ -9,5 +9,8 @@ QtObject {
     property bool present: false
     property int percentage: 0
     property bool charging: false
+    property bool fullyCharged: false
+    property int timeToEmptySeconds: 16200
+    property int timeToFullSeconds: 0
     property string iconName: ""
 }

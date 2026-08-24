@@ -82,9 +82,9 @@ QtObject {
                 root.freshness = "current";
                 root.operation = "succeeded";
                 root.lastError = root.ipv4Address.length > 0 ? null : {
-                    code: "WIRED_IPV4_MISSING",
+                    code: "NETWORK_IPV4_MISSING",
                     boundary: "network-address",
-                    summary: "Connected wired device has no IPv4 address",
+                    summary: "Connected network device has no IPv4 address",
                     detail: root.requestedInterface,
                     timestamp: new Date().toISOString(),
                     retryable: true,
@@ -96,9 +96,9 @@ QtObject {
                 root.freshness = "unknown";
                 root.operation = "failed";
                 root.lastError = {
-                    code: "WIRED_IPV4_LOOKUP_FAILED",
+                    code: "NETWORK_IPV4_LOOKUP_FAILED",
                     boundary: "network-address",
-                    summary: "Failed to read wired IPv4 address",
+                    summary: "Failed to read network IPv4 address",
                     detail: result.stderr || result.errorCode || "unknown failure",
                     timestamp: new Date().toISOString(),
                     retryable: true,

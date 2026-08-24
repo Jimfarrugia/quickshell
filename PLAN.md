@@ -1,8 +1,8 @@
 # QE Implementation Plan
 
-Status: Phases 1-2 complete; Phase 3 has not started
+Status: Phases 1-3 complete; Phase 4 has not started
 
-Last inventory: 2026-08-24
+Last inventory: 2026-08-25
 
 This is the authoritative roadmap, implementation sequence, dependency map,
 project-status reference, risk register, and architectural decision log for the
@@ -31,7 +31,7 @@ one.
 | Project code | Foundation implemented | Executable shell bootstrap, services, integration convention, schemas, themes, and tests exist |
 | Foundation | Complete | Phase 1 acceptance passed on 2026-08-24 |
 | Bar vertical slice | Complete | Phase 2; top reserved edge selected, tray host disabled during Waybar coexistence |
-| Bar parity and Waybar cutover | Not started | Phase 3 |
+| Bar parity and Waybar cutover | Complete | Phase 3 acceptance passed 2026-08-25 |
 | Theme/Matugen integration | Not started | Phase 4 |
 | Notifications/OSDs | Not started | Phases 5-6 |
 | Launcher/help | Not started | Phase 7 |
@@ -42,23 +42,35 @@ one.
 ### 2.1 Next-session handoff
 
 - Read `AGENTS.md`, `ARCHITECTURE.md`, and this plan in that order before making
-  changes. Phase 2 is complete; Phase 3 is the next roadmap phase but must not
-  begin until its prerequisites at the Phase 3 section are confirmed.
-- The reviewed Waybar module classification is recorded in the Phase 2
-  implementation record. Metrics adapter design approval and explicit permission
-  to edit `~/Projects/theme-switcher` remain Phase 3 gates. Do not infer either
-  approval from Phase 2 completion.
-- Normal development runtime is one QE shell from `shell.qml` plus the existing
-  Waybar: QE reserves 26 pixels at the top, Waybar reserves 28 pixels at the
-  bottom, and `config/qe.json` keeps `trayHostEnabled` false. Waybar must remain
-  the sole `org.kde.StatusNotifierWatcher` owner until its documented cutover.
-- The active authored/default QE theme is Poimandres. Theme-v1 includes the
-  pre-release `charging` token documented by ADR-012.
+  changes. Phases 1-3 are complete; Phase 4 is next and has not started.
+- Phase 4 must begin with a semantic-token audit and user approval of the
+  resulting minimal contract revision. Do not install Matugen, design generator
+  mappings, refactor external theme projects, or implement theme catalog/hot
+  reload work before that audit is documented and approved.
+- Audit input: the user is not satisfied with the range of current semantic
+  tokens. Identify current elements that are forced to share tokens but need
+  independent roles; inspect the planned notification, OSD, launcher, dashboard,
+  and lock surfaces; remove ambiguous/unused roles; avoid component-specific
+  tokens without distinct semantics; then update theme-v1, emergency fallback,
+  authored themes, schema, fixtures, architecture, and an ADR atomically.
+- The reviewed Waybar module classification, metrics adapter contract, and
+  narrow permission to edit `~/Projects/theme-switcher` were approved on
+  2026-08-24. The authorization and implementation boundaries are recorded in
+  the Phase 3 prerequisite and implementation records.
+- Normal runtime is one guarded QE shell from `shell.qml`, reserving 26 pixels
+  at the bottom with `trayHostEnabled` true. Waybar is absent from autostart and
+  retired in theme-switcher; QE owns `org.kde.StatusNotifierWatcher`.
+- The active authored/default QE theme is Poimandres. The current provisional
+  theme-v1 includes the pre-release `charging` and `tooltip` tokens documented by
+  ADR-012 and ADR-014; Phase 4 begins by auditing the complete vocabulary before
+  treating it as the Matugen input contract.
 - Full developer commands and expected markers are in `tests/VALIDATION.md`.
   The live NetworkManager loopback test is opt-in. Relocation was revalidated
   from `/tmp` at the Phase 2 exit.
-- Physical external-monitor attach/detach could not be exercised because only
-  `eDP-1` was connected. Carry that test into Phase 3 before Waybar cutover.
+- Physical external-monitor attach, independent-output startup, reorder, detach,
+  and mirror restoration passed in Phase 3. A connected mirror changed to
+  extended does not create a new Qt `QScreen`; reconnect the output or restart
+  QE after that specific transition.
 - The project is not yet production-managed or installed in its final location;
   explicit development launch remains intentional until Phase 12.
 
@@ -569,9 +581,10 @@ Implementation record:
   `Singleton`, `FileView`, XDG path helpers, `Process`, and stream parsers.
 - The frozen theme v1 semantic tokens are `surfaceBase`, `surfaceRaised`,
   `surfaceOverlay`, `textPrimary`, `textSecondary`, `accentPrimary`,
-  `accentSecondary`, `border`, `success`, `charging`, `warning`, `error`,
-  `shadow`, and `scrim`. `charging` was added by an explicit Phase 2 pre-release
-  contract revision. Palette keys remain theme-authored color names.
+  `accentSecondary`, `border`, `tooltip`, `success`, `charging`, `warning`,
+  `error`, `shadow`, and `scrim`. `charging` and `tooltip` were added by explicit
+  pre-release contract revisions. Palette keys remain theme-authored color
+  names.
 - Poimandres and Gruvbox Dark validate against the runtime contract and JSON
   Schema. Invalid themes degrade the catalog locally without blocking valid
   entries.
@@ -747,6 +760,9 @@ Out of scope:
 
 ### Phase 3: Essential bar parity and Waybar cutover
 
+Status: Complete (2026-08-25; acceptance, cutover, fresh-login, rollback, and
+physical multi-monitor validation passed)
+
 Objective: make the QE bar sufficient for daily use and replace Waybar through a
 reversible configuration change.
 
@@ -758,6 +774,29 @@ Prerequisites:
 - Phase 2's current-module classification and essential cutover set are approved
 - explicit approval to edit the separate `~/Projects/theme-switcher` project for
   the target-retirement prerequisite
+
+Prerequisite record:
+
+- The user confirmed Phase 2 stability during regular use and approved the
+  reviewed current-module classification and essential cutover set on
+  2026-08-24.
+- The user approved the Phase 3 system-metrics adapter contract on 2026-08-24:
+  `SystemMetricsService` owns normalized per-metric health, values, and consumer
+  lifecycle; `/proc/stat` and `/proc/meminfo` use asynchronous `FileView` reads
+  on one two-second cadence with pure fixture-tested parsers; a bounded
+  structured helper owns thermal discovery/read and disk capacity; stable
+  sensor attributes replace `hwmonN` assumptions; last-known values become
+  stale at the Poller Registry thresholds; pollers stop with no configured
+  consumers.
+- Phase 3 cost validation refined that approved boundary without changing its
+  normalized service contract or cadence: the helper performs thermal
+  discovery/rediscovery, while recurring selected-sensor reads use asynchronous
+  `FileView`; live root-disk reads use a validated shell/`df` fast path under the
+  same structured helper contract. This removed recurring Python startup cost.
+- The user authorized the narrow `~/Projects/theme-switcher` target-retirement
+  implementation on 2026-08-24 after reviewing its planned files, validation,
+  inactive initial state, activation timing, and rollback. This approval does
+  not authorize a theme application or the Waybar/Hyprland cutover itself.
 
 Scope:
 
@@ -805,10 +844,187 @@ Validation:
 - login/restart test after cutover
 - rollback exercise
 
+Implementation record (initial slice, 2026-08-24):
+
+- Added consumer-gated CPU and memory reads from `/proc/stat` and
+  `/proc/meminfo` on one two-second cadence, plus bounded structured thermal and
+  root-disk helper reads at five and thirty seconds. CPU/memory, thermal, and
+  disk poll independently according to configured visible consumers.
+- Thermal discovery selects by sensor name/label, retains the selected sensor
+  path for subsequent reads, and rediscovers after three failures. No `hwmonN`
+  index is hard-coded. Structured helper output is schema-versioned, bounded,
+  and validated as a complete document before state publication.
+- The first five-minute poller measurement failed at 1.84% average CPU, with
+  1.56 percentage points isolated to recurring helper children. Replacing
+  five-second Python sensor reads with selected-path `FileView` reads and adding
+  the validated live disk fast path reduced a diagnostic minute to 0.25%. The
+  authoritative 300-second repeat on persistent QE PID 3072743 measured 0.22%
+  total CPU including reaped children (60 parent ticks, 8 child ticks at 100 Hz)
+  and RSS changed from 143920 KiB to 143976 KiB (+56 KiB), passing the under-0.5
+  percentage-point bar budget. A direct selected-sensor adapter fixture proves
+  recurring reads do not launch the discovery helper.
+- Current monitor validation covers one 1920x1080 `eDP-1` output at scale 1.2,
+  with QE reserving 26 pixels top and Waybar 28 pixels bottom. Multi-monitor
+  validation remains pending because no second output is available.
+- Added compact ordered CPU, memory, disk, and temperature bar modules backed
+  only by `SystemMetricsService`, including loading, unavailable, stale,
+  last-known-value, and recovery fixture coverage. Metric enablement and order
+  mismatches fall back transactionally to a consistent enabled order.
+- Live follow-up fixed initial procfs reads after consumer activation and cached
+  hwmon reads through `/sys/class/hwmon` symlinks. The selected `coretemp`
+  package sensor now remains readable between discovery cycles. Metrics render
+  immediately to the right of network on the bar's left side; temperature uses
+  warning above 70 C and error above 80 C.
+- Added an optional delayed `BarChip` hover popup that renders outside the panel
+  through a themed `PopupWindow`. The reviewed initial content contract leaves
+  brightness empty, shows UPower's native time-to-full while charging and
+  time-to-empty otherwise, and shows `Fully charged.` for confirmed fully charged
+  state (with unavailable rather than a fabricated duration). Idle inhibition is
+  labeled `Requested` or `Disabled`. All bar hover text uses the configured
+  sans-serif family at 13 pixels. The reviewed content also covers disk mount and
+  capacity, memory used/total, aggregate CPU source/status, selected temperature
+  sensor, connected Bluetooth device batteries, active audio output, and network
+  type/interface/SSID/IPv4/connectivity. Brightness intentionally remains empty.
+- Added the brightness vertical slice on the right side immediately left of
+  battery. `BrightnessService` separates confirmed and pending percentages,
+  clamps writes to 1-100 percent, and coalesces rapid five-percent wheel steps.
+  A bounded `brightnessctl` helper owns discovery and writes; successful writes
+  include an authoritative post-write read before confirmation. The active bar
+  consumer uses asynchronous reads of the validated sysfs device on the Poller
+  Registry's 10-second cadence and stops all polling when disabled. Fixture and
+  live read-only adapter tests cover parsing, clamping, coalescing, failures,
+  consumer lifecycle, icon thresholds, and confirmed-versus-requested state.
+- Added matching five-percent wheel control to the audio bar module through
+  `AudioService`. Requested volume is visibly distinct from the confirmed
+  PipeWire value and reconciles only from native volume events; unavailable
+  audio rejects wheel operations without reaching the adapter.
+- Added a read-only Bluetooth bar summary before audio on the right side using
+  the installed `Quickshell.Bluetooth` API. It distinguishes no controller,
+  powered off, powered on, transition, and connected service states; no
+  controller and powered-off states intentionally share the persistent
+  disabled/error bar visual. It normalizes device
+  names and reported battery values for hover detail; and updates only
+  from BlueZ events. Fixture tests cover disabled, connected, multiple-device,
+  pending, in-place device-property changes, and daemon/controller-loss states,
+  while a live read-only test verifies the development controller without
+  changing its power or devices.
+  Blueman launch and interactive connect/pair controls remain pending their
+  application-launch and pairing-agent contracts.
+- Added the ADR-013 requested-only idle-inhibitor toggle before Bluetooth. One
+  `IdleService` session request owns one native Wayland `IdleInhibitor`, selects
+  a visible registered bar window, fails over across monitor-window loss, and
+  releases the request when disabled, when configuration hides the control,
+  when the final owner disappears, or when QE exits. The request defaults off,
+  is not persisted, leaves Hypridle/manual lock/suspend policy unchanged, and
+  is never labeled compositor-confirmed active because Quickshell 0.3.0 exposes
+  no confirmation signal. Unlike the previous Waybar module, QE applies no
+  automatic timeout; the requested state remains until explicitly toggled or
+  forced release by configuration/window/process loss. Lifecycle fixtures
+  cover unavailable requests,
+  toggle state, owner failover, final-owner loss, and configuration disable.
+- Added `scripts/run-qe.sh` as the canonical persistent-shell entry point. It
+  resolves the project path and uses Quickshell 0.3.0's per-configuration lock
+  through `--no-duplicate`; a sandbox test proves a duplicate launch reports
+  the running instance, exits without disturbing it, and leaves exactly one
+  process. Production autostart must use this wrapper when cutover is approved;
+  no live autostart change has been made.
+- Started the approved controlled full-session Waybar-absent trial on
+  2026-08-25 at 01:36 local time. Waybar stopped cleanly; one guarded QE process
+  (initial PID 4035870) remained; a duplicate guarded launch was rejected; and
+  `eDP-1` changed from `[0, 26, 0, 28]` coexistence reservations to
+  `[0, 26, 0, 0]`. QE's PID owns `org.kde.StatusNotifierWatcher`, reports a
+  registered host, and exposes the registered Nextcloud status-notifier item.
+  At trial start, `config.bar.trayHostEnabled` was temporarily `true` while
+  autostart, Hyprland configuration, and theme-switcher retirement remained
+  unchanged pending manual
+  tray activation/menu and daily-use review; avoid applying an external theme
+  during this trial because the still-active Waybar target would restart it.
+- The user accepted the live trial at 2026-08-25 07:06 AEST after confirming the
+  Nextcloud tray activation/menu, module interactions and tooltips, workspace
+  behavior, idle inhibition, brightness/volume scrolling, and general
+  Waybar-absent layout. The trial remains active; this acceptance does not by
+  itself activate theme-switcher retirement or modify live autostart.
+- The user approved permanent cutover after the accepted trial. At 2026-08-25
+  07:12 AEST, `~/.local/bin/qe-shell` was linked to the symlink-safe guarded
+  launcher, `~/.config/hypr/autostart.lua` replaced its Waybar launch with that
+  stable QE launcher, and `~/Projects/theme-switcher/retired-targets` activated
+  `waybar`. The original autostart is backed up at
+  `~/.config/hypr/autostart.lua.qe-phase3-20260825-0706.bak`. Lua syntax,
+  launcher duplicate rejection, switcher syntax/ShellCheck/all 22 sandbox tests,
+  active retirement-list validation, one-QE/no-Waybar process state, top-only
+  reservation, and QE watcher ownership pass. At that point, fresh-login and
+  exercised rollback/re-cutover validation remained before Phase 3 completion.
+- The approved rollback/re-cutover exercise passed on 2026-08-25. Rollback
+  stopped QE first, restored `trayHostEnabled: false`, Waybar autostart, an empty
+  retirement list, and removed the stable launcher link. Guarded coexistence QE
+  plus Waybar then restored `[0, 26, 0, 28]`; Waybar PID 4091716 owned the
+  watcher and recovered the pre-registered Nextcloud item. Re-cutover stopped
+  both bars, restored `trayHostEnabled: true`, QE autostart, active Waybar
+  retirement, and the launcher link. One guarded QE process (initial PID
+  4094581), no Waybar, `[0, 26, 0, 0]`, duplicate rejection, and QE watcher
+  ownership all revalidated. Only a real fresh-login test remains before Phase
+  3 completion; the original autostart backup is retained.
+- After re-cutover review, the user selected the bottom edge as the authored and
+  fallback QE bar position. `bar.edge` defaults to `bottom`; the shared tooltip
+  anchor uses its bottom-edge branch to position hover surfaces above their
+  associated modules. One persistent guarded QE instance produced the expected
+  live Hyprland reservation `[0, 0, 0, 26]`, with Waybar still absent and QE
+  retaining watcher ownership.
+- Fresh-login validation passed on 2026-08-25 at 07:52 AEST. Hyprland autostart
+  launched exactly one guarded QE process (PID 1132) through the stable launcher;
+  Waybar was absent; a duplicate launch was rejected; `eDP-1` reserved
+  `[0, 0, 0, 26]`; QE's PID owned `org.kde.StatusNotifierWatcher`; the Nextcloud
+  item was registered; and active Waybar retirement remained valid. The user
+  confirmed the rebooted bar appeared and functioned normally.
+- The user declined a temporary Hyprland headless-output test and chose to defer
+  multi-monitor acceptance until physical hardware became available. At that
+  point Phase 3 remained open; no virtual output was created or changed.
+- Physical multi-monitor acceptance subsequently passed with `eDP-1` and an LG
+  `HDMI-A-1` display. With HDMI physically absent, a temporary extended rule was
+  loaded; physical attach created a second logical output, workspace 2, one QE
+  layer, and `[0, 0, 0, 26]` reservation while eDP retained workspace 1, one QE
+  layer, and the same reservation. Moving HDMI from logical x=1600 to x=-1536
+  preserved both bars, reservations, independent workspaces, one QE process,
+  and tray ownership. Physical detach removed only HDMI's output/layer while
+  eDP remained unchanged. The original mirrored `monitors.lua` was restored
+  byte-for-byte from its backup, reloaded without errors, and the user confirmed
+  normal mirroring after reconnect.
+- A connected mirror changed to extended at runtime does not cause Qt 6.11 to
+  expose a second `QScreen`, so QE cannot add a bar for that specific transition
+  until the connector is reannounced or QE restarts. A fresh physical attach
+  under an extended rule works correctly; this limitation and recovery are now
+  documented rather than misrepresented as QE state.
+- Post-acceptance tray polish gives each tray delegate the same eight-pixel
+  horizontal padding and configured inter-module spacing as other bar modules.
+  The Nextcloud item retains its native reactive pixmap source for synced,
+  syncing, paused, attention, and other application-controlled variants, while
+  a Nextcloud-only `MultiEffect` colorizes those pixels with the current
+  `accentSecondary` token. Other tray applications retain native colors. A
+  fixture proves item matching, theme-token selection, native source reactivity,
+  and non-Nextcloud fallback.
+- Added the approved target-retirement mechanism to
+  `~/Projects/theme-switcher`: a validated repository-local list can skip an
+  existing target without modifying its apply script. Missing, malformed,
+  duplicate, or unknown entries abort before any target runs. The list is
+  active for `waybar` after the completed cutover.
+- JavaScript/schema/helper tests, `shellcheck`, switcher sandbox tests,
+  `qmllint`, Phase 1-3 service regressions, and the persistent-shell timeout
+  smoke test pass. All Phase 3 acceptance items are complete.
+
 Rollback/recovery:
 
-- restore Waybar autostart and original window/reserved-area assumptions; stop QE
-- re-enable the switcher's Waybar target when rolling back to Waybar
+- Stop the persistent QE process first with
+  `qs kill --path <qe-project>/shell.qml`; changing `trayHostEnabled` in a live
+  0.3.0 process does not return status-notifier watcher ownership.
+- Remove `waybar` from `~/Projects/theme-switcher/retired-targets`, restore the
+  prior Waybar autostart entry and any changed window/reserved-area assumptions,
+  then start Waybar.
+- Restore `config.bar.trayHostEnabled` to `false` before restarting QE in
+  coexistence mode. Verify exactly one bar owns the tray and confirm the
+  expected reserved edges before considering rollback complete.
+- Production autostart currently uses the guarded `~/.local/bin/qe-shell`
+  launcher. Full rollback restores the retained Hyprland autostart backup and
+  removes that launcher link before Waybar is restored.
 
 Out of scope:
 
@@ -821,13 +1037,37 @@ desktop theme workflow, including generated `Wallpaper` themes.
 
 Prerequisites:
 
-- Phase 1 theme contract stable
-- approval before installing Matugen or editing the external projects
-- external switcher repository backed up/version controlled
+- Phases 1-3 complete
+- current authored themes, schema, fallback, and validation suite provide the
+  provisional audit baseline
+
+Phase foundation gates:
+
+- no Phase 4 work beyond the semantic-token audit/proposal may proceed until the
+  revised minimal pre-release theme-v1 contract is explicitly approved by the
+  user
+- obtain separate approval before installing Matugen or editing external
+  projects; confirm each external repository is backed up/version controlled
+  before its first edit
+
+Required implementation order:
+
+1. Audit semantic roles across current and planned QE surfaces.
+2. Present the minimal revised token vocabulary, alternatives, affected
+   consumers, migration impact, and Matugen implications for user approval.
+3. Record the decision in an ADR and update architecture, schema, emergency
+   fallback, authored themes, fixtures, validation, and token-use documentation
+   atomically.
+4. Fix active-theme hot reload and prove transactional live updates for manual
+   themes against the approved contract.
+5. Only then proceed to catalog discovery, selectors, external machine
+   contracts, Matugen installation/mappings, and wallpaper generation.
 
 Scope:
 
-- convert all current manual palettes to QE theme schema
+- semantic-token vocabulary audit and explicit pre-release theme-v1 revision
+- convert all current manual palettes to the approved QE theme schema
+- transactional active-theme hot reload without requiring a QE restart
 - theme catalog discovery and validation
 - theme selector module
 - refactor `~/Projects/theme-switcher` machine contract
@@ -857,6 +1097,11 @@ Deliverables:
 
 Acceptance criteria:
 
+- revised semantic vocabulary is explicitly approved, documented by ADR, and
+  used consistently by current consumers without direct palette coupling
+- valid edits to the active authored theme update live QE surfaces without a
+  process restart; invalid edits retain the last-known-good active theme and
+  emit diagnostics
 - invalid themes never enter the catalog
 - selecting a manual theme updates all live QE surfaces
 - QE persistence failure prevents external invocation
@@ -871,6 +1116,8 @@ Acceptance criteria:
 
 Validation:
 
+- semantic-token consumer inventory and required-role coverage tests
+- active-theme valid-edit, invalid-edit, recovery, and last-known-good fixtures
 - validate all nine current themes
 - golden Matugen fixture tests
 - missing Matugen, timeout, malformed result, and partial target simulations
@@ -1702,6 +1949,65 @@ themes.
 
 Revisit if: external theme consumers ship before another token change; further
 contract changes then require a versioned migration.
+
+### ADR-013: Idle inhibition exposes requested state only
+
+Status: Accepted by user on 2026-08-24
+
+Decision: implement the Phase 3 native Wayland idle-inhibitor toggle as
+process-session requested state bound to a persistent QE bar window. Do not
+claim or synthesize compositor-confirmed active state.
+
+Context: installed Quickshell 0.3.0 exposes `IdleInhibitor.enabled` and `window`
+but no active property, protocol-object status, rejection signal, or compositor
+acknowledgement. Treating `enabled` as confirmed would violate QE's
+requested-versus-confirmed state rule.
+
+Rationale: requested-only state preserves the native no-command boundary and
+honestly represents what QE can know. The Wayland object lifetime still gives
+safe automatic release when the window or process disappears.
+
+Alternatives considered: defer the module entirely; add a C++ native extension
+in Phase 3; present `enabled` as confirmed active.
+
+Consequences: the bar indicates that inhibition is requested, not guaranteed;
+confirmed-active reporting remains deferred. The request is not persisted and
+does not replace Hypridle, manual locking, or suspend policy.
+
+Affected areas: `IdleService`, bar idle-inhibitor presentation, Phase 3
+acceptance language, later control-center idle state.
+
+Revisit if: Quickshell exposes reliable inhibitor status or QE adopts a reviewed
+native extension that can distinguish protocol creation/revocation.
+
+### ADR-014: Add tooltip semantic token before release
+
+Status: Accepted by user on 2026-08-24
+
+Decision: revise the pre-release theme-v1 contract to require a `tooltip`
+semantic color token. Poimandres maps it to the new `palette.black` value
+`#171922`; Gruvbox maps it to `palette.blackLight`; the emergency theme provides
+an internal dark fallback.
+
+Context: bar hover popups need a deliberate background distinct from general
+raised surfaces. Reusing `surfaceRaised` coupled tooltip styling to unrelated
+module-hover and elevated-surface decisions.
+
+Rationale: one semantic token lets each authored theme choose tooltip contrast
+without presentation code knowing palette names.
+
+Alternatives considered: continue using `surfaceRaised`; hard-code popup colors;
+add a bar-specific tooltip color outside the theme contract.
+
+Consequences: runtime validation, JSON Schema, emergency fallback, authored
+themes, fixtures, and token documentation require `tooltip`. This remains a
+pre-release schema-v1 revision with no shipped migration obligation.
+
+Affected areas: theme schema and validation, `ThemeService`, authored themes,
+bar tooltip presentation, fixtures, and future generated-theme mappings.
+
+Revisit if: tooltip surfaces later require separate normal, border, and rich
+content tokens.
 
 ## 14. Planning Change Procedure
 

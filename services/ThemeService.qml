@@ -22,6 +22,7 @@ Singleton {
             accentPrimary: "#ffffff",
             accentSecondary: "#b0b0b0",
             border: "#707070",
+            tooltip: "#101010",
             success: "#70c070",
             charging: "#e0c060",
             warning: "#e0c060",

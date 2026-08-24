@@ -21,8 +21,9 @@ Rectangle {
     property color iconColor: Services.ThemeService.theme.tokens.accentSecondary
     property color textColor: Services.ThemeService.theme.tokens.textSecondary
     property color trailingTextColor: Services.ThemeService.theme.tokens.textSecondary
+    property string hoverText: ""
     property color backgroundColor: active ? Services.ThemeService.theme.tokens.accentPrimary
-                                           : (hover.hovered ? Services.ThemeService.theme.tokens.surfaceRaised : "transparent")
+                                           : (hover.hovered ? Services.ThemeService.theme.tokens.tooltip : "transparent")
     signal clicked()
     signal secondaryClicked()
 
@@ -90,6 +91,11 @@ Rectangle {
     }
 
     HoverHandler { id: hover }
+    BarTooltip {
+        anchorItem: root
+        text: root.hoverText
+        show: hover.hovered && root.hoverText.length > 0
+    }
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton

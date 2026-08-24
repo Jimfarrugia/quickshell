@@ -7,6 +7,7 @@ const THEME_TOKENS = [
   "accentPrimary",
   "accentSecondary",
   "border",
+  "tooltip",
   "success",
   "charging",
   "warning",
@@ -22,7 +23,24 @@ export const defaultConfig = Object.freeze({
   schemaVersion: 1,
   defaultTheme: "poimandres",
   preview: Object.freeze({ enabled: true }),
-  bar: Object.freeze({ enabled: false, edge: "top", exclusive: true, height: 26, trayHostEnabled: false, moduleSpacing: 8 }),
+  bar: Object.freeze({
+    enabled: false,
+    edge: "bottom",
+    exclusive: true,
+    height: 26,
+    trayHostEnabled: false,
+    moduleSpacing: 8,
+    brightnessEnabled: true,
+    bluetoothEnabled: true,
+    idleInhibitorEnabled: true,
+    metrics: Object.freeze({
+      cpu: true,
+      memory: true,
+      disk: true,
+      temperature: true,
+      order: Object.freeze(["disk", "memory", "cpu", "temperature"])
+    })
+  }),
   clock: Object.freeze({ showSeconds: false, format24h: false }),
   commands: Object.freeze({ timeoutMs: 5000, termGraceMs: 1000, maxOutputBytes: 32768 }),
   appearance: Object.freeze({
@@ -56,7 +74,11 @@ function copyDefaults() {
     schemaVersion: defaultConfig.schemaVersion,
     defaultTheme: defaultConfig.defaultTheme,
     preview: Object.assign({}, defaultConfig.preview),
-    bar: Object.assign({}, defaultConfig.bar),
+    bar: Object.assign({}, defaultConfig.bar, {
+      metrics: Object.assign({}, defaultConfig.bar.metrics, {
+        order: Array.prototype.slice.call(defaultConfig.bar.metrics.order)
+      })
+    }),
     clock: Object.assign({}, defaultConfig.clock),
     commands: Object.assign({}, defaultConfig.commands),
     appearance: Object.assign({}, defaultConfig.appearance)
@@ -103,6 +125,43 @@ export function validateConfig(document) {
     else if (document.bar.trayHostEnabled !== undefined) errors.push("config.bar.trayHostEnabled: expected a boolean");
     if (integerIn(document.bar.moduleSpacing, 0, 64)) value.bar.moduleSpacing = document.bar.moduleSpacing;
     else if (document.bar.moduleSpacing !== undefined) errors.push("config.bar.moduleSpacing: expected an integer from 0 to 64");
+    if (typeof document.bar.brightnessEnabled === "boolean") value.bar.brightnessEnabled = document.bar.brightnessEnabled;
+    else if (document.bar.brightnessEnabled !== undefined) errors.push("config.bar.brightnessEnabled: expected a boolean");
+    if (typeof document.bar.bluetoothEnabled === "boolean") value.bar.bluetoothEnabled = document.bar.bluetoothEnabled;
+    else if (document.bar.bluetoothEnabled !== undefined) errors.push("config.bar.bluetoothEnabled: expected a boolean");
+    if (typeof document.bar.idleInhibitorEnabled === "boolean") value.bar.idleInhibitorEnabled = document.bar.idleInhibitorEnabled;
+    else if (document.bar.idleInhibitorEnabled !== undefined) errors.push("config.bar.idleInhibitorEnabled: expected a boolean");
+
+    if (isObject(document.bar.metrics)) {
+      const orderProvided = document.bar.metrics.order !== undefined;
+      for (const key of ["cpu", "memory", "disk", "temperature"]) {
+        if (typeof document.bar.metrics[key] === "boolean") value.bar.metrics[key] = document.bar.metrics[key];
+        else if (document.bar.metrics[key] !== undefined) errors.push(`config.bar.metrics.${key}: expected a boolean`);
+      }
+      if (Array.isArray(document.bar.metrics.order)) {
+        const allowed = ["disk", "memory", "cpu", "temperature"];
+        const order = document.bar.metrics.order.filter(item => allowed.indexOf(item) !== -1);
+        const unique = Array.from(new Set(order));
+        if (order.length !== document.bar.metrics.order.length)
+          errors.push("config.bar.metrics.order: unsupported metric key");
+        else if (unique.length !== order.length)
+          errors.push("config.bar.metrics.order: duplicate metric key");
+        else
+          value.bar.metrics.order = order;
+      } else if (document.bar.metrics.order !== undefined) {
+        errors.push("config.bar.metrics.order: expected an array");
+      }
+      const enabledMetrics = ["disk", "memory", "cpu", "temperature"]
+        .filter(key => value.bar.metrics[key]);
+      if (value.bar.metrics.order.length !== enabledMetrics.length
+          || enabledMetrics.some(key => value.bar.metrics.order.indexOf(key) === -1)) {
+        if (orderProvided)
+          errors.push("config.bar.metrics.order: must contain every enabled metric exactly once and no disabled metrics");
+        value.bar.metrics.order = enabledMetrics;
+      }
+    } else if (document.bar.metrics !== undefined) {
+      errors.push("config.bar.metrics: expected an object");
+    }
   } else if (document.bar !== undefined) {
     errors.push("config.bar: expected an object");
   }

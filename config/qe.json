@@ -6,11 +6,21 @@
   },
   "bar": {
     "enabled": true,
-    "edge": "top",
+    "edge": "bottom",
     "exclusive": true,
     "height": 26,
-    "trayHostEnabled": false,
-    "moduleSpacing": 8
+    "trayHostEnabled": true,
+    "moduleSpacing": 8,
+    "brightnessEnabled": true,
+    "bluetoothEnabled": true,
+    "idleInhibitorEnabled": true,
+    "metrics": {
+      "cpu": true,
+      "memory": true,
+      "disk": true,
+      "temperature": true,
+      "order": ["disk", "memory", "cpu", "temperature"]
+    }
   },
   "clock": {
     "showSeconds": false,

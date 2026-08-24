@@ -24,20 +24,32 @@ Singleton {
     readonly property string ssid: integration.ssid
     readonly property int signalStrength: integration.signalStrength
     readonly property string wiredInterface: integration.wiredInterface
+    readonly property string interfaceName: integration.interfaceName
     readonly property string ipv4Address: addressIntegration.ipv4Address
+    readonly property string hoverText: `Type: ${connectionTypeText()}\nInterface: ${interfaceName || "unavailable"}\nSSID: ${ssid || "n/a"}\nIP: ${ipv4Address || "unavailable"}\nConnectivity: ${statusText(connectivity)}`
 
-    function refreshWiredAddress() {
-        if (connectionType === "wired") addressIntegration.refresh(wiredInterface);
+    function connectionTypeText() {
+        if (connectionType === "wifi") return "Wi-Fi";
+        if (connectionType === "wired") return "Wired";
+        return "Disconnected";
+    }
+
+    function statusText(status) {
+        return status.length > 0 ? status[0].toUpperCase() + status.slice(1) : "Unknown";
+    }
+
+    function refreshAddress() {
+        if (interfaceName.length > 0) addressIntegration.refresh(interfaceName);
         else addressIntegration.clear();
     }
 
-    onConnectionTypeChanged: refreshWiredAddress()
-    onWiredInterfaceChanged: refreshWiredAddress()
-    onConnectivityChanged: if (connectionType === "wired") refreshWiredAddress()
-    onAddressIntegrationChanged: refreshWiredAddress()
+    onConnectionTypeChanged: refreshAddress()
+    onInterfaceNameChanged: refreshAddress()
+    onConnectivityChanged: if (interfaceName.length > 0) refreshAddress()
+    onAddressIntegrationChanged: refreshAddress()
 
     Integrations.NetworkIntegration { id: nativeIntegration }
     Integrations.NetworkAddressIntegration { id: nativeAddressIntegration }
 
-    Component.onCompleted: refreshWiredAddress()
+    Component.onCompleted: refreshAddress()
 }

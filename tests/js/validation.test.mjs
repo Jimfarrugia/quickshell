@@ -7,7 +7,18 @@ const fixture = async path => JSON.parse(await readFile(new URL(`../fixtures/${p
 for (const path of ["../../config/qe.json", "../../themes/poimandres.json", "../../themes/gruvbox.json"])
   JSON.parse(await readFile(new URL(path, import.meta.url), "utf8"));
 
-assert.equal(validateConfig(await fixture("config/valid.json")).ok, true);
+const validConfig = validateConfig(await fixture("config/valid.json"));
+assert.equal(validConfig.ok, true);
+assert.equal(validConfig.value.bar.brightnessEnabled, true);
+const invalidBrightness = validateConfig({ schemaVersion: 1, bar: { brightnessEnabled: "yes" } });
+assert.equal(invalidBrightness.value.bar.brightnessEnabled, true);
+assert.match(invalidBrightness.errors.join(" "), /brightnessEnabled/);
+const invalidBluetooth = validateConfig({ schemaVersion: 1, bar: { bluetoothEnabled: "yes" } });
+assert.equal(invalidBluetooth.value.bar.bluetoothEnabled, true);
+assert.match(invalidBluetooth.errors.join(" "), /bluetoothEnabled/);
+const invalidIdle = validateConfig({ schemaVersion: 1, bar: { idleInhibitorEnabled: "yes" } });
+assert.equal(invalidIdle.value.bar.idleInhibitorEnabled, true);
+assert.match(invalidIdle.errors.join(" "), /idleInhibitorEnabled/);
 const fieldFallback = validateConfig(await fixture("config/invalid-field.json"));
 assert.equal(fieldFallback.ok, true);
 assert.equal(fieldFallback.value.defaultTheme, "poimandres");
@@ -18,6 +29,12 @@ for (const path of ["../../themes/poimandres.json", "../../themes/gruvbox.json",
   const result = validateTheme(JSON.parse(await readFile(new URL(path, import.meta.url), "utf8")));
   assert.equal(result.ok, true, `${path}: ${result.errors.join("; ")}`);
 }
+const poimandres = validateTheme(JSON.parse(await readFile(new URL("../../themes/poimandres.json", import.meta.url), "utf8")));
+assert.equal(poimandres.value.tokens.tooltip, "#171922");
+assert.equal(poimandres.value.tokens.border, "#303340");
+const gruvbox = validateTheme(JSON.parse(await readFile(new URL("../../themes/gruvbox.json", import.meta.url), "utf8")));
+assert.equal(gruvbox.value.tokens.tooltip, "#3c3836");
+assert.equal(gruvbox.value.tokens.border, "#504945");
 assert.equal(validateTheme(await fixture("themes/missing-token.json")).ok, false);
 assert.match(validateTheme(await fixture("themes/cycle.json")).errors.join(" "), /cycle/);
 assert.equal(validateThemeState(await fixture("state/valid.json")).ok, true);

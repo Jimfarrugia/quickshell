@@ -16,6 +16,7 @@ QtObject {
     readonly property string ssid: wifiNetwork ? wifiNetwork.name : ""
     readonly property int signalStrength: wifiNetwork ? Math.round(wifiNetwork.signalStrength * 100) : 0
     readonly property string wiredInterface: wiredDevice ? wiredDevice.name : ""
+    readonly property string interfaceName: wifiDevice ? wifiDevice.name : wiredInterface
     readonly property string connectivity: {
         switch (Networking.connectivity) {
         case NetworkConnectivity.Full: return "full";

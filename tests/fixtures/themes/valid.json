@@ -7,7 +7,7 @@
   "tokens": {
     "surfaceBase": "{palette.base}", "surfaceRaised": "{palette.raised}", "surfaceOverlay": "#eeffffff",
     "textPrimary": "{palette.text}", "textSecondary": "{palette.muted}", "accentPrimary": "{palette.accent}",
-    "accentSecondary": "{palette.muted}", "border": "{palette.muted}", "success": "{palette.accent}", "charging": "{palette.warning}",
+    "accentSecondary": "{palette.muted}", "border": "{palette.muted}", "tooltip": "{palette.raised}", "success": "{palette.accent}", "charging": "{palette.warning}",
     "warning": "{palette.warning}", "error": "{palette.error}", "shadow": "#40000000", "scrim": "#80000000"
   }
 }

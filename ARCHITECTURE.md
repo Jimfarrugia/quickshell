@@ -130,6 +130,13 @@ There must be only one persistent QE instance per graphical session. This
 prevents duplicate bars, duplicate global shortcut identities, notification
 DBus contention, and duplicate external subscriptions.
 
+The canonical persistent-shell entry point is `scripts/run-qe.sh`, which uses
+Quickshell's per-configuration instance lock through `--no-duplicate` and the
+project-resolved `shell.qml` path. The launcher resolves its own symlink before
+finding the project, and production autostart invokes it through the stable XDG
+user-bin path `~/.local/bin/qe-shell`. Direct unguarded `quickshell --path`
+launches are development-only and can bypass the single-instance guarantee.
+
 ### 3.2 Lock process
 
 The lock screen is a separate, minimal, on-demand Quickshell process. It owns:
@@ -469,22 +476,40 @@ Operations use native Quickshell Bluetooth methods for connect, disconnect,
 pair, cancel, and forget. Pairing-agent capabilities and interactive PIN/passkey
 flows must be verified before claiming full Blueman replacement.
 
+The Phase 3 bar summary uses the installed `Quickshell.Bluetooth` module and is
+read-only. It normalizes the default adapter, powered/transition state, known
+and connected devices, aliases, and reported battery values directly from BlueZ
+events; it adds no poller and treats controller/daemon loss as unavailable. The
+configured bar chip remains visible for that unavailable state and presents the
+same disabled/error visual as a powered-off controller, without claiming that
+an adapter still exists.
+Interactive connect, pair, and manager-launch behavior remains deferred until
+the pairing-agent and application-launch boundaries are established.
+
 ### 7.8 PowerService and SystemMetricsService
 
 `PowerService` wraps UPower and power-profiles-daemon event-driven state.
+Battery state includes UPower's native time-to-full and time-to-empty estimates
+in seconds; the domain service selects and formats the estimate appropriate to
+confirmed charging state. Zero or invalid estimates are exposed as unavailable,
+not as a fabricated duration.
 
 `SystemMetricsService` owns CPU, memory, disk, and temperature reads that lack a
 native event API. It uses narrow adapters for `/proc`, `/sys`, and filesystem
 statistics. Polling is visible in configuration and diagnostics:
 
-- CPU and memory: proposed 2 seconds while consumed
-- thermal data: proposed 5 seconds while consumed
-- disk capacity: proposed 30 seconds while consumed
+- CPU and memory: 2 seconds while consumed
+- thermal data: 5 seconds while consumed
+- disk capacity: 30 seconds while consumed
 - no polling when no enabled surface consumes the metric, where practical
 
-Intervals are proposed defaults and must be validated against cost and UX in
-the bar milestone. Hardware sensors are discovered by stable attributes, not a
-hard-coded `hwmon3` path.
+These intervals passed the Phase 3 bar budget on the development machine.
+Hardware sensors are discovered by stable attributes, not a hard-coded
+`hwmon3` path. A bounded structured helper performs thermal discovery once;
+subsequent selected-sensor reads use asynchronous `FileView` access until three
+failures force rediscovery. Root-disk capacity retains a bounded structured
+helper contract with a validated shell/`df` fast path; Python is restricted to
+fixture parsing and thermal discovery rather than recurring reads.
 
 ### 7.9 MediaService
 
@@ -508,6 +533,17 @@ or step operations. A successful command exit triggers a fresh authoritative
 read before confirmed state changes. External changes use a filesystem watcher
 if reliable for the active sysfs device; otherwise a documented low-rate poll
 is allowed and must mark stale data after missed reads.
+
+The Phase 3 bar implementation uses the helper for backlight discovery and
+writes only. While the configured bar consumer is active, the adapter reads the
+validated active device's `brightness` and `max_brightness` sysfs files
+asynchronously and refreshes `brightness` every 10 seconds because portable
+change notifications are not reliable across backlight drivers and external
+writers. The poll stops with no consumer. Three failed reads retain the last
+confirmed value, mark it stale, discard the invalid device, and retry discovery.
+Rapid requests are coalesced by `BrightnessService`; requested values remain
+pending until the helper returns a fresh authoritative post-write read. Bar
+wheel input changes the latest requested value in bounded five-percent steps.
 
 ### 7.11 NotificationService
 
@@ -541,8 +577,16 @@ confirmed or clearly marked pending state and reports failed operations.
 ### 7.13 IdleService
 
 `IdleService` owns the compositor `IdleInhibitor` and binds it to a persistent QE
-window. It exposes requested and active state because the compositor may decline
-or revoke inhibition. It does not replace Hypridle's timeout and suspend policy.
+window. Quickshell 0.3.0 exposes only the local `enabled` request and bound
+window; it provides no compositor-confirmed active state or failure signal.
+`IdleService` therefore exposes requested state only and never presents it as
+confirmed external state. The request is process-session local, defaults off,
+is not persisted, and is released when disabled, when the owner window is lost,
+or when QE exits. Confirmed-active reporting is deferred until Quickshell
+exposes it or QE gains a reviewed native extension. Idle inhibition does not
+replace Hypridle's timeout, manual lock, or suspend policy. QE applies no
+automatic inhibitor timeout: requested state remains unchanged until the user
+toggles it or the configuration/window/process lifecycle forces safe release.
 
 ### 7.14 LauncherService and HelpService
 
@@ -583,8 +627,11 @@ contract. The initial shape is:
   "variant": "dark",
   "palette": {
     "background": "#1b1e28",
+    "black": "#171922",
     "surface": "#303340",
     "surfaceVariant": "#506477",
+    "gray": "#506477",
+    "grayDark": "#303340",
     "foreground": "#e4f0fb",
     "blue": "#7390aa",
     "purple": "#767c9d",
@@ -601,7 +648,8 @@ contract. The initial shape is:
     "textSecondary": "{palette.surfaceVariant}",
     "accentPrimary": "{palette.green}",
     "accentSecondary": "{palette.blue}",
-    "border": "{palette.purple}",
+    "border": "{palette.grayDark}",
+    "tooltip": "{palette.black}",
     "success": "{palette.green}",
     "charging": "{palette.yellow}",
     "warning": "{palette.yellow}",
@@ -613,6 +661,8 @@ contract. The initial shape is:
 ```
 
 The token names are frozen after validation of the schema and converted themes.
+The pre-release v1 contract revisions that added `charging` and `tooltip` are
+recorded in ADR-012 and ADR-014.
 Any explicit pre-release contract revision is recorded in an ADR and updates all
 themes, fixtures, fallbacks, and validators together. Token references are
 resolved once by pure validation logic; components consume resolved semantic
@@ -705,7 +755,7 @@ reverted atomically and rollback can also fail.
 | ----------------- | -------------------------------- | --------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
 | Hyprland          | Hyprland IPC                     | native singleton models           | socket events                     | typed dispatch adapter             | mark stale on disconnect; explicit refresh only for known API gaps                                                             | recorded events/models and live opt-in test                   |
 | PipeWire          | PipeWire/WirePlumber             | `Pipewire.ready`, nodes/defaults  | libpipewire events                | defaults, volume, mute             | native adapter reconnects; clear stale object references                                                                       | mock node model and live audio test                           |
-| NetworkManager    | NetworkManager                   | native Networking models; bounded `nmcli` IPv4 enrichment because 0.3.0 exposes only hardware addresses | DBus signals trigger native updates and wired-address refresh; no polling | toggle/connect/disconnect/forget   | unavailable/degraded while daemon absent; cancel or supersede stale IPv4 lookups; repopulate on return                          | fixture model plus isolated live test network and loopback IPv4 lookup |
+| NetworkManager    | NetworkManager                   | native Networking models; bounded `nmcli` IPv4 enrichment because 0.3.0 exposes only hardware addresses | DBus signals trigger native updates and active-interface address refresh; no polling | toggle/connect/disconnect/forget   | unavailable/degraded while daemon absent; cancel or supersede stale IPv4 lookups; repopulate on return                          | fixture model plus isolated live test network and loopback IPv4 lookup |
 | BlueZ             | BlueZ                            | DBus ObjectManager via native API | DBus object/property signals      | power/discover/pair/connect/forget | preserve no false connected state; repopulate on service return                                                                | mock devices and manual hardware test                         |
 | UPower            | UPower and power-profiles-daemon | native singleton                  | DBus signals                      | profile selection                  | battery may remain absent on desktop; profile feature degrades separately                                                      | fixture devices and live read-only test                       |
 | MPRIS             | player applications              | service watcher                   | DBus properties/signals           | capability-guarded controls        | remove vanished player; deterministic reselection                                                                              | mock player capabilities                                      |

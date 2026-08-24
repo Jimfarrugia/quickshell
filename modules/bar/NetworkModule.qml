@@ -15,6 +15,7 @@ BarChip {
     iconColor: wifiConnected || wiredConnected ? Services.ThemeService.theme.tokens.accentSecondary
                                                : Services.ThemeService.theme.tokens.error
     warning: false
+    hoverText: Services.NetworkService.hoverText
     horizontalPadding: Services.ConfigService.config.bar.moduleSpacing / 2
     contentSpacing: Services.ConfigService.config.bar.moduleSpacing * 2
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily

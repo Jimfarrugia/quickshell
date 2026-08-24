@@ -18,11 +18,30 @@
       "additionalProperties": false,
       "properties": {
         "enabled": { "type": "boolean", "default": false },
-        "edge": { "enum": ["top", "bottom"], "default": "top" },
+        "edge": { "enum": ["top", "bottom"], "default": "bottom" },
         "exclusive": { "type": "boolean", "default": true },
         "height": { "type": "integer", "minimum": 16, "maximum": 128, "default": 26 },
         "trayHostEnabled": { "type": "boolean", "default": false },
-        "moduleSpacing": { "type": "integer", "minimum": 0, "maximum": 64, "default": 8 }
+        "moduleSpacing": { "type": "integer", "minimum": 0, "maximum": 64, "default": 8 },
+        "brightnessEnabled": { "type": "boolean", "default": true },
+        "bluetoothEnabled": { "type": "boolean", "default": true },
+        "idleInhibitorEnabled": { "type": "boolean", "default": true },
+        "metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cpu": { "type": "boolean", "default": true },
+            "memory": { "type": "boolean", "default": true },
+            "disk": { "type": "boolean", "default": true },
+            "temperature": { "type": "boolean", "default": true },
+            "order": {
+              "type": "array",
+              "items": { "enum": ["cpu", "memory", "disk", "temperature"] },
+              "uniqueItems": true,
+              "default": ["disk", "memory", "cpu", "temperature"]
+            }
+          }
+        }
       }
     },
     "clock": {

@@ -13,7 +13,26 @@ Singleton {
     readonly property bool present: integration.present
     readonly property int percentage: integration.percentage
     readonly property bool charging: integration.charging
+    readonly property bool fullyCharged: integration.fullyCharged
+    readonly property int timeToEmptySeconds: integration.timeToEmptySeconds
+    readonly property int timeToFullSeconds: integration.timeToFullSeconds
+    readonly property int remainingTimeSeconds: charging ? timeToFullSeconds : timeToEmptySeconds
+    readonly property string remainingTimeText: fullyCharged
+        ? "Fully charged."
+        : (charging
+            ? `Time to full: ${formatDuration(timeToFullSeconds)}`
+            : `Time to empty: ${formatDuration(timeToEmptySeconds)}`)
     readonly property string iconName: integration.iconName
+
+    function formatDuration(seconds) {
+        if (!Number.isFinite(seconds) || seconds <= 0) return "unavailable";
+        const totalMinutes = Math.max(1, Math.round(seconds / 60));
+        const hours = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+        if (hours === 0) return `${minutes}m`;
+        if (minutes === 0) return `${hours}h`;
+        return `${hours}h ${minutes}m`;
+    }
 
     Integrations.UPowerIntegration { id: nativeIntegration }
 }

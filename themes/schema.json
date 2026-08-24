@@ -18,7 +18,7 @@
     "tokens": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["surfaceBase", "surfaceRaised", "surfaceOverlay", "textPrimary", "textSecondary", "accentPrimary", "accentSecondary", "border", "success", "charging", "warning", "error", "shadow", "scrim"],
+      "required": ["surfaceBase", "surfaceRaised", "surfaceOverlay", "textPrimary", "textSecondary", "accentPrimary", "accentSecondary", "border", "tooltip", "success", "charging", "warning", "error", "shadow", "scrim"],
       "properties": {
         "surfaceBase": { "$ref": "#/$defs/colorOrReference" },
         "surfaceRaised": { "$ref": "#/$defs/colorOrReference" },
@@ -28,6 +28,7 @@
         "accentPrimary": { "$ref": "#/$defs/colorOrReference" },
         "accentSecondary": { "$ref": "#/$defs/colorOrReference" },
         "border": { "$ref": "#/$defs/colorOrReference" },
+        "tooltip": { "$ref": "#/$defs/colorOrReference" },
         "success": { "$ref": "#/$defs/colorOrReference" },
         "charging": { "$ref": "#/$defs/colorOrReference" },
         "warning": { "$ref": "#/$defs/colorOrReference" },

@@ -1,21 +1,39 @@
 import QtQuick
+import QtQuick.Effects
 import "../../services" as Services
 
 Row {
     id: root
     property var parentWindow
-    spacing: 3
+    property var items: Services.TrayService.items
+    property var tintedItemIds: ["nextcloud"]
+    property real itemHorizontalPadding: 8
+    spacing: Services.ConfigService.config.bar.moduleSpacing
+
+    function shouldTint(item) {
+        const identifier = String(item.id || item.title || "").toLowerCase();
+        return tintedItemIds.indexOf(identifier) !== -1;
+    }
+
+    function itemAt(index) {
+        return trayRepeater.itemAt(index);
+    }
 
     Repeater {
-        model: Services.TrayService.items
+        id: trayRepeater
+        model: root.items
         delegate: Item {
             id: trayItem
             required property var modelData
+            readonly property bool themedIcon: root.shouldTint(modelData)
+            readonly property string iconSource: modelData.icon
+            readonly property color tintColor: Services.ThemeService.theme.tokens.accentSecondary
 
-            width: 26
+            width: 18 + root.itemHorizontalPadding * 2
             height: 26
 
             Image {
+                id: nativeIcon
                 anchors.centerIn: parent
                 width: 18
                 height: 18
@@ -23,6 +41,16 @@ Row {
                 sourceSize.width: width
                 sourceSize.height: height
                 fillMode: Image.PreserveAspectFit
+                visible: !trayItem.themedIcon
+            }
+
+            MultiEffect {
+                anchors.fill: nativeIcon
+                source: nativeIcon
+                visible: trayItem.themedIcon
+                colorization: 1
+                colorizationColor: trayItem.tintColor
+                autoPaddingEnabled: false
             }
 
             MouseArea {

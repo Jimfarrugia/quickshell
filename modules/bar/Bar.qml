@@ -7,6 +7,17 @@ PanelWindow {
     id: root
 
     property var modelData
+    property bool idleWindowRegistered: false
+
+    function updateIdleWindowRegistration() {
+        if (visible && !idleWindowRegistered) {
+            Services.IdleService.registerWindow(root);
+            idleWindowRegistered = true;
+        } else if (!visible && idleWindowRegistered) {
+            Services.IdleService.unregisterWindow(root);
+            idleWindowRegistered = false;
+        }
+    }
     screen: modelData
     visible: Services.ConfigService.config.bar.enabled
     implicitHeight: Services.ConfigService.config.bar.height
@@ -24,10 +35,15 @@ PanelWindow {
         color: Services.ThemeService.theme.tokens.surfaceOverlay
         border.width: 0
 
-        NetworkModule {
+        Row {
+            id: leftModules
             anchors.left: parent.left
             anchors.leftMargin: Services.ConfigService.config.bar.moduleSpacing / 2
             anchors.verticalCenter: parent.verticalCenter
+            spacing: Services.ConfigService.config.bar.moduleSpacing
+
+            NetworkModule {}
+            MetricsModule {}
         }
 
         WorkspacesModule {
@@ -60,9 +76,16 @@ PanelWindow {
                 }
             }
             HealthModule {}
+            IdleInhibitorModule {}
+            BluetoothModule {}
             AudioModule {}
+            BrightnessModule {}
             BatteryModule {}
             ClockModule {}
         }
     }
+
+    onVisibleChanged: updateIdleWindowRegistration()
+    Component.onCompleted: updateIdleWindowRegistration()
+    Component.onDestruction: if (idleWindowRegistered) Services.IdleService.unregisterWindow(root)
 }

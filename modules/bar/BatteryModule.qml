@@ -24,15 +24,21 @@ BarChip {
     }
 
     visible: Services.PowerService.availability !== "unavailable"
-    icon: iconForPercentage(Services.PowerService.percentage)
-    iconColor: critical || low ? stateColor
-                               : (Services.PowerService.charging ? Services.ThemeService.theme.tokens.charging
-                                                                 : Services.ThemeService.theme.tokens.accentSecondary)
+    icon: Services.PowerService.charging
+        ? "battery_android_frame_bolt"
+        : iconForPercentage(Services.PowerService.percentage)
+    iconColor: Services.PowerService.charging
+        ? Services.ThemeService.theme.tokens.accentSecondary
+        : (critical || low ? stateColor : Services.ThemeService.theme.tokens.accentSecondary)
     text: Services.PowerService.availability === "available"
         ? `${Services.PowerService.percentage}%`
         : "Battery..."
-    textColor: critical || low ? stateColor : Services.ThemeService.theme.tokens.textSecondary
+    textColor: Services.PowerService.charging
+        ? Services.ThemeService.theme.tokens.textSecondary
+        : (critical || low ? stateColor : Services.ThemeService.theme.tokens.textSecondary)
     warning: false
+    hoverText: Services.PowerService.availability === "available"
+        ? Services.PowerService.remainingTimeText : "Battery unavailable"
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
     configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily
     configuredFontSize: Services.ConfigService.config.appearance.fontSize

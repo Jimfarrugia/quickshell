@@ -12,4 +12,5 @@ QtObject {
     property string ssid: "Fixture WiFi"
     property int signalStrength: 73
     property string wiredInterface: ""
+    property string interfaceName: connectionType === "wifi" ? "wlan0" : wiredInterface
 }
