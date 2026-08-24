@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "defaultTheme": "poimandres",
+  "preview": {
+    "enabled": false
+  },
+  "bar": {
+    "enabled": true,
+    "edge": "top",
+    "exclusive": true,
+    "height": 26,
+    "trayHostEnabled": false,
+    "moduleSpacing": 8
+  },
+  "clock": {
+    "showSeconds": false,
+    "format24h": false
+  },
+  "commands": {
+    "timeoutMs": 5000,
+    "termGraceMs": 1000,
+    "maxOutputBytes": 32768
+  },
+  "appearance": {
+    "fontFamily": "Inter",
+    "monospaceFontFamily": "JetBrainsMono Nerd Font",
+    "iconFontFamily": "Material Symbols Rounded",
+    "fontSize": 14,
+    "spacing": 8,
+    "radius": 10,
+    "borderWidth": 1,
+    "opacity": 1,
+    "shadows": true,
+    "animations": true
+  }
+}

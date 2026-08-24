@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "id": "broken",
+  "name": "Broken",
+  "variant": "dark",
+  "palette": { "base": "#000000" },
+  "tokens": {}
+}

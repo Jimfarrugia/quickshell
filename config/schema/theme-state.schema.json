@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qe.local/schema/theme-state-v1.json",
+  "title": "QE active theme state v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "activeThemeId"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "activeThemeId": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" }
+  }
+}

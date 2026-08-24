@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "poimandres",
+  "name": "Poimandres",
+  "variant": "dark",
+  "palette": {
+    "foreground": "#e4f0fb",
+    "background": "#1b1e28",
+    "grayDark": "#303340",
+    "gray": "#506477",
+    "grayLight": "#767C9D",
+    "blue": "#7390aa",
+    "green": "#5fb3a1",
+    "greenLight": "#5de4c7",
+    "yellow": "#fffac2",
+    "red": "#d0679d",
+    "purple": "#91B4D5",
+    "cyan": "#89DDFF"
+  },
+  "tokens": {
+    "surfaceBase": "{palette.background}",
+    "surfaceRaised": "{palette.grayDark}",
+    "surfaceOverlay": "#f21b1e28",
+    "textPrimary": "{palette.foreground}",
+    "textSecondary": "{palette.gray}",
+    "accentPrimary": "{palette.green}",
+    "accentSecondary": "{palette.blue}",
+    "border": "{palette.purple}",
+    "success": "{palette.greenLight}",
+    "charging": "{palette.yellow}",
+    "warning": "{palette.yellow}",
+    "error": "{palette.red}",
+    "shadow": "#80000000",
+    "scrim": "#99000000"
+  }
+}

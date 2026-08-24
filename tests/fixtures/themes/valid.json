@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "id": "fixture",
+  "name": "Fixture",
+  "variant": "light",
+  "palette": { "base": "#ffffff", "raised": "#eeeeee", "text": "#101010", "muted": "#606060", "accent": "#0055cc", "warning": "#aa6600", "error": "#cc0022" },
+  "tokens": {
+    "surfaceBase": "{palette.base}", "surfaceRaised": "{palette.raised}", "surfaceOverlay": "#eeffffff",
+    "textPrimary": "{palette.text}", "textSecondary": "{palette.muted}", "accentPrimary": "{palette.accent}",
+    "accentSecondary": "{palette.muted}", "border": "{palette.muted}", "success": "{palette.accent}", "charging": "{palette.warning}",
+    "warning": "{palette.warning}", "error": "{palette.error}", "shadow": "#40000000", "scrim": "#80000000"
+  }
+}

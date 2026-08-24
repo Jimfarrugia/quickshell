@@ -1,0 +1,23 @@
+import "../../components"
+import "../../services" as Services
+
+BarChip {
+    readonly property bool wifiConnected: Services.NetworkService.connectionType === "wifi"
+    readonly property bool wiredConnected: Services.NetworkService.connectionType === "wired"
+
+    text: wifiConnected ? Services.NetworkService.ssid
+                        : (wiredConnected ? (Services.NetworkService.ipv4Address || "Connecting...") : "Disconnected")
+    trailingText: wifiConnected ? `${Services.NetworkService.signalStrength}%` : ""
+    icon: wifiConnected ? "wifi" : (wiredConnected ? "lan" : "signal_wifi_bad")
+    textColor: wifiConnected ? Services.ThemeService.theme.tokens.accentSecondary
+                             : Services.ThemeService.theme.tokens.textSecondary
+    trailingTextColor: Services.ThemeService.theme.tokens.textSecondary
+    iconColor: wifiConnected || wiredConnected ? Services.ThemeService.theme.tokens.accentSecondary
+                                               : Services.ThemeService.theme.tokens.error
+    warning: false
+    horizontalPadding: Services.ConfigService.config.bar.moduleSpacing / 2
+    contentSpacing: Services.ConfigService.config.bar.moduleSpacing * 2
+    configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
+    configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily
+    configuredFontSize: Services.ConfigService.config.appearance.fontSize
+}

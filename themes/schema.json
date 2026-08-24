@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qe.local/schema/theme-v1.json",
+  "title": "QE theme v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "name", "variant", "palette", "tokens"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" },
+    "name": { "type": "string", "minLength": 1 },
+    "variant": { "enum": ["dark", "light"] },
+    "palette": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$" }
+    },
+    "tokens": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surfaceBase", "surfaceRaised", "surfaceOverlay", "textPrimary", "textSecondary", "accentPrimary", "accentSecondary", "border", "success", "charging", "warning", "error", "shadow", "scrim"],
+      "properties": {
+        "surfaceBase": { "$ref": "#/$defs/colorOrReference" },
+        "surfaceRaised": { "$ref": "#/$defs/colorOrReference" },
+        "surfaceOverlay": { "$ref": "#/$defs/colorOrReference" },
+        "textPrimary": { "$ref": "#/$defs/colorOrReference" },
+        "textSecondary": { "$ref": "#/$defs/colorOrReference" },
+        "accentPrimary": { "$ref": "#/$defs/colorOrReference" },
+        "accentSecondary": { "$ref": "#/$defs/colorOrReference" },
+        "border": { "$ref": "#/$defs/colorOrReference" },
+        "success": { "$ref": "#/$defs/colorOrReference" },
+        "charging": { "$ref": "#/$defs/colorOrReference" },
+        "warning": { "$ref": "#/$defs/colorOrReference" },
+        "error": { "$ref": "#/$defs/colorOrReference" },
+        "shadow": { "$ref": "#/$defs/colorOrReference" },
+        "scrim": { "$ref": "#/$defs/colorOrReference" }
+      }
+    }
+  },
+  "$defs": {
+    "colorOrReference": {
+      "type": "string",
+      "pattern": "^(#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?|\\{(palette|tokens)\\.[A-Za-z][A-Za-z0-9]*\\})$"
+    }
+  }
+}

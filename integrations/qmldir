@@ -1,0 +1,8 @@
+module QE.Integrations
+CommandRunner 1.0 CommandRunner.qml
+HyprlandIntegration 1.0 HyprlandIntegration.qml
+PipewireIntegration 1.0 PipewireIntegration.qml
+NetworkIntegration 1.0 NetworkIntegration.qml
+NetworkAddressIntegration 1.0 NetworkAddressIntegration.qml
+UPowerIntegration 1.0 UPowerIntegration.qml
+TrayIntegration 1.0 TrayIntegration.qml

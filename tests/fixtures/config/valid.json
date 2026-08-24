@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "defaultTheme": "gruvbox",
+  "preview": { "enabled": false },
+  "bar": { "enabled": true, "edge": "top", "exclusive": true, "height": 26, "trayHostEnabled": false, "moduleSpacing": 8 },
+  "clock": { "showSeconds": false, "format24h": false },
+  "commands": { "timeoutMs": 2000, "termGraceMs": 100, "maxOutputBytes": 4096 }
+}

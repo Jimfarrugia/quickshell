@@ -1,0 +1,5 @@
+{
+  "schemaVersion": 1,
+  "defaultTheme": "Not Normalized",
+  "commands": { "timeoutMs": -1 }
+}

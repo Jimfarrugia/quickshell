@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "cycle",
+  "name": "Cycle",
+  "variant": "dark",
+  "palette": { "base": "#000000" },
+  "tokens": {
+    "surfaceBase": "{tokens.surfaceRaised}", "surfaceRaised": "{tokens.surfaceBase}", "surfaceOverlay": "#ee000000",
+    "textPrimary": "#ffffff", "textSecondary": "#aaaaaa", "accentPrimary": "#00aaff", "accentSecondary": "#aa00ff",
+    "border": "#777777", "success": "#00aa00", "charging": "#aaaa00", "warning": "#aaaa00", "error": "#aa0000", "shadow": "#80000000", "scrim": "#99000000"
+  }
+}

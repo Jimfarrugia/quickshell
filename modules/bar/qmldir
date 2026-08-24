@@ -1,0 +1,11 @@
+module QE.Modules.Bar
+BarHost 1.0 BarHost.qml
+Bar 1.0 Bar.qml
+WorkspacesModule 1.0 WorkspacesModule.qml
+WindowTitleModule 1.0 WindowTitleModule.qml
+AudioModule 1.0 AudioModule.qml
+NetworkModule 1.0 NetworkModule.qml
+BatteryModule 1.0 BatteryModule.qml
+ClockModule 1.0 ClockModule.qml
+HealthModule 1.0 HealthModule.qml
+TrayHost 1.0 TrayHost.qml
