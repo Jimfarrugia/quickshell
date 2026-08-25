@@ -10,7 +10,7 @@ BarChip {
   readonly property color usageColor: Services.SystemMetricsService.disk.availability === "unavailable"
     || criticalUsage
       ? Services.ThemeService.theme.tokens.error
-      : (highUsage ? Services.ThemeService.theme.tokens.warning : Services.ThemeService.theme.tokens.accentSecondary)
+      : (highUsage ? Services.ThemeService.theme.tokens.warning : Services.ThemeService.theme.tokens.secondary)
 
   visible: Services.ConfigService.config.bar.metrics.disk
   icon: "storage"
@@ -19,7 +19,7 @@ BarChip {
     : (Services.SystemMetricsService.disk.availability === "unavailable" ? "Disk!" : "Disk...")
   iconColor: usageColor
   textColor: highUsage || Services.SystemMetricsService.disk.availability === "unavailable"
-    ? usageColor : Services.ThemeService.theme.tokens.textSecondary
+    ? usageColor : Services.ThemeService.theme.tokens.on_surface_variant
   warning: Services.SystemMetricsService.disk.freshness === "stale"
   hoverText: Services.SystemMetricsService.diskHoverText
   configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily

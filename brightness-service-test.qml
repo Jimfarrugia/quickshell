@@ -26,7 +26,7 @@ ShellRoot {
     Services.BrightnessService.__confirmedDeviceName = "intel_backlight";
     Services.BrightnessService.__confirmedDeviceClass = "backlight";
     Services.BrightnessService.__confirmedDeviceMaxBrightness = 1060;
-    if (brightnessModule.textColor.toString() !== Services.ThemeService.theme.tokens.textSecondary.toString())
+    if (brightnessModule.textColor.toString() !== Services.ThemeService.theme.tokens.on_surface_variant.toString())
       return fail("brightness text did not use the standard secondary text color");
     if (brightnessModule.hoverText !== "")
       return fail("brightness module unexpectedly exposed hover content");
@@ -66,7 +66,7 @@ ShellRoot {
       return fail("pending state was not published");
     if (brightnessModule.displayPercent !== 42)
       return fail("module did not show pending percent");
-    if (brightnessModule.iconColor.toString() !== Services.ThemeService.theme.tokens.accentSecondary.toString())
+    if (brightnessModule.iconColor.toString() !== Services.ThemeService.theme.tokens.secondary.toString())
       return fail("pending brightness request changed the normal icon color");
 
     // A background read is external state, not confirmation of the pending request.

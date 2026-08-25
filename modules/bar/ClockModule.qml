@@ -4,7 +4,7 @@ import "../../services" as Services
 BarChip {
     text: Services.TimeService.dateText
     trailingText: Services.TimeService.timeText
-    trailingTextColor: Services.ThemeService.theme.tokens.accentSecondary
+    trailingTextColor: Services.ThemeService.theme.tokens.secondary
     horizontalPadding: Services.ConfigService.config.bar.moduleSpacing / 2
     contentSpacing: Services.ConfigService.config.bar.moduleSpacing * 2
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily

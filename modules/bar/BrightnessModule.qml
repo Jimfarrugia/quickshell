@@ -24,14 +24,15 @@ BarChip {
         && Services.BrightnessService.availability !== "unavailable"
     icon: iconForPercentage(displayPercent)
     iconColor: unavailable
-        ? Services.ThemeService.theme.tokens.textSecondary
+        ? Services.ThemeService.theme.tokens.on_surface_disabled
         : (stale
             ? Services.ThemeService.theme.tokens.warning
-            : Services.ThemeService.theme.tokens.accentSecondary)
+            : Services.ThemeService.theme.tokens.secondary)
     text: unavailable
         ? "Light..."
         : `${displayPercent}%`
-    textColor: Services.ThemeService.theme.tokens.textSecondary
+    textColor: unavailable ? Services.ThemeService.theme.tokens.on_surface_disabled
+                           : Services.ThemeService.theme.tokens.on_surface_variant
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
     configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily
     configuredFontSize: Services.ConfigService.config.appearance.fontSize

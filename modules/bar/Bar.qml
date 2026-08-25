@@ -32,7 +32,7 @@ PanelWindow {
 
     Rectangle {
         anchors.fill: parent
-        color: Services.ThemeService.theme.tokens.surfaceOverlay
+        color: Services.ThemeService.theme.tokens.surface_panel
         border.width: 0
 
         Row {

@@ -34,12 +34,15 @@ ShellRoot {
         if (!nextcloudDelegate || !otherDelegate)
             return fail("tray delegates were not created");
         if (!nextcloudDelegate.themedIcon
-                || nextcloudDelegate.tintColor.toString() !== Services.ThemeService.theme.tokens.accentSecondary.toString())
-            return fail("Nextcloud did not use the accentSecondary tint path");
+                || nextcloudDelegate.tintColor.toString() !== Services.ThemeService.theme.tokens.secondary.toString())
+            return fail("Nextcloud did not use the secondary tint path");
         if (nextcloudDelegate.iconSource !== nextcloud.icon)
             return fail("Nextcloud tint path did not retain the native dynamic icon source");
         if (otherDelegate.themedIcon || otherDelegate.iconSource !== other.icon)
             return fail("non-Nextcloud tray icon was modified");
+        if (tray.hoverBackground(true).toString() !== Services.ThemeService.theme.tokens.surface_hover.toString()
+                || nextcloudDelegate.radius !== 7)
+            return fail("tray hover styling does not match BarChip");
 
         nextcloud.icon = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==#syncing";
         Qt.callLater(checkReactiveSource);

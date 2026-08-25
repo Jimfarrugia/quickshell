@@ -636,20 +636,38 @@ contract. The initial shape is:
     "blue": "#7390aa",
     "purple": "#767c9d",
     "green": "#5de4c7",
+    "cyan": "#89ddff",
     "yellow": "#fffac2",
     "red": "#f16c75",
     "pink": "#d0679d"
   },
   "tokens": {
-    "surfaceBase": "{palette.background}",
-    "surfaceRaised": "{palette.surface}",
-    "surfaceOverlay": "#f21b1e28",
-    "textPrimary": "{palette.foreground}",
-    "textSecondary": "{palette.surfaceVariant}",
-    "accentPrimary": "{palette.green}",
-    "accentSecondary": "{palette.blue}",
-    "border": "{palette.grayDark}",
-    "tooltip": "{palette.black}",
+    "background": "{palette.background}",
+    "on_background": "{palette.foreground}",
+    "surface": "{palette.surface}",
+    "on_surface": "{palette.foreground}",
+    "surface_variant": "{palette.black}",
+    "on_surface_variant": "{palette.surfaceVariant}",
+    "surface_panel": "#f21b1e28",
+    "on_surface_panel": "{palette.foreground}",
+    "surface_tooltip": "{palette.black}",
+    "on_surface_tooltip": "{palette.foreground}",
+    "surface_hover": "{palette.surface}",
+    "surface_pressed": "{palette.surfaceVariant}",
+    "primary": "{palette.green}",
+    "on_primary": "{palette.black}",
+    "primary_container": "{palette.blue}",
+    "on_primary_container": "{palette.black}",
+    "secondary": "{palette.blue}",
+    "on_secondary": "{palette.black}",
+    "outline": "{palette.surfaceVariant}",
+    "outline_variant": "{palette.surface}",
+    "focus_ring": "{palette.cyan}",
+    "on_surface_disabled": "{palette.gray}",
+    "on_surface_placeholder": "{palette.surfaceVariant}",
+    "link": "{palette.cyan}",
+    "highlight": "{palette.yellow}",
+    "on_highlight": "{palette.black}",
     "success": "{palette.green}",
     "charging": "{palette.yellow}",
     "warning": "{palette.yellow}",
@@ -660,9 +678,10 @@ contract. The initial shape is:
 }
 ```
 
-The token names are frozen after validation of the schema and converted themes.
-The pre-release v1 contract revisions that added `charging` and `tooltip` are
-recorded in ADR-012 and ADR-014.
+The approved 32-role token names use Matugen-style `snake_case` and paired
+`on_*` foregrounds. ADR-015 records the Phase 4 pre-release contract revision
+that supersedes the provisional vocabulary and the individual additions in
+ADR-012 and ADR-014 while retaining their charging and tooltip semantics.
 Any explicit pre-release contract revision is recorded in an ADR and updates all
 themes, fixtures, fallbacks, and validators together. Token references are
 resolved once by pure validation logic; components consume resolved semantic
@@ -674,7 +693,8 @@ manually authored palettes to map different raw vocabularies to the same UI.
 
 Typography, spacing, radii, border widths, shadows parameters, opacity policy,
 and animation durations belong to user configuration initially, not individual
-color themes. Color-valued shadow, scrim, and overlay tokens remain in themes.
+color themes. Color-valued shadow, scrim, panel-alpha, and interaction-state
+tokens remain in themes.
 This prevents theme changes from unexpectedly altering layout and motion. A
 future theme schema may add explicit style profiles through a migration.
 

@@ -121,9 +121,9 @@ ShellRoot {
         fakePower.timeToFullSeconds = 5400;
         if (batteryModule.icon !== "battery_android_frame_bolt")
             return fail("charging battery did not use the bolt icon");
-        if (batteryModule.iconColor.toString() !== Services.ThemeService.theme.tokens.accentSecondary
-                || batteryModule.textColor.toString() !== Services.ThemeService.theme.tokens.textSecondary)
-            return fail("charging battery did not retain normal colors");
+        if (batteryModule.iconColor.toString() !== Services.ThemeService.theme.tokens.charging
+                || batteryModule.textColor.toString() !== Services.ThemeService.theme.tokens.on_surface_variant)
+            return fail("charging battery did not use charging semantics");
         if (batteryModule.hoverText !== "Time to full: 1h 30m")
             return fail(`charging battery hover was '${batteryModule.hoverText}'`);
         fakePower.charging = false;

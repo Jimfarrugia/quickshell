@@ -10,7 +10,7 @@ BarChip {
   readonly property color usageColor: Services.SystemMetricsService.memory.availability === "unavailable"
     || criticalUsage
       ? Services.ThemeService.theme.tokens.error
-      : (highUsage ? Services.ThemeService.theme.tokens.warning : Services.ThemeService.theme.tokens.accentSecondary)
+      : (highUsage ? Services.ThemeService.theme.tokens.warning : Services.ThemeService.theme.tokens.secondary)
 
   visible: Services.ConfigService.config.bar.metrics.memory
   icon: "memory_alt"
@@ -19,7 +19,7 @@ BarChip {
     : (Services.SystemMetricsService.memory.availability === "unavailable" ? "Mem!" : "Mem...")
   iconColor: usageColor
   textColor: highUsage || Services.SystemMetricsService.memory.availability === "unavailable"
-    ? usageColor : Services.ThemeService.theme.tokens.textSecondary
+    ? usageColor : Services.ThemeService.theme.tokens.on_surface_variant
   warning: Services.SystemMetricsService.memory.freshness === "stale"
   hoverText: Services.SystemMetricsService.memoryHoverText
   configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily

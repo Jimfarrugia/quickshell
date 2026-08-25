@@ -1,8 +1,31 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { validateConfig, validateTheme, validateThemeState, truncateUtf8 } from "../../utils/Validation.mjs";
+import { themeTokenNames, validateConfig, validateTheme, validateThemeState, truncateUtf8 } from "../../utils/Validation.mjs";
 
 const fixture = async path => JSON.parse(await readFile(new URL(`../fixtures/${path}`, import.meta.url), "utf8"));
+
+const expectedThemeTokens = [
+  "background", "on_background", "surface", "on_surface", "surface_variant", "on_surface_variant",
+  "surface_panel", "on_surface_panel", "surface_tooltip", "on_surface_tooltip", "surface_hover",
+  "surface_pressed", "primary", "on_primary", "primary_container", "on_primary_container", "secondary",
+  "on_secondary", "outline", "outline_variant", "focus_ring", "on_surface_disabled",
+  "on_surface_placeholder", "link", "highlight", "on_highlight", "success", "charging", "warning",
+  "error", "shadow", "scrim"
+];
+
+function contrastRatio(first, second) {
+  function luminance(color) {
+    const channels = color.slice(1).match(/../g).map(value => Number.parseInt(value, 16) / 255)
+      .map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+  }
+  const firstLuminance = luminance(first);
+  const secondLuminance = luminance(second);
+  return (Math.max(firstLuminance, secondLuminance) + 0.05)
+    / (Math.min(firstLuminance, secondLuminance) + 0.05);
+}
+
+assert.deepEqual(themeTokenNames(), expectedThemeTokens);
 
 for (const path of ["../../config/qe.json", "../../themes/poimandres.json", "../../themes/gruvbox.json"])
   JSON.parse(await readFile(new URL(path, import.meta.url), "utf8"));
@@ -30,11 +53,24 @@ for (const path of ["../../themes/poimandres.json", "../../themes/gruvbox.json",
   assert.equal(result.ok, true, `${path}: ${result.errors.join("; ")}`);
 }
 const poimandres = validateTheme(JSON.parse(await readFile(new URL("../../themes/poimandres.json", import.meta.url), "utf8")));
-assert.equal(poimandres.value.tokens.tooltip, "#171922");
-assert.equal(poimandres.value.tokens.border, "#303340");
+assert.equal(poimandres.value.tokens.surface_tooltip, "#171922");
+assert.equal(poimandres.value.tokens.outline, "#506477");
+assert.equal(poimandres.value.tokens.on_primary, "#171922");
 const gruvbox = validateTheme(JSON.parse(await readFile(new URL("../../themes/gruvbox.json", import.meta.url), "utf8")));
-assert.equal(gruvbox.value.tokens.tooltip, "#3c3836");
-assert.equal(gruvbox.value.tokens.border, "#504945");
+assert.equal(gruvbox.value.tokens.surface_tooltip, "#3c3836");
+assert.equal(gruvbox.value.tokens.outline, "#928374");
+assert.equal(gruvbox.value.tokens.on_primary_container, "#32302f");
+for (const theme of [poimandres.value, gruvbox.value]) {
+  for (const [surface, foreground] of [
+    ["background", "on_background"], ["surface", "on_surface"],
+    ["surface_variant", "on_surface_variant"], ["surface_tooltip", "on_surface_tooltip"],
+    ["primary", "on_primary"], ["primary_container", "on_primary_container"],
+    ["secondary", "on_secondary"], ["highlight", "on_highlight"]
+  ]) {
+    assert.ok(contrastRatio(theme.tokens[surface], theme.tokens[foreground]) >= 4.5,
+      `${theme.id}: ${foreground} must contrast with ${surface}`);
+  }
+}
 assert.equal(validateTheme(await fixture("themes/missing-token.json")).ok, false);
 assert.match(validateTheme(await fixture("themes/cycle.json")).errors.join(" "), /cycle/);
 assert.equal(validateThemeState(await fixture("state/valid.json")).ok, true);

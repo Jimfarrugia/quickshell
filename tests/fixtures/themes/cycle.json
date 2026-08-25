@@ -5,8 +5,13 @@
   "variant": "dark",
   "palette": { "base": "#000000" },
   "tokens": {
-    "surfaceBase": "{tokens.surfaceRaised}", "surfaceRaised": "{tokens.surfaceBase}", "surfaceOverlay": "#ee000000",
-    "textPrimary": "#ffffff", "textSecondary": "#aaaaaa", "accentPrimary": "#00aaff", "accentSecondary": "#aa00ff",
-    "border": "#777777", "tooltip": "#111111", "success": "#00aa00", "charging": "#aaaa00", "warning": "#aaaa00", "error": "#aa0000", "shadow": "#80000000", "scrim": "#99000000"
+    "background": "{tokens.surface}", "on_background": "#ffffff", "surface": "{tokens.background}", "on_surface": "#ffffff",
+    "surface_variant": "#222222", "on_surface_variant": "#aaaaaa", "surface_panel": "#ee000000", "on_surface_panel": "#ffffff",
+    "surface_tooltip": "#111111", "on_surface_tooltip": "#ffffff", "surface_hover": "#222222", "surface_pressed": "#333333",
+    "primary": "#00aaff", "on_primary": "#000000", "primary_container": "#005577", "on_primary_container": "#ffffff",
+    "secondary": "#aa00ff", "on_secondary": "#ffffff", "outline": "#777777", "outline_variant": "#444444",
+    "focus_ring": "#00aaff", "on_surface_disabled": "#777777", "on_surface_placeholder": "#aaaaaa",
+    "link": "#00aaff", "highlight": "#aaaa00", "on_highlight": "#000000", "success": "#00aa00", "charging": "#aaaa00",
+    "warning": "#aaaa00", "error": "#aa0000", "shadow": "#80000000", "scrim": "#99000000"
   }
 }

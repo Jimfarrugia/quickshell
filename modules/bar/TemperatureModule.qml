@@ -10,7 +10,7 @@ BarChip {
   readonly property color temperatureColor: Services.SystemMetricsService.temperature.availability === "unavailable"
     || criticalTemperature
       ? Services.ThemeService.theme.tokens.error
-      : (highTemperature ? Services.ThemeService.theme.tokens.warning : Services.ThemeService.theme.tokens.accentSecondary)
+      : (highTemperature ? Services.ThemeService.theme.tokens.warning : Services.ThemeService.theme.tokens.secondary)
 
   visible: Services.ConfigService.config.bar.metrics.temperature
   icon: "thermostat"
@@ -19,7 +19,7 @@ BarChip {
     : (Services.SystemMetricsService.temperature.availability === "unavailable" ? "Temp!" : "Temp...")
   iconColor: temperatureColor
   textColor: highTemperature || Services.SystemMetricsService.temperature.availability === "unavailable"
-    ? temperatureColor : Services.ThemeService.theme.tokens.textSecondary
+    ? temperatureColor : Services.ThemeService.theme.tokens.on_surface_variant
   warning: Services.SystemMetricsService.temperature.freshness === "stale"
   hoverText: Services.SystemMetricsService.temperatureHoverText
   configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily

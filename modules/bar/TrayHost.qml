@@ -19,18 +19,24 @@ Row {
         return trayRepeater.itemAt(index);
     }
 
+    function hoverBackground(hovered) {
+        return hovered ? Services.ThemeService.theme.tokens.surface_hover : "transparent";
+    }
+
     Repeater {
         id: trayRepeater
         model: root.items
-        delegate: Item {
+        delegate: Rectangle {
             id: trayItem
             required property var modelData
             readonly property bool themedIcon: root.shouldTint(modelData)
             readonly property string iconSource: modelData.icon
-            readonly property color tintColor: Services.ThemeService.theme.tokens.accentSecondary
+            readonly property color tintColor: Services.ThemeService.theme.tokens.secondary
 
             width: 18 + root.itemHorizontalPadding * 2
             height: 26
+            radius: 7
+            color: root.hoverBackground(trayHover.hovered)
 
             Image {
                 id: nativeIcon
@@ -52,6 +58,8 @@ Row {
                 colorizationColor: trayItem.tintColor
                 autoPaddingEnabled: false
             }
+
+            HoverHandler { id: trayHover }
 
             MouseArea {
                 anchors.fill: parent

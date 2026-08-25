@@ -10,7 +10,7 @@ BarChip {
   readonly property color usageColor: Services.SystemMetricsService.cpu.availability === "unavailable"
     || criticalUsage
       ? Services.ThemeService.theme.tokens.error
-      : (highUsage ? Services.ThemeService.theme.tokens.warning : Services.ThemeService.theme.tokens.accentSecondary)
+      : (highUsage ? Services.ThemeService.theme.tokens.warning : Services.ThemeService.theme.tokens.secondary)
 
   visible: Services.ConfigService.config.bar.metrics.cpu
   icon: "memory"
@@ -19,7 +19,7 @@ BarChip {
     : (Services.SystemMetricsService.cpu.availability === "unavailable" ? "CPU!" : "CPU...")
   iconColor: usageColor
   textColor: highUsage || Services.SystemMetricsService.cpu.availability === "unavailable"
-    ? usageColor : Services.ThemeService.theme.tokens.textSecondary
+    ? usageColor : Services.ThemeService.theme.tokens.on_surface_variant
   warning: Services.SystemMetricsService.cpu.freshness === "stale"
   hoverText: Services.SystemMetricsService.cpuHoverText
   configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily

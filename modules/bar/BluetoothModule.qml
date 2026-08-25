@@ -10,9 +10,10 @@ BarChip {
     iconColor: Services.BluetoothService.connectedCount > 0
         ? Services.ThemeService.theme.tokens.success
         : (Services.BluetoothService.enabled
-            ? Services.ThemeService.theme.tokens.accentSecondary
+            ? Services.ThemeService.theme.tokens.secondary
             : Services.ThemeService.theme.tokens.error)
     warning: Services.BluetoothService.operation === "pending"
+    warningColor: Services.ThemeService.theme.tokens.primary
     hoverText: Services.BluetoothService.hoverText
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
     configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily

@@ -1,6 +1,6 @@
 # QE Implementation Plan
 
-Status: Phases 1-3 complete; Phase 4 has not started
+Status: Phases 1-3 complete; Phase 4 semantic-token contract migration in progress
 
 Last inventory: 2026-08-25
 
@@ -32,7 +32,7 @@ one.
 | Foundation | Complete | Phase 1 acceptance passed on 2026-08-24 |
 | Bar vertical slice | Complete | Phase 2; top reserved edge selected, tray host disabled during Waybar coexistence |
 | Bar parity and Waybar cutover | Complete | Phase 3 acceptance passed 2026-08-25 |
-| Theme/Matugen integration | Not started | Phase 4 |
+| Theme/Matugen integration | In progress | Phase 4 approved semantic-token contract migration |
 | Notifications/OSDs | Not started | Phases 5-6 |
 | Launcher/help | Not started | Phase 7 |
 | Dashboards/control center | Not started | Phases 8-10 |
@@ -43,10 +43,9 @@ one.
 
 - Read `AGENTS.md`, `ARCHITECTURE.md`, and this plan in that order before making
   changes. Phases 1-3 are complete; Phase 4 is next and has not started.
-- Phase 4 must begin with a semantic-token audit and user approval of the
-  resulting minimal contract revision. Do not install Matugen, design generator
-  mappings, refactor external theme projects, or implement theme catalog/hot
-  reload work before that audit is documented and approved.
+- Phase 4's 32-role Matugen-style semantic-token contract was approved on
+  2026-08-25. Complete and validate its atomic migration before active-theme hot
+  reload, catalog, selector, Matugen, or external-project work.
 - Audit input: the user is not satisfied with the range of current semantic
   tokens. Identify current elements that are forced to share tokens but need
   independent roles; inspect the planned notification, OSD, launcher, dashboard,
@@ -579,12 +578,12 @@ Implementation record:
 
 - Installed Quickshell `0.3.0-2` metadata reconfirmed for `ShellRoot`, reload-safe
   `Singleton`, `FileView`, XDG path helpers, `Process`, and stream parsers.
-- The frozen theme v1 semantic tokens are `surfaceBase`, `surfaceRaised`,
+- The provisional Phase 1 theme-v1 semantic tokens were `surfaceBase`, `surfaceRaised`,
   `surfaceOverlay`, `textPrimary`, `textSecondary`, `accentPrimary`,
   `accentSecondary`, `border`, `tooltip`, `success`, `charging`, `warning`,
   `error`, `shadow`, and `scrim`. `charging` and `tooltip` were added by explicit
   pre-release contract revisions. Palette keys remain theme-authored color
-  names.
+  names. ADR-015 supersedes this pre-Phase-4 vocabulary.
 - Poimandres and Gruvbox Dark validate against the runtime contract and JSON
   Schema. Invalid themes degrade the catalog locally without blocking valid
   entries.
@@ -995,7 +994,8 @@ Implementation record (initial slice, 2026-08-24):
   under an extended rule works correctly; this limitation and recovery are now
   documented rather than misrepresented as QE state.
 - Post-acceptance tray polish gives each tray delegate the same eight-pixel
-  horizontal padding and configured inter-module spacing as other bar modules.
+  horizontal padding, configured inter-module spacing, seven-pixel radius, and
+  `tooltip` hover background as other bar modules.
   The Nextcloud item retains its native reactive pixmap source for synced,
   syncing, paused, attention, and other application-controlled variants, while
   a Nextcloud-only `MultiEffect` colorizes those pixels with the current
@@ -1032,6 +1032,8 @@ Out of scope:
 
 ### Phase 4: Theme, Matugen, and wallpaper platform
 
+Status: In progress; 32-role semantic-token contract approved on 2026-08-25
+
 Objective: deliver complete QE theming and a stable cross-project best-effort
 desktop theme workflow, including generated `Wallpaper` themes.
 
@@ -1062,6 +1064,94 @@ Required implementation order:
    themes against the approved contract.
 5. Only then proceed to catalog discovery, selectors, external machine
    contracts, Matugen installation/mappings, and wallpaper generation.
+
+Semantic-token audit and proposal (2026-08-25):
+
+- The provisional contract has 15 required tokens and no presentation consumer
+  reads raw palette entries. Current consumers nevertheless expose four forced
+  role-sharing problems: selected text borrows `surfaceBase`; disabled content
+  has only `textSecondary`; inline hover fills borrow the tooltip surface; and
+  pending operations borrow warning or success-like presentation.
+- `surfaceOverlay` is currently used only for the persistent translucent bar and
+  is ambiguous beside raised surfaces, transient popups, and the modal `scrim`.
+  `tooltip` is a surface role but has no paired foreground, so readable tooltip
+  text currently depends on the unrelated `textPrimary` role.
+- `charging`, `shadow`, and `scrim` have no current QML consumer, but they are
+  retained because charging is an accepted distinct power state and shadows and
+  scrims are required by planned selectors, notifications, dashboards, and the
+  lock. `surfaceBase`, `surfaceRaised`, and `accentPrimary` are currently used
+  mainly by the disabled foundation preview but are likewise required by those
+  planned surfaces.
+- Two current consumers violate already accepted semantics independently of the
+  vocabulary size. The battery uses `accentSecondary` instead of `charging`, and
+  requested-only idle inhibition uses `success` despite ADR-013 forbidding a
+  confirmed-success claim. Both must be corrected with the contract migration.
+- The initial 19-role audit proposal was not approved. The user requested a
+  broader vocabulary covering surfaces and interaction, focus and accessibility,
+  and links and highlights; Matugen-style naming; and mappings that preserve
+  each authored theme's identity while enforcing contrast.
+- Matugen's documented color scheme uses `snake_case`, paired foreground roles
+  such as `primary`/`on_primary`, `surface`/`on_surface`, and
+  `primary_container`/`on_primary_container`, and role names such as `outline`,
+  `shadow`, and `scrim`. The revised proposal adopts that convention rather than
+  converting Matugen output into QE's provisional camelCase primary/secondary
+  text vocabulary.
+- The revised pre-release theme-v1 proposal has 32 roles: paired base roles
+  `background`/`on_background`, `surface`/`on_surface`,
+  `surface_variant`/`on_surface_variant`,
+  `surface_panel`/`on_surface_panel`, and
+  `surface_tooltip`/`on_surface_tooltip`; interaction surfaces `surface_hover`
+  and `surface_pressed`; accent and selection pairs `primary`/`on_primary`,
+  `primary_container`/`on_primary_container`, and
+  `secondary`/`on_secondary`; structure `outline` and `outline_variant`;
+  accessibility `focus_ring`, `on_surface_disabled`, and
+  `on_surface_placeholder`; content emphasis `link`, `highlight`, and
+  `on_highlight`; state `success`, `charging`, `warning`, and `error`; and
+  utilities `shadow` and `scrim`.
+- `surface_variant` owns recessed inputs and alternate cards;
+  `primary_container`/`on_primary_container` own selected items without forcing
+  them onto the stronger primary action color; hover and pressed colors are
+  independent state layers; every authored solid surface has an intentional
+  foreground pair; and tooltip contrast no longer depends on a generic text
+  token. Disabled and placeholder foregrounds remain separate because disabled
+  controls and editable hints have different meaning and contrast needs.
+- `focus_ring` is independent from the selected or primary fill so keyboard
+  focus remains visible on active controls. `link` is a foreground role, while
+  `highlight`/`on_highlight` form a readable pair for search matches and marked
+  content. Component-specific notification, slider, dashboard, and lock tokens
+  remain rejected; those surfaces compose the shared roles.
+- A dedicated pending/status expansion remains outside this revision because the
+  user did not select status/urgency expansion. Pending intent will use primary
+  emphasis plus motion or operation text rather than warning or success, while
+  confirmed positive, charging, warning, and failure states retain their
+  existing semantic roles.
+- Approval would trigger one atomic contract revision across runtime validation,
+  JSON Schema, emergency fallback, both authored themes, fixtures, consumer
+  coverage tests, architecture vocabulary, and a new ADR. Current QML migration
+  includes the bar panel, chip/tray hover, tooltip surface and foreground,
+  selected preview pair, Bluetooth pending treatment, battery charging state,
+  and idle-inhibitor requested state plus their tests. There are no shipped
+  external QE theme consumers, so the pre-release revision requires no
+  compatibility parser or schema v2.
+- Manual mappings will preserve recognizable Poimandres and Gruvbox hues while
+  validating each `on_*` pair. Normal text targets at least 4.5:1 contrast;
+  large text, icons, focus indicators, and meaningful boundaries target at least
+  3:1. Disabled content may be lower emphasis but must remain distinguishable;
+  placeholder text remains readable as user-facing text. New derived palette
+  values are allowed when a source palette lacks a suitable role, but authored
+  semantic tokens remain references or literals rather than runtime blending.
+- Matugen maps its `background`, `surface`, `surface_variant`, primary,
+  primary-container, secondary, `outline`, `outline_variant`, `shadow`, and
+  `scrim` pairs directly. The QE template derives literal panel alpha, hover and
+  pressed state layers, disabled and placeholder foregrounds, link/highlight
+  roles from tertiary colors, and QE's success/charging/warning colors. Generated
+  values must pass the same pairwise contrast and complete-document validation
+  as manual themes before promotion.
+- No schema, theme, QML consumer, external project, Matugen configuration, or
+  package state was changed by the audit itself. The user approved the revised
+  32-role vocabulary and contrast policy on 2026-08-25, authorizing the atomic
+  in-repository contract migration. Matugen installation and external-project
+  edits still require their separate Phase 4 approvals.
 
 Scope:
 
@@ -2008,6 +2098,51 @@ bar tooltip presentation, fixtures, and future generated-theme mappings.
 
 Revisit if: tooltip surfaces later require separate normal, border, and rich
 content tokens.
+
+### ADR-015: Adopt Matugen-style paired semantic roles before release
+
+Status: Accepted by user on 2026-08-25
+
+Decision: replace the provisional 15-token camelCase theme-v1 vocabulary with
+the approved 32-role `snake_case` contract documented in the Phase 4 audit. Use
+paired `on_*` foregrounds for authored surfaces and accents; distinct hover,
+pressed, focus, disabled, placeholder, link, and highlight roles; existing QE
+success, charging, warning, and error states; and shadow/scrim utilities.
+
+Context: current presentation forced unrelated roles to share colors, including
+selected text with a background token, disabled content with secondary active
+text, inline hover with tooltip surfaces, and tooltip foreground with generic
+text. Planned selectors, notifications, launcher, dashboards, and lock surfaces
+would multiply those ambiguities. The user requested broader surface,
+interaction, accessibility, link, and highlight coverage and Matugen's naming
+style before the contract becomes a generator input.
+
+Rationale: Matugen exposes `snake_case` Material roles and paired foregrounds,
+so retaining that convention reduces template translation and makes contrast
+relationships explicit. QE-specific roles remain only where the generated
+scheme has no direct shell semantic. The contract is still pre-release and has
+no shipped external consumers, making one coordinated revision safer than
+compatibility aliases or an immediate schema v2.
+
+Alternatives considered: retain the 15-token contract; the rejected 19-token
+camelCase proposal; import every Matugen role without QE curation; add
+component-specific notification, slider, dashboard, or lock tokens; add pending
+and urgency status colors in this revision.
+
+Consequences: runtime validation, JSON Schema, emergency fallback, authored
+themes, fixtures, all existing consumers, tests, architecture documentation, and
+future Matugen templates use the 32 names atomically. Authored and generated
+surface/foreground pairs target 4.5:1 normal-text contrast and 3:1 for large
+text, meaningful icons, focus, and boundaries. Theme identity is preserved, but
+derived palette values are allowed where required for contrast. Pending intent
+uses primary emphasis plus motion or text rather than warning or success.
+
+Affected areas: theme-v1 contract, all QE presentation, manual theme conversion,
+Matugen templates, selectors, notifications/OSDs, launcher/help, dashboards,
+and the isolated lock theme reader.
+
+Revisit if: implemented surfaces expose a semantic role that cannot be composed
+from this vocabulary, or Matugen changes its stable generated-role contract.
 
 ## 14. Planning Change Procedure
 

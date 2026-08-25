@@ -40,7 +40,7 @@ ShellRoot {
                 || idleModule.icon !== "visibility"
                 || idleModule.active
                 || idleModule.hoverText !== "Requested"
-                || idleModule.iconColor.toString() !== Services.ThemeService.theme.tokens.success.toString())
+                || idleModule.iconColor.toString() !== Services.ThemeService.theme.tokens.primary.toString())
             return fail("idle request did not reach the native integration and presentation");
 
         Services.IdleService.unregisterWindow(firstWindow);

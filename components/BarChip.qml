@@ -18,12 +18,17 @@ Rectangle {
     property real contentSpacing: 5
     property real iconSpacing: 5
     property real contentVerticalOffset: -1
-    property color iconColor: Services.ThemeService.theme.tokens.accentSecondary
-    property color textColor: Services.ThemeService.theme.tokens.textSecondary
-    property color trailingTextColor: Services.ThemeService.theme.tokens.textSecondary
+    property color iconColor: active ? Services.ThemeService.theme.tokens.on_primary_container
+                                     : Services.ThemeService.theme.tokens.secondary
+    property color textColor: active ? Services.ThemeService.theme.tokens.on_primary_container
+                                     : Services.ThemeService.theme.tokens.on_surface_variant
+    property color trailingTextColor: textColor
     property string hoverText: ""
-    property color backgroundColor: active ? Services.ThemeService.theme.tokens.accentPrimary
-                                           : (hover.hovered ? Services.ThemeService.theme.tokens.tooltip : "transparent")
+    property color warningColor: Services.ThemeService.theme.tokens.warning
+    property color backgroundColor: active ? Services.ThemeService.theme.tokens.primary_container
+                                           : (pointerArea.pressed
+                                               ? Services.ThemeService.theme.tokens.surface_pressed
+                                               : (hover.hovered ? Services.ThemeService.theme.tokens.surface_hover : "transparent"))
     signal clicked()
     signal secondaryClicked()
 
@@ -32,7 +37,7 @@ Rectangle {
     radius: 7
     color: backgroundColor
     border.width: warning ? 1 : 0
-    border.color: Services.ThemeService.theme.tokens.warning
+    border.color: warningColor
 
     RowLayout {
         id: content
@@ -97,6 +102,7 @@ Rectangle {
         show: hover.hovered && root.hoverText.length > 0
     }
     MouseArea {
+        id: pointerArea
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: mouse => {

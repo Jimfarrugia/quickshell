@@ -10,7 +10,7 @@ BarChip {
                                 && Services.PowerService.percentage <= 24
     readonly property color stateColor: critical ? Services.ThemeService.theme.tokens.error
                                                  : (low ? Services.ThemeService.theme.tokens.warning
-                                                        : Services.ThemeService.theme.tokens.textSecondary)
+                                                         : Services.ThemeService.theme.tokens.on_surface_variant)
 
     function iconForPercentage(percentage) {
         if (percentage <= 15) return "battery_android_alert";
@@ -28,14 +28,14 @@ BarChip {
         ? "battery_android_frame_bolt"
         : iconForPercentage(Services.PowerService.percentage)
     iconColor: Services.PowerService.charging
-        ? Services.ThemeService.theme.tokens.accentSecondary
-        : (critical || low ? stateColor : Services.ThemeService.theme.tokens.accentSecondary)
+        ? Services.ThemeService.theme.tokens.charging
+        : (critical || low ? stateColor : Services.ThemeService.theme.tokens.secondary)
     text: Services.PowerService.availability === "available"
         ? `${Services.PowerService.percentage}%`
         : "Battery..."
     textColor: Services.PowerService.charging
-        ? Services.ThemeService.theme.tokens.textSecondary
-        : (critical || low ? stateColor : Services.ThemeService.theme.tokens.textSecondary)
+        ? Services.ThemeService.theme.tokens.on_surface_variant
+        : (critical || low ? stateColor : Services.ThemeService.theme.tokens.on_surface_variant)
     warning: false
     hoverText: Services.PowerService.availability === "available"
         ? Services.PowerService.remainingTimeText : "Battery unavailable"
