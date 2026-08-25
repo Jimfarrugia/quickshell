@@ -146,6 +146,10 @@ Singleton {
         return true;
     }
 
+    function applyExternalTheme(themeId, operationId, skipGtk = false) {
+        return requestExternalTheme(themeId, operationId, skipGtk);
+    }
+
     function commitPendingTheme() {
         if (pendingTheme === null) return;
         const committedThemeId = pendingTheme.id;
@@ -158,10 +162,12 @@ Singleton {
         lastUpdated = new Date();
         pendingOperationId = "";
         synchronizeCatalog();
-        requestExternalTheme(committedThemeId, committedOperationId);
+        if (committedThemeId !== "wallpaper")
+            requestExternalTheme(committedThemeId, committedOperationId);
     }
 
-    function requestExternalTheme(themeId, operationId) {
+    function requestExternalTheme(themeId, operationId, skipGtk = false) {
+        if (externalOperation === "pending") return false;
         externalRequestedThemeId = themeId;
         externalOperationId = operationId;
         externalResults = [];
@@ -174,11 +180,13 @@ Singleton {
         }
         externalOperation = "pending";
         externalStatus = "pending";
-        if (!externalAdapter.start(themeId, operationId)) {
+        if (!externalAdapter.start(themeId, operationId, skipGtk)) {
             externalOperation = "failed";
             externalStatus = "failed";
             externalLastError = "external theme request could not start";
+            return false;
         }
+        return true;
     }
 
     function handleExternalResult(result) {

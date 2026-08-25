@@ -1,8 +1,8 @@
 # QE Implementation Plan
 
-Status: Phases 1-3 complete; Phase 4 theme catalog foundation complete
+Status: Phases 1-4 complete
 
-Last inventory: 2026-08-25
+Last inventory: 2026-08-26
 
 This is the authoritative roadmap, implementation sequence, dependency map,
 project-status reference, risk register, and architectural decision log for the
@@ -32,7 +32,7 @@ one.
 | Foundation | Complete | Phase 1 acceptance passed on 2026-08-24 |
 | Bar vertical slice | Complete | Phase 2; top reserved edge selected, tray host disabled during Waybar coexistence |
 | Bar parity and Waybar cutover | Complete | Phase 3 acceptance passed 2026-08-25 |
-| Theme/Matugen integration | In progress | Manual selector and external machine integration complete; Matugen/wallpaper work next |
+| Theme/Matugen integration | Complete | Manual selector and external machine integration complete; Matugen mapping, staged promotion, QE-localized wallpaper selector, and Hyprpaper XDG-path application complete; external generated Matugen artifacts now delivered as QE-generated `wallpaper` theme slots applied by the external switcher; `QE_THEME_SWITCHER` wired for production through the installed `qe-theme-switcher` wrapper. Phase 4 acceptance passed on 2026-08-26 |
 | Notifications/OSDs | Not started | Phases 5-6 |
 | Launcher/help | Not started | Phase 7 |
 | Dashboards/control center | Not started | Phases 8-10 |
@@ -42,10 +42,11 @@ one.
 ### 2.1 Next-session handoff
 
 - Read `AGENTS.md`, `ARCHITECTURE.md`, and this plan in that order before making
-  changes. Phases 1-3 are complete; Phase 4's approved semantic-token migration,
+  changes. Phases 1-4 are complete; Phase 4's approved semantic-token migration,
   transactional active-theme hot reload, dynamic catalog discovery, manual
-  selector, and external machine integration are complete. Matugen and wallpaper
-  foundations are next and retain their separate approval gates.
+  selector, and external machine integration are complete. Matugen mapping,
+  staged promotion, the QE-localized wallpaper selector, and Hyprpaper
+  IPC-confirmed application are complete.
 - Phase 4's 32-role Matugen-style semantic-token contract was approved on
   2026-08-25 and its atomic in-repository migration is complete. Matugen and
   external-project work retain their separate approval gate.
@@ -63,6 +64,9 @@ one.
   provisional Phase 1 vocabulary while retaining the charging and tooltip
   semantics from ADR-012 and ADR-014.
 - Full developer commands and expected markers are in `tests/VALIDATION.md`.
+- QE-internal wallpaper-theme startup self-heal and external wallpaper source
+  recovery are documented deferred items (see Deferred decisions); neither
+  changes current behavior.
   The live NetworkManager loopback test is opt-in. Relocation was revalidated
   from `/tmp` at the Phase 2 exit.
 - Physical external-monitor attach, independent-output startup, reorder, detach,
@@ -400,6 +404,18 @@ Known requirements:
 - automatic external-to-QE theme synchronization
 - cross-compositor portability
 - exact multi-monitor bar policy beyond supporting safe per-screen construction
+- startup self-heal for the generated `wallpaper` theme: on QE start, regenerate
+  only when the active wallpaper theme was not produced from the currently
+  selected source image (identity-checked via a QE-owned fingerprint; skips the
+  current unconditional startup regeneration and self-heals a replaced source
+  file). No behavior change is requested now; it would be a small QE-internal
+  addition.
+- external wallpaper source recovery: sync the selectable `wallpaper` theme with
+  a wallpaper set outside QE while QE was stopped. This blocks on the standalone
+  `wallpaper` script recording its source path somewhere QE can read, or on QE
+  generating from the derived raster (palette approximation; violates the
+  source-versus-derived and `wallpaperRoot` boundaries). Requires an external
+  change or an accepted approximation, so it is deferred.
 
 These deferred decisions must not be silently implemented as defaults.
 
@@ -1031,7 +1047,8 @@ Out of scope:
 
 ### Phase 4: Theme, Matugen, and wallpaper platform
 
-Status: In progress; manual theme and external-switcher integration complete
+Status: Complete (2026-08-26; catalog/selector, Matugen generation, external
+wallpaper-theme slot dispatch, and real-session regression cycles passed)
 
 Objective: deliver complete QE theming and a stable cross-project best-effort
 desktop theme workflow, including generated `Wallpaper` themes.
@@ -1214,10 +1231,88 @@ Implementation record (foundation, 2026-08-25):
   results never roll QE back, and independent CLI state updates never overwrite
   the active QE theme. The selector reports external status separately and names
   failed targets.
-- The current production launcher environment does not set `QE_THEME_SWITCHER`,
-  so normal shell launches intentionally show external theming as unavailable
-  until a stable installed path or explicit environment wiring is approved.
-  Validation supplies the executable path explicitly; no live theme was applied.
+- The current production launcher environment now wires external theming. The
+  installed `qe-theme-switcher` helper forwards QE's array arguments to the
+  theme-switcher machine CLI, and `run-qe.sh` discovers it solely from
+  `QE_THEME_SWITCHER` (via `command -v` with a `~/.local/bin` fallback). An
+  unset, missing, or removed executable still degrades only external theming;
+  no project checkout path is assumed. Applying the QE `wallpaper` theme now
+  invokes the switcher with `--skip-gtk`, because Matugen generates no GTK
+  theme; all other themes apply without the flag.
+- While the QE `wallpaper` theme is active, QE generates `wallpaper` theme slot
+  files for external applications from the same Matugen palette it already
+  captures. `utils/ExternalWallpaperTheme.mjs` maps palette roles to kitty,
+  bat, btop, eza, dunst, fzf, hyprland, hyprlock, rofi, starship, tmux,
+  opencode, and a documented `qe-nvim-palette` JSON for Neovim, validating each
+  generated file. `scripts/promote-external-theme.sh` materializes and
+  atomically promotes each slot file (same-filesystem rename, skipped when the
+  target executable is absent, 0/3/4/2 exit semantics) under the contracts in
+  ADR-019.
+- After external slot promotion succeeds, QE delegates application to the
+  external switcher (`--machine --theme wallpaper --skip-gtk`). Applying a
+  wallpaper always runs Matugen generation so the validated `wallpaper` QE
+  theme enters the catalog and becomes selectable, but QE delegates external
+  application only while the wallpaper theme is active, so changing a wallpaper
+  never overwrites fixed external themes. Neovim consumes the generated palette
+  through a local `colors/wallpaper.vim` colorscheme that reloads the palette
+  on each `:colorscheme wallpaper`, so the switcher's existing name-based
+  Neovim apply path works without an extra plugin. Generated-theme catalog files
+  are explicitly re-read after atomic replacement, and wallpaper external
+  dispatch is deferred until generation/promotion completes so repeated
+  generations remain current without duplicate switcher requests. Wallpaper
+  changes issued while a generation is running are queued to the latest
+  requested path, and regenerating an already-published theme skips the
+  redundant promotion while still dispatching external application.
+  Known limitation: opencode loads and caches its theme colors at launch, so a
+  regenerated wallpaper theme's colors take effect only after opencode
+  restarts. The switcher can live-update the *selected theme name* in opencode
+  running inside tmux (driving the picker with `tmux send-keys`), but that
+  cannot reload the cached palette, so it does not change colors. This is an
+  external application path owned by the switcher, not a QE defect.
+- Added the first Matugen/wallpaper foundation without changing package state or
+  the legacy wallpaper-picker repository. `MatugenAdapter` accepts only an
+  explicit `QE_MATUGEN` executable, requests noninteractive JSON color output,
+  and maps it through the normal 32-role QE validator. `WallpaperService` owns
+  versioned selected-wallpaper state, and `WallpaperAdapter` keeps the legacy
+  helper behind an explicit `QE_WALLPAPER_HELPER` boundary. Generated
+  `Wallpaper.json` is stored in QE data, outside authored `themes/`, and is
+  admitted to the catalog only after validation.
+- The mapper, adapter, and service fixtures pass with a fake Matugen executable,
+  and the real Matugen 4.1.0 command was verified against a user wallpaper.
+  The QE-owned cache helper now generates bounded thumbnails and a validated
+   manifest in the QE cache directory; malformed entries and stale thumbnails
+   are excluded. The production launcher now wires the QE-owned wallpaper apply
+   helper by default; it validates the source image, derives the Hyprpaper and
+    lockscreen artifacts under XDG data, and leaves the legacy wallpaper-picker
+    repository untouched. External generated Matugen artifacts were initially
+    deferred pending approved target contracts and later resolved by ADR-019's
+    wallpaper-theme slot generation; wallpaper-picker migration is resolved by
+    keeping QE's own selector localized in this repository.
+- QE `Wallpaper.json` generation now writes to a per-operation staging path and
+  promotes through `WallpaperPromotionAdapter` only after Matugen mapping and
+  schema validation succeed. Same-filesystem promotion preserves the prior
+  artifact on staging/promotion failure; success, promotion failure, and
+  malformed-generation last-known-good fixtures pass. External generated
+  Matugen artifacts were deferred at this point and later resolved by ADR-019.
+- Hyprpaper IPC application is now confirmed through the QE helper after its
+  derived images are staged, with rollback of those images if bounded IPC
+  startup/acceptance fails. The standalone picker's `wallpaper` script and the
+  QE helper are interchangeable when used sequentially: both write
+  `current_wallpaper.png` and `current_lockscreen.png` and restart Hyprpaper,
+  while QE additionally validates, confirms IPC, and rolls back on failure.
+- A QE-localized wallpaper selector (`modules/wallpaper/WallpaperSelector.qml`)
+  opens through the `qe-wallpaper` IPC target, closes automatically after a
+  successful apply, and uses QE-owned thumbnail cache and apply state. Theme and
+  wallpaper selectors are launched via temporary `.desktop` entries
+  (`qe-theme-selector.desktop`, `qe-wallpaper-selector.desktop`) and a
+  `scripts/qe-launch.sh` helper that discovers the running `--no-duplicate` QE
+  shell. These temporary launchers will be superseded by the planned control
+  center (Phases 8-10), which will host both selectors.
+- The approved Hyprpaper and Hyprlock configuration changes now resolve the
+  wallpaper and lockscreen image paths through `$XDG_DATA_HOME` with a
+  `$HOME/.local/share` fallback (`hyprpaper.conf`, `hyprlock.conf`). This keeps
+  both configs and both wallpaper scripts aligned even when `XDG_DATA_HOME` is
+  exported; the two config files are the only dotfiles changed for this work.
 - Pure parser fixtures, fake-service coverage, and sandboxed adapter tests cover
   success, partial failure, malformed stdout, timeout, invalid IDs, missing
   executable, executable loss, independent state updates, and malformed-state
@@ -1225,6 +1320,15 @@ Implementation record (foundation, 2026-08-25):
   machine-contract assertions pass with ShellCheck. Existing target validation
   helpers now resolve relative to the exported switcher root, preserving
   relocation without changing their target behavior.
+- Phase 4 acceptance passed on 2026-08-26 after real-session regression cycles
+  covering: repeated and queued wallpaper generation, live generated-theme
+  catalog refresh, single external `wallpaper` dispatch with `--skip-gtk`,
+  the wallpaper theme's dedicated image directory, authored-convention
+  `#AARRGGBB` alpha tokens, and the full rofi colorscheme variable set. The
+  full JS, helper, `qmllint`, and persistent-shell smoke suites pass. Known
+  limitation: opencode caches its theme colors at launch, so regenerated
+  wallpaper colors take effect after an opencode restart even when the switcher
+  re-selects the theme name in tmux-hosted instances.
 
 Scope:
 
@@ -1833,7 +1937,7 @@ Polling budget for the bar milestone:
 | R13 | Hard-coded hardware/path assumptions return | Medium | Medium | PathsService, sensor discovery, path lint | every filesystem integration |
 | R14 | Broad dashboard scope delays reliable foundations | High | Medium | explicit v1 non-goals and phased fallbacks | phase planning changes |
 | R15 | External switcher target mutation partially corrupts config | Medium | High | target prevalidation, backups/staging where possible, per-target result | switcher refactor |
-| R16 | Wallpaper helper reports success before compositor display | Medium | Low/medium | label confirmation level, investigate Hyprpaper IPC, refresh/diagnostic | Phase 4 |
+| R16 | Wallpaper helper reports success before compositor display | Low | Low/medium | Hyprpaper IPC acceptance handshake implemented; confirmation labeled as IPC acceptance, not pixel display | Phase 4 |
 | R17 | Production restart loop destabilizes session | Low/medium | High | defer supervision, bounded restart policy based on evidence | Phase 12 decision |
 | R18 | Notification content loads unsafe resources/markup | Medium | High | sanitize/limit rendering and resources | Phase 5 security review |
 | R19 | External theme apply restarts a tool after QE has replaced it | Medium | High | target-retirement controls must precede each cutover and are included in rollback tests | Phases 3, 4, and 6 |
@@ -2284,6 +2388,93 @@ Affected areas: external switcher schema v1, `ExternalThemeAdapter`,
 
 Revisit if: the switcher adds concurrent remote callers that require shared
 cross-process request correlation rather than independent durable state.
+
+### ADR-018: Stage QE wallpaper themes before promotion
+
+Status: Accepted as part of the Phase 4 wallpaper implementation on 2026-08-25
+
+Decision: Matugen output mapped to the QE `Wallpaper` schema is written to a
+per-operation staging path under the QE data directory. A dedicated promotion
+adapter atomically renames the staged artifact into the catalog-visible
+`Wallpaper.json` path only after the staged write succeeds.
+
+Context: direct writes to the catalog-visible generated file made the current
+foundation safe at the single-file level but did not expose a distinct
+generation/promotion boundary. The Phase 4 contract requires generated output
+to remain out of authored themes and to retain the complete last-known-good set
+when generation or promotion fails.
+
+Rationale: keeping staging and the target on the same filesystem gives the QE
+artifact a replace operation with clear failure semantics. The adapter remains
+replaceable when approved external Matugen targets add more artifacts.
+
+Alternatives considered: write directly with `FileView.atomicWrites`; invoke
+Matugen templates from the shell; implement multi-artifact promotion in QML.
+
+Consequences: an interrupted generation can leave an unpromoted staging
+directory, which is harmless derived data and can be cleaned in a later startup
+maintenance step. External artifact promotion and compositor application remain
+separate contracts; this ADR does not authorize edits to the legacy picker.
+
+Affected areas: `WallpaperService`, `MatugenAdapter`,
+`WallpaperPromotionAdapter`, generated QE theme state, and Phase 4 fixtures.
+
+Revisit if: external generated artifacts require cross-filesystem promotion or
+an atomic directory-set replacement rather than per-artifact replacement.
+
+## ADR-019: QE-generated external wallpaper theme slots
+
+Context: the architecture promised Matugen output that includes "configured
+external application artifacts", but the external target contracts were not
+approved. The accepted model is that QE owns generation and the external
+theme-switcher owns external application, so QE must produce theme files the
+switcher's existing apply scripts consume without writing any live config.
+
+Decision: while the active QE theme is `wallpaper`, QE maps the captured
+Matugen palette into a `wallpaper` theme slot per supported app and promotes
+each file atomically into the app's `themes/` directory (kitty, bat, btop,
+eza, dunst, fzf, hyprland, hyprlock, rofi, starship, tmux, opencode) plus an
+nvim palette JSON under XDG cache for the local `colors/wallpaper.vim`
+colorscheme. `WallpaperExternalThemeAdapter` materializes a validated spec via
+`scripts/promote-external-theme.sh`, skips targets whose executables are
+absent, and reports per-target results. QE never writes active application
+configuration; after promotion it delegates `--machine --theme wallpaper
+--skip-gtk` to the switcher, which performs the documented copy-to-active.
+GTK is excluded because Matugen has no GTK generator.
+
+Rationale: this preserves standalone switcher function, avoids two owners of
+the same live config, and keeps "wallpaper" a normal theme ID from the
+switcher's perspective. Applying a wallpaper always regenerates the QE
+Wallpaper theme and slot files so the generated theme stays selectable;
+external application is delegated only while the wallpaper theme is active,
+which prevents a wallpaper change from overwriting fixed external themes.
+
+Alternatives considered: QE writing external live configs directly (creates
+file contention with the switcher); Matugen native template output (rejected
+in favor of QE-owned generation); installing `matugen.nvim` for nvim
+(extra plugin dependency and palette-format coupling; the local colorscheme
+avoids both while remaining swappable for the plugin later).
+
+Consequences: external slot files are derived data written into app config
+trees by approved contract; failed or skipped targets are reported without
+rolling back already-promoted files. The self-contained nvim colorscheme means
+neovim follows the wallpaper only while the wallpaper theme is active. The
+generated catalog is refreshed after atomic replacement, and wallpaper
+external application has one generation-completion dispatch point to avoid
+concurrent switcher requests. Generated QE tokens use `#AARRGGBB` alpha to
+match authored themes, and the generated `wallpaper` rofi colorscheme defines
+the full variable set the main rofi theme references. opencode loads and caches
+its theme colors at launch, so a regenerated wallpaper theme requires an
+opencode restart even when the switcher live-re-selects the theme name in
+tmux-hosted instances.
+
+Affected areas: `ExternalWallpaperTheme.mjs`, `WallpaperExternalThemeAdapter`,
+`promote-external-theme.sh`, `WallpaperService`, `ThemeService`,
+`ExternalThemeAdapter`, nvim `colors/wallpaper.vim`, and Phase 4 fixtures.
+
+Revisit if: an external app changes its theme slot layout, a target needs
+cross-filesystem promotion, or the user selects `matugen.nvim` as the nvim
+consumer.
 
 ## 14. Planning Change Procedure
 

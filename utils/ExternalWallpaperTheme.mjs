@@ -1,0 +1,593 @@
+const HEX_PATTERN = /^#[0-9a-fA-F]{6}$/;
+const ANSI_KEYS = [
+  "background", "error", "tertiary", "secondary", "primary",
+  "secondaryContainer", "tertiaryContainer", "foreground",
+  "surfaceVariant", "error", "tertiary", "secondaryContainer",
+  "primaryContainer", "tertiaryContainer", "secondary", "onSurfaceVariant"
+];
+
+function buildCode(palette) {
+  const read = (role) => {
+    const value = palette[role];
+    return HEX_PATTERN.test(value) ? value.toLowerCase() : "#000000";
+  };
+  return {
+    background: read("background"),
+    foreground: read("on_background"),
+    surface: read("surface"),
+    onSurface: read("on_surface"),
+    surfaceVariant: read("surface_variant"),
+    onSurfaceVariant: read("on_surface_variant"),
+    primary: read("primary"),
+    onPrimary: read("on_primary"),
+    primaryContainer: read("primary_container"),
+    onPrimaryContainer: read("on_primary_container"),
+    secondary: read("secondary"),
+    onSecondary: read("on_secondary"),
+    secondaryContainer: read("secondary_container"),
+    onSecondaryContainer: read("on_secondary_container"),
+    tertiary: read("tertiary"),
+    tertiaryContainer: read("tertiary_container"),
+    onTertiaryContainer: read("on_tertiary_container"),
+    error: read("error"),
+    outline: read("outline"),
+    outlineVariant: read("outline_variant")
+  };
+}
+
+function hex(value, fallback = "#000000") {
+  return HEX_PATTERN.test(value) ? value.toLowerCase() : fallback;
+}
+
+function stripHash(value) {
+  return hex(value).slice(1).toUpperCase();
+}
+
+function ansiColors(c) {
+  return ANSI_KEYS.map(key => c[key]);
+}
+
+function kittyTheme(c) {
+  const a = ansiColors(c);
+  const lines = [
+    "# vim:ft=kitty",
+    `background ${c.background}`,
+    `foreground ${c.foreground}`,
+    `selection_background ${c.primaryContainer}`,
+    `selection_foreground ${c.onPrimaryContainer}`,
+    `url_color ${c.primary}`,
+    `cursor ${c.primary}`,
+    `cursor_text_color ${c.background}`,
+    "active_tab_background " + c.primary,
+    "active_tab_foreground " + c.onPrimary,
+    "inactive_tab_background " + c.surfaceVariant,
+    "inactive_tab_foreground " + c.onSurfaceVariant,
+    "active_border_color " + c.primary,
+    "inactive_border_color " + c.outlineVariant
+  ];
+  for (let i = 0; i < 16; i++) lines.push(`color${i} ${a[i]}`);
+  return lines.join("\n") + "\n";
+}
+
+function batTheme(c) {
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<plist version="1.0">',
+    "<dict>",
+    "  <key>name</key><string>Wallpaper</string>",
+    "  <key>uuid</key><string>qe-wallpaper-external-bat</string>",
+    "  <key>settings</key>",
+    "  <array>",
+    "    <dict><key>settings</key><dict>",
+    `      <key>background</key><string>${c.background}</string>`,
+    `      <key>foreground</key><string>${c.foreground}</string>`,
+    `      <key>caret</key><string>${c.primary}</string>`,
+    `      <key>selection</key><string>${c.primaryContainer}</string>`,
+    `      <key>invisibles</key><string>${c.outlineVariant}</string>`,
+    "    </dict></dict>",
+    `    <dict><key>scope</key><string>comment, comment.*</string><key>settings</key><dict><key>foreground</key><string>${c.outline}</string></dict></dict>`,
+    `    <dict><key>scope</key><string>keyword, storage, keyword.*</string><key>settings</key><dict><key>foreground</key><string>${c.primary}</string></dict></dict>`,
+    `    <dict><key>scope</key><string>string, string.*</string><key>settings</key><dict><key>foreground</key><string>${c.tertiary}</string></dict></dict>`,
+    `    <dict><key>scope</key><string>constant.numeric</string><key>settings</key><dict><key>foreground</key><string>${c.secondary}</string></dict></dict>`,
+    `    <dict><key>scope</key><string>entity.name.function, entity.name.class, entity.name.type</string><key>settings</key><dict><key>foreground</key><string>${c.onPrimaryContainer}</string></dict></dict>`,
+    `    <dict><key>scope</key><string>invalid, invalid.*, constant.language</string><key>settings</key><dict><key>foreground</key><string>${c.error}</string></dict></dict>`,
+    "  </array>",
+    "</dict>",
+    "</plist>",
+    ""
+  ].join("\n");
+}
+
+function gradientSuffix(c) {
+  return [
+    `theme[temp_start]="${stripHash(c.secondary)}"`,
+    `theme[temp_mid]="${stripHash(c.tertiary)}"`,
+    `theme[temp_end]="${stripHash(c.foreground)}"`,
+    `theme[cpu_start]="${stripHash(c.secondary)}"`,
+    `theme[cpu_mid]="${stripHash(c.tertiary)}"`,
+    `theme[cpu_end]="${stripHash(c.foreground)}"`,
+    `theme[free_start]="${stripHash(c.secondary)}"`,
+    `theme[free_mid]="${stripHash(c.tertiary)}"`,
+    `theme[free_end]="${stripHash(c.foreground)}"`,
+    `theme[cached_start]="${stripHash(c.secondary)}"`,
+    `theme[cached_mid]="${stripHash(c.tertiary)}"`,
+    `theme[cached_end]="${stripHash(c.foreground)}"`,
+    `theme[available_start]="${stripHash(c.secondary)}"`,
+    `theme[available_mid]="${stripHash(c.tertiary)}"`,
+    `theme[available_end]="${stripHash(c.foreground)}"`,
+    `theme[used_start]="${stripHash(c.secondary)}"`,
+    `theme[used_mid]="${stripHash(c.tertiary)}"`,
+    `theme[used_end]="${stripHash(c.foreground)}"`,
+    `theme[download_start]="${stripHash(c.secondary)}"`,
+    `theme[download_mid]="${stripHash(c.tertiary)}"`,
+    `theme[download_end]="${stripHash(c.foreground)}"`,
+    `theme[upload_start]="${stripHash(c.secondary)}"`,
+    `theme[upload_mid]="${stripHash(c.tertiary)}"`,
+    `theme[upload_end]="${stripHash(c.foreground)}"`
+  ].join("\n");
+}
+
+function btopTheme(c) {
+  return [
+    "# btop theme generated from the active wallpaper palette",
+    `theme[main_bg]="${stripHash(c.background)}"`,
+    `theme[main_fg]="${stripHash(c.foreground)}"`,
+    `theme[title]="${stripHash(c.primary)}"`,
+    `theme[hi_fg]="${stripHash(c.secondary)}"`,
+    `theme[selected_bg]="${stripHash(c.surfaceVariant)}"`,
+    `theme[selected_fg]="${stripHash(c.foreground)}"`,
+    `theme[inactive_fg]="${stripHash(c.outlineVariant)}"`,
+    `theme[proc_misc]="${stripHash(c.secondary)}"`,
+    `theme[cpu_box]="${stripHash(c.outlineVariant)}"`,
+    `theme[mem_box]="${stripHash(c.outlineVariant)}"`,
+    `theme[net_box]="${stripHash(c.outlineVariant)}"`,
+    `theme[proc_box]="${stripHash(c.outlineVariant)}"`,
+    `theme[div_line]="${stripHash(c.outlineVariant)}"`,
+    gradientSuffix(c),
+    ""
+  ].join("\n");
+}
+
+function ezaYml(c) {
+  const fg = c.foreground;
+  const dim = c.onSurfaceVariant;
+  const accent = c.primary;
+  const accent2 = c.secondary;
+  const accent3 = c.tertiary;
+  const danger = c.error;
+  const group = (items) => items.map(kv => `  ${kv.key}: {foreground: "${kv.value}"}`).join("\n");
+  return [
+    "colourful: false",
+    "",
+    "filekinds:",
+    group([
+      { key: "normal", value: fg }, { key: "directory", value: accent },
+      { key: "symlink", value: accent3 }, { key: "pipe", value: dim },
+      { key: "block_device", value: accent2 }, { key: "char_device", value: accent2 },
+      { key: "socket", value: accent2 }, { key: "special", value: accent2 },
+      { key: "executable", value: accent2 }, { key: "mount_point", value: accent }
+    ]),
+    "",
+    "perms:",
+    group([
+      { key: "user_read", value: fg }, { key: "user_write", value: accent2 },
+      { key: "user_execute_file", value: accent3 }, { key: "user_execute_other", value: accent3 },
+      { key: "group_read", value: fg }, { key: "group_write", value: accent2 },
+      { key: "group_execute", value: accent3 }, { key: "other_read", value: accent },
+      { key: "other_write", value: accent2 }, { key: "other_execute", value: accent3 },
+      { key: "special_user_file", value: accent2 }, { key: "special_other", value: dim },
+      { key: "attribute", value: accent }
+    ]),
+    "",
+    "size:",
+    group([
+      { key: "major", value: accent }, { key: "minor", value: accent2 },
+      { key: "number_byte", value: fg }, { key: "number_kilo", value: accent },
+      { key: "number_mega", value: accent3 }, { key: "number_giga", value: accent2 },
+      { key: "number_huge", value: accent2 }, { key: "unit_byte", value: accent },
+      { key: "unit_kilo", value: accent3 }, { key: "unit_mega", value: accent2 },
+      { key: "unit_giga", value: accent2 }, { key: "unit_huge", value: accent3 }
+    ]),
+    "",
+    "users:",
+    group([
+      { key: "user_you", value: fg }, { key: "user_root", value: dim },
+      { key: "user_other", value: accent2 }, { key: "group_yours", value: accent },
+      { key: "group_other", value: dim }, { key: "group_root", value: dim }
+    ]),
+    "",
+    "links:",
+    group([
+      { key: "normal", value: accent2 }, { key: "multi_link_file", value: accent3 }
+    ]),
+    "",
+    "git:",
+    group([
+      { key: "new", value: accent }, { key: "modified", value: accent2 },
+      { key: "deleted", value: dim }, { key: "renamed", value: accent3 },
+      { key: "typechange", value: accent2 }, { key: "ignored", value: dim },
+      { key: "conflicted", value: danger }
+    ]),
+    "",
+    "git_repo:",
+    group([
+      { key: "branch_main", value: fg }, { key: "branch_other", value: accent2 },
+      { key: "git_clean", value: accent3 }, { key: "git_dirty", value: danger }
+    ]),
+    "",
+    "security_context:",
+    group([
+      { key: "colon", value: accent3 }, { key: "user", value: accent },
+      { key: "role", value: accent2 }, { key: "typ", value: dim }, { key: "range", value: accent2 }
+    ]),
+    "",
+    "file_type:",
+    group([
+      { key: "image", value: accent3 }, { key: "video", value: accent2 },
+      { key: "music", value: accent }, { key: "lossless", value: accent2 },
+      { key: "crypto", value: dim }, { key: "document", value: fg },
+      { key: "compressed", value: accent2 }, { key: "temp", value: danger },
+      { key: "compiled", value: accent3 }, { key: "build", value: dim },
+      { key: "source", value: accent2 }
+    ]),
+    "",
+    `punctuation: {foreground: "${fg}"}`,
+    `date: {foreground: "${accent3}"}`,
+    `inode: {foreground: "${accent}"}`,
+    `blocks: {foreground: "${dim}"}`,
+    `header: {foreground: "${fg}"}`,
+    `octal: {foreground: "${accent3}"}`,
+    `flags: {foreground: "${accent2}"}`,
+    "",
+    `symlink_path: {foreground: "${accent2}"}`,
+    `control_char: {foreground: "${accent3}"}`,
+    `broken_symlink: {foreground: "${danger}"}`,
+    `broken_path_overlay: {foreground: "${dim}"}`,
+    "",
+    "filenames:",
+    "extensions:",
+    ""
+  ].join("\n");
+}
+
+function dunstTheme(c) {
+  return [
+    "# dunst theme generated from the active wallpaper palette",
+    "[global]",
+    `  highlight = "${c.primary}"`,
+    `  frame_color = "${c.primary}"`,
+    "",
+    "[urgency_low]",
+    `  background = "${c.background}"`,
+    `  foreground = "${c.foreground}"`,
+    "",
+    "[urgency_normal]",
+    `  background = "${c.surface}"`,
+    `  foreground = "${c.onSurface}"`,
+    "",
+    "[urgency_critical]",
+    `  background = "${c.error}"`,
+    `  foreground = "${c.background}"`,
+    ""
+  ].join("\n");
+}
+
+function fzfZsh(c) {
+  return [
+    "FZF_DEFAULT_OPTS=\"\"",
+    "",
+    `FZF_DEFAULT_OPTS+=" --color=border:${c.outline},label:${c.secondary}"`,
+    `FZF_DEFAULT_OPTS+=" --color=fg:${c.foreground},bg:${c.background},hl:${c.primary}"`,
+    `FZF_DEFAULT_OPTS+=" --color=fg+:${c.onPrimaryContainer},bg+:${c.primaryContainer},hl+:${c.primary}"`,
+    `FZF_DEFAULT_OPTS+=" --color=info:${c.tertiary},prompt:${c.secondary},pointer:${c.secondary}"`,
+    `FZF_DEFAULT_OPTS+=" --color=marker:${c.tertiary},spinner:${c.tertiary},header:${c.outlineVariant}"`,
+    "",
+    "export FZF_DEFAULT_OPTS",
+    ""
+  ].join("\n");
+}
+
+function hyprlandLua(c) {
+  const rgb = (value) => `rgb(${stripHash(value)})`;
+  return [
+    "-- hyprland colors generated from the active wallpaper palette",
+    `local black = "${rgb(c.background)}"`,
+    `local white = "${rgb(c.foreground)}"`,
+    `local gray = "${rgb(c.surfaceVariant)}"`,
+    `local red = "${rgb(c.error)}"`,
+    `local yellow = "${rgb(c.tertiary)}"`,
+    `local blue = "${rgb(c.primary)}"`,
+    `local cyan = "${rgb(c.secondary)}"`,
+    "",
+    "hl.config({",
+    "\tgeneral = {",
+    "\t\tcol = {",
+    "\t\t\tactive_border = { colors = { cyan, white, cyan }, angle = 45 },",
+    "\t\t\tinactive_border = gray,",
+    "\t\t},",
+    "\t},",
+    "})",
+    "",
+    "hl.config({",
+    "\tgroup = {",
+    "\t\tgroupbar = {",
+    "\t\t\tcol = {",
+    "\t\t\t\tactive = cyan,",
+    "\t\t\t\tinactive = gray,",
+    "\t\t\t},",
+    "\t\t},",
+    "\t},",
+    "})",
+    ""
+  ].join("\n");
+}
+
+function hyprlockConf(c) {
+  const rgb = (value) => `rgb(${stripHash(value)})`;
+  return [
+    "# hyprlock colors generated from the active wallpaper palette",
+    `$black     = ${rgb(c.background)}`,
+    `$white     = ${rgb(c.foreground)}`,
+    `$gray      = ${rgb(c.surfaceVariant)}`,
+    `$red       = ${rgb(c.error)}`,
+    `$yellow    = ${rgb(c.tertiary)}`,
+    `$yellowRaw = ${stripHash(c.tertiary)}`,
+    `$blue      = ${rgb(c.primary)}`,
+    `$cyan      = ${rgb(c.secondary)}`,
+    `$cyanRaw   = ${stripHash(c.secondary)}`,
+    "",
+    "$foreground      = $white",
+    "$background      = $black",
+    "$shadow_color    = $black",
+    "$date_color      = $cyanRaw",
+    `$rect_background = rgba(${stripHash(c.background)}4A)`,
+    "$rect_border     = $white",
+    "$icon_color      = $yellowRaw",
+    ""
+  ].join("\n");
+}
+
+function rofiRasi(c) {
+  return [
+    "* {",
+    "  /* Theme Colors */",
+    `  black: ${c.background};`,
+    `  gray: ${c.outline};`,
+    `  gray-dark: ${c.surfaceVariant};`,
+    `  white: ${c.foreground};`,
+    `  blue: ${c.primary};`,
+    `  cyan: ${c.secondary};`,
+    `  green: ${c.tertiary};`,
+    `  purple: ${c.tertiaryContainer};`,
+    `  yellow: ${c.secondaryContainer};`,
+    `  red: ${c.error};`,
+    "",
+    "  /* Rofi Colors */",
+    "  foreground: @white;",
+    "  background-color: @black;",
+    "  active-background: @gray-dark;",
+    "  active-foreground: @cyan;",
+    "  urgent-background: @white;",
+    "  urgent-foreground: @gray;",
+    "  selected-background: @active-background;",
+    "  selected-foreground: @cyan;",
+    "  selected-urgent-background: @urgent-background;",
+    "  selected-active-background: @active-background;",
+    "  separatorcolor: @active-background;",
+    "  textbox-prompt-colon-foreground: @purple;",
+    "  bordercolor: @blue;",
+    "  entry-foreground: @white;",
+    "  prompt-foreground: @blue;",
+    "}",
+    ""
+  ].join("\n");
+}
+
+function starshipSh(c) {
+  return [
+    "# starship colors generated from the active wallpaper palette",
+    `white="${c.foreground}"`,
+    `black="${c.background}"`,
+    `gray="${c.surfaceVariant}"`,
+    `red="${c.error}"`,
+    `green="${c.tertiary}"`,
+    `yellow="${c.secondaryContainer}"`,
+    `blue="${c.primary}"`,
+    `purple="${c.tertiaryContainer}"`,
+    `cyan="${c.secondary}"`,
+    `gray_dark="${c.outlineVariant}"`,
+    `gray_light="${c.onSurfaceVariant}"`,
+    `primary_text_fg="${c.foreground}"`,
+    ""
+  ].join("\n");
+}
+
+function tmuxConf(c) {
+  return [
+    "# tmux colors generated from the active wallpaper palette",
+    `set -g @bg "default"`,
+    `set -g @default_fg "${c.foreground}"`,
+    `set -g @pane_border_fg "${c.outlineVariant}"`,
+    `set -g @active_pane_border "${c.surfaceVariant}"`,
+    `set -g @session_bg "default"`,
+    `set -g @session_fg "${c.primary}"`,
+    `set -g @session_selection_fg "${c.secondary}"`,
+    `set -g @session_selection_bg "${c.surfaceVariant}"`,
+    `set -g @window_index_fg "${c.outline}"`,
+    `set -g @window_index_bg "default"`,
+    `set -g @window_fg "${c.outline}"`,
+    `set -g @window_bg "default"`,
+    `set -g @active_window_fg "${c.secondary}"`,
+    `set -g @active_window_bg "default"`,
+    `set -g @prev_window_fg "${c.outline}"`,
+    `set -g @prev_window_bg "default"`,
+    `set -g @status_fg "${c.outline}"`,
+    `set -g @status_icon_fg "${c.secondary}"`,
+    `set -g @status_bg "default"`,
+    `set -g @mode_fg "${c.background}"`,
+    `set -g @mode_bg "${c.secondaryContainer}"`,
+    `set -g @command_fg "default"`,
+    `set -g @command_bg "default"`,
+    `set -g @message_fg "${c.secondaryContainer}"`,
+    `set -g @message_bg "default"`,
+    ""
+  ].join("\n");
+}
+
+function opencodeJson(c) {
+  const palette = {
+    background: c.background,
+    currentLine: c.surfaceVariant,
+    bgHighlight: c.primaryContainer,
+    bgDark: c.background,
+    foreground: c.foreground,
+    fgDark: c.onSurfaceVariant,
+    comment: c.outline,
+    cyan: c.secondary,
+    green: c.tertiary,
+    orange: c.secondaryContainer,
+    pink: c.tertiary,
+    purple: c.tertiaryContainer,
+    red: c.error,
+    yellow: c.primaryContainer,
+    magenta2: c.onSecondaryContainer,
+    darkCyan: c.primary
+  };
+  const theme = {
+    primary: { dark: "purple", light: "purple" },
+    secondary: { dark: "green", light: "green" },
+    accent: { dark: "purple", light: "purple" },
+    error: { dark: "red", light: "red" },
+    warning: { dark: "orange", light: "orange" },
+    success: { dark: "green", light: "green" },
+    info: { dark: "cyan", light: "cyan" },
+    text: { dark: "foreground", light: "foreground" },
+    textMuted: { dark: "fgDark", light: "fgDark" },
+    background: { dark: "background", light: "background" },
+    backgroundPanel: { dark: "bgHighlight", light: "bgHighlight" },
+    backgroundElement: { dark: "bgHighlight", light: "bgHighlight" },
+    border: { dark: "currentLine", light: "currentLine" },
+    borderActive: { dark: "purple", light: "purple" },
+    borderSubtle: { dark: "currentLine", light: "currentLine" },
+    diffAdded: { dark: "green", light: "green" },
+    diffRemoved: { dark: "red", light: "red" },
+    diffContext: { dark: "comment", light: "comment" },
+    diffHunkHeader: { dark: "comment", light: "comment" },
+    diffHighlightAdded: { dark: "green", light: "green" },
+    diffHighlightRemoved: { dark: "red", light: "red" },
+    diffAddedBg: { dark: "bgHighlight", light: "bgHighlight" },
+    diffRemovedBg: { dark: "bgHighlight", light: "bgHighlight" },
+    diffContextBg: { dark: "currentLine", light: "currentLine" },
+    diffLineNumber: { dark: "comment", light: "comment" },
+    diffAddedLineNumberBg: { dark: "bgHighlight", light: "bgHighlight" },
+    diffRemovedLineNumberBg: { dark: "bgHighlight", light: "bgHighlight" },
+    markdownText: { dark: "foreground", light: "foreground" },
+    markdownHeading: { dark: "cyan", light: "cyan" },
+    markdownLink: { dark: "cyan", light: "cyan" },
+    markdownLinkText: { dark: "purple", light: "purple" },
+    markdownCode: { dark: "yellow", light: "yellow" },
+    markdownBlockQuote: { dark: "comment", light: "comment" },
+    markdownEmph: { dark: "orange", light: "orange" },
+    markdownStrong: { dark: "orange", light: "orange" },
+    markdownHorizontalRule: { dark: "comment", light: "comment" },
+    markdownListItem: { dark: "cyan", light: "cyan" },
+    markdownListEnumeration: { dark: "purple", light: "purple" },
+    markdownImage: { dark: "cyan", light: "cyan" },
+    markdownImageText: { dark: "purple", light: "purple" },
+    markdownCodeBlock: { dark: "foreground", light: "foreground" },
+    syntaxComment: { dark: "comment", light: "comment" },
+    syntaxKeyword: { dark: "green", light: "green" },
+    syntaxFunction: { dark: "pink", light: "pink" },
+    syntaxVariable: { dark: "cyan", light: "cyan" },
+    syntaxString: { dark: "yellow", light: "yellow" },
+    syntaxNumber: { dark: "red", light: "red" },
+    syntaxType: { dark: "orange", light: "orange" },
+    syntaxOperator: { dark: "green", light: "green" },
+    syntaxPunctuation: { dark: "fgDark", light: "fgDark" }
+  };
+  return JSON.stringify({ "$schema": "https://opencode.ai/theme.json", defs: palette, theme }, null, 2) + "\n";
+}
+
+function nvimPalette(palette, variant) {
+  const sorted = {};
+  for (const role of Object.keys(palette).sort()) sorted[role] = hex(palette[role]);
+  return JSON.stringify({ schema: "qe-nvim-palette", version: 1, variant, colors: sorted }, null, 2) + "\n";
+}
+
+const TARGETS = [
+  { id: "kitty", executable: "kitty", path: (b, c) => `${b.config}/kitty/themes/wallpaper.conf`, generate: kittyTheme },
+  { id: "bat", executable: "bat", path: (b, c) => `${b.config}/bat/themes/wallpaper.tmTheme`, generate: batTheme },
+  { id: "btop", executable: "btop", path: (b, c) => `${b.config}/btop/themes/wallpaper.theme`, generate: btopTheme },
+  { id: "eza", executable: "eza", path: (b, c) => `${b.config}/eza/themes/wallpaper.yml`, generate: ezaYml },
+  { id: "dunst", executable: "dunst", path: (b, c) => `${b.config}/dunst/themes/wallpaper.conf`, generate: dunstTheme },
+  { id: "fzf", executable: "fzf", path: (b, c) => `${b.zshConfig}/fzf_themes/wallpaper.zsh`, generate: fzfZsh },
+  { id: "hyprland", executable: "Hyprland", path: (b, c) => `${b.config}/hypr/themes/hyprland/wallpaper.lua`, generate: hyprlandLua },
+  { id: "hyprlock", executable: "hyprlock", path: (b, c) => `${b.config}/hypr/themes/hyprlock/wallpaper.conf`, generate: hyprlockConf },
+  { id: "rofi", executable: "rofi", path: (b, c) => `${b.config}/rofi/themes/colorschemes/wallpaper.rasi`, generate: rofiRasi },
+  { id: "starship", executable: "starship", path: (b, c) => `${b.config}/starship/themes/wallpaper.sh`, generate: starshipSh },
+  { id: "tmux", executable: "tmux", path: (b, c) => `${b.config}/tmux/themes/wallpaper.conf`, generate: tmuxConf },
+  { id: "opencode", executable: "opencode", path: (b, c) => `${b.config}/opencode/themes/wallpaper.json`, generate: opencodeJson },
+  { id: "nvim", executable: "nvim", path: (b, c) => `${b.cache}/matugen/nvim-colors.json`, generate: (code, palette, variant) => nvimPalette(palette, variant) }
+];
+
+const ABSOLUTE_PATH_PATTERN = /^\/(?:[^/]+\/)*[^/]+$/;
+
+export function generateWallpaperExternalTargets(palette, bases, variant = "dark") {
+  const errors = [];
+  if (palette === null || typeof palette !== "object" || Array.isArray(palette))
+    return { ok: false, errors: ["external wallpaper theme: palette must be an object"], targets: [] };
+  if (!HEX_PATTERN.test(palette.background) || !HEX_PATTERN.test(palette.on_background))
+    return { ok: false, errors: ["external wallpaper theme: palette must contain background and foreground hex colors"], targets: [] };
+  if (bases === null || typeof bases !== "object"
+      || typeof bases.home !== "string" || typeof bases.config !== "string"
+      || typeof bases.zshConfig !== "string" || typeof bases.cache !== "string") {
+    return { ok: false, errors: ["external wallpaper theme: bases must include home, config, zshConfig, and cache directories"], targets: [] };
+  }
+
+  const code = buildCode(palette);
+  const targets = TARGETS.map(target => {
+    const path = target.path(bases, code);
+    const content = target.generate(code, palette, variant);
+    return { id: target.id, executable: target.executable, path, content };
+  });
+
+  if (!targets.every(target => ABSOLUTE_PATH_PATTERN.test(target.path) && !target.path.split("/").includes(".."))) {
+    errors.push("external wallpaper theme: all target paths must be absolute and cannot contain '..'");
+  }
+  if (!targets.every(target => /^[a-z0-9_]+$/.test(target.id))) {
+    errors.push("external wallpaper theme: target ids must match ^[a-z0-9_]+$");
+  }
+  for (const target of targets) {
+    if (typeof target.content !== "string" || target.content.length === 0)
+      errors.push(`external wallpaper theme target '${target.id}': generated content must be non-empty`);
+  }
+
+  return { ok: errors.length === 0, errors, targets };
+}
+
+export function validateExternalTargetContent(target) {
+  if (target === null || typeof target !== "object" || typeof target.id !== "string"
+      || !ABSOLUTE_PATH_PATTERN.test(target.path) || typeof target.content !== "string")
+    return `target '${target.id}': invalid shape`;
+  if (target.content.length === 0)
+    return `target '${target.id}': generated content is empty`;
+  const checks = [
+    { id: "kitty", probe: /^color0 #/m },
+    { id: "bat", probe: /<\/plist>/ },
+    { id: "btop", probe: /theme\[main_bg\]/ },
+    { id: "eza", probe: /^colourful: false/m },
+    { id: "dunst", probe: /^\[urgency_low\]/m },
+    { id: "fzf", probe: /--color=fg:/ },
+    { id: "hyprland", probe: /hl\.config\(/ },
+    { id: "hyprlock", probe: /^\$background/m },
+    { id: "rofi", probe: /@white;/ },
+    { id: "starship", probe: /^white="/m },
+    { id: "tmux", probe: /^set -g @default_fg/m },
+    { id: "opencode", probe: /"defs"/ },
+    { id: "nvim", probe: /"schema":\s*"qe-nvim-palette"/ }
+  ];
+  const check = checks.find(entry => entry.id === target.id);
+  if (check && !check.probe.test(target.content))
+    return `target '${target.id}': generated content failed format validation`;
+  return null;
+}

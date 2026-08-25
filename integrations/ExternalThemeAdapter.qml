@@ -22,12 +22,14 @@ Scope {
 
     signal finished(var result)
 
-    function start(themeId, operationId) {
+    function start(themeId, operationId, skipGtk = false) {
         if (runner.running || availability !== "available"
                 || !ExternalTheme.isExternalThemeId(themeId) || !operationId) return false;
         requestedThemeId = themeId;
         requestedOperationId = operationId;
-        runner.command = [executable, "--machine", "--theme", themeId];
+        const args = ["--machine", "--theme", themeId];
+        if (skipGtk) args.push("--skip-gtk");
+        runner.command = [executable, ...args];
         runner.operationId = operationId;
         return runner.start();
     }

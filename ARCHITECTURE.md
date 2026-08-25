@@ -418,10 +418,10 @@ Responsibilities:
 
 When `Wallpaper` is active and a wallpaper change succeeds:
 
-1. Generate all Matugen outputs into a staging directory.
+1. Generate all Matugen outputs into a per-operation staging directory.
 2. Validate the QE theme and required external artifacts.
 3. Atomically promote the generated QE `Wallpaper` theme and each safely
-   replaceable external artifact.
+   replaceable external artifact through its promotion adapter.
 4. Reapply the QE `Wallpaper` theme.
 5. Request external `Wallpaper` application as best effort.
 6. Keep the previous generated set if generation or validation fails.
@@ -756,6 +756,62 @@ Matugen's JSON output or templates are mapped into QE semantic tokens by a
 versioned template. The generated `Wallpaper` file is derived data and is never
 edited by users. User overrides, if later needed, must be a separate authored
 input layered before generation rather than edits to generated output.
+
+The current adapter boundary requires `QE_MATUGEN` to name the executable; an
+unset or missing executable is an isolated unavailable state. `MatugenAdapter`
+requests noninteractive JSON output with an explicit mode and source-color
+preference, bounds the process, and validates the mapped 32-role theme before
+the service stages it. `WallpaperPromotionAdapter` then promotes the staged QE
+`Wallpaper.json` through a same-filesystem rename, preserving the previous
+artifact when staging or promotion fails. External Matugen artifacts remain
+deferred until their target contracts are approved.
+
+The compatibility wallpaper boundary requires `QE_WALLPAPER_HELPER` and passes
+the selected path as a discrete argument. The QE helper validates and stages
+derived images, restarts Hyprpaper, and waits for the bounded
+`hyprctl hyprpaper wallpaper` request before promoting those images. A
+successful helper result confirms Hyprpaper IPC acceptance, not pixel display;
+`WallpaperService` therefore keeps requested, applied, and generation state
+separate. No legacy helper is used unless explicitly configured.
+
+QE also owns a localized wallpaper selector
+(`modules/wallpaper/WallpaperSelector.qml`) opened through the `qe-wallpaper`
+IPC target. It uses QE-owned thumbnail cache and apply state, closes after a
+successful apply, and reuses the same apply/generation pipeline as the helper.
+The Hyprpaper and Hyprlock configurations resolve their image paths through
+`$XDG_DATA_HOME` with a `$HOME/.local/share` fallback so both configs and both
+wallpaper scripts stay aligned. Temporary `.desktop` entries launch the theme
+and wallpaper selectors through `scripts/qe-launch.sh`, which discovers the
+running `--no-duplicate` QE shell and calls the corresponding IPC target; these
+launchers will be replaced by the planned control center.
+
+When the active QE theme is the generated `wallpaper` theme, QE also generates
+standalone "wallpaper" theme slot files for external applications and the
+external switcher applies them. `ExternalWallpaperTheme` maps the same Matugen
+Material palette into per-application formats (kitty, bat, btop, eza, dunst,
+fzf, hyprland, hyprlock, rofi, starship, tmux, opencode, and a Palette JSON for
+Neovim), and `WallpaperExternalThemeAdapter` materializes them through
+`scripts/promote-external-theme.sh`, which writes each file into the app's
+`themes/` `wallpaper` slot with staging and atomic same-filesystem replacement,
+skipping targets whose executables are absent, and reporting per-target results.
+QE never writes an app's active configuration; the external switcher owns that
+copy. After promotion succeeds, QE delegates external application to the
+switcher with `--machine --theme wallpaper --skip-gtk` (GTK is excluded because
+Matugen does not generate GTK themes). Applying a wallpaper always regenerates
+QE's validated `Wallpaper` theme and the external slot files so the generated
+"wallpaper" theme becomes selectable, but QE delegates external application
+only while the wallpaper theme is active, so a wallpaper change never overwrites
+fixed external themes. Neovim consumes the generated palette through a local
+`colors/wallpaper.vim` colorscheme that reloads the palette on every
+`:colorscheme wallpaper`, so the switcher's existing name-based Neovim apply
+path works without an extra plugin. The generated catalog entry is re-read
+after atomic replacement so repeated wallpaper generations update the live
+catalog without a QE restart. Selecting `wallpaper` defers external switcher
+dispatch until its generation/promotion phase completes, preventing duplicate
+external requests from racing one another. A wallpaper change issued while a
+generation is in flight is queued as the latest requested path instead of being
+dropped, and regenerating the already-published theme skips the redundant
+promotion while still running the external dispatch phase.
 
 ### 8.6 External theme switcher contract
 

@@ -31,7 +31,8 @@ Singleton {
     }
 
     function themeFilesSettled() {
-        if (themeFolder.status !== FolderListModel.Ready || themeFiles.count !== themeFolder.count)
+        if (themeFolder.status !== FolderListModel.Ready || themeFiles.count !== themeFolder.count
+                || !generatedThemeFile.settled)
             return false;
         for (let index = 0; index < themeFiles.count; index++) {
             const file = themeFiles.objectAt(index);
@@ -50,6 +51,9 @@ Singleton {
             if (file.candidate !== null)
                 entries.push({ path: file.relativePath, theme: file.candidate });
         }
+        errors = errors.concat(generatedThemeFile.errors);
+        if (generatedThemeFile.candidate !== null)
+            entries.push({ path: generatedThemeFile.relativePath, theme: generatedThemeFile.candidate });
         entries.sort((first, second) => first.path.localeCompare(second.path));
         const idCounts = new Map();
         for (const entry of entries)
@@ -126,6 +130,7 @@ Singleton {
                 if (ignored) return;
                 settled = false;
                 reload();
+                text();
             }
             onLoadFailed: error => {
                 candidate = null;
@@ -136,6 +141,37 @@ Singleton {
         }
         onObjectAdded: Qt.callLater(root.rebuildCatalog)
         onObjectRemoved: Qt.callLater(root.rebuildCatalog)
+    }
+
+    FileView {
+        id: generatedThemeFile
+        readonly property string relativePath: "generated/Wallpaper.json"
+        property var candidate: null
+        property var errors: []
+        property bool settled: false
+
+        path: PathsService.generatedThemePath
+        blockLoading: true
+        watchChanges: true
+        printErrors: false
+        onLoaded: {
+            const result = root.parseTheme(this, relativePath);
+            candidate = result.value;
+            errors = result.errors;
+            settled = true;
+            root.rebuildCatalog();
+        }
+        onFileChanged: {
+            settled = false;
+            reload();
+            text();
+        }
+        onLoadFailed: {
+            candidate = null;
+            errors = [];
+            settled = true;
+            root.rebuildCatalog();
+        }
     }
 
     Component.onCompleted: rebuildCatalog()

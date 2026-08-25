@@ -16,13 +16,35 @@ ShellRoot {
     TestSurface {}
     BarHost {}
     ThemeSelectorIpc {}
+    WallpaperSelectorIpc {}
     ExternalThemeAdapter {
         id: externalThemeAdapter
+    }
+    MatugenAdapter {
+        id: matugenAdapter
+    }
+    WallpaperAdapter {
+        id: wallpaperAdapter
+    }
+    WallpaperCacheAdapter {
+        id: wallpaperCacheAdapter
+    }
+    WallpaperPromotionAdapter {
+        id: wallpaperPromotionAdapter
+    }
+
+    WallpaperExternalThemeAdapter {
+        id: wallpaperExternalThemeAdapter
     }
 
     QS.LazyLoader {
         active: Services.SurfaceService.themeSelectorVisible
         source: "modules/theme/ThemeSelector.qml"
+    }
+
+    QS.LazyLoader {
+        active: Services.SurfaceService.wallpaperSelectorVisible
+        source: "modules/wallpaper/WallpaperSelector.qml"
     }
 
     QS.LazyLoader {
@@ -35,6 +57,41 @@ ShellRoot {
         target: Services.ThemeService
         property: "externalAdapter"
         value: externalThemeAdapter
+        restoreMode: Binding.RestoreBindingOrValue
+    }
+
+    Binding {
+        target: Services.WallpaperService
+        property: "matugenAdapter"
+        value: matugenAdapter
+        restoreMode: Binding.RestoreBindingOrValue
+    }
+
+    Binding {
+        target: Services.WallpaperService
+        property: "wallpaperAdapter"
+        value: wallpaperAdapter
+        restoreMode: Binding.RestoreBindingOrValue
+    }
+
+    Binding {
+        target: Services.WallpaperService
+        property: "cacheAdapter"
+        value: wallpaperCacheAdapter
+        restoreMode: Binding.RestoreBindingOrValue
+    }
+
+    Binding {
+        target: Services.WallpaperService
+        property: "promotionAdapter"
+        value: wallpaperPromotionAdapter
+        restoreMode: Binding.RestoreBindingOrValue
+    }
+
+    Binding {
+        target: Services.WallpaperService
+        property: "externalThemeAdapter"
+        value: wallpaperExternalThemeAdapter
         restoreMode: Binding.RestoreBindingOrValue
     }
 }

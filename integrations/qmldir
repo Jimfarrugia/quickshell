@@ -12,4 +12,10 @@ BrightnessIntegration 1.0 BrightnessIntegration.qml
 BluetoothIntegration 1.0 BluetoothIntegration.qml
 IdleInhibitorIntegration 1.0 IdleInhibitorIntegration.qml
 ThemeSelectorIpc 1.0 ThemeSelectorIpc.qml
+WallpaperSelectorIpc 1.0 WallpaperSelectorIpc.qml
 ExternalThemeAdapter 1.0 ExternalThemeAdapter.qml
+MatugenAdapter 1.0 MatugenAdapter.qml
+WallpaperAdapter 1.0 WallpaperAdapter.qml
+WallpaperCacheAdapter 1.0 WallpaperCacheAdapter.qml
+WallpaperPromotionAdapter 1.0 WallpaperPromotionAdapter.qml
+WallpaperExternalThemeAdapter 1.0 WallpaperExternalThemeAdapter.qml

@@ -26,7 +26,9 @@ done
 
 targets="$(qs ipc --pid "$shell_pid" show)"
 [[ "$targets" == *"target qe-theme"* ]]
+[[ "$targets" == *"target qe-wallpaper"* ]]
 [[ "$(qs ipc --pid "$shell_pid" call qe-theme isOpen)" == "false" ]]
+[[ "$(qs ipc --pid "$shell_pid" call qe-wallpaper isOpen)" == "false" ]]
 qs ipc --pid "$shell_pid" call qe-theme open
 [[ "$(qs ipc --pid "$shell_pid" call qe-theme isOpen)" == "true" ]]
 qs ipc --pid "$shell_pid" call qe-theme toggle
@@ -34,6 +36,10 @@ qs ipc --pid "$shell_pid" call qe-theme toggle
 qs ipc --pid "$shell_pid" call qe-theme open
 qs ipc --pid "$shell_pid" call qe-theme close
 [[ "$(qs ipc --pid "$shell_pid" call qe-theme isOpen)" == "false" ]]
+qs ipc --pid "$shell_pid" call qe-wallpaper open
+[[ "$(qs ipc --pid "$shell_pid" call qe-wallpaper isOpen)" == "true" ]]
+qs ipc --pid "$shell_pid" call qe-wallpaper toggle
+[[ "$(qs ipc --pid "$shell_pid" call qe-wallpaper isOpen)" == "false" ]]
 
 if ! kill -0 "$shell_pid" 2>/dev/null; then
   while IFS= read -r line; do

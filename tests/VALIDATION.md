@@ -8,13 +8,28 @@ node tests/js/schema.test.mjs
 node tests/js/system-metrics.test.mjs
 node tests/js/brightness.test.mjs
 node tests/js/external-theme.test.mjs
+node tests/js/matugen.test.mjs
+node tests/js/external-wallpaper-theme.test.mjs
 bash tests/helpers/system-metrics-helper.test.sh
 bash tests/helpers/brightness-helper.test.sh
 bash tests/helpers/single-instance.test.sh
 bash tests/helpers/theme-hot-reload.test.sh
 bash tests/helpers/theme-selector-ipc.test.sh
 bash tests/helpers/external-theme-adapter.test.sh
-qmllint *.qml components/*.qml modules/test_surface/*.qml modules/bar/*.qml modules/theme/*.qml services/*.qml integrations/*.qml tests/fixtures/qml/*.qml
+bash tests/helpers/wallpaper-cache.test.sh
+bash tests/helpers/wallpaper-helper.test.sh
+bash tests/helpers/wallpaper-service.test.sh
+bash tests/helpers/wallpaper-promotion.test.sh
+bash tests/helpers/wallpaper-generation-failure.test.sh
+bash tests/helpers/wallpaper-selector-ipc.test.sh
+bash tests/helpers/qe-launch.test.sh
+bash tests/helpers/external-wallpaper-theme.test.sh
+bash tests/helpers/external-wallpaper-theme-service.test.sh
+bash tests/helpers/repeated-wallpaper-generation.test.sh
+bash tests/helpers/generated-theme-hot-reload.test.sh
+bash tests/helpers/queued-wallpaper-generation.test.sh
+bash tests/helpers/wallpaper-theme-select-external.test.sh
+qmllint $(find . -maxdepth 1 -name '*.qml') $(find components modules services tests/fixtures/qml -name '*.qml') $(find integrations -maxdepth 1 -name '*.qml' ! -name 'ThemeSelectorIpc.qml' ! -name 'WallpaperSelectorIpc.qml')
 timeout 5 quickshell -p command-runner-test.qml
 timeout 5 quickshell -p foundation-service-test.qml
 timeout 5 quickshell -p foundation-service-test.qml
@@ -31,6 +46,7 @@ timeout 5 quickshell -p idle-service-test.qml
 timeout 5 quickshell -p tray-tint-test.qml
 timeout 5 quickshell -p theme-selector-test.qml
 timeout 5 quickshell -p external-theme-service-test.qml
+timeout 5 env QE_MATUGEN=<absolute-path-to-fixture> quickshell -p matugen-adapter-test.qml
 timeout 5 quickshell -p shell.qml
 ```
 
@@ -52,8 +68,9 @@ print `THEME_HOT_RELOAD_AND_CATALOG_TEST_PASSED` after valid, invalid, and
 recovered active-theme edits plus catalog add, malformed, duplicate-ID, removal,
 and active-source loss/recovery cases without restarting the test shell.
 The selector IPC helper starts an isolated shell process and must print
-`THEME_SELECTOR_IPC_TEST_PASSED` after proving the `qe-theme` target and its
-`open`, `close`, `toggle`, and `isOpen` methods against that exact PID.
+`THEME_SELECTOR_IPC_TEST_PASSED` after proving the `qe-theme` and
+`qe-wallpaper` targets and their `open`, `close`, `toggle`, and `isOpen`
+methods against that exact PID.
 The selector interaction test must print `THEME_SELECTOR_TEST_PASSED` after a
 catalog selection becomes the confirmed resolved live theme.
 The external theme service test uses a fake adapter and must print
@@ -64,10 +81,58 @@ after sandboxed success, partial, malformed-output, timeout, invalid theme ID,
 missing-executable, independent valid/malformed state updates, and
 executable-loss cases.
 
+The Matugen adapter fixture must print `MATUGEN_ADAPTER_TEST_PASSED` after
+mapping a schema-compatible JSON response into a validated QE `Wallpaper`
+theme. The wallpaper service fixture must print
+`WALLPAPER_SERVICE_TEST_PASSED` after synchronizing a thumbnail manifest and
+persisting a generated theme through the service boundary. Use
+`tests/helpers/wallpaper-service.test.sh`, which creates a temporary valid image
+fixture and supplies `QE_MATUGEN` and `QE_WALLPAPER_ROOT`. Live Matugen execution
+additionally requires `QE_MATUGEN` to point to its executable.
+The promotion fixture must print `WALLPAPER_PROMOTION_TEST_PASSED` after a
+successful staged rename and a failed promotion retains the prior artifact. The
+generation-failure fixture must print
+`WALLPAPER_GENERATION_FAILURE_HELPER_TEST_PASSED` after malformed Matugen output
+leaves the valid last-known-good generated theme unchanged.
+The wallpaper helper fixture also verifies that Hyprpaper IPC accepts the
+request and that a rejected request restores the prior derived images.
+The external-wallpaper helper fixture must print
+`EXTERNAL_WALLPAPER_THEME_HELPER_TEST_PASSED` after promoting generated slot
+files (success plus absent-executable skip), rejecting invalid specs and
+paths, and proving partial promotion. The external wallpaper theme service
+fixture must print `EXTERNAL_WALLPAPER_THEME_TEST_PASSED` after the wallpaper
+generation pipeline produces the full 13-target spec, the fake promotion
+adapter promotes it, and `externalThemeStatus` reaches `succeeded`.
+The repeated wallpaper generation fixture must print
+`REPEATED_WALLPAPER_GENERATION_TEST_PASSED` after two successive Matugen
+generations in one QE process promote distinct second-generation artifacts.
+The generated theme hot-reload fixture must print
+`GENERATED_THEME_HOT_RELOAD_TEST_PASSED` after the live catalog is refreshed
+twice from atomically replaced `Wallpaper.json` files without a restart.
+The queued generation fixture must print
+`QUEUED_WALLPAPER_GENERATION_TEST_PASSED` after a wallpaper change requested
+while a generation is pending is not dropped: both complete and the published
+theme reflects the latest request. The wallpaper theme select external fixture
+must print `WALLPAPER_THEME_SELECT_EXTERNAL_TEST_PASSED` after an initial
+generation makes `wallpaper` selectable and selecting it dispatches exactly one
+external `wallpaper` apply with `--skip-gtk`.
+The generated-theme hot-reload fixture must print
+`GENERATED_THEME_HOT_RELOAD_TEST_PASSED` after two atomic generated-theme
+replacements update the catalog without restarting QE. The repeated wallpaper
+generation fixture must print
+`REPEATED_WALLPAPER_GENERATION_TEST_PASSED` after two successive Matugen
+generations complete in one QE process.
+
 Relocation is checked by copying the project to a temporary directory and
 repeating the JavaScript validation and shell smoke test there. QE state created
 by a development run is isolated under Quickshell's per-shell XDG state path and
 can be removed after QE is stopped.
+
+`integrations/ThemeSelectorIpc.qml` and `integrations/WallpaperSelectorIpc.qml`
+use Quickshell typed IPC functions that `qmllint 1.0` cannot parse (the process
+exits 255 without diagnostics), so the lint command above excludes them; both
+files are instead verified by the theme-selector and wallpaper-selector IPC
+runtime tests.
 
 Catalog degradation is tested only in a disposable relocated copy: replace that
 copy's `themes/poimandres.json` with
