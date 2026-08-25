@@ -50,8 +50,8 @@ Singleton {
     })
     property var theme: emergencyTheme
     property string activeThemeId: emergencyTheme.id
-    property var catalog: []
-    property var validationErrors: []
+    readonly property var catalog: ThemeCatalogService.catalog
+    readonly property var validationErrors: ThemeCatalogService.validationErrors
     property var lastError: null
     property string availability: "unknown"
     property string freshness: "unknown"
@@ -61,47 +61,35 @@ Singleton {
     property string pendingOperationId: ""
     property int nextOperationId: 1
     property bool initialized: false
-    property bool poimandresFailed: false
-    property bool gruvboxFailed: false
     property bool stateReady: false
+    property bool activeSourceMissing: false
+    property var externalAdapter: null
+    property string externalOperation: "idle"
+    property string externalStatus: "unknown"
+    property string externalRequestedThemeId: ""
+    property string externalOperationId: ""
+    property var externalResults: []
+    property var externalLastError: null
 
-    function parseTheme(view, path) {
-        if (!view.loaded) return null;
-        const parsed = Validation.parseJson(view.text(), path);
-        if (!parsed.ok) {
-            validationErrors = validationErrors.concat(parsed.errors);
-            return null;
-        }
-        const result = Validation.validateTheme(parsed.value);
-        if (!result.ok) {
-            validationErrors = validationErrors.concat(result.errors.map(error => `${path}: ${error}`));
-            return null;
-        }
-        return result.value;
-    }
+    onExternalAdapterChanged: syncExternalState()
 
-    function rebuildCatalog() {
-        if (!(poimandresFile.loaded || poimandresFailed) || !(gruvboxFile.loaded || gruvboxFailed)) return;
-        validationErrors = [];
-        const candidates = [
-            parseTheme(poimandresFile, "themes/poimandres.json"),
-            parseTheme(gruvboxFile, "themes/gruvbox.json")
-        ].filter(candidate => candidate !== null);
-        const ids = new Set();
-        catalog = candidates.filter(candidate => {
-            if (ids.has(candidate.id)) {
-                validationErrors = validationErrors.concat([`duplicate theme ID '${candidate.id}'`]);
-                return false;
-            }
-            ids.add(candidate.id);
-            return true;
-        });
-        for (const detail of validationErrors)
-            DiagnosticsService.report("THEME_REJECTED", "theme", "Theme excluded from catalog", detail, true, null);
-        availability = catalog.length > 0 ? (validationErrors.length > 0 ? "degraded" : "available") : "unavailable";
-        freshness = "current";
-        lastUpdated = new Date();
-        initializeTheme();
+    function synchronizeCatalog() {
+        if (!ThemeCatalogService.initialized) return;
+        const sourceMissing = initialized && activeThemeId !== emergencyTheme.id
+            && findTheme(activeThemeId) === null;
+        if (sourceMissing && !activeSourceMissing) {
+            lastError = DiagnosticsService.report("THEME_ACTIVE_SOURCE_MISSING", "theme", "Active theme source is unavailable", `Retaining last-known-good theme '${activeThemeId}'`, true, null);
+        } else if (!sourceMissing && activeSourceMissing && lastError !== null
+                   && lastError.code === "THEME_ACTIVE_SOURCE_MISSING") {
+            lastError = null;
+        }
+        activeSourceMissing = sourceMissing;
+        availability = sourceMissing && ThemeCatalogService.availability === "available"
+            ? "degraded" : ThemeCatalogService.availability;
+        freshness = sourceMissing ? "stale" : ThemeCatalogService.freshness;
+        lastUpdated = ThemeCatalogService.lastUpdated;
+        if (initialized) publishActiveCatalogRevision();
+        else initializeTheme();
     }
 
     function findTheme(id) {
@@ -110,7 +98,7 @@ Singleton {
     }
 
     function initializeTheme() {
-        if (initialized || catalog.length === 0 || !ConfigService.hasLoaded || !stateReady) return;
+        if (initialized || !ThemeCatalogService.initialized || !ConfigService.hasLoaded || !stateReady) return;
         let requestedId = ConfigService.config.defaultTheme;
         if (stateFile.loaded) {
             const parsed = Validation.parseJson(stateFile.text(), "active theme state");
@@ -128,21 +116,23 @@ Singleton {
             lastError = DiagnosticsService.report("THEME_FALLBACK", "theme", "Using emergency theme", `No valid configured theme '${requestedId}'`, true, null);
         }
         initialized = true;
+        synchronizeCatalog();
+    }
+
+    function publishActiveCatalogRevision() {
+        if (!initialized || operation === "pending") return;
+        const candidate = findTheme(activeThemeId);
+        if (!candidate) return;
+        theme = candidate;
+        lastUpdated = new Date();
     }
 
     function reportStateError(errors) {
         lastError = DiagnosticsService.report("THEME_STATE_REJECTED", "theme-state", "Invalid active theme state ignored", errors.join("; "), true, null);
     }
 
-    function themeLoadFailed(name, error) {
-        if (name === "poimandres") poimandresFailed = true;
-        else gruvboxFailed = true;
-        DiagnosticsService.report("THEME_READ_FAILED", "theme", "Theme file could not be read", `themes/${name}.json (${error})`, true, null);
-        rebuildCatalog();
-    }
-
     function requestTheme(id) {
-        if (!initialized || operation === "pending") return false;
+        if (!initialized || operation === "pending" || externalOperation === "pending") return false;
         const candidate = findTheme(id);
         if (!candidate) {
             operation = "failed";
@@ -158,6 +148,8 @@ Singleton {
 
     function commitPendingTheme() {
         if (pendingTheme === null) return;
+        const committedThemeId = pendingTheme.id;
+        const committedOperationId = pendingOperationId;
         theme = pendingTheme;
         activeThemeId = pendingTheme.id;
         pendingTheme = null;
@@ -165,6 +157,47 @@ Singleton {
         lastError = null;
         lastUpdated = new Date();
         pendingOperationId = "";
+        synchronizeCatalog();
+        requestExternalTheme(committedThemeId, committedOperationId);
+    }
+
+    function requestExternalTheme(themeId, operationId) {
+        externalRequestedThemeId = themeId;
+        externalOperationId = operationId;
+        externalResults = [];
+        externalLastError = null;
+        if (externalAdapter === null || externalAdapter.availability !== "available") {
+            externalOperation = "failed";
+            externalStatus = "unavailable";
+            externalLastError = "external theme switcher is unavailable";
+            return;
+        }
+        externalOperation = "pending";
+        externalStatus = "pending";
+        if (!externalAdapter.start(themeId, operationId)) {
+            externalOperation = "failed";
+            externalStatus = "failed";
+            externalLastError = "external theme request could not start";
+        }
+    }
+
+    function handleExternalResult(result) {
+        if (result.operationId !== externalOperationId) return;
+        externalResults = result.targets;
+        externalLastError = result.error;
+        externalStatus = result.status;
+        externalOperation = result.contractValid ? "succeeded" : "failed";
+        if (!result.contractValid)
+            DiagnosticsService.report("EXTERNAL_THEME_CONTRACT_REJECTED", "external-theme", "External theme result rejected", result.error, true, result.operationId);
+        else if (result.status !== "success")
+            DiagnosticsService.report("EXTERNAL_THEME_PARTIAL", "external-theme", "External theme apply did not fully succeed", result.error || result.status, true, result.operationId);
+    }
+
+    function syncExternalState() {
+        if (externalAdapter === null || externalOperation === "pending" || externalAdapter.lastState === null) return;
+        externalRequestedThemeId = externalAdapter.lastState.requestedTheme;
+        externalStatus = externalAdapter.lastState.status;
+        externalResults = externalAdapter.lastState.results;
     }
 
     function failPendingTheme(error) {
@@ -173,34 +206,7 @@ Singleton {
         pendingTheme = null;
         operation = "failed";
         pendingOperationId = "";
-    }
-
-    FileView {
-        id: poimandresFile
-        path: PathsService.shellPath("themes/poimandres.json")
-        blockLoading: true
-        watchChanges: true
-        printErrors: false
-        onLoaded: {
-            root.poimandresFailed = false;
-            root.rebuildCatalog();
-        }
-        onFileChanged: reload()
-        onLoadFailed: error => root.themeLoadFailed("poimandres", error)
-    }
-
-    FileView {
-        id: gruvboxFile
-        path: PathsService.shellPath("themes/gruvbox.json")
-        blockLoading: true
-        watchChanges: true
-        printErrors: false
-        onLoaded: {
-            root.gruvboxFailed = false;
-            root.rebuildCatalog();
-        }
-        onFileChanged: reload()
-        onLoadFailed: error => root.themeLoadFailed("gruvbox", error)
+        publishActiveCatalogRevision();
     }
 
     FileView {
@@ -226,5 +232,18 @@ Singleton {
         function onHasLoadedChanged() { root.initializeTheme(); }
     }
 
-    Component.onCompleted: root.rebuildCatalog()
+    Connections {
+        target: ThemeCatalogService
+        function onCatalogChanged() { root.synchronizeCatalog(); }
+        function onInitializedChanged() { root.synchronizeCatalog(); }
+    }
+
+    Connections {
+        target: root.externalAdapter
+        ignoreUnknownSignals: true
+        function onFinished(result) { root.handleExternalResult(result); }
+        function onLastStateChanged() { root.syncExternalState(); }
+    }
+
+    Component.onCompleted: root.synchronizeCatalog()
 }

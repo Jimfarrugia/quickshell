@@ -380,6 +380,14 @@ schema, and exposes catalog metadata. Theme files remain authoritative for their
 own metadata; any catalog list is derived and must not duplicate editable theme
 names or colors.
 
+The authored catalog uses Qt's event-driven `FolderListModel` over `themes/` and
+one watched `FileView` per readable, non-hidden JSON file. The schema document is
+reserved and excluded. Publication waits for a settled complete candidate set;
+malformed entries and every entry participating in a duplicate ID are excluded
+with diagnostics. There is no theme-directory poller. Removing or invalidating
+the active source leaves `ThemeService`'s last-known-good resolved theme
+published and marks it stale until a valid matching source returns.
+
 `ThemeService` owns the active QE theme and application operation:
 
 1. Validate the requested ID and complete theme document.
@@ -626,49 +634,49 @@ contract. The initial shape is:
   "name": "Poimandres",
   "variant": "dark",
   "palette": {
+    "foreground": "#e4f0fb",
     "background": "#1b1e28",
     "black": "#171922",
-    "surface": "#303340",
-    "surfaceVariant": "#506477",
-    "gray": "#506477",
     "grayDark": "#303340",
-    "foreground": "#e4f0fb",
+    "gray": "#506477",
+    "grayLight": "#767c9d",
+    "muted": "#8290a5",
     "blue": "#7390aa",
-    "purple": "#767c9d",
-    "green": "#5de4c7",
-    "cyan": "#89ddff",
+    "green": "#5fb3a1",
+    "greenLight": "#5de4c7",
     "yellow": "#fffac2",
-    "red": "#f16c75",
-    "pink": "#d0679d"
+    "red": "#d0679d",
+    "purple": "#91b4d5",
+    "cyan": "#89ddff"
   },
   "tokens": {
     "background": "{palette.background}",
     "on_background": "{palette.foreground}",
-    "surface": "{palette.surface}",
+    "surface": "{palette.grayDark}",
     "on_surface": "{palette.foreground}",
     "surface_variant": "{palette.black}",
-    "on_surface_variant": "{palette.surfaceVariant}",
+    "on_surface_variant": "{palette.muted}",
     "surface_panel": "#f21b1e28",
     "on_surface_panel": "{palette.foreground}",
     "surface_tooltip": "{palette.black}",
     "on_surface_tooltip": "{palette.foreground}",
-    "surface_hover": "{palette.surface}",
-    "surface_pressed": "{palette.surfaceVariant}",
+    "surface_hover": "{palette.grayDark}",
+    "surface_pressed": "{palette.gray}",
     "primary": "{palette.green}",
     "on_primary": "{palette.black}",
     "primary_container": "{palette.blue}",
     "on_primary_container": "{palette.black}",
     "secondary": "{palette.blue}",
     "on_secondary": "{palette.black}",
-    "outline": "{palette.surfaceVariant}",
-    "outline_variant": "{palette.surface}",
+    "outline": "{palette.muted}",
+    "outline_variant": "{palette.grayDark}",
     "focus_ring": "{palette.cyan}",
     "on_surface_disabled": "{palette.gray}",
-    "on_surface_placeholder": "{palette.surfaceVariant}",
+    "on_surface_placeholder": "{palette.muted}",
     "link": "{palette.cyan}",
     "highlight": "{palette.yellow}",
     "on_highlight": "{palette.black}",
-    "success": "{palette.green}",
+    "success": "{palette.greenLight}",
     "charging": "{palette.yellow}",
     "warning": "{palette.yellow}",
     "error": "{palette.red}",
@@ -690,6 +698,13 @@ tokens only.
 Raw palette names describe source colors. Semantic tokens describe UI roles.
 Components never consume palette entries directly, which allows Matugen and
 manually authored palettes to map different raw vocabularies to the same UI.
+
+Authored and generated `on_*` pairs target at least 4.5:1 contrast for normal
+text. Meaningful icons, focus indicators, and strong boundaries target at least
+3:1 against their intended surface. `surface_panel` may contain alpha, so static
+validation composites it over the theme background; live acceptance also checks
+representative wallpapers because no fixed foreground can guarantee contrast
+over every external image.
 
 Typography, spacing, radii, border widths, shadows parameters, opacity policy,
 and animation durations belong to user configuration initially, not individual
@@ -744,11 +759,11 @@ input layered before generation rather than edits to generated output.
 
 ### 8.6 External theme switcher contract
 
-The switcher remains usable independently and is refactored to accept a stable
-machine-facing interface conceptually equivalent to:
+The switcher remains usable independently and exposes this stable
+machine-facing interface:
 
 ```text
-run.sh --theme <id> --no-wallpaper-picker --format json [--targets <list>]
+run.sh --machine --theme <id> [--skip-gtk]
 ```
 
 Required contract:
@@ -756,7 +771,7 @@ Required contract:
 - validate IDs against a catalog; reject path traversal and arbitrary names
 - accept arguments as discrete values
 - never require QE to parse human log lines
-- emit one versioned JSON result with operation ID and per-target status
+- emit one versioned JSON result with per-target status
 - reserve stdout for structured output in machine mode and stderr for logs
 - return distinct codes for success, partial failure, invalid request, and
   orchestrator failure
@@ -764,6 +779,20 @@ Required contract:
 - persist external active theme only according to documented external policy
 - skip targets retired by QE without deleting their source themes
 - avoid automatically opening a wallpaper picker for QE-issued requests
+
+Machine mode exits 0 for success, 3 for partial application, 4 for failed
+application or orchestration, and 2 for usage. It atomically writes the same
+successful persistence document to
+`${XDG_STATE_HOME:-$HOME/.local/state}/theme-switcher/active-theme.json`; this
+switcher-owned document contains no QE operation identity. Per ADR-017, QE
+assigns operation IDs at its adapter boundary, serializes requests through the
+bounded process phase, and uses those IDs only to associate direct command
+results. Independent state-file updates report external state but never complete
+a QE operation or overwrite the active QE theme.
+
+`ExternalThemeAdapter` resolves the executable from `QE_THEME_SWITCHER`. An
+unset, missing, or removed executable is an isolated unavailable state rather
+than a startup failure; QE does not assume an external repository location.
 
 External application is best effort. Partial application is retained and
 reported; global rollback is not attempted because many targets cannot be
@@ -858,6 +887,21 @@ reload.
 - Generated and persisted files remain valid because writes are atomic.
 - Lock-process shutdown without authenticated unlock is never treated as a
   successful unlock.
+
+### 10.4 Transient surface routing and IPC
+
+`SurfaceService` owns requested visibility for non-security-sensitive transient
+QE surfaces. The persistent shell lazily instantiates each surface while its
+request is active; presentation objects do not own IPC handlers or duplicate
+cross-entry-point visibility state.
+
+Each surface integration owns a separate `IpcHandler` target named
+`qe-<surface>`, with consistent typed `open`, `close`, `toggle`, and `isOpen`
+methods where those operations apply. Module-local targets preserve independent
+lifecycle and failure boundaries and avoid a growing central handler. The theme
+selector uses `qe-theme`. These endpoints route intent through `SurfaceService`;
+they do not mutate domain state directly. Lock and authentication operations are
+never part of this convention.
 
 ## 11. Failure and Degraded Behavior
 
@@ -973,7 +1017,6 @@ a rollback exercise.
 These are not approved implementation facts until their milestone verifies
 them against installed Quickshell 0.3.0:
 
-- the exact theme-directory discovery mechanism and file-watch behavior
 - Hyprland IPC reconnection behavior after compositor restart
 - NetworkManager behavior for hidden and enterprise networks
 - Bluetooth interactive pairing-agent coverage

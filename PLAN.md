@@ -1,6 +1,6 @@
 # QE Implementation Plan
 
-Status: Phases 1-3 complete; Phase 4 semantic-token contract migration in progress
+Status: Phases 1-3 complete; Phase 4 theme catalog foundation complete
 
 Last inventory: 2026-08-25
 
@@ -32,7 +32,7 @@ one.
 | Foundation | Complete | Phase 1 acceptance passed on 2026-08-24 |
 | Bar vertical slice | Complete | Phase 2; top reserved edge selected, tray host disabled during Waybar coexistence |
 | Bar parity and Waybar cutover | Complete | Phase 3 acceptance passed 2026-08-25 |
-| Theme/Matugen integration | In progress | Phase 4 approved semantic-token contract migration |
+| Theme/Matugen integration | In progress | Manual selector and external machine integration complete; Matugen/wallpaper work next |
 | Notifications/OSDs | Not started | Phases 5-6 |
 | Launcher/help | Not started | Phase 7 |
 | Dashboards/control center | Not started | Phases 8-10 |
@@ -42,16 +42,16 @@ one.
 ### 2.1 Next-session handoff
 
 - Read `AGENTS.md`, `ARCHITECTURE.md`, and this plan in that order before making
-  changes. Phases 1-3 are complete; Phase 4 is next and has not started.
+  changes. Phases 1-3 are complete; Phase 4's approved semantic-token migration,
+  transactional active-theme hot reload, dynamic catalog discovery, manual
+  selector, and external machine integration are complete. Matugen and wallpaper
+  foundations are next and retain their separate approval gates.
 - Phase 4's 32-role Matugen-style semantic-token contract was approved on
-  2026-08-25. Complete and validate its atomic migration before active-theme hot
-  reload, catalog, selector, Matugen, or external-project work.
-- Audit input: the user is not satisfied with the range of current semantic
-  tokens. Identify current elements that are forced to share tokens but need
-  independent roles; inspect the planned notification, OSD, launcher, dashboard,
-  and lock surfaces; remove ambiguous/unused roles; avoid component-specific
-  tokens without distinct semantics; then update theme-v1, emergency fallback,
-  authored themes, schema, fixtures, architecture, and an ADR atomically.
+  2026-08-25 and its atomic in-repository migration is complete. Matugen and
+  external-project work retain their separate approval gate.
+- The semantic-token audit is complete. ADR-015 records the approved 32-role
+  vocabulary and contrast policy; do not reopen the contract without concrete
+  evidence and the planning change procedure.
 - The reviewed Waybar module classification, metrics adapter contract, and
   narrow permission to edit `~/Projects/theme-switcher` were approved on
   2026-08-24. The authorization and implementation boundaries are recorded in
@@ -59,10 +59,9 @@ one.
 - Normal runtime is one guarded QE shell from `shell.qml`, reserving 26 pixels
   at the bottom with `trayHostEnabled` true. Waybar is absent from autostart and
   retired in theme-switcher; QE owns `org.kde.StatusNotifierWatcher`.
-- The active authored/default QE theme is Poimandres. The current provisional
-  theme-v1 includes the pre-release `charging` and `tooltip` tokens documented by
-  ADR-012 and ADR-014; Phase 4 begins by auditing the complete vocabulary before
-  treating it as the Matugen input contract.
+- The active authored/default QE theme is Poimandres. ADR-015 supersedes the
+  provisional Phase 1 vocabulary while retaining the charging and tooltip
+  semantics from ADR-012 and ADR-014.
 - Full developer commands and expected markers are in `tests/VALIDATION.md`.
   The live NetworkManager loopback test is opt-in. Relocation was revalidated
   from `/tmp` at the Phase 2 exit.
@@ -1032,7 +1031,7 @@ Out of scope:
 
 ### Phase 4: Theme, Matugen, and wallpaper platform
 
-Status: In progress; 32-role semantic-token contract approved on 2026-08-25
+Status: In progress; manual theme and external-switcher integration complete
 
 Objective: deliver complete QE theming and a stable cross-project best-effort
 desktop theme workflow, including generated `Wallpaper` themes.
@@ -1152,6 +1151,80 @@ Semantic-token audit and proposal (2026-08-25):
   32-role vocabulary and contrast policy on 2026-08-25, authorizing the atomic
   in-repository contract migration. Matugen installation and external-project
   edits still require their separate Phase 4 approvals.
+
+Implementation record (foundation, 2026-08-25):
+
+- Migrated runtime validation, JSON Schema, emergency fallback, Poimandres,
+  Gruvbox, fixtures, and every current QML consumer atomically to ADR-015's 32
+  roles. No old token access remains in QML or theme JSON. Existing bar semantics
+  now use distinct panel, hover, pressed, tooltip, selection, disabled, charging,
+  and requested-state roles.
+- Authored solid surface/foreground pairs pass the 4.5:1 normal-text target;
+  focus rings and strong outlines pass 3:1 against their intended surfaces.
+  Panel text is checked against the alpha panel composited over the theme
+  background; representative wallpaper contrast remains a live visual boundary.
+- Runtime and JSON Schema now agree that an authored palette cannot be empty.
+  The foundation service test also proves the emergency fallback exposes exactly
+  the approved token set.
+- Fixed active-theme hot reload so a changed file republishes only a complete,
+  validated catalog candidate matching the confirmed active ID. Invalid edits
+  remain excluded while the last-known-good resolved theme stays published; a
+  valid recovery republishes without restarting QE.
+- A disposable-copy test performs a valid Poimandres edit, invalid missing-token
+  edit, and recovery in one uninterrupted shell process. JavaScript/schema tests,
+  `shellcheck`, full `qmllint`, affected Phase 1-3 QML regressions, and the
+  persistent-shell timeout smoke test pass.
+- Added `ThemeCatalogService` as the architecture-owned discovery and validation
+  boundary. Installed Qt 6.11's event-driven `FolderListModel` discovers readable
+  non-hidden `*.json` files without polling, and an `Instantiator` owns one
+  watched `FileView` per path. The reserved `themes/schema.json` is excluded from
+  authored catalog input.
+- Catalog publication waits until the directory model and every file reader are
+  settled. Valid entries are sorted by display name; malformed documents are
+  excluded locally; and every file involved in a duplicate ID is excluded until
+  the conflict is removed. `ThemeService` retains active-theme ownership and
+  exposes the catalog as a compatibility facade for current consumers.
+- The disposable lifecycle test covers dynamic add, malformed input, duplicate
+  IDs, removal, active-source loss with stale last-known-good state, and recovery.
+  Full Phase 1-3 regressions and the persistent-shell smoke test pass after the
+  catalog/service split.
+- Added the manual `ThemeSelector` as a lazy persistent-shell surface. The
+  `SurfaceService` owns requested visibility and the module-scoped `qe-theme`
+  IPC adapter exposes typed `open`, `close`, `toggle`, and `isOpen` methods per
+  ADR-016. Selector interaction and exact-process IPC fixtures pass without
+  changing existing Hyprland keybindings or external desktop entries.
+- Refactored the approved external `~/Projects/theme-switcher` boundary without
+  changing its positional human CLI. Machine mode is
+  `run.sh --machine --theme <id> [--skip-gtk]`, reserves stdout for one strict
+  schema-v1 JSON result, continues across target failures, reports deterministic
+  per-target applied/skipped/failed results, never opens the wallpaper picker,
+  never writes legacy `theme_data`, and exits 0/3/4 for success/partial/failed
+  with exit 2 reserved for usage. It atomically persists switcher-owned state at
+  `${XDG_STATE_HOME:-$HOME/.local/state}/theme-switcher/active-theme.json`.
+- `ExternalThemeAdapter` resolves its executable only from the explicit
+  `QE_THEME_SWITCHER` environment path, passes arguments as an array, enforces a
+  120-second timeout with a two-second TERM grace, bounds retained output, and
+  strictly validates status, exit code, timestamp, persistence, and per-target
+  consistency. An unset, missing, or removed executable degrades only external
+  theming; no project checkout path is assumed.
+- `ThemeService` persists and publishes QE first, then runs the external phase
+  as best effort. Requests are serialized through that bounded phase; QE-owned
+  operation IDs associate results locally because switcher-owned persisted state
+  intentionally contains no QE operation identity. Partial or failed external
+  results never roll QE back, and independent CLI state updates never overwrite
+  the active QE theme. The selector reports external status separately and names
+  failed targets.
+- The current production launcher environment does not set `QE_THEME_SWITCHER`,
+  so normal shell launches intentionally show external theming as unavailable
+  until a stable installed path or explicit environment wiring is approved.
+  Validation supplies the executable path explicitly; no live theme was applied.
+- Pure parser fixtures, fake-service coverage, and sandboxed adapter tests cover
+  success, partial failure, malformed stdout, timeout, invalid IDs, missing
+  executable, executable loss, independent state updates, and malformed-state
+  last-known-good retention. The external repository's 22 retirement and 54
+  machine-contract assertions pass with ShellCheck. Existing target validation
+  helpers now resolve relative to the exported switcher root, preserving
+  relocation without changing their target behavior.
 
 Scope:
 
@@ -2143,6 +2216,74 @@ and the isolated lock theme reader.
 
 Revisit if: implemented surfaces expose a semantic role that cannot be composed
 from this vocabulary, or Matugen changes its stable generated-role contract.
+
+### ADR-016: Use separate namespaced IPC targets for transient surfaces
+
+Status: Accepted by user on 2026-08-25
+
+Decision: use one module-owned `IpcHandler` target per transient surface, named
+`qe-<surface>`, rather than one central `qe` handler. Expose consistent typed
+`open`, `close`, `toggle`, and `isOpen` methods where applicable. Route requests
+through `SurfaceService`, which owns requested visibility; let `shell.qml` lazily
+instantiate presentation surfaces.
+
+Context: Phase 4's theme selector required the previously missing stable
+surface-opening convention. A single `qe` target would simplify the first CLI
+command but would grow a shared integration boundary, couple unrelated optional
+modules, and create parallel-development contention. Module-scoped targets keep
+registration, tests, lifecycle, and degradation local.
+
+Alternatives considered: one `qe` target with descriptive methods such as
+`openThemeSelector`; presentation-owned handlers; a generic string-based
+`open(surface)` router; direct domain mutation from IPC.
+
+Consequences: the theme selector target is `qe-theme`, invoked for example with
+`qs ipc call qe-theme toggle`. Future surfaces follow the same namespace and
+method convention but register only when implemented. `SurfaceService` may
+coordinate exclusivity later without absorbing IPC adapters. Existing external
+desktop entries and Hyprland keybindings remain unchanged until their documented
+cutover criteria pass. No QE IPC endpoint may unlock or carry authentication
+responses.
+
+Affected areas: shell assembly, transient surface lifecycle, IPC adapters,
+Hyprland bindings at later cutovers, module tests, and future launcher/help and
+control-center surfaces.
+
+Revisit if: Quickshell adds a typed hierarchical IPC namespace or operational
+evidence shows separate target registration harms reliable reload behavior.
+
+### ADR-017: Keep external operation identity at the QE adapter boundary
+
+Status: Accepted as part of the approved Phase 4 machine contract on 2026-08-25
+
+Decision: use the switcher's schema-v1 document as durable external desktop
+state without a QE operation ID. `ThemeService` assigns a local operation ID
+before invoking machine mode, `CommandRunner` carries it through the bounded
+process lifecycle, and stale process results are rejected by that local ID.
+
+Context: the switcher remains independently usable, and its persisted document
+describes external state that may be produced by QE, its human CLI, or another
+machine caller. Persisting a QE-generated ID would imply QE ownership and would
+not identify independent invocations meaningfully. QE still needs operation
+identity to prevent stale process completion from overwriting current UI state.
+
+Alternatives considered: require every switcher caller to provide and persist an
+operation ID; let QE infer result identity only from requested theme; omit
+operation association in QE.
+
+Consequences: the machine syntax remains
+`run.sh --machine --theme <id> [--skip-gtk]`; its state/result schema contains
+theme, status, timestamp, persistence, error, and per-target outcomes but no
+caller identity. QE serializes theme requests through an active external phase
+and associates only direct process results with its local operation ID. File
+watch updates are external state observations and never complete a QE operation
+or mutate the active QE theme.
+
+Affected areas: external switcher schema v1, `ExternalThemeAdapter`,
+`ThemeService`, selector status, command fixtures, and external state watching.
+
+Revisit if: the switcher adds concurrent remote callers that require shared
+cross-process request correlation rather than independent durable state.
 
 ## 14. Planning Change Procedure
 

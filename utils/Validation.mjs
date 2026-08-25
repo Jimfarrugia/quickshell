@@ -267,6 +267,8 @@ export function validateTheme(document) {
   if (!isObject(document.palette)) errors.push("theme.palette: expected an object");
   if (!isObject(document.tokens)) errors.push("theme.tokens: expected an object");
   if (errors.length > 0) return { ok: false, errors };
+  if (Object.keys(document.palette).length === 0)
+    errors.push("theme.palette: expected at least one color");
 
   for (const [key, color] of Object.entries(document.palette)) {
     if (typeof color !== "string" || !COLOR_PATTERN.test(color))

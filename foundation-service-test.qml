@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "services" as Services
+import "utils/Validation.mjs" as Validation
 
 ShellRoot {
     id: root
@@ -14,6 +15,11 @@ ShellRoot {
         if (started || !stateProbeReady || !Services.ConfigService.hasLoaded || !Services.ThemeService.initialized
                 || Services.ThemeService.catalog.length < 2) return;
         started = true;
+
+        const expectedTokens = Validation.themeTokenNames().sort();
+        const emergencyTokens = Object.keys(Services.ThemeService.emergencyTheme.tokens).sort();
+        if (JSON.stringify(emergencyTokens) !== JSON.stringify(expectedTokens))
+            return fail("emergency theme does not match the approved token contract");
 
         const confirmedConfig = JSON.stringify(Services.ConfigService.config);
         if (Services.ConfigService.applyText("{") || JSON.stringify(Services.ConfigService.config) !== confirmedConfig) {

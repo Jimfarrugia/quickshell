@@ -25,6 +25,15 @@ function contrastRatio(first, second) {
     / (Math.min(firstLuminance, secondLuminance) + 0.05);
 }
 
+function compositeArgb(color, background) {
+  if (color.length === 7) return color;
+  const alpha = Number.parseInt(color.slice(1, 3), 16) / 255;
+  const foregroundChannels = color.slice(3).match(/../g).map(value => Number.parseInt(value, 16));
+  const backgroundChannels = background.slice(1).match(/../g).map(value => Number.parseInt(value, 16));
+  const channels = foregroundChannels.map((value, index) => Math.round(value * alpha + backgroundChannels[index] * (1 - alpha)));
+  return `#${channels.map(value => value.toString(16).padStart(2, "0")).join("")}`;
+}
+
 assert.deepEqual(themeTokenNames(), expectedThemeTokens);
 
 for (const path of ["../../config/qe.json", "../../themes/poimandres.json", "../../themes/gruvbox.json"])
@@ -54,11 +63,11 @@ for (const path of ["../../themes/poimandres.json", "../../themes/gruvbox.json",
 }
 const poimandres = validateTheme(JSON.parse(await readFile(new URL("../../themes/poimandres.json", import.meta.url), "utf8")));
 assert.equal(poimandres.value.tokens.surface_tooltip, "#171922");
-assert.equal(poimandres.value.tokens.outline, "#506477");
+assert.equal(poimandres.value.tokens.outline, "#8290a5");
 assert.equal(poimandres.value.tokens.on_primary, "#171922");
 const gruvbox = validateTheme(JSON.parse(await readFile(new URL("../../themes/gruvbox.json", import.meta.url), "utf8")));
 assert.equal(gruvbox.value.tokens.surface_tooltip, "#3c3836");
-assert.equal(gruvbox.value.tokens.outline, "#928374");
+assert.equal(gruvbox.value.tokens.outline, "#b8a98a");
 assert.equal(gruvbox.value.tokens.on_primary_container, "#32302f");
 for (const theme of [poimandres.value, gruvbox.value]) {
   for (const [surface, foreground] of [
@@ -70,8 +79,18 @@ for (const theme of [poimandres.value, gruvbox.value]) {
     assert.ok(contrastRatio(theme.tokens[surface], theme.tokens[foreground]) >= 4.5,
       `${theme.id}: ${foreground} must contrast with ${surface}`);
   }
+  assert.ok(contrastRatio(theme.tokens.surface, theme.tokens.outline) >= 3,
+    `${theme.id}: outline must contrast with surface`);
+  assert.ok(contrastRatio(theme.tokens.surface, theme.tokens.focus_ring) >= 3,
+    `${theme.id}: focus_ring must contrast with surface`);
+  const compositedPanel = compositeArgb(theme.tokens.surface_panel, theme.tokens.background);
+  assert.ok(contrastRatio(compositedPanel, theme.tokens.on_surface_panel) >= 4.5,
+    `${theme.id}: on_surface_panel must contrast with surface_panel over background`);
 }
 assert.equal(validateTheme(await fixture("themes/missing-token.json")).ok, false);
+const emptyPalette = await fixture("themes/valid.json");
+emptyPalette.palette = {};
+assert.equal(validateTheme(emptyPalette).ok, false);
 assert.match(validateTheme(await fixture("themes/cycle.json")).errors.join(" "), /cycle/);
 assert.equal(validateThemeState(await fixture("state/valid.json")).ok, true);
 assert.equal(validateThemeState(await fixture("state/invalid.json")).ok, false);

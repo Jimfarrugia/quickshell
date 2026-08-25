@@ -38,7 +38,7 @@
     "on_primary_container": "{palette.black}",
     "secondary": "{palette.blue}",
     "on_secondary": "{palette.black}",
-    "outline": "{palette.gray}",
+    "outline": "{palette.muted}",
     "outline_variant": "{palette.grayDark}",
     "focus_ring": "{palette.cyan}",
     "on_surface_disabled": "{palette.gray}",

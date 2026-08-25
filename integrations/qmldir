@@ -11,3 +11,5 @@ SystemMetricsHelperAdapter 1.0 SystemMetricsHelperAdapter.qml
 BrightnessIntegration 1.0 BrightnessIntegration.qml
 BluetoothIntegration 1.0 BluetoothIntegration.qml
 IdleInhibitorIntegration 1.0 IdleInhibitorIntegration.qml
+ThemeSelectorIpc 1.0 ThemeSelectorIpc.qml
+ExternalThemeAdapter 1.0 ExternalThemeAdapter.qml
