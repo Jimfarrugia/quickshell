@@ -1,6 +1,7 @@
 # Developer Validation
 
-Run from the project root:
+Run from the project root. This file is stored under `docs/`, but all commands
+below are intended to be run from the repository root:
 
 ```sh
 node tests/js/validation.test.mjs

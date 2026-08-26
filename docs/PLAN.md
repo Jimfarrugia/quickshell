@@ -6,7 +6,7 @@ Last inventory: 2026-08-26
 
 This is the authoritative roadmap, implementation sequence, dependency map,
 project-status reference, risk register, and architectural decision log for the
-Quickshell Environment (QE). `ARCHITECTURE.md` is authoritative for system
+Quickshell Environment (QE). `docs/ARCHITECTURE.md` is authoritative for system
 architecture, boundaries, ownership, and service contracts. If the documents
 conflict, resolve the conflict explicitly and update both; do not silently pick
 one.
@@ -27,7 +27,7 @@ one.
 | Area | Status | Notes |
 | --- | --- | --- |
 | Discovery | Complete | Existing Hyprland, theme, wallpaper, desktop tools, and installed Quickshell inspected |
-| Architecture | Complete for implementation start | Authoritative boundaries are in `ARCHITECTURE.md` |
+| Architecture | Complete for implementation start | Authoritative boundaries are in `docs/ARCHITECTURE.md` |
 | Project code | Foundation implemented | Executable shell bootstrap, services, integration convention, schemas, themes, and tests exist |
 | Foundation | Complete | Phase 1 acceptance passed on 2026-08-24 |
 | Bar vertical slice | Complete | Phase 2; top reserved edge selected, tray host disabled during Waybar coexistence |
@@ -41,7 +41,7 @@ one.
 
 ### 2.1 Next-session handoff
 
-- Read `AGENTS.md`, `ARCHITECTURE.md`, and this plan in that order before making
+- Read `AGENTS.md`, `docs/ARCHITECTURE.md`, and this plan in that order before making
   changes. Phases 1-4 are complete; Phase 4's approved semantic-token migration,
   transactional active-theme hot reload, dynamic catalog discovery, manual
   selector, and external machine integration are complete. Matugen mapping,
@@ -63,7 +63,7 @@ one.
 - The active authored/default QE theme is Poimandres. ADR-015 supersedes the
   provisional Phase 1 vocabulary while retaining the charging and tooltip
   semantics from ADR-012 and ADR-014.
-- Full developer commands and expected markers are in `tests/VALIDATION.md`.
+- Full developer commands and expected markers are in `docs/VALIDATION.md`.
 - QE-internal wallpaper-theme startup self-heal and external wallpaper source
   recovery are documented deferred items (see Deferred decisions); neither
   changes current behavior.
@@ -358,6 +358,13 @@ Accepted decisions:
 - Use a bar as the first user-visible vertical slice.
 - Defer production supervision until runtime evidence exists.
 
+Documentation requirement: keep `docs/USER_GUIDE.md` concise and user-facing.
+Do not add or update content in the user guide without explicit user approval.
+Suggestions for additions or updates may be made, but approval is required
+before implementation. Record technical detail, implementation status,
+validation procedures, and internal decisions in the authoritative project
+documents instead.
+
 Known requirements:
 
 - No absolute project path assumptions.
@@ -502,8 +509,8 @@ risks, and implementation sequencing.
 
 Deliverables:
 
-- `PLAN.md`
-- `ARCHITECTURE.md`
+- `docs/PLAN.md`
+- `docs/ARCHITECTURE.md`
 - `AGENTS.md`
 
 Exit criteria:
@@ -537,7 +544,7 @@ Prerequisites:
 Scope:
 
 - `shell.qml` bootstrap only; no replacement cutover
-- directory/module structure from `ARCHITECTURE.md`
+- directory/module structure from `docs/ARCHITECTURE.md`
 - `ConfigService`, `PathsService`, diagnostics, persistent state schema
 - common integration health/error and operation semantics
 - command runner with timeout, cancellation, bounded output, and structured result
@@ -2493,7 +2500,7 @@ When implementation reveals a reason to change an accepted decision:
 2. Identify affected plan phases, contracts, risks, and migration steps.
 3. Propose a replacement and alternatives.
 4. Document consequences and compatibility impact.
-5. Update `ARCHITECTURE.md` if boundaries or ownership change.
+5. Update `docs/ARCHITECTURE.md` if boundaries or ownership change.
 6. Add or update an ADR in this document.
 7. Obtain user clarification before changing scope, security, state ownership,
    external behavior, or a previously accepted decision.

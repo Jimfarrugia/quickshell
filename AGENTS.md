@@ -7,16 +7,16 @@ These instructions apply to all work in this repository.
 Before changing code or planning documents:
 
 1. Read this file.
-2. Read `ARCHITECTURE.md` for authoritative boundaries, ownership, state,
+2. Read `docs/ARCHITECTURE.md` for authoritative boundaries, ownership, state,
    integration, lifecycle, failure, and security rules.
-3. Read `PLAN.md` for authoritative project status, phase scope, prerequisites,
+3. Read `docs/PLAN.md` for authoritative project status, phase scope, prerequisites,
    acceptance criteria, risks, and accepted decisions.
 4. Inspect the current implementation and every external integration affected by
    the task.
 5. Verify uncertain Quickshell APIs against installed version metadata, the
    matching official documentation, or source before use.
 
-`PLAN.md` is authoritative for roadmap and status. `ARCHITECTURE.md` is
+`docs/PLAN.md` is authoritative for roadmap and status. `docs/ARCHITECTURE.md` is
 authoritative for system design. Resolve conflicts explicitly; do not silently
 choose one document.
 
@@ -45,7 +45,7 @@ choose one document.
   transformations. Use scripts only for reviewed stable external contracts.
 - Prefer native Quickshell/Qt/Wayland/DBus/IPC facilities over commands.
 - Never add polling without documenting the missing event source, interval,
-  cost, consumer lifecycle, and stale-state behavior in `PLAN.md`.
+  cost, consumer lifecycle, and stale-state behavior in `docs/PLAN.md`.
 - The lock process remains isolated and minimal. Never expose unlock through QE
   IPC or replace `WlSessionLock` with a fullscreen window.
 
@@ -58,7 +58,7 @@ choose one document.
 - Do not use `~/.local/share/theme_data` as QE's state store; it is a transitional
   external compatibility source.
 - QE and external desktop themes are intentionally independent scopes. Follow
-  the apply semantics in `ARCHITECTURE.md`.
+  the apply semantics in `docs/ARCHITECTURE.md`.
 - Keep authored inputs separate from generated data and caches.
 - Use project-relative and XDG-resolved paths. Do not hard-code `/home/jim` or
   the current repository location.
@@ -73,11 +73,14 @@ choose one document.
 - If a required interface is not established, implement or obtain approval for
   that foundation before feature UI.
 - Keep adapters replaceable and test them with fixtures independent of UI.
-- Update `PLAN.md` status when a milestone begins or completes and record newly
+- Update `docs/PLAN.md` status when a milestone begins or completes and record newly
   discovered dependencies, risks, or deferred work.
-- Update `ARCHITECTURE.md` when ownership, boundaries, contracts, lifecycle,
+- Update `docs/ARCHITECTURE.md` when ownership, boundaries, contracts, lifecycle,
   security, or failure policy changes.
-- Add or revise an ADR in `PLAN.md` for every significant architectural change.
+- Add or revise an ADR in `docs/PLAN.md` for every significant architectural change.
+- Keep `docs/USER_GUIDE.md` concise and user-facing. Do not add or update user-guide
+  content without explicit user approval; suggestions for additions or updates are
+  allowed and must be presented for approval first.
 
 ## Validation
 
@@ -85,7 +88,7 @@ choose one document.
 - Run JSON/theme/schema validation after configuration or theme changes.
 - Run `shellcheck` for new or modified shell helpers.
 - Run relevant unit and contract tests, then the phase-specific validation from
-  `PLAN.md`.
+  `docs/PLAN.md`.
 - Smoke-test the persistent shell with `quickshell -p shell.qml` under a timeout.
 - Test missing dependencies, malformed output, timeouts, stale state, and daemon
   loss for every external integration.

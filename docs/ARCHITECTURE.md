@@ -4,7 +4,7 @@ Status: Proposed architecture approved for implementation planning
 
 This document is the authoritative description of the Quickshell Environment
 (QE) architecture, ownership boundaries, runtime topology, and service
-contracts. `PLAN.md` is authoritative for sequence, project status, milestones,
+contracts. `docs/PLAN.md` is authoritative for sequence, project status, milestones,
 and the decision log. `AGENTS.md` tells implementation agents how to use both
 documents.
 
@@ -13,6 +13,15 @@ documents.
 QE is a cohesive desktop-shell platform for Hyprland on Arch Linux. It is not a
 set of unrelated widgets. Shared configuration, state, themes, lifecycle,
 diagnostics, IPC, and failure behavior are platform responsibilities.
+
+## 1.1 Documentation Governance
+
+`docs/USER_GUIDE.md` is a concise, user-facing document. It must not receive
+new or updated content without explicit user approval. Agents and maintainers
+may suggest additions or corrections, but must obtain approval before applying
+them. Authoritative design, implementation status, validation procedures, and
+internal decisions belong in `docs/ARCHITECTURE.md`, `docs/PLAN.md`, and
+`docs/VALIDATION.md` instead.
 
 The architecture must support incremental replacement of Waybar, Hyprlock,
 Rofi, Dunst, Blueman Manager, `nm-connection-editor`, and `pavucontrol` without
@@ -214,8 +223,11 @@ contracts.
 |   |-- fixtures/             # adapter inputs and malformed-data cases
 |   |-- qml/                  # QML/Qt tests
 |   `-- integration/          # opt-in tests against live dependencies
-|-- ARCHITECTURE.md
-|-- PLAN.md
+|-- docs/
+|   |-- ARCHITECTURE.md
+|   |-- PLAN.md
+|   |-- USER_GUIDE.md
+|   `-- VALIDATION.md
 `-- AGENTS.md
 ```
 
@@ -907,7 +919,7 @@ avoid it, logs, state files, or diagnostic UI.
 ### 9.2 Polling policy
 
 Polling is allowed only for values lacking reliable events. Every poller must be
-listed in `PLAN.md`, configured or constant with rationale, suspended when not
+listed in `docs/PLAN.md`, configured or constant with rationale, suspended when not
 needed where practical, and expose staleness after failures.
 
 Expected pollers are clock display cadence, CPU/memory, temperature, disk
