@@ -6,7 +6,7 @@ ShellRoot {
     id: root
 
     readonly property string sensorPath: Quickshell.shellPath(
-        "tests/fixtures/system-metrics/sys/class/hwmon/hwmon0/temp1_input")
+        "fixtures/system-metrics/sys/class/hwmon/hwmon0/temp1_input")
 
     function fail(message) {
         console.error(`SYSTEM_METRICS_HELPER_ADAPTER_TEST_FAILED: ${message}`);

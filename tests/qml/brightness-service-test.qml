@@ -2,7 +2,7 @@ import QtQuick
 import Quickshell
 import "services" as Services
 import "modules/bar" as Bar
-import "tests/fixtures/qml" as Fixtures
+import "fixtures/qml" as Fixtures
 
 ShellRoot {
   id: root

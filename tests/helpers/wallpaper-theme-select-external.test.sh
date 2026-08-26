@@ -17,7 +17,7 @@ output=$(
     QE_MATUGEN="$project_root/tests/fixtures/matugen/fake-matugen.sh" \
     QE_WALLPAPER_ROOT="$wallpaper_root" \
     QE_TEST_WALLPAPER="$wallpaper_root/themes/poimandres/sample.png" \
-        timeout 15 quickshell -p "$project_root/wallpaper-theme-select-external-test.qml" 2>&1
+        timeout 15 quickshell -p "$project_root/tests/qml/wallpaper-theme-select-external-test.qml" 2>&1
 )
 grep -q 'WALLPAPER_THEME_SELECT_EXTERNAL_TEST_PASSED' <<<"$output"
 

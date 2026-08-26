@@ -32,24 +32,24 @@ bash tests/helpers/generated-theme-hot-reload.test.sh
 bash tests/helpers/queued-wallpaper-generation.test.sh
 bash tests/helpers/wallpaper-theme-select-external.test.sh
 bash tests/helpers/restored-wallpaper-theme.test.sh
-qmllint $(find . -maxdepth 1 -name '*.qml') $(find components modules services tests/fixtures/qml -name '*.qml') $(find integrations -maxdepth 1 -name '*.qml' ! -name 'ThemeSelectorIpc.qml' ! -name 'WallpaperSelectorIpc.qml')
-timeout 5 quickshell -p command-runner-test.qml
-timeout 5 quickshell -p foundation-service-test.qml
-timeout 5 quickshell -p foundation-service-test.qml
-timeout 5 quickshell -p phase2-service-test.qml
-timeout 5 quickshell -p phase3-service-test.qml
-timeout 5 quickshell -p system-metrics-adapter-test.qml
-timeout 5 quickshell -p system-metrics-helper-adapter-test.qml
-timeout 5 quickshell -p brightness-service-test.qml
-timeout 5 quickshell -p brightness-adapter-test.qml
-timeout 5 quickshell -p bluetooth-service-test.qml
-timeout 5 quickshell -p bluetooth-integration-test.qml
-timeout 5 quickshell -p bluetooth-adapter-test.qml
-timeout 5 quickshell -p idle-service-test.qml
-timeout 5 quickshell -p tray-tint-test.qml
-timeout 5 quickshell -p theme-selector-test.qml
-timeout 5 quickshell -p external-theme-service-test.qml
-timeout 5 env QE_MATUGEN=<absolute-path-to-fixture> quickshell -p matugen-adapter-test.qml
+qmllint $(find . -maxdepth 1 -name '*.qml') $(find components modules services tests -name '*.qml') $(find integrations -maxdepth 1 -name '*.qml' ! -name 'ThemeSelectorIpc.qml' ! -name 'WallpaperSelectorIpc.qml')
+timeout 5 quickshell -p tests/qml/command-runner-test.qml
+timeout 5 quickshell -p tests/qml/foundation-service-test.qml
+timeout 5 quickshell -p tests/qml/foundation-service-test.qml
+timeout 5 quickshell -p tests/qml/phase2-service-test.qml
+timeout 5 quickshell -p tests/qml/phase3-service-test.qml
+timeout 5 quickshell -p tests/qml/system-metrics-adapter-test.qml
+timeout 5 quickshell -p tests/qml/system-metrics-helper-adapter-test.qml
+timeout 5 quickshell -p tests/qml/brightness-service-test.qml
+timeout 5 quickshell -p tests/qml/brightness-adapter-test.qml
+timeout 5 quickshell -p tests/qml/bluetooth-service-test.qml
+timeout 5 quickshell -p tests/qml/bluetooth-integration-test.qml
+timeout 5 quickshell -p tests/qml/bluetooth-adapter-test.qml
+timeout 5 quickshell -p tests/qml/idle-service-test.qml
+timeout 5 quickshell -p tests/qml/tray-tint-test.qml
+timeout 5 quickshell -p tests/qml/theme-selector-test.qml
+timeout 5 quickshell -p tests/qml/external-theme-service-test.qml
+timeout 5 env QE_MATUGEN=<absolute-path-to-fixture> quickshell -p tests/qml/matugen-adapter-test.qml
 timeout 5 quickshell -p shell.qml
 ```
 
@@ -147,7 +147,7 @@ copy's `themes/poimandres.json` with
 `tests/fixtures/themes/missing-token.json`, then run:
 
 ```sh
-timeout 5 quickshell -p theme-degradation-test.qml
+timeout 5 quickshell -p tests/qml/theme-degradation-test.qml
 ```
 
 The test must print `THEME_DEGRADATION_TEST_PASSED`. Never replace an authored
@@ -157,7 +157,7 @@ The live NetworkManager IPv4 test is opt-in because it requires `nmcli`, a
 running NetworkManager daemon, and an IPv4 loopback address:
 
 ```sh
-timeout 5 quickshell -p network-address-test.qml
+timeout 5 quickshell -p tests/qml/network-address-test.qml
 ```
 
 It must print `NETWORK_ADDRESS_TEST_PASSED`.

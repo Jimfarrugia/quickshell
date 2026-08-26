@@ -21,7 +21,7 @@ output=$(
     QE_WALLPAPER_ROOT="$wallpaper_root" \
     QE_TEST_WALLPAPER_A="$wallpaper_root/themes/poimandres/a.png" \
     QE_TEST_WALLPAPER_B="$wallpaper_root/themes/poimandres/b.png" \
-        timeout 15 quickshell -p "$project_root/queued-wallpaper-generation-test.qml" 2>&1
+        timeout 15 quickshell -p "$project_root/tests/qml/queued-wallpaper-generation-test.qml" 2>&1
 )
 grep -q 'QUEUED_WALLPAPER_GENERATION_TEST_PASSED' <<<"$output"
 

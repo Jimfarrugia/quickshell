@@ -221,8 +221,9 @@ contracts.
 |-- scripts/                  # stable external helpers only
 |-- tests/
 |   |-- fixtures/             # adapter inputs and malformed-data cases
-|   |-- qml/                  # QML/Qt tests
-|   `-- integration/          # opt-in tests against live dependencies
+|   |-- js/                   # JavaScript tests
+|   |-- helpers/              # shell/helper contract tests
+|   `-- qml/                  # QML/Qt tests
 |-- docs/
 |   |-- ARCHITECTURE.md
 |   |-- PLAN.md

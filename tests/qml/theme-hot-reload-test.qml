@@ -52,9 +52,9 @@ ShellRoot {
     }
 
     function runFileCommand(command) {
-        if (remover.running) return fail("file remover was already running");
-        remover.command = command;
-        remover.running = true;
+        if (fileCommand.running) return fail("file command was already running");
+        fileCommand.command = command;
+        fileCommand.running = true;
     }
 
     function removeFiles(paths) {
@@ -93,13 +93,13 @@ ShellRoot {
                 return fail("a duplicated theme ID remained in the catalog");
             stage = 7;
             removeFiles([addedPath, invalidPath, duplicatePath]);
-        } else if (stage === 7 && !remover.running
+        } else if (stage === 7 && !fileCommand.running
                    && Services.ThemeService.catalog.length === 2
                    && Services.ThemeService.validationErrors.length === 0
                    && catalogContains("poimandres") && catalogContains("gruvbox")) {
             stage = 8;
             removeFiles([themeEditor.path]);
-        } else if (stage === 8 && !remover.running
+        } else if (stage === 8 && !fileCommand.running
                    && Services.ThemeService.activeSourceMissing
                    && Services.ThemeService.freshness === "stale") {
             if (Services.ThemeService.activeThemeId !== "poimandres"
@@ -152,10 +152,10 @@ ShellRoot {
     }
 
     Process {
-        id: remover
+        id: fileCommand
         onExited: (exitCode, exitStatus) => {
             if (exitCode !== 0)
-                root.fail(`file removal failed (${exitCode}, ${exitStatus})`);
+                root.fail(`file command failed (${exitCode}, ${exitStatus}): ${JSON.stringify(command)}`);
             else
                 Qt.callLater(root.evaluate);
         }

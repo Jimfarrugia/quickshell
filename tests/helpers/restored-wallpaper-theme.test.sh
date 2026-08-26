@@ -14,7 +14,7 @@ output=$(
     XDG_STATE_HOME="$test_root/state" \
     XDG_DATA_HOME="$test_root/data" \
     XDG_CACHE_HOME="$test_root/cache" \
-        timeout 8 quickshell -p "$project_root/restored-wallpaper-theme-test.qml" 2>&1
+        timeout 8 quickshell -p "$project_root/tests/qml/restored-wallpaper-theme-test.qml" 2>&1
 )
 grep -q 'RESTORED_WALLPAPER_THEME_TEST_PASSED' <<<"$output"
 

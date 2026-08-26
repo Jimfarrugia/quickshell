@@ -15,6 +15,6 @@ XDG_DATA_HOME="$test_root/data" \
 XDG_CACHE_HOME="$test_root/cache" \
 QE_MATUGEN="$project_root/tests/fixtures/matugen/fake-matugen.sh" \
 QE_WALLPAPER_ROOT="$wallpaper_root" \
-    timeout 12 quickshell -p "$project_root/wallpaper-service-test.qml"
+    timeout 12 quickshell -p "$project_root/tests/qml/wallpaper-service-test.qml"
 
 printf '%s\n' 'WALLPAPER_SERVICE_HELPER_TEST_PASSED'

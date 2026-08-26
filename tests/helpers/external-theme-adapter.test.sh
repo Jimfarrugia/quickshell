@@ -4,7 +4,7 @@ set -euo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 FAKE_SWITCHER="$PROJECT_DIR/tests/fixtures/external-theme/fake-switcher.sh"
-TEST_QML="$PROJECT_DIR/external-theme-adapter-test.qml"
+TEST_QML="$PROJECT_DIR/tests/qml/external-theme-adapter-test.qml"
 
 run_case() {
   local mode="$1"

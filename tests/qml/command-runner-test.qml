@@ -23,7 +23,7 @@ ShellRoot {
                 if (!result.timedOut || result.success || root.confirmedState !== "unchanged")
                     return root.fail("timeout result was allowed to mutate confirmed state");
                 root.stage = 1;
-                command = ["/usr/bin/cat", Services.PathsService.shellPath("tests/fixtures/command/malformed.txt")];
+                command = ["/usr/bin/cat", Services.PathsService.shellPath("fixtures/command/malformed.txt")];
                 timeoutMs = 1000;
                 start();
             } else if (root.stage === 1) {
@@ -53,7 +53,7 @@ ShellRoot {
                 root.stage = 5;
                 expectJson = true;
                 maxStdoutBytes = 32768;
-                command = ["/usr/bin/cat", Services.PathsService.shellPath("tests/fixtures/command/valid.json")];
+                command = ["/usr/bin/cat", Services.PathsService.shellPath("fixtures/command/valid.json")];
                 start();
             } else {
                 if (!result.success || result.parsed.status !== "ok")

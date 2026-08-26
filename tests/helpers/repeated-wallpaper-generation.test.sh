@@ -18,7 +18,7 @@ output=$(
     QE_FAKE_MATUGEN_COUNTER="$test_root/matugen-counter" \
     QE_WALLPAPER_ROOT="$wallpaper_root" \
     QE_TEST_WALLPAPER="$wallpaper_root/themes/poimandres/sample.png" \
-        timeout 15 quickshell -p "$project_root/repeated-wallpaper-generation-test.qml" 2>&1
+        timeout 15 quickshell -p "$project_root/tests/qml/repeated-wallpaper-generation-test.qml" 2>&1
 )
 grep -q 'REPEATED_WALLPAPER_GENERATION_TEST_PASSED' <<<"$output"
 
