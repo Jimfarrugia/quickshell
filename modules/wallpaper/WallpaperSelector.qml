@@ -23,9 +23,9 @@ FloatingWindow {
     Rectangle {
         anchors.fill: parent
         color: Services.ThemeService.theme.tokens.surface_panel
-        radius: Services.ConfigService.config.appearance.radius + 4
-        border.width: Services.ConfigService.config.appearance.borderWidth
-        border.color: Services.ThemeService.theme.tokens.outline
+        // Hyprland owns the outer window border and corner clipping.
+        radius: 0
+        border.width: 0
 
         ColumnLayout {
             anchors.fill: parent
