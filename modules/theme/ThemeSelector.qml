@@ -89,6 +89,31 @@ FloatingWindow {
                 currentIndex: Math.max(0, Services.ThemeService.catalog.findIndex(theme => theme.id === Services.ThemeService.activeThemeId))
 
                 Keys.onEscapePressed: Services.SurfaceService.closeThemeSelector()
+                Keys.onPressed: function(event) {
+                    if (event.modifiers !== Qt.NoModifier) return;
+
+                    switch (event.key) {
+                    case Qt.Key_H:
+                        moveCurrentIndexLeft();
+                        break;
+                    case Qt.Key_J:
+                        moveCurrentIndexDown();
+                        break;
+                    case Qt.Key_K:
+                        moveCurrentIndexUp();
+                        break;
+                    case Qt.Key_L:
+                        moveCurrentIndexRight();
+                        break;
+                    case Qt.Key_Q:
+                        Services.SurfaceService.closeThemeSelector();
+                        break;
+                    default:
+                        return;
+                    }
+
+                    event.accepted = true;
+                }
                 Keys.onEnterPressed: {
                     if (currentItem !== null) root.applyTheme(currentItem.themeId);
                 }
@@ -260,7 +285,7 @@ FloatingWindow {
                 }
 
                 Text {
-                    text: "Esc to close / Enter to apply"
+                    text: "h/j/k/l navigate / q or Esc close / Enter apply"
                     color: Services.ThemeService.theme.tokens.on_surface_variant
                     font.family: Services.ConfigService.config.appearance.monospaceFontFamily
                     font.pixelSize: 11

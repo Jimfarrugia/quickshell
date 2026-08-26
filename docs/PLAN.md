@@ -2537,6 +2537,34 @@ Affected areas: `MatugenAdapter`, `Matugen.mjs`, `Opacity.mjs`,
 Revisit if: Kitty or Hyprland expose a stable native event/API that makes
 live synchronization valuable, or if the bar must match inactive windows too.
 
+## ADR-021: Vim-style selector navigation convention
+
+Status: Accepted by user
+
+Decision: focused QE windows with selectable elements support lowercase `h`, `j`,
+`k`, and `l` as aliases for left, down, up, and right arrow navigation. A
+lowercase `q` is an alias for Escape when Escape dismisses the focused window.
+Native arrow keys, Escape, and existing activation keys remain supported.
+
+Context: the theme and wallpaper selectors use focused grid views and already
+support keyboard navigation and Escape dismissal. The user requested a
+consistent vim-style alternative for these selectors and future QE surfaces.
+
+Rationale: the convention provides efficient keyboard navigation without
+removing standard keyboard behavior or changing compositor-owned global
+keybindings. Handling remains local to the focused selectable view, preserving
+view-local interaction ownership.
+
+Consequences: future selectable QE windows should expose the same aliases when
+they provide arrow-key navigation or Escape dismissal. Uppercase or modified
+vim keys are not aliases, so they remain available to controls that need them.
+
+Affected areas: `modules/theme/ThemeSelector.qml`,
+`modules/wallpaper/WallpaperSelector.qml`, and future selectable QE surfaces.
+
+Revisit if: a future input method requires modified vim keys, or a shared
+keyboard-navigation component becomes justified by additional surfaces.
+
 ## 14. Planning Change Procedure
 
 When implementation reveals a reason to change an accepted decision:

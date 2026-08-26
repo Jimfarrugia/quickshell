@@ -88,6 +88,31 @@ FloatingWindow {
                 currentIndex: 0
 
                 Keys.onEscapePressed: Services.SurfaceService.closeWallpaperSelector()
+                Keys.onPressed: function(event) {
+                    if (event.modifiers !== Qt.NoModifier) return;
+
+                    switch (event.key) {
+                    case Qt.Key_H:
+                        moveCurrentIndexLeft();
+                        break;
+                    case Qt.Key_J:
+                        moveCurrentIndexDown();
+                        break;
+                    case Qt.Key_K:
+                        moveCurrentIndexUp();
+                        break;
+                    case Qt.Key_L:
+                        moveCurrentIndexRight();
+                        break;
+                    case Qt.Key_Q:
+                        Services.SurfaceService.closeWallpaperSelector();
+                        break;
+                    default:
+                        return;
+                    }
+
+                    event.accepted = true;
+                }
                 Keys.onEnterPressed: {
                     if (currentItem !== null && currentItem.selectable)
                         root.applyWallpaper(currentItem.sourcePath);
@@ -207,7 +232,7 @@ FloatingWindow {
                 }
 
                 Text {
-                    text: "Esc to close / Enter to apply"
+                    text: "h/j/k/l navigate / q or Esc close / Enter apply"
                     color: Services.ThemeService.theme.tokens.on_surface_variant
                     font.family: Services.ConfigService.config.appearance.monospaceFontFamily
                     font.pixelSize: 11
