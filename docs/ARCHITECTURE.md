@@ -799,8 +799,8 @@ separate. No legacy helper is used unless explicitly configured.
 
 QE also owns a localized wallpaper selector
 (`modules/wallpaper/WallpaperSelector.qml`) opened through the `qe-wallpaper`
-IPC target. It uses QE-owned thumbnail cache and apply state, closes after a
-successful apply, and reuses the same apply/generation pipeline as the helper.
+  IPC target. It uses QE-owned thumbnail cache and apply state, remains open after
+  a successful apply, and reuses the same apply/generation pipeline as the helper.
 The Hyprpaper and Hyprlock configurations resolve their image paths through
 `$XDG_DATA_HOME` with a `$HOME/.local/share` fallback so both configs and both
 wallpaper scripts stay aligned. Temporary `.desktop` entries launch the theme

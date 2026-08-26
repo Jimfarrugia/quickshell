@@ -1315,8 +1315,9 @@ Implementation record (foundation, 2026-08-25):
   `current_wallpaper.png` and `current_lockscreen.png` and restart Hyprpaper,
   while QE additionally validates, confirms IPC, and rolls back on failure.
 - A QE-localized wallpaper selector (`modules/wallpaper/WallpaperSelector.qml`)
-  opens through the `qe-wallpaper` IPC target, closes automatically after a
-  successful apply, and uses QE-owned thumbnail cache and apply state. Theme and
+  opens through the `qe-wallpaper` IPC target, remains open after a successful
+  apply, prevents selection while an apply is pending, excludes the confirmed
+  active wallpaper, and uses QE-owned thumbnail cache and apply state. Theme and
   wallpaper selectors are launched via temporary `.desktop` entries
   (`qe-theme-selector.desktop`, `qe-wallpaper-selector.desktop`) and a
   `scripts/qe-launch.sh` helper that discovers the running `--no-duplicate` QE

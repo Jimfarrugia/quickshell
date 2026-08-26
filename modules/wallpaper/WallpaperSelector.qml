@@ -13,15 +13,9 @@ FloatingWindow {
     color: "transparent"
 
     function applyWallpaper(path) {
+        if (Services.WallpaperService.operation === "pending"
+                || path === Services.WallpaperService.appliedPath) return false;
         return Services.WallpaperService.requestWallpaper(path);
-    }
-
-    Connections {
-        target: Services.WallpaperService
-        function onOperationChanged() {
-            if (Services.WallpaperService.operation === "succeeded")
-                Services.SurfaceService.closeWallpaperSelector();
-        }
     }
 
     onClosed: Services.SurfaceService.closeWallpaperSelector()
@@ -95,10 +89,12 @@ FloatingWindow {
 
                 Keys.onEscapePressed: Services.SurfaceService.closeWallpaperSelector()
                 Keys.onEnterPressed: {
-                    if (currentItem !== null) root.applyWallpaper(currentItem.sourcePath);
+                    if (currentItem !== null && currentItem.selectable)
+                        root.applyWallpaper(currentItem.sourcePath);
                 }
                 Keys.onReturnPressed: {
-                    if (currentItem !== null) root.applyWallpaper(currentItem.sourcePath);
+                    if (currentItem !== null && currentItem.selectable)
+                        root.applyWallpaper(currentItem.sourcePath);
                 }
 
                 delegate: Item {
@@ -107,6 +103,8 @@ FloatingWindow {
                     required property string sourcePath
                     required property string fileName
                     required property int index
+                    readonly property bool selectable: Services.WallpaperService.operation !== "pending"
+                        && sourcePath !== Services.WallpaperService.appliedPath
                     width: wallpaperGrid.cellWidth
                     height: wallpaperGrid.cellHeight
 
@@ -114,6 +112,7 @@ FloatingWindow {
                         anchors.fill: parent
                         anchors.margins: 6
                         radius: Services.ConfigService.config.appearance.radius
+                        opacity: delegateRoot.selectable ? 1 : 0.52
                         color: cardTap.pressed ? Services.ThemeService.theme.tokens.surface_pressed
                             : (cardHover.hovered ? Services.ThemeService.theme.tokens.surface_hover
                                 : Services.ThemeService.theme.tokens.surface)
@@ -150,12 +149,16 @@ FloatingWindow {
                             }
                         }
 
-                        HoverHandler { id: cardHover }
+                        HoverHandler {
+                            id: cardHover
+                            enabled: delegateRoot.selectable
+                        }
                         TapHandler {
                             id: cardTap
+                            enabled: delegateRoot.selectable
                             onTapped: {
                                 wallpaperGrid.currentIndex = delegateRoot.index;
-                                Services.WallpaperService.requestWallpaper(delegateRoot.sourcePath);
+                                root.applyWallpaper(delegateRoot.sourcePath);
                             }
                         }
                     }
