@@ -7,9 +7,11 @@ ShellRoot {
     property bool requested: false
 
     function check() {
-        if (requested || Services.ThemeService.availability === "unknown") return;
-        if (Services.ThemeService.availability !== "degraded" || Services.ThemeService.catalog.length !== 1
-                || Services.ThemeService.catalog[0].id !== "gruvbox") {
+        if (requested || !Services.ThemeCatalogService.initialized || !Services.ThemeService.initialized) return;
+        const hasGruvbox = Services.ThemeCatalogService.catalog.some(theme => theme.id === "gruvbox");
+        const rejectedInvalidTheme = Services.ThemeCatalogService.validationErrors.some(error =>
+            error.includes("themes/poimandres.json"));
+        if (!hasGruvbox || !rejectedInvalidTheme) {
             console.error("THEME_DEGRADATION_TEST_FAILED: valid catalog entries were not isolated from an invalid theme");
             Qt.quit();
             return;
@@ -30,6 +32,13 @@ ShellRoot {
                 Qt.quit();
             }
         }
+    }
+
+    Timer {
+        interval: 100
+        repeat: true
+        running: true
+        onTriggered: root.check()
     }
 
     Timer {
