@@ -137,6 +137,12 @@ ShellRoot {
                 Qt.callLater(root.selectWallpaperTheme);
         }
     }
+    function verify() {
+        if (!Services.WallpaperService.wallpaperDirectory.endsWith("/themes/wallpaper"))
+            return `wallpaperDirectory was ${Services.WallpaperService.wallpaperDirectory}`;
+        return null;
+    }
+
     Connections {
         target: Services.ThemeService
         function onInitializedChanged() { root.begin(); }
@@ -146,6 +152,8 @@ ShellRoot {
             if (!fakeExternalTheme.skipGtkApplied) return root.fail("wallpaper external apply did not skip GTK");
             if (Services.ThemeService.externalOperation !== "succeeded")
                 return root.fail(`external operation ended as ${Services.ThemeService.externalOperation}`);
+            const error = root.verify();
+            if (error) return root.fail(error);
             console.log("WALLPAPER_THEME_SELECT_EXTERNAL_TEST_PASSED");
             Qt.quit();
         }
@@ -154,6 +162,8 @@ ShellRoot {
             if (Services.ThemeService.activeThemeId !== "wallpaper") return;
             if (fakeExternalTheme.requestedThemeId !== "wallpaper") return;
             if (!fakeExternalTheme.skipGtkApplied) return root.fail("wallpaper external apply did not skip GTK");
+            const error = root.verify();
+            if (error) return root.fail(error);
             console.log("WALLPAPER_THEME_SELECT_EXTERNAL_TEST_PASSED");
             Qt.quit();
         }

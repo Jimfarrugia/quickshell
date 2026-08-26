@@ -12,16 +12,7 @@ Singleton {
 
     readonly property string wallpaperRoot: PathsService.wallpaperRoot
     readonly property var catalogModel: thumbnailModel
-    readonly property string wallpaperDirectory: {
-        let themeId = ThemeService.activeThemeId;
-        if (themeId !== "wallpaper" && selectedPath) {
-            const parts = selectedPath.split("/");
-            const themesIndex = parts.lastIndexOf("themes");
-            if (themesIndex >= 0 && themesIndex + 1 < parts.length)
-                themeId = parts[themesIndex + 1];
-        }
-        return `${wallpaperRoot}/themes/${themeId}`;
-    }
+    readonly property string wallpaperDirectory: `${wallpaperRoot}/themes/${ThemeService.activeThemeId}`
     readonly property string cacheDirectory: PathsService.cachePath(`wallpaper/${wallpaperDirectory.split("/").pop()}`)
     readonly property string cacheManifestPath: `${cacheDirectory}/manifest`
     property string selectedPath: ""
