@@ -32,7 +32,7 @@ one.
 | Foundation | Complete | Phase 1 acceptance passed on 2026-08-24 |
 | Bar vertical slice | Complete | Phase 2; top reserved edge selected, tray host disabled during Waybar coexistence |
 | Bar parity and Waybar cutover | Complete | Phase 3 acceptance passed 2026-08-25 |
-| Theme/Matugen integration | Complete | Manual selector and external machine integration complete; Matugen mapping, staged promotion, QE-localized wallpaper selector, and Hyprpaper XDG-path application complete; external generated Matugen artifacts now delivered as QE-generated `wallpaper` theme slots applied by the external switcher; `QE_THEME_SWITCHER` wired for production through the installed `qe-theme-switcher` wrapper. Phase 4 acceptance passed on 2026-08-26 |
+| Theme/Matugen integration | Complete | Manual selector and external machine integration complete; Matugen mapping, staged promotion, QE-localized wallpaper selector, and Hyprpaper XDG-path application complete; external generated Matugen artifacts now delivered as QE-generated `wallpaper` theme slots applied by the external switcher; runtime/default artifact separation and idempotent promotion added; `QE_THEME_SWITCHER` wired for production through the installed `qe-theme-switcher` wrapper. Phase 4 acceptance passed on 2026-08-26 |
 | Notifications/OSDs | Not started | Phases 5-6 |
 | Launcher/help | Not started | Phase 7 |
 | Dashboards/control center | Not started | Phases 8-10 |
@@ -1275,8 +1275,9 @@ Implementation record (foundation, 2026-08-25):
   and maps it through the normal 32-role QE validator. `WallpaperService` owns
   versioned selected-wallpaper state, and `WallpaperAdapter` keeps the legacy
   helper behind an explicit `QE_WALLPAPER_HELPER` boundary. Generated
-  `Wallpaper.json` is stored in QE data, outside authored `themes/`, and is
-  admitted to the catalog only after validation.
+  `Wallpaper.json` is stored at the stable XDG data path
+  `$XDG_DATA_HOME/qe/wallpaper/Wallpaper.json`, outside authored `themes/`, and
+  is admitted to the catalog only after validation.
 - The mapper, adapter, and service fixtures pass with a fake Matugen executable,
   and the real Matugen 4.1.0 command was verified against a user wallpaper.
   The QE-owned cache helper now generates bounded thumbnails and a validated
@@ -2457,7 +2458,15 @@ avoids both while remaining swappable for the plugin later).
 
 Consequences: external slot files are derived data written into app config
 trees by approved contract; failed or skipped targets are reported without
-rolling back already-promoted files. The self-contained nvim colorscheme means
+rolling back already-promoted files. Promotion is content-idempotent and
+follows restore-managed slot symlinks, so generation never rewrites a tracked
+default. The dotfiles workflow keeps authored defaults under a dedicated
+`qe-defaults/wallpaper` snapshot. The preflighted `qe-wallpaper-default restore`
+command restores the stable XDG QE theme, wallpaper/lockscreen images, Neovim
+palette, and external runtime files before creating or repairing ignored live
+slot links; `capture` is the intentional default-change operation. This makes
+the generated QE `wallpaper` theme selectable before the first wallpaper
+selection on a fresh installation. The self-contained nvim colorscheme means
 neovim follows the wallpaper only while the wallpaper theme is active. The
 generated catalog is refreshed after atomic replacement, and wallpaper
 external application has one generation-completion dispatch point to avoid

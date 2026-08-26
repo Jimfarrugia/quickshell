@@ -29,6 +29,7 @@ bash tests/helpers/repeated-wallpaper-generation.test.sh
 bash tests/helpers/generated-theme-hot-reload.test.sh
 bash tests/helpers/queued-wallpaper-generation.test.sh
 bash tests/helpers/wallpaper-theme-select-external.test.sh
+bash tests/helpers/restored-wallpaper-theme.test.sh
 qmllint $(find . -maxdepth 1 -name '*.qml') $(find components modules services tests/fixtures/qml -name '*.qml') $(find integrations -maxdepth 1 -name '*.qml' ! -name 'ThemeSelectorIpc.qml' ! -name 'WallpaperSelectorIpc.qml')
 timeout 5 quickshell -p command-runner-test.qml
 timeout 5 quickshell -p foundation-service-test.qml
@@ -98,8 +99,9 @@ The wallpaper helper fixture also verifies that Hyprpaper IPC accepts the
 request and that a rejected request restores the prior derived images.
 The external-wallpaper helper fixture must print
 `EXTERNAL_WALLPAPER_THEME_HELPER_TEST_PASSED` after promoting generated slot
-files (success plus absent-executable skip), rejecting invalid specs and
-paths, and proving partial promotion. The external wallpaper theme service
+files (success plus absent-executable skip), preserving unchanged files and
+Stow-style symlink slots, rejecting invalid specs and paths, and proving
+partial promotion. The external wallpaper theme service
 fixture must print `EXTERNAL_WALLPAPER_THEME_TEST_PASSED` after the wallpaper
 generation pipeline produces the full 13-target spec, the fake promotion
 adapter promotes it, and `externalThemeStatus` reaches `succeeded`.
@@ -122,6 +124,10 @@ replacements update the catalog without restarting QE. The repeated wallpaper
 generation fixture must print
 `REPEATED_WALLPAPER_GENERATION_TEST_PASSED` after two successive Matugen
 generations complete in one QE process.
+The restored wallpaper fixture must print
+`RESTORED_WALLPAPER_THEME_HELPER_TEST_PASSED` after a default generated theme
+seeded at the stable XDG data path is catalogued, selected without a persisted
+wallpaper source, and delegated to the external switcher with GTK skipped.
 
 Relocation is checked by copying the project to a temporary directory and
 repeating the JavaScript validation and shell smoke test there. QE state created

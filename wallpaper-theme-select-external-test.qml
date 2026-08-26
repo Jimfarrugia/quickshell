@@ -114,6 +114,7 @@ ShellRoot {
     }
 
     function selectWallpaperTheme() {
+        if (Services.ThemeService.findTheme("wallpaper") === null) return;
         if (!Services.ThemeService.requestTheme("wallpaper"))
             fail("selecting the wallpaper theme was rejected");
         themeSelected = true;
@@ -171,6 +172,19 @@ ShellRoot {
     Connections {
         target: Services.ThemeCatalogService
         function onInitializedChanged() { root.begin(); }
+        function onCatalogChanged() {
+            if (Services.WallpaperService.generationStatus === "succeeded"
+                    && root.started && !root.themeSelected)
+                Qt.callLater(root.selectWallpaperTheme);
+        }
+    }
+
+    Timer {
+        interval: 20
+        repeat: true
+        running: root.started && !root.themeSelected
+            && Services.WallpaperService.generationStatus === "succeeded"
+        onTriggered: root.selectWallpaperTheme()
     }
 
     Timer {

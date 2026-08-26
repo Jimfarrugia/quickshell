@@ -18,7 +18,7 @@ if [[ "$spec_file" != /* || ! -f "$spec_file" || ! -r "$spec_file" ]]; then
     exit 2
 fi
 
-for dependency in jq mktemp; do
+for dependency in jq mktemp realpath; do
     if ! command -v "$dependency" >/dev/null 2>&1; then
         printf 'Required external theme dependency is unavailable: %s\n' "$dependency" >&2
         exit 127
@@ -48,6 +48,17 @@ path_has_parent_segment() {
     return 1
 }
 
+resolve_target_path() {
+    local path=$1
+    # Stow-managed slots can be restore-managed links to mutable XDG state. Never
+    # replace the link itself; promote the generated file at its destination.
+    if [[ -L "$path" ]]; then
+        realpath -m -- "$path"
+    else
+        printf '%s\n' "$path"
+    fi
+}
+
 results=()
 exit_code=0
 temporary_dirs=()
@@ -73,6 +84,16 @@ for ((i = 0; i < target_count; i++)); do
         exit_code=4
         continue
     fi
+    if ! path=$(resolve_target_path "$path"); then
+        results+=("{\"id\":\"$id\",\"status\":\"failed\",\"error\":\"target path could not be resolved\"}")
+        exit_code=4
+        continue
+    fi
+    if [[ "$path" != /* || $(path_has_parent_segment "$path"; echo $?) -eq 0 ]]; then
+        results+=("{\"id\":\"$id\",\"status\":\"failed\",\"error\":\"resolved target path is invalid\"}")
+        exit_code=4
+        continue
+    fi
     if [[ -n "$executable" ]] && ! command -v "$executable" >/dev/null 2>&1; then
         results+=("{\"id\":\"$id\",\"status\":\"skipped\",\"error\":\"executable is unavailable\"}")
         continue
@@ -95,6 +116,11 @@ for ((i = 0; i < target_count; i++)); do
     if [[ ! -s "$staged_path" ]]; then
         results+=("{\"id\":\"$id\",\"status\":\"failed\",\"error\":\"empty generated content\"}")
         exit_code=4
+        continue
+    fi
+
+    if [[ -f "$path" ]] && cmp -s "$staged_path" "$path"; then
+        results+=("{\"id\":\"$id\",\"status\":\"unchanged\"}")
         continue
     fi
 

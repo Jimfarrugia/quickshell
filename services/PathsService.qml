@@ -8,7 +8,9 @@ Singleton {
     readonly property string themeDirectory: Quickshell.shellPath("themes")
     readonly property string activeThemeState: Quickshell.statePath("active-theme.json")
     readonly property string wallpaperState: Quickshell.statePath("wallpaper.json")
-    readonly property string generatedThemePath: Quickshell.dataPath("Wallpaper.json")
+    readonly property string dataHome: Quickshell.env("XDG_DATA_HOME")
+        || `${Quickshell.env("HOME")}/.local/share`
+    readonly property string generatedThemePath: `${dataHome}/qe/wallpaper/Wallpaper.json`
     readonly property string wallpaperRoot: Quickshell.env("QE_WALLPAPER_ROOT")
         || `${Quickshell.env("HOME")}/Pictures/Wallpaper`
     readonly property string dataDirectory: Quickshell.dataDir

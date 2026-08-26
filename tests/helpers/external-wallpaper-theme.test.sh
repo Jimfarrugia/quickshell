@@ -43,6 +43,29 @@ grep -qx 'set -g @default_fg "#f4f7fb"' "$config_root/beta/themes/wallpaper.conf
 [[ ! -e "$config_root/ghost/themes/wallpaper.conf" ]]
 [[ -z "$(find "$config_root" -name '.qe-wallpaper.*' 2>/dev/null)" ]]
 
+result=$(run_helper "$spec")
+grep -q '^STATUS=0$' <<<"$result"
+printf '%s\n' "$result" | sed -n '2,$p' | jq -e '[.results[] | select(.status == "unchanged")] | length == 2' >/dev/null
+
+mkdir -p "$test_root/runtime"
+ln -s "$test_root/runtime/alpha.conf" "$config_root/alpha/themes/symlinked.conf"
+cat >"$test_root/symlink.json" <<EOF
+{
+  "schemaVersion": 1,
+  "variant": "dark",
+  "targets": [
+    {"id": "symlinked", "executable": "bash", "path": "$config_root/alpha/themes/symlinked.conf",
+     "content": "background #303030\n"}
+  ]
+}
+EOF
+result=$(run_helper "$test_root/symlink.json")
+grep -q '^STATUS=0$' <<<"$result"
+grep -qx 'background #303030' "$test_root/runtime/alpha.conf"
+[[ -L "$config_root/alpha/themes/symlinked.conf" ]]
+result=$(run_helper "$test_root/symlink.json")
+printf '%s\n' "$result" | sed -n '2,$p' | jq -e '.results[0].status == "unchanged"' >/dev/null
+
 result=$(run_helper "$test_root/does-not-exist.json")
 grep -q '^STATUS=2$' <<<"$result"
 

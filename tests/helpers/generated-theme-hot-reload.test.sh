@@ -4,6 +4,7 @@ set -euo pipefail
 project_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd -P)
 test_root=$(mktemp -d)
 trap 'rm -rf -- "$test_root"' EXIT
+mkdir -p -- "$test_root/data/qe/wallpaper"
 
 output=$(
     XDG_STATE_HOME="$test_root/state" \

@@ -83,6 +83,12 @@ Singleton {
         initialized = true;
     }
 
+    function refreshGeneratedTheme() {
+        generatedThemeFile.settled = false;
+        generatedThemeFile.reload();
+        generatedThemeFile.text();
+    }
+
     FolderListModel {
         id: themeFolder
         folder: `file://${PathsService.themeDirectory}/`

@@ -199,6 +199,7 @@ Singleton {
     }
 
     function completeGeneration() {
+        ThemeCatalogService.refreshGeneratedTheme();
         generationStatus = "succeeded";
         root.startExternalThemeGeneration();
         pendingGenerationPath = "";
@@ -461,8 +462,12 @@ Singleton {
         target: ThemeService
         function onActiveThemeIdChanged() {
             root.syncCache();
-            if (ThemeService.activeThemeId === "wallpaper" && root.selectedPath)
+            if (ThemeService.activeThemeId !== "wallpaper") return;
+            if (root.selectedPath) {
                 root.requestGeneration(root.selectedPath);
+            } else if (root.generationStatus !== "pending" && root.externalThemeStatus !== "pending") {
+                ThemeService.applyExternalTheme("wallpaper", `wallpaper-restored-${root.nextOperationId++}`, true);
+            }
         }
         function onInitializedChanged() { root.syncCache(); }
     }

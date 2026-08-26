@@ -282,7 +282,9 @@ dotfiles location.
   `shellRoot` and `configDir` aliases are deprecated. The exact property must
   still be verified before a Quickshell upgrade.
 - QE persistent state uses `Quickshell.statePath(...)`.
-- QE generated data uses `Quickshell.dataPath(...)`.
+- QE operation staging uses `Quickshell.dataPath(...)`. The generated
+  `Wallpaper.json` uses `$XDG_DATA_HOME/qe/wallpaper/Wallpaper.json` so a
+  default snapshot can be restored before QE starts on a fresh installation.
 - Regenerable caches use `Quickshell.cachePath(...)`.
 - External paths are resolved from XDG environment variables or explicit
   configuration.
@@ -308,7 +310,7 @@ contracts. UI modules invoke typed domain operations such as `openLauncher()` or
 | --------------------------- | --------------------------------------------- | --------------------------------------------- | --------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | QE user configuration       | User                                          | `config/qe.json`                              | `ConfigService`, modules through service properties | User only                              | watched, validate then publish                                                            | persistent; invalid file retains last-known-good or safe defaults       |
 | QE authored themes          | User                                          | `themes/*.json`                               | `ThemeCatalogService`                               | User only                              | discovery/watch and validation                                                            | persistent input; invalid themes excluded with diagnostics              |
-| Generated `Wallpaper` theme | Matugen generation adapter                    | QE data directory, same theme schema          | `ThemeCatalogService`, lock reader                  | generation adapter only                | atomic replace then catalog notification                                                  | derived, regenerable; last-known-good retained on failure               |
+| Generated `Wallpaper` theme | Matugen generation adapter                    | stable XDG data path, same theme schema        | `ThemeCatalogService`, lock reader                  | generation adapter only                | atomic replace then catalog notification                                                  | derived, regenerable; default snapshot seeds fresh installs and LKG is retained on failure |
 | Active QE theme             | `ThemeService`                                | versioned QE state JSON                       | all QE presentation, lock process                   | `ThemeService` only                    | singleton properties/signals                                                              | persistent; missing ID falls back to configured default                 |
 | External desktop theme      | external theme switcher                       | switcher-owned versioned state after refactor | `ExternalThemeAdapter`, diagnostics                 | external switcher only                 | structured command result/file watch                                                      | independent of QE theme; unavailable state is unknown, not QE fallback  |
 | Theme request in flight     | `ThemeService`                                | in-memory operation record                    | theme UI/status UI                                  | `ThemeService`                         | reactive properties                                                                       | ephemeral desired state; never authoritative confirmed theme            |
@@ -762,9 +764,9 @@ unset or missing executable is an isolated unavailable state. `MatugenAdapter`
 requests noninteractive JSON output with an explicit mode and source-color
 preference, bounds the process, and validates the mapped 32-role theme before
 the service stages it. `WallpaperPromotionAdapter` then promotes the staged QE
-`Wallpaper.json` through a same-filesystem rename, preserving the previous
-artifact when staging or promotion fails. External Matugen artifacts remain
-deferred until their target contracts are approved.
+`Wallpaper.json` into its stable XDG data path, preserving the previous artifact
+when staging or promotion fails. External Matugen artifacts use the separate
+validated promotion contract described below.
 
 The compatibility wallpaper boundary requires `QE_WALLPAPER_HELPER` and passes
 the selected path as a discrete argument. The QE helper validates and stages
@@ -793,7 +795,15 @@ fzf, hyprland, hyprlock, rofi, starship, tmux, opencode, and a Palette JSON for
 Neovim), and `WallpaperExternalThemeAdapter` materializes them through
 `scripts/promote-external-theme.sh`, which writes each file into the app's
 `themes/` `wallpaper` slot with staging and atomic same-filesystem replacement,
-skipping targets whose executables are absent, and reporting per-target results.
+skipping targets whose executables are absent, preserving unchanged files, and
+reporting per-target results. Stow-managed installations keep these live slots
+as ignored, restore-managed symlinks to XDG state; promotion resolves the link
+before replacing the runtime target so the dotfiles repository remains
+authored-default data rather than a runtime write target. The explicit
+`qe-wallpaper-default restore` operation preflights and restores the generated
+QE theme, wallpaper/lockscreen images, Neovim palette, and external slots before
+creating or repairing the live links. `capture` is the only operation that
+updates the authored default snapshot.
 QE never writes an app's active configuration; the external switcher owns that
 copy. After promotion succeeds, QE delegates external application to the
 switcher with `--machine --theme wallpaper --skip-gtk` (GTK is excluded because
