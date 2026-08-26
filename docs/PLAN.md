@@ -2,7 +2,7 @@
 
 Status: Phases 1-4 complete
 
-Last inventory: 2026-08-26
+Last inventory: 2026-08-27
 
 This is the authoritative roadmap, implementation sequence, dependency map,
 project-status reference, risk register, and architectural decision log for the
@@ -1238,6 +1238,12 @@ Implementation record (foundation, 2026-08-25):
   results never roll QE back, and independent CLI state updates never overwrite
   the active QE theme. The selector reports external status separately and names
   failed targets.
+- The theme selector rejects the already-active theme and disables every theme
+  card while an apply operation is pending. Disabled cards use reduced opacity
+  and cannot receive pointer or hover interaction; the active card is labeled
+  `Currently active`, and pending cards show `Theme apply in progress`. The
+  selector interaction fixture verifies that reselecting the active theme cannot
+  start an operation.
 - The current production launcher environment now wires external theming. The
   installed `qe-theme-switcher` helper forwards QE's array arguments to the
   theme-switcher machine CLI, and `run-qe.sh` discovers it solely from
@@ -2491,6 +2497,44 @@ Affected areas: `ExternalWallpaperTheme.mjs`, `WallpaperExternalThemeAdapter`,
 Revisit if: an external app changes its theme slot layout, a target needs
 cross-filesystem promotion, or the user selects `matugen.nvim` as the nvim
 consumer.
+
+## ADR-020: Apply-time focused Kitty bar compositing
+
+Context: generated wallpaper themes used a fixed QE panel alpha and Matugen's
+surface color, while Kitty separately applied its background opacity and
+Hyprland applied window opacity. This made the generated bar visibly differ
+from a focused Kitty window, especially for automatically generated palettes.
+
+Decision: when generating the wallpaper theme, QE captures Kitty's effective
+`background_opacity` and queries Hyprland's live
+`decoration:active_opacity`. The generated `surface_panel` uses the Matugen
+wallpaper background with the product of those values as its alpha. Kitty and
+Hyprland remain the owners of their settings; QE does not introduce a shared
+opacity setting or runtime watchers. Missing configuration files, missing
+settings, unavailable IPC, malformed values, and out-of-range values use full
+opacity (`1.0`). A later upstream change is reflected when the wallpaper theme
+is next generated or applied.
+
+Rationale: this matches the requested focused-window appearance without
+polling or duplicating Kitty configuration. Applying the alpha to the bar is
+necessary because Hyprland window opacity does not automatically apply to the
+QE layer surface.
+
+Alternatives considered: watching both configuration sources (unnecessary
+runtime work and more lifecycle complexity); adding a QE-owned Kitty opacity
+setting (creates competing ownership); using the Matugen surface token (does
+not match Kitty's terminal background).
+
+Consequences: an already-generated theme can remain stale after an upstream
+opacity edit until the next wallpaper-theme application. Kitty include files
+are resolved by the bounded helper, while Hyprland is queried from the live
+compositor rather than assuming a config filename or syntax.
+
+Affected areas: `MatugenAdapter`, `Matugen.mjs`, `Opacity.mjs`,
+`qe-window-opacity.sh`, generated wallpaper themes, and validation fixtures.
+
+Revisit if: Kitty or Hyprland expose a stable native event/API that makes
+live synchronization valuable, or if the bar must match inactive windows too.
 
 ## 14. Planning Change Procedure
 

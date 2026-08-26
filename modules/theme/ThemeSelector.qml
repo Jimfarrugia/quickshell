@@ -13,7 +13,8 @@ FloatingWindow {
     color: "transparent"
 
     function applyTheme(id) {
-        if (Services.ThemeService.operation === "pending") return false;
+        if (Services.ThemeService.operation === "pending"
+                || Services.ThemeService.externalOperation === "pending") return false;
         return Services.ThemeService.requestTheme(id);
     }
 
@@ -100,6 +101,9 @@ FloatingWindow {
                     required property var modelData
                     required property int index
                     readonly property string themeId: modelData.id
+                    readonly property bool selectable: Services.ThemeService.operation !== "pending"
+                        && Services.ThemeService.externalOperation !== "pending"
+                        && themeId !== Services.ThemeService.activeThemeId
                     width: themeGrid.cellWidth
                     height: themeGrid.cellHeight
 
@@ -107,6 +111,7 @@ FloatingWindow {
                         anchors.fill: parent
                         anchors.margins: 6
                         radius: Services.ConfigService.config.appearance.radius + 2
+                        opacity: delegateRoot.selectable ? 1 : 0.52
                         color: modelData.id === Services.ThemeService.activeThemeId
                             ? modelData.tokens.primary_container
                             : (cardTap.pressed ? modelData.tokens.surface_pressed
@@ -184,8 +189,11 @@ FloatingWindow {
                             Text {
                                 Layout.fillWidth: true
                                 text: modelData.id === Services.ThemeService.activeThemeId
-                                    ? "Applied to live QE surfaces"
-                                    : "Select to apply"
+                                    ? "Currently active"
+                                    : (Services.ThemeService.operation === "pending"
+                                        || Services.ThemeService.externalOperation === "pending")
+                                        ? "Theme apply in progress"
+                                        : "Select to apply"
                                 color: modelData.id === Services.ThemeService.activeThemeId
                                     ? modelData.tokens.on_primary_container : modelData.tokens.on_surface_variant
                                 font.family: Services.ConfigService.config.appearance.fontFamily
@@ -193,9 +201,13 @@ FloatingWindow {
                             }
                         }
 
-                        HoverHandler { id: cardHover }
+                        HoverHandler {
+                            id: cardHover
+                            enabled: delegateRoot.selectable
+                        }
                         TapHandler {
                             id: cardTap
+                            enabled: delegateRoot.selectable
                             onTapped: {
                                 themeGrid.currentIndex = delegateRoot.index;
                                 root.applyTheme(delegateRoot.themeId);

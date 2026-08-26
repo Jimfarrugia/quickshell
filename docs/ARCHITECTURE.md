@@ -771,6 +771,15 @@ versioned template. The generated `Wallpaper` file is derived data and is never
 edited by users. User overrides, if later needed, must be a separate authored
 input layered before generation rather than edits to generated output.
 
+Wallpaper generation also captures the focused Kitty appearance at apply time.
+`scripts/qe-window-opacity.sh` reads Kitty's effective `background_opacity`,
+including nested includes, and queries Hyprland's live
+`decoration:active_opacity` through `hyprctl`. Missing, unavailable, malformed,
+or out-of-range upstream values fall back to `1.0`; the snapshot is not watched
+at runtime. The generated wallpaper `surface_panel` uses the palette background
+with the product of those opacities as its alpha, so later upstream config
+changes take effect on the next wallpaper-theme generation or application.
+
 The current adapter boundary requires `QE_MATUGEN` to name the executable; an
 unset or missing executable is an isolated unavailable state. `MatugenAdapter`
 requests noninteractive JSON output with an explicit mode and source-color

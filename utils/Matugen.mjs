@@ -1,4 +1,5 @@
 import { validateTheme } from "./Validation.mjs";
+import { alphaHex } from "./Opacity.mjs";
 
 const COLOR_PATTERN = /^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
 const REQUIRED_COLORS = [
@@ -26,7 +27,7 @@ function withAlpha(color, alpha) {
   return color.length === 7 ? `#${alpha}${color.slice(1)}` : color;
 }
 
-export function mapMatugenTheme(document, variant = "dark") {
+export function mapMatugenTheme(document, variant = "dark", opacitySnapshot = null) {
   const errors = [];
   if (!isObject(document))
     return { ok: false, errors: ["matugen: root must be an object"], value: null };
@@ -66,7 +67,7 @@ export function mapMatugenTheme(document, variant = "dark") {
       on_surface: color("on_surface"),
       surface_variant: color("surface_variant"),
       on_surface_variant: color("on_surface_variant"),
-      surface_panel: withAlpha(color("surface"), "e6"),
+      surface_panel: withAlpha(color("background"), alphaHex(opacitySnapshot)),
       on_surface_panel: color("on_surface"),
       surface_tooltip: color("surface_variant"),
       on_surface_tooltip: color("on_surface_variant"),

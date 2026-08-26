@@ -7,21 +7,28 @@ Scope {
     id: root
 
     property string executable: Quickshell.env("QE_MATUGEN")
+    property string opacityHelper: Quickshell.env("QE_WINDOW_OPACITY_HELPER")
+        || Quickshell.shellPath("scripts/qe-window-opacity.sh")
     property int timeoutMs: 120000
     property int termGraceMs: 2000
     property string availability: "unknown"
     property string lastError: ""
     readonly property bool running: runner.running
+    property var opacitySnapshot: null
 
     signal finished(var result)
 
     function generate(imagePath, variant, operationId) {
-        if (runner.running || availability !== "available" || !imagePath || !operationId)
+        if (runner.running || opacityRunner.running || availability !== "available" || !imagePath || !operationId)
             return false;
-        runner.command = [executable, "image", imagePath, "--json", "hex", "-m", variant, "--prefer", "saturation", "--dry-run"];
-        runner.operationId = operationId;
-        runner.variant = variant;
-        return runner.start();
+        opacitySnapshot = null;
+        opacityRunner.command = [opacityHelper];
+        opacityRunner.operationId = `${operationId}-opacity`;
+        opacityRunner.variant = variant;
+        opacityRunner.imagePath = imagePath;
+        opacityRunner.generationOperationId = operationId;
+        if (!opacityRunner.start()) return false;
+        return true;
     }
 
     FileView {
@@ -34,6 +41,26 @@ Scope {
         onLoadFailed: {
             root.availability = "unavailable";
             root.lastError = "Matugen executable is unavailable";
+        }
+    }
+
+    CommandRunner {
+        id: opacityRunner
+        property string variant: "dark"
+        property string imagePath: ""
+        property string generationOperationId: ""
+        timeoutMs: 5000
+        termGraceMs: 1000
+        maxStdoutBytes: 4096
+        maxStderrBytes: 8192
+        expectJson: true
+        onFinished: raw => {
+            root.opacitySnapshot = raw.success && raw.parsed !== null ? raw.parsed : {};
+            runner.command = [root.executable, "image", imagePath, "--json", "hex", "-m", variant,
+                "--prefer", "saturation", "--dry-run"];
+            runner.operationId = generationOperationId;
+            runner.variant = variant;
+            runner.start();
         }
     }
 
@@ -52,7 +79,7 @@ Scope {
             else if (raw.cancelled)
                 mapped.errors = ["Matugen generation was cancelled"];
             else if (raw.parsed !== null)
-                mapped = Matugen.mapMatugenTheme(raw.parsed, runner.variant);
+                mapped = Matugen.mapMatugenTheme(raw.parsed, runner.variant, root.opacitySnapshot);
             else
                 mapped.errors = [raw.parseError || raw.errorCode || "Matugen generation failed"];
             const result = {

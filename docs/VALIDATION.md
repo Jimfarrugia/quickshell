@@ -26,6 +26,7 @@ bash tests/helpers/wallpaper-selector-ipc.test.sh
 bash tests/helpers/qe-launch.test.sh
 bash tests/helpers/external-wallpaper-theme.test.sh
 bash tests/helpers/external-wallpaper-theme-service.test.sh
+bash tests/helpers/window-opacity.test.sh
 bash tests/helpers/repeated-wallpaper-generation.test.sh
 bash tests/helpers/generated-theme-hot-reload.test.sh
 bash tests/helpers/queued-wallpaper-generation.test.sh

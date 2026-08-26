@@ -139,6 +139,7 @@ Singleton {
             lastError = DiagnosticsService.report("THEME_NOT_FOUND", "theme", "Theme request rejected", `Unknown theme '${id}'`, false, null);
             return false;
         }
+        if (id === activeThemeId) return false;
         pendingTheme = candidate;
         pendingOperationId = `theme-${nextOperationId++}`;
         operation = "pending";

@@ -13,6 +13,8 @@ ShellRoot {
         if (requested || !Services.ThemeService.initialized || Services.ThemeService.catalog.length < 2)
             return;
         expectedThemeId = Services.ThemeService.activeThemeId === "poimandres" ? "gruvbox" : "poimandres";
+        if (selector.applyTheme(Services.ThemeService.activeThemeId))
+            return fail("selector accepted the already-active theme");
         requested = true;
         if (!selector.applyTheme(expectedThemeId))
             fail("selector rejected a valid catalog theme");
