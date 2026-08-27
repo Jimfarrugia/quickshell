@@ -6,10 +6,12 @@ import {
 
 const palette = {
   background: "#101820", on_background: "#f4f7fb", surface: "#18232d", on_surface: "#f4f7fb",
-  surface_variant: "#3f4b56", on_surface_variant: "#d1dae4", primary: "#9ecaff",
+  surface_variant: "#3f4b56", surface_container: "#202b35", surface_container_low: "#1c2731",
+  on_surface_variant: "#d1dae4", primary: "#9ecaff",
   on_primary: "#003258", primary_container: "#1c4a73", on_primary_container: "#d1e5ff",
   secondary: "#b5c9e2", on_secondary: "#1f3348", secondary_container: "#364b62",
   on_secondary_container: "#d1e5ff", tertiary: "#d5bce5", tertiary_container: "#513a5e",
+  on_tertiary_container: "#f2daff",
   on_tertiary_container: "#f2daff", outline: "#8b96a2", outline_variant: "#414b56",
   error: "#ffb4ab", shadow: "#000000", scrim: "#000000"
 };
@@ -48,6 +50,32 @@ assert.match(byId.rofi.content, /@white;/);
 assert.match(byId.tmux.content, /^set -g @default_fg/m);
 assert.match(byId.fzf.content, /--color=fg:/);
 assert.match(byId.nvim.content, /"schema":\s*"qe-nvim-palette"/);
+const opencode = JSON.parse(byId.opencode.content);
+for (const token of [
+  "background", "on_background", "surface_variant", "on_surface_variant", "primary",
+  "secondary", "secondary_container", "tertiary", "tertiary_container", "error",
+  "outline", "primary_container", "on_primary_container", "on_secondary_container"
+]) {
+  assert.equal(typeof opencode.defs[token], "string");
+}
+for (const colorAlias of ["currentLine", "bgHighlight", "foreground", "cyan", "green", "orange", "purple"]) {
+  assert.equal(Object.hasOwn(opencode.defs, colorAlias), false);
+}
+assert.equal(opencode.theme.primary.dark, "primary");
+assert.equal(opencode.theme.text.dark, "on_background");
+assert.equal(opencode.theme.markdownText.dark, "on_background");
+assert.equal(opencode.theme.secondary.dark, "secondary");
+assert.equal(opencode.theme.accent.dark, "tertiary");
+assert.equal(opencode.theme.warning.dark, "tertiary");
+assert.equal(opencode.theme.borderActive.dark, "primary");
+assert.equal(opencode.theme.diffHighlightAdded.dark, "on_tertiary_container");
+assert.equal(opencode.theme.backgroundPanel.dark, "surface_container");
+assert.equal(opencode.theme.backgroundElement.dark, "surface_container_low");
+assert.equal(opencode.theme.diffAddedLineNumberBg.dark, "surface_container_low");
+assert.equal(opencode.theme.diffRemovedLineNumberBg.dark, "surface_container_low");
+assert.equal(opencode.theme.markdownCode.dark, "on_tertiary_container");
+assert.equal(opencode.theme.markdownEmph.dark, "on_secondary_container");
+assert.equal(opencode.theme.markdownStrong.dark, "on_primary_container");
 for (const token of [
   "primary", "secondary", "tertiary", "tertiary_container", "secondary_container",
   "error", "on_surface_variant"
@@ -81,7 +109,7 @@ assert.equal(validateExternalTargetContent({
 assert.equal(JSON.parse(byId.nvim.content).variant, "dark");
 assert.equal(JSON.parse(byId.nvim.content).colors.surface_variant, "#3f4b56");
 assert.equal(JSON.parse(byId.nvim.content).colors.primary, "#9ecaff");
-assert.equal(JSON.parse(byId.opencode.content).theme.background.dark, "background");
+assert.equal(opencode.theme.background.dark, "background");
 assert.equal(byId.nvim.path, "/tmp/qe-test/home/.cache/matugen/nvim-colors.json");
 
 const light = generateWallpaperExternalTargets(palette, bases, "light");

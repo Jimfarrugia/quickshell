@@ -1,9 +1,21 @@
 const HEX_PATTERN = /^#[0-9a-fA-F]{6}$/;
 const ANSI_KEYS = [
-  "background", "error", "tertiary", "secondary", "primary",
-  "secondaryContainer", "tertiaryContainer", "foreground",
-  "surfaceVariant", "error", "tertiary", "secondaryContainer",
-  "primaryContainer", "tertiaryContainer", "secondary", "onSurfaceVariant"
+  "background",
+  "error",
+  "tertiary",
+  "secondary",
+  "primary",
+  "secondaryContainer",
+  "tertiaryContainer",
+  "foreground",
+  "surfaceVariant",
+  "error",
+  "tertiary",
+  "secondaryContainer",
+  "primaryContainer",
+  "tertiaryContainer",
+  "secondary",
+  "onSurfaceVariant",
 ];
 
 function buildCode(palette) {
@@ -13,6 +25,8 @@ function buildCode(palette) {
   };
   return {
     background: read("background"),
+    surfaceContainer: read("surface_container"),
+    surfaceContainerLow: read("surface_container_low"),
     foreground: read("on_background"),
     surface: read("surface"),
     onSurface: read("on_surface"),
@@ -31,7 +45,7 @@ function buildCode(palette) {
     onTertiaryContainer: read("on_tertiary_container"),
     error: read("error"),
     outline: read("outline"),
-    outlineVariant: read("outline_variant")
+    outlineVariant: read("outline_variant"),
   };
 }
 
@@ -44,7 +58,7 @@ function stripHash(value) {
 }
 
 function ansiColors(c) {
-  return ANSI_KEYS.map(key => c[key]);
+  return ANSI_KEYS.map((key) => c[key]);
 }
 
 function kittyTheme(c) {
@@ -63,7 +77,7 @@ function kittyTheme(c) {
     "inactive_tab_background " + c.surfaceVariant,
     "inactive_tab_foreground " + c.onSurfaceVariant,
     "active_border_color " + c.primary,
-    "inactive_border_color " + c.outlineVariant
+    "inactive_border_color " + c.outlineVariant,
   ];
   for (let i = 0; i < 16; i++) lines.push(`color${i} ${a[i]}`);
   return lines.join("\n") + "\n";
@@ -94,7 +108,7 @@ function batTheme(c) {
     "  </array>",
     "</dict>",
     "</plist>",
-    ""
+    "",
   ].join("\n");
 }
 
@@ -123,7 +137,7 @@ function gradientSuffix(c) {
     `theme[download_end]="${stripHash(c.foreground)}"`,
     `theme[upload_start]="${stripHash(c.secondary)}"`,
     `theme[upload_mid]="${stripHash(c.tertiary)}"`,
-    `theme[upload_end]="${stripHash(c.foreground)}"`
+    `theme[upload_end]="${stripHash(c.foreground)}"`,
   ].join("\n");
 }
 
@@ -144,7 +158,7 @@ function btopTheme(c) {
     `theme[proc_box]="${stripHash(c.outlineVariant)}"`,
     `theme[div_line]="${stripHash(c.outlineVariant)}"`,
     gradientSuffix(c),
-    ""
+    "",
   ].join("\n");
 }
 
@@ -155,80 +169,115 @@ function ezaYml(c) {
   const accent2 = c.secondary;
   const accent3 = c.tertiary;
   const danger = c.error;
-  const group = (items) => items.map(kv => `  ${kv.key}: {foreground: "${kv.value}"}`).join("\n");
+  const group = (items) =>
+    items.map((kv) => `  ${kv.key}: {foreground: "${kv.value}"}`).join("\n");
   return [
     "colourful: false",
     "",
     "filekinds:",
     group([
-      { key: "normal", value: fg }, { key: "directory", value: accent },
-      { key: "symlink", value: accent3 }, { key: "pipe", value: dim },
-      { key: "block_device", value: accent2 }, { key: "char_device", value: accent2 },
-      { key: "socket", value: accent2 }, { key: "special", value: accent2 },
-      { key: "executable", value: accent2 }, { key: "mount_point", value: accent }
+      { key: "normal", value: fg },
+      { key: "directory", value: accent },
+      { key: "symlink", value: accent3 },
+      { key: "pipe", value: dim },
+      { key: "block_device", value: accent2 },
+      { key: "char_device", value: accent2 },
+      { key: "socket", value: accent2 },
+      { key: "special", value: accent2 },
+      { key: "executable", value: accent2 },
+      { key: "mount_point", value: accent },
     ]),
     "",
     "perms:",
     group([
-      { key: "user_read", value: fg }, { key: "user_write", value: accent2 },
-      { key: "user_execute_file", value: accent3 }, { key: "user_execute_other", value: accent3 },
-      { key: "group_read", value: fg }, { key: "group_write", value: accent2 },
-      { key: "group_execute", value: accent3 }, { key: "other_read", value: accent },
-      { key: "other_write", value: accent2 }, { key: "other_execute", value: accent3 },
-      { key: "special_user_file", value: accent2 }, { key: "special_other", value: dim },
-      { key: "attribute", value: accent }
+      { key: "user_read", value: fg },
+      { key: "user_write", value: accent2 },
+      { key: "user_execute_file", value: accent3 },
+      { key: "user_execute_other", value: accent3 },
+      { key: "group_read", value: fg },
+      { key: "group_write", value: accent2 },
+      { key: "group_execute", value: accent3 },
+      { key: "other_read", value: accent },
+      { key: "other_write", value: accent2 },
+      { key: "other_execute", value: accent3 },
+      { key: "special_user_file", value: accent2 },
+      { key: "special_other", value: dim },
+      { key: "attribute", value: accent },
     ]),
     "",
     "size:",
     group([
-      { key: "major", value: accent }, { key: "minor", value: accent2 },
-      { key: "number_byte", value: fg }, { key: "number_kilo", value: accent },
-      { key: "number_mega", value: accent3 }, { key: "number_giga", value: accent2 },
-      { key: "number_huge", value: accent2 }, { key: "unit_byte", value: accent },
-      { key: "unit_kilo", value: accent3 }, { key: "unit_mega", value: accent2 },
-      { key: "unit_giga", value: accent2 }, { key: "unit_huge", value: accent3 }
+      { key: "major", value: accent },
+      { key: "minor", value: accent2 },
+      { key: "number_byte", value: fg },
+      { key: "number_kilo", value: accent },
+      { key: "number_mega", value: accent3 },
+      { key: "number_giga", value: accent2 },
+      { key: "number_huge", value: accent2 },
+      { key: "unit_byte", value: accent },
+      { key: "unit_kilo", value: accent3 },
+      { key: "unit_mega", value: accent2 },
+      { key: "unit_giga", value: accent2 },
+      { key: "unit_huge", value: accent3 },
     ]),
     "",
     "users:",
     group([
-      { key: "user_you", value: fg }, { key: "user_root", value: dim },
-      { key: "user_other", value: accent2 }, { key: "group_yours", value: accent },
-      { key: "group_other", value: dim }, { key: "group_root", value: dim }
+      { key: "user_you", value: fg },
+      { key: "user_root", value: dim },
+      { key: "user_other", value: accent2 },
+      { key: "group_yours", value: accent },
+      { key: "group_other", value: dim },
+      { key: "group_root", value: dim },
     ]),
     "",
     "links:",
     group([
-      { key: "normal", value: accent2 }, { key: "multi_link_file", value: accent3 }
+      { key: "normal", value: accent2 },
+      { key: "multi_link_file", value: accent3 },
     ]),
     "",
     "git:",
     group([
-      { key: "new", value: accent }, { key: "modified", value: accent2 },
-      { key: "deleted", value: dim }, { key: "renamed", value: accent3 },
-      { key: "typechange", value: accent2 }, { key: "ignored", value: dim },
-      { key: "conflicted", value: danger }
+      { key: "new", value: accent },
+      { key: "modified", value: accent2 },
+      { key: "deleted", value: dim },
+      { key: "renamed", value: accent3 },
+      { key: "typechange", value: accent2 },
+      { key: "ignored", value: dim },
+      { key: "conflicted", value: danger },
     ]),
     "",
     "git_repo:",
     group([
-      { key: "branch_main", value: fg }, { key: "branch_other", value: accent2 },
-      { key: "git_clean", value: accent3 }, { key: "git_dirty", value: danger }
+      { key: "branch_main", value: fg },
+      { key: "branch_other", value: accent2 },
+      { key: "git_clean", value: accent3 },
+      { key: "git_dirty", value: danger },
     ]),
     "",
     "security_context:",
     group([
-      { key: "colon", value: accent3 }, { key: "user", value: accent },
-      { key: "role", value: accent2 }, { key: "typ", value: dim }, { key: "range", value: accent2 }
+      { key: "colon", value: accent3 },
+      { key: "user", value: accent },
+      { key: "role", value: accent2 },
+      { key: "typ", value: dim },
+      { key: "range", value: accent2 },
     ]),
     "",
     "file_type:",
     group([
-      { key: "image", value: accent3 }, { key: "video", value: accent2 },
-      { key: "music", value: accent }, { key: "lossless", value: accent2 },
-      { key: "crypto", value: dim }, { key: "document", value: fg },
-      { key: "compressed", value: accent2 }, { key: "temp", value: danger },
-      { key: "compiled", value: accent3 }, { key: "build", value: dim },
-      { key: "source", value: accent2 }
+      { key: "image", value: accent3 },
+      { key: "video", value: accent2 },
+      { key: "music", value: accent },
+      { key: "lossless", value: accent2 },
+      { key: "crypto", value: dim },
+      { key: "document", value: fg },
+      { key: "compressed", value: accent2 },
+      { key: "temp", value: danger },
+      { key: "compiled", value: accent3 },
+      { key: "build", value: dim },
+      { key: "source", value: accent2 },
     ]),
     "",
     `punctuation: {foreground: "${fg}"}`,
@@ -246,7 +295,7 @@ function ezaYml(c) {
     "",
     "filenames:",
     "extensions:",
-    ""
+    "",
   ].join("\n");
 }
 
@@ -268,13 +317,13 @@ function dunstTheme(c) {
     "[urgency_critical]",
     `  background = "${c.error}"`,
     `  foreground = "${c.background}"`,
-    ""
+    "",
   ].join("\n");
 }
 
 function fzfZsh(c) {
   return [
-    "FZF_DEFAULT_OPTS=\"\"",
+    'FZF_DEFAULT_OPTS=""',
     "",
     `FZF_DEFAULT_OPTS+=" --color=border:${c.outline},label:${c.secondary}"`,
     `FZF_DEFAULT_OPTS+=" --color=fg:${c.foreground},bg:${c.background},hl:${c.primary}"`,
@@ -283,7 +332,7 @@ function fzfZsh(c) {
     `FZF_DEFAULT_OPTS+=" --color=marker:${c.tertiary},spinner:${c.tertiary},header:${c.outlineVariant}"`,
     "",
     "export FZF_DEFAULT_OPTS",
-    ""
+    "",
   ].join("\n");
 }
 
@@ -318,7 +367,7 @@ function hyprlandLua(c) {
     "\t\t},",
     "\t},",
     "})",
-    ""
+    "",
   ].join("\n");
 }
 
@@ -343,7 +392,7 @@ function hyprlockConf(c) {
     `$rect_background = rgba(${stripHash(c.background)}4A)`,
     "$rect_border     = $white",
     "$icon_color      = $yellowRaw",
-    ""
+    "",
   ].join("\n");
 }
 
@@ -379,7 +428,7 @@ function rofiRasi(c) {
     "  entry-foreground: @white;",
     "  prompt-foreground: @blue;",
     "}",
-    ""
+    "",
   ].join("\n");
 }
 
@@ -436,21 +485,52 @@ function starshipSh(c) {
     'export USERNAME_ROOT_FG="$on_surface_variant"',
     'export DOCKER_BG=""',
     'export DOCKER_FG="$on_surface_variant"',
-    ""
+    "",
   ].join("\n");
 }
 
 const STARSHIP_EXPORTS = [
-  "LP_SEPARATOR", "LP_LEFT_EDGE_SYMBOL", "OS_BG", "OS_FG", "DIR_PATH_BG",
-  "DIR_PATH_FG", "GIT_BG", "GIT_FG", "ENV_BG", "ENV_FG",
-  "LP_RIGHT_EDGE_SYMBOL", "CMD_DURATION_FG", "FILL_FG", "FILL_SYMBOL",
-  "RP_SEPARATOR", "RP_LEFT_EDGE_SYMBOL", "BATTERY_BG", "BATTERY_FG",
-  "HOSTNAME_BG", "HOSTNAME_FG", "TIME_BG", "TIME_FG", "RP_RIGHT_EDGE_SYMBOL",
-  "CHAR_SUCCESS_FG", "CHAR_SUCCESS_SYMBOL", "CHAR_ERROR_FG", "CHAR_ERROR_SYMBOL",
-  "CHAR_VIM_FG", "CHAR_VIM_SYMBOL", "CHAR_VIM_REPLACE_ONE_FG",
-  "CHAR_VIM_REPLACE_ONE_SYMBOL", "CHAR_VIM_REPLACE_FG", "CHAR_VIM_REPLACE_SYMBOL",
-  "CHAR_VIM_VISUAL_FG", "CHAR_VIM_VISUAL_SYMBOL", "USERNAME_USER_BG",
-  "USERNAME_USER_FG", "USERNAME_ROOT_BG", "USERNAME_ROOT_FG", "DOCKER_BG", "DOCKER_FG"
+  "LP_SEPARATOR",
+  "LP_LEFT_EDGE_SYMBOL",
+  "OS_BG",
+  "OS_FG",
+  "DIR_PATH_BG",
+  "DIR_PATH_FG",
+  "GIT_BG",
+  "GIT_FG",
+  "ENV_BG",
+  "ENV_FG",
+  "LP_RIGHT_EDGE_SYMBOL",
+  "CMD_DURATION_FG",
+  "FILL_FG",
+  "FILL_SYMBOL",
+  "RP_SEPARATOR",
+  "RP_LEFT_EDGE_SYMBOL",
+  "BATTERY_BG",
+  "BATTERY_FG",
+  "HOSTNAME_BG",
+  "HOSTNAME_FG",
+  "TIME_BG",
+  "TIME_FG",
+  "RP_RIGHT_EDGE_SYMBOL",
+  "CHAR_SUCCESS_FG",
+  "CHAR_SUCCESS_SYMBOL",
+  "CHAR_ERROR_FG",
+  "CHAR_ERROR_SYMBOL",
+  "CHAR_VIM_FG",
+  "CHAR_VIM_SYMBOL",
+  "CHAR_VIM_REPLACE_ONE_FG",
+  "CHAR_VIM_REPLACE_ONE_SYMBOL",
+  "CHAR_VIM_REPLACE_FG",
+  "CHAR_VIM_REPLACE_SYMBOL",
+  "CHAR_VIM_VISUAL_FG",
+  "CHAR_VIM_VISUAL_SYMBOL",
+  "USERNAME_USER_BG",
+  "USERNAME_USER_FG",
+  "USERNAME_ROOT_BG",
+  "USERNAME_ROOT_FG",
+  "DOCKER_BG",
+  "DOCKER_FG",
 ];
 
 function tmuxConf(c) {
@@ -481,144 +561,302 @@ function tmuxConf(c) {
     `set -g @command_bg "default"`,
     `set -g @message_fg "${c.secondaryContainer}"`,
     `set -g @message_bg "default"`,
-    ""
+    "",
   ].join("\n");
 }
 
 function opencodeJson(c) {
   const palette = {
     background: c.background,
-    currentLine: c.surfaceVariant,
-    bgHighlight: c.primaryContainer,
-    bgDark: c.background,
-    foreground: c.foreground,
-    fgDark: c.onSurfaceVariant,
-    comment: c.outline,
-    cyan: c.secondary,
-    green: c.tertiary,
-    orange: c.secondaryContainer,
-    pink: c.tertiary,
-    purple: c.tertiaryContainer,
-    red: c.error,
-    yellow: c.primaryContainer,
-    magenta2: c.onSecondaryContainer,
-    darkCyan: c.primary
+    surface_container: c.surfaceContainer,
+    surface_container_low: c.surfaceContainerLow,
+    surface_variant: c.surfaceVariant,
+    primary_container: c.primaryContainer,
+    on_background: c.foreground,
+    on_surface_variant: c.onSurfaceVariant,
+    outline: c.outline,
+    secondary: c.secondary,
+    tertiary: c.tertiary,
+    secondary_container: c.secondaryContainer,
+    tertiary_container: c.tertiaryContainer,
+    error: c.error,
+    on_primary_container: c.onPrimaryContainer,
+    on_tertiary_container: c.onTertiaryContainer,
+    on_secondary_container: c.onSecondaryContainer,
+    primary: c.primary,
   };
   const theme = {
-    primary: { dark: "purple", light: "purple" },
-    secondary: { dark: "green", light: "green" },
-    accent: { dark: "purple", light: "purple" },
-    error: { dark: "red", light: "red" },
-    warning: { dark: "orange", light: "orange" },
-    success: { dark: "green", light: "green" },
-    info: { dark: "cyan", light: "cyan" },
-    text: { dark: "foreground", light: "foreground" },
-    textMuted: { dark: "fgDark", light: "fgDark" },
+    primary: { dark: "primary", light: "primary" },
+    secondary: { dark: "secondary", light: "secondary" },
+    accent: { dark: "tertiary", light: "tertiary" },
+    error: { dark: "error", light: "error" },
+    warning: { dark: "tertiary", light: "tertiary" },
+    success: { dark: "secondary", light: "secondary" },
+    info: { dark: "primary", light: "primary" },
+    text: { dark: "on_background", light: "on_background" },
+    textMuted: { dark: "outline", light: "outline" },
     background: { dark: "background", light: "background" },
-    backgroundPanel: { dark: "bgHighlight", light: "bgHighlight" },
-    backgroundElement: { dark: "bgHighlight", light: "bgHighlight" },
-    border: { dark: "currentLine", light: "currentLine" },
-    borderActive: { dark: "purple", light: "purple" },
-    borderSubtle: { dark: "currentLine", light: "currentLine" },
-    diffAdded: { dark: "green", light: "green" },
-    diffRemoved: { dark: "red", light: "red" },
-    diffContext: { dark: "comment", light: "comment" },
-    diffHunkHeader: { dark: "comment", light: "comment" },
-    diffHighlightAdded: { dark: "green", light: "green" },
-    diffHighlightRemoved: { dark: "red", light: "red" },
-    diffAddedBg: { dark: "bgHighlight", light: "bgHighlight" },
-    diffRemovedBg: { dark: "bgHighlight", light: "bgHighlight" },
-    diffContextBg: { dark: "currentLine", light: "currentLine" },
-    diffLineNumber: { dark: "comment", light: "comment" },
-    diffAddedLineNumberBg: { dark: "bgHighlight", light: "bgHighlight" },
-    diffRemovedLineNumberBg: { dark: "bgHighlight", light: "bgHighlight" },
-    markdownText: { dark: "foreground", light: "foreground" },
-    markdownHeading: { dark: "cyan", light: "cyan" },
-    markdownLink: { dark: "cyan", light: "cyan" },
-    markdownLinkText: { dark: "purple", light: "purple" },
-    markdownCode: { dark: "yellow", light: "yellow" },
-    markdownBlockQuote: { dark: "comment", light: "comment" },
-    markdownEmph: { dark: "orange", light: "orange" },
-    markdownStrong: { dark: "orange", light: "orange" },
-    markdownHorizontalRule: { dark: "comment", light: "comment" },
-    markdownListItem: { dark: "cyan", light: "cyan" },
-    markdownListEnumeration: { dark: "purple", light: "purple" },
-    markdownImage: { dark: "cyan", light: "cyan" },
-    markdownImageText: { dark: "purple", light: "purple" },
-    markdownCodeBlock: { dark: "foreground", light: "foreground" },
-    syntaxComment: { dark: "comment", light: "comment" },
-    syntaxKeyword: { dark: "green", light: "green" },
-    syntaxFunction: { dark: "pink", light: "pink" },
-    syntaxVariable: { dark: "cyan", light: "cyan" },
-    syntaxString: { dark: "yellow", light: "yellow" },
-    syntaxNumber: { dark: "red", light: "red" },
-    syntaxType: { dark: "orange", light: "orange" },
-    syntaxOperator: { dark: "green", light: "green" },
-    syntaxPunctuation: { dark: "fgDark", light: "fgDark" }
+    backgroundPanel: { dark: "surface_container", light: "surface_container" },
+    backgroundElement: {
+      dark: "surface_container_low",
+      light: "surface_container_low",
+    },
+    border: { dark: "outline", light: "outline" },
+    borderActive: { dark: "primary", light: "primary" },
+    borderSubtle: { dark: "outline", light: "outline" },
+    diffAdded: { dark: "tertiary", light: "tertiary" },
+    diffRemoved: { dark: "error", light: "error" },
+    diffContext: { dark: "outline", light: "outline" },
+    diffHunkHeader: { dark: "outline", light: "outline" },
+    diffHighlightAdded: {
+      dark: "on_tertiary_container",
+      light: "on_tertiary_container",
+    },
+    diffHighlightRemoved: { dark: "error", light: "error" },
+    diffAddedBg: {
+      dark: "surface_container_low",
+      light: "surface_container_low",
+    },
+    diffRemovedBg: {
+      dark: "surface_container_low",
+      light: "surface_container_low",
+    },
+    diffContextBg: { dark: "surface_container", light: "surface_container" },
+    diffLineNumber: { dark: "outline", light: "outline" },
+    diffAddedLineNumberBg: {
+      dark: "surface_container_low",
+      light: "surface_container_low",
+    },
+    diffRemovedLineNumberBg: {
+      dark: "surface_container_low",
+      light: "surface_container_low",
+    },
+    markdownText: { dark: "on_background", light: "on_background" },
+    markdownHeading: { dark: "primary", light: "primary" },
+    markdownLink: { dark: "secondary", light: "secondary" },
+    markdownLinkText: { dark: "tertiary", light: "tertiary" },
+    markdownCode: {
+      dark: "on_tertiary_container",
+      light: "on_tertiary_container",
+    },
+    markdownBlockQuote: { dark: "outline", light: "outline" },
+    markdownEmph: {
+      dark: "on_secondary_container",
+      light: "on_secondary_container",
+    },
+    markdownStrong: {
+      dark: "on_primary_container",
+      light: "on_primary_container",
+    },
+    markdownHorizontalRule: { dark: "outline", light: "outline" },
+    markdownListItem: { dark: "primary", light: "primary" },
+    markdownListEnumeration: { dark: "tertiary", light: "tertiary" },
+    markdownImage: { dark: "secondary", light: "secondary" },
+    markdownImageText: { dark: "tertiary", light: "tertiary" },
+    markdownCodeBlock: { dark: "on_background", light: "on_background" },
+    syntaxComment: { dark: "outline", light: "outline" },
+    syntaxKeyword: { dark: "tertiary", light: "tertiary" },
+    syntaxFunction: { dark: "tertiary", light: "tertiary" },
+    syntaxVariable: { dark: "secondary", light: "secondary" },
+    syntaxString: {
+      dark: "on_primary_container",
+      light: "on_primary_container",
+    },
+    syntaxNumber: { dark: "error", light: "error" },
+    syntaxType: {
+      dark: "on_secondary_container",
+      light: "on_secondary_container",
+    },
+    syntaxOperator: { dark: "tertiary", light: "tertiary" },
+    syntaxPunctuation: {
+      dark: "on_surface_variant",
+      light: "on_surface_variant",
+    },
   };
-  return JSON.stringify({ "$schema": "https://opencode.ai/theme.json", defs: palette, theme }, null, 2) + "\n";
+  return (
+    JSON.stringify(
+      { $schema: "https://opencode.ai/theme.json", defs: palette, theme },
+      null,
+      2,
+    ) + "\n"
+  );
 }
 
 function nvimPalette(palette, variant) {
   const sorted = {};
-  for (const role of Object.keys(palette).sort()) sorted[role] = hex(palette[role]);
-  return JSON.stringify({ schema: "qe-nvim-palette", version: 1, variant, colors: sorted }, null, 2) + "\n";
+  for (const role of Object.keys(palette).sort())
+    sorted[role] = hex(palette[role]);
+  return (
+    JSON.stringify(
+      { schema: "qe-nvim-palette", version: 1, variant, colors: sorted },
+      null,
+      2,
+    ) + "\n"
+  );
 }
 
 const TARGETS = [
-  { id: "kitty", executable: "kitty", path: (b, c) => `${b.config}/kitty/themes/wallpaper.conf`, generate: kittyTheme },
-  { id: "bat", executable: "bat", path: (b, c) => `${b.config}/bat/themes/wallpaper.tmTheme`, generate: batTheme },
-  { id: "btop", executable: "btop", path: (b, c) => `${b.config}/btop/themes/wallpaper.theme`, generate: btopTheme },
-  { id: "eza", executable: "eza", path: (b, c) => `${b.config}/eza/themes/wallpaper.yml`, generate: ezaYml },
-  { id: "dunst", executable: "dunst", path: (b, c) => `${b.config}/dunst/themes/wallpaper.conf`, generate: dunstTheme },
-  { id: "fzf", executable: "fzf", path: (b, c) => `${b.zshConfig}/fzf_themes/wallpaper.zsh`, generate: fzfZsh },
-  { id: "hyprland", executable: "Hyprland", path: (b, c) => `${b.config}/hypr/themes/hyprland/wallpaper.lua`, generate: hyprlandLua },
-  { id: "hyprlock", executable: "hyprlock", path: (b, c) => `${b.config}/hypr/themes/hyprlock/wallpaper.conf`, generate: hyprlockConf },
-  { id: "rofi", executable: "rofi", path: (b, c) => `${b.config}/rofi/themes/colorschemes/wallpaper.rasi`, generate: rofiRasi },
-  { id: "starship", executable: "starship", path: (b, c) => `${b.config}/starship/themes/wallpaper.sh`, generate: starshipSh },
-  { id: "tmux", executable: "tmux", path: (b, c) => `${b.config}/tmux/themes/wallpaper.conf`, generate: tmuxConf },
-  { id: "opencode", executable: "opencode", path: (b, c) => `${b.config}/opencode/themes/wallpaper.json`, generate: opencodeJson },
-  { id: "nvim", executable: "nvim", path: (b, c) => `${b.cache}/matugen/nvim-colors.json`, generate: (code, palette, variant) => nvimPalette(palette, variant) }
+  {
+    id: "kitty",
+    executable: "kitty",
+    path: (b, c) => `${b.config}/kitty/themes/wallpaper.conf`,
+    generate: kittyTheme,
+  },
+  {
+    id: "bat",
+    executable: "bat",
+    path: (b, c) => `${b.config}/bat/themes/wallpaper.tmTheme`,
+    generate: batTheme,
+  },
+  {
+    id: "btop",
+    executable: "btop",
+    path: (b, c) => `${b.config}/btop/themes/wallpaper.theme`,
+    generate: btopTheme,
+  },
+  {
+    id: "eza",
+    executable: "eza",
+    path: (b, c) => `${b.config}/eza/themes/wallpaper.yml`,
+    generate: ezaYml,
+  },
+  {
+    id: "dunst",
+    executable: "dunst",
+    path: (b, c) => `${b.config}/dunst/themes/wallpaper.conf`,
+    generate: dunstTheme,
+  },
+  {
+    id: "fzf",
+    executable: "fzf",
+    path: (b, c) => `${b.zshConfig}/fzf_themes/wallpaper.zsh`,
+    generate: fzfZsh,
+  },
+  {
+    id: "hyprland",
+    executable: "Hyprland",
+    path: (b, c) => `${b.config}/hypr/themes/hyprland/wallpaper.lua`,
+    generate: hyprlandLua,
+  },
+  {
+    id: "hyprlock",
+    executable: "hyprlock",
+    path: (b, c) => `${b.config}/hypr/themes/hyprlock/wallpaper.conf`,
+    generate: hyprlockConf,
+  },
+  {
+    id: "rofi",
+    executable: "rofi",
+    path: (b, c) => `${b.config}/rofi/themes/colorschemes/wallpaper.rasi`,
+    generate: rofiRasi,
+  },
+  {
+    id: "starship",
+    executable: "starship",
+    path: (b, c) => `${b.config}/starship/themes/wallpaper.sh`,
+    generate: starshipSh,
+  },
+  {
+    id: "tmux",
+    executable: "tmux",
+    path: (b, c) => `${b.config}/tmux/themes/wallpaper.conf`,
+    generate: tmuxConf,
+  },
+  {
+    id: "opencode",
+    executable: "opencode",
+    path: (b, c) => `${b.config}/opencode/themes/wallpaper.json`,
+    generate: opencodeJson,
+  },
+  {
+    id: "nvim",
+    executable: "nvim",
+    path: (b, c) => `${b.cache}/matugen/nvim-colors.json`,
+    generate: (code, palette, variant) => nvimPalette(palette, variant),
+  },
 ];
 
 const ABSOLUTE_PATH_PATTERN = /^\/(?:[^/]+\/)*[^/]+$/;
 
-export function generateWallpaperExternalTargets(palette, bases, variant = "dark") {
+export function generateWallpaperExternalTargets(
+  palette,
+  bases,
+  variant = "dark",
+) {
   const errors = [];
   if (palette === null || typeof palette !== "object" || Array.isArray(palette))
-    return { ok: false, errors: ["external wallpaper theme: palette must be an object"], targets: [] };
-  if (!HEX_PATTERN.test(palette.background) || !HEX_PATTERN.test(palette.on_background))
-    return { ok: false, errors: ["external wallpaper theme: palette must contain background and foreground hex colors"], targets: [] };
-  if (bases === null || typeof bases !== "object"
-      || typeof bases.home !== "string" || typeof bases.config !== "string"
-      || typeof bases.zshConfig !== "string" || typeof bases.cache !== "string") {
-    return { ok: false, errors: ["external wallpaper theme: bases must include home, config, zshConfig, and cache directories"], targets: [] };
+    return {
+      ok: false,
+      errors: ["external wallpaper theme: palette must be an object"],
+      targets: [],
+    };
+  if (
+    !HEX_PATTERN.test(palette.background) ||
+    !HEX_PATTERN.test(palette.on_background)
+  )
+    return {
+      ok: false,
+      errors: [
+        "external wallpaper theme: palette must contain background and foreground hex colors",
+      ],
+      targets: [],
+    };
+  if (
+    bases === null ||
+    typeof bases !== "object" ||
+    typeof bases.home !== "string" ||
+    typeof bases.config !== "string" ||
+    typeof bases.zshConfig !== "string" ||
+    typeof bases.cache !== "string"
+  ) {
+    return {
+      ok: false,
+      errors: [
+        "external wallpaper theme: bases must include home, config, zshConfig, and cache directories",
+      ],
+      targets: [],
+    };
   }
 
   const code = buildCode(palette);
-  const targets = TARGETS.map(target => {
+  const targets = TARGETS.map((target) => {
     const path = target.path(bases, code);
     const content = target.generate(code, palette, variant);
     return { id: target.id, executable: target.executable, path, content };
   });
 
-  if (!targets.every(target => ABSOLUTE_PATH_PATTERN.test(target.path) && !target.path.split("/").includes(".."))) {
-    errors.push("external wallpaper theme: all target paths must be absolute and cannot contain '..'");
+  if (
+    !targets.every(
+      (target) =>
+        ABSOLUTE_PATH_PATTERN.test(target.path) &&
+        !target.path.split("/").includes(".."),
+    )
+  ) {
+    errors.push(
+      "external wallpaper theme: all target paths must be absolute and cannot contain '..'",
+    );
   }
-  if (!targets.every(target => /^[a-z0-9_]+$/.test(target.id))) {
+  if (!targets.every((target) => /^[a-z0-9_]+$/.test(target.id))) {
     errors.push("external wallpaper theme: target ids must match ^[a-z0-9_]+$");
   }
   for (const target of targets) {
     if (typeof target.content !== "string" || target.content.length === 0)
-      errors.push(`external wallpaper theme target '${target.id}': generated content must be non-empty`);
+      errors.push(
+        `external wallpaper theme target '${target.id}': generated content must be non-empty`,
+      );
   }
 
   return { ok: errors.length === 0, errors, targets };
 }
 
 export function validateExternalTargetContent(target) {
-  if (target === null || typeof target !== "object" || typeof target.id !== "string"
-      || !ABSOLUTE_PATH_PATTERN.test(target.path) || typeof target.content !== "string")
+  if (
+    target === null ||
+    typeof target !== "object" ||
+    typeof target.id !== "string" ||
+    !ABSOLUTE_PATH_PATTERN.test(target.path) ||
+    typeof target.content !== "string"
+  )
     return `target '${target.id}': invalid shape`;
   if (target.content.length === 0)
     return `target '${target.id}': generated content is empty`;
@@ -635,11 +873,15 @@ export function validateExternalTargetContent(target) {
     { id: "starship", probe: /^export OS_BG=/m },
     { id: "tmux", probe: /^set -g @default_fg/m },
     { id: "opencode", probe: /"defs"/ },
-    { id: "nvim", probe: /"schema":\s*"qe-nvim-palette"/ }
+    { id: "nvim", probe: /"schema":\s*"qe-nvim-palette"/ },
   ];
-  const check = checks.find(entry => entry.id === target.id);
-  if (target.id === "starship"
-      && !STARSHIP_EXPORTS.every(name => new RegExp(`^export ${name}=`, "m").test(target.content)))
+  const check = checks.find((entry) => entry.id === target.id);
+  if (
+    target.id === "starship" &&
+    !STARSHIP_EXPORTS.every((name) =>
+      new RegExp(`^export ${name}=`, "m").test(target.content),
+    )
+  )
     return "target 'starship': generated content is missing a template placeholder export";
   if (check && !check.probe.test(target.content))
     return `target '${target.id}': generated content failed format validation`;
