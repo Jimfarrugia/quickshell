@@ -385,22 +385,73 @@ function rofiRasi(c) {
 
 function starshipSh(c) {
   return [
-    "# starship colors generated from the active wallpaper palette",
-    `white="${c.foreground}"`,
-    `black="${c.background}"`,
-    `gray="${c.surfaceVariant}"`,
-    `red="${c.error}"`,
-    `green="${c.tertiary}"`,
-    `yellow="${c.secondaryContainer}"`,
-    `blue="${c.primary}"`,
-    `purple="${c.tertiaryContainer}"`,
-    `cyan="${c.secondary}"`,
-    `gray_dark="${c.outlineVariant}"`,
-    `gray_light="${c.onSurfaceVariant}"`,
-    `primary_text_fg="${c.foreground}"`,
+    "# starship semantic colors generated from the active wallpaper palette",
+    `primary="${c.primary}"`,
+    `secondary="${c.secondary}"`,
+    `tertiary="${c.tertiary}"`,
+    `tertiary_container="${c.tertiaryContainer}"`,
+    `secondary_container="${c.secondaryContainer}"`,
+    `error="${c.error}"`,
+    `on_surface_variant="${c.onSurfaceVariant}"`,
+    "",
+    "# Template placeholders",
+    'export LP_SEPARATOR=""',
+    'export LP_LEFT_EDGE_SYMBOL=""',
+    'export OS_BG=""',
+    'export OS_FG="$primary"',
+    'export DIR_PATH_BG=""',
+    'export DIR_PATH_FG="$primary"',
+    'export GIT_BG=""',
+    'export GIT_FG="$secondary"',
+    'export ENV_BG=""',
+    'export ENV_FG="$tertiary_container"',
+    'export LP_RIGHT_EDGE_SYMBOL=""',
+    'export CMD_DURATION_FG="$on_surface_variant"',
+    'export FILL_FG="$on_surface_variant"',
+    'export FILL_SYMBOL=""',
+    'export RP_SEPARATOR="  "',
+    'export RP_LEFT_EDGE_SYMBOL=""',
+    'export BATTERY_BG=""',
+    'export BATTERY_FG="$on_surface_variant"',
+    'export HOSTNAME_BG=""',
+    'export HOSTNAME_FG="$tertiary"',
+    'export TIME_BG=""',
+    'export TIME_FG="$on_surface_variant"',
+    'export RP_RIGHT_EDGE_SYMBOL=""',
+    'export CHAR_SUCCESS_FG="$tertiary"',
+    'export CHAR_SUCCESS_SYMBOL="◆"',
+    'export CHAR_ERROR_FG="$error"',
+    'export CHAR_ERROR_SYMBOL="◆"',
+    'export CHAR_VIM_FG="$secondary_container"',
+    'export CHAR_VIM_SYMBOL="◆"',
+    'export CHAR_VIM_REPLACE_ONE_FG="$tertiary_container"',
+    'export CHAR_VIM_REPLACE_ONE_SYMBOL="◆"',
+    'export CHAR_VIM_REPLACE_FG="$primary"',
+    'export CHAR_VIM_REPLACE_SYMBOL="◆"',
+    'export CHAR_VIM_VISUAL_FG="$tertiary"',
+    'export CHAR_VIM_VISUAL_SYMBOL="◆"',
+    'export USERNAME_USER_BG=""',
+    'export USERNAME_USER_FG="$on_surface_variant"',
+    'export USERNAME_ROOT_BG=""',
+    'export USERNAME_ROOT_FG="$on_surface_variant"',
+    'export DOCKER_BG=""',
+    'export DOCKER_FG="$on_surface_variant"',
     ""
   ].join("\n");
 }
+
+const STARSHIP_EXPORTS = [
+  "LP_SEPARATOR", "LP_LEFT_EDGE_SYMBOL", "OS_BG", "OS_FG", "DIR_PATH_BG",
+  "DIR_PATH_FG", "GIT_BG", "GIT_FG", "ENV_BG", "ENV_FG",
+  "LP_RIGHT_EDGE_SYMBOL", "CMD_DURATION_FG", "FILL_FG", "FILL_SYMBOL",
+  "RP_SEPARATOR", "RP_LEFT_EDGE_SYMBOL", "BATTERY_BG", "BATTERY_FG",
+  "HOSTNAME_BG", "HOSTNAME_FG", "TIME_BG", "TIME_FG", "RP_RIGHT_EDGE_SYMBOL",
+  "CHAR_SUCCESS_FG", "CHAR_SUCCESS_SYMBOL", "CHAR_ERROR_FG", "CHAR_ERROR_SYMBOL",
+  "CHAR_VIM_FG", "CHAR_VIM_SYMBOL", "CHAR_VIM_REPLACE_ONE_FG",
+  "CHAR_VIM_REPLACE_ONE_SYMBOL", "CHAR_VIM_REPLACE_FG", "CHAR_VIM_REPLACE_SYMBOL",
+  "CHAR_VIM_VISUAL_FG", "CHAR_VIM_VISUAL_SYMBOL", "USERNAME_USER_BG",
+  "USERNAME_USER_FG", "USERNAME_ROOT_BG", "USERNAME_ROOT_FG", "DOCKER_BG", "DOCKER_FG"
+];
 
 function tmuxConf(c) {
   return [
@@ -581,12 +632,15 @@ export function validateExternalTargetContent(target) {
     { id: "hyprland", probe: /hl\.config\(/ },
     { id: "hyprlock", probe: /^\$background/m },
     { id: "rofi", probe: /@white;/ },
-    { id: "starship", probe: /^white="/m },
+    { id: "starship", probe: /^export OS_BG=/m },
     { id: "tmux", probe: /^set -g @default_fg/m },
     { id: "opencode", probe: /"defs"/ },
     { id: "nvim", probe: /"schema":\s*"qe-nvim-palette"/ }
   ];
   const check = checks.find(entry => entry.id === target.id);
+  if (target.id === "starship"
+      && !STARSHIP_EXPORTS.every(name => new RegExp(`^export ${name}=`, "m").test(target.content)))
+    return "target 'starship': generated content is missing a template placeholder export";
   if (check && !check.probe.test(target.content))
     return `target '${target.id}': generated content failed format validation`;
   return null;

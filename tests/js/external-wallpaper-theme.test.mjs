@@ -48,6 +48,36 @@ assert.match(byId.rofi.content, /@white;/);
 assert.match(byId.tmux.content, /^set -g @default_fg/m);
 assert.match(byId.fzf.content, /--color=fg:/);
 assert.match(byId.nvim.content, /"schema":\s*"qe-nvim-palette"/);
+for (const token of [
+  "primary", "secondary", "tertiary", "tertiary_container", "secondary_container",
+  "error", "on_surface_variant"
+]) {
+  assert.match(byId.starship.content, new RegExp(`^${token}=`, "m"));
+}
+assert.match(byId.starship.content, /^export OS_FG="\$primary"$/m);
+assert.match(byId.starship.content, /^export GIT_FG="\$secondary"$/m);
+assert.match(byId.starship.content, /^export ENV_FG="\$tertiary_container"$/m);
+assert.match(byId.starship.content, /^export CHAR_ERROR_FG="\$error"$/m);
+assert.match(byId.starship.content, /^export CMD_DURATION_FG="\$on_surface_variant"$/m);
+for (const colorAlias of ["white", "black", "gray", "red", "green", "yellow", "blue", "purple", "cyan"]) {
+  assert.doesNotMatch(byId.starship.content, new RegExp(`^${colorAlias}=`, "m"));
+}
+for (const placeholder of [
+  "OS_BG", "OS_FG", "DIR_PATH_FG", "GIT_FG", "ENV_FG", "CMD_DURATION_FG",
+  "BATTERY_FG", "HOSTNAME_FG", "TIME_FG", "CHAR_SUCCESS_FG", "CHAR_ERROR_FG",
+  "CHAR_VIM_FG", "USERNAME_USER_FG", "DOCKER_FG"
+]) {
+  assert.match(byId.starship.content, new RegExp(`^export ${placeholder}=`, "m"));
+}
+for (const placeholder of [
+  "OS_BG", "DIR_PATH_BG", "GIT_BG", "ENV_BG", "BATTERY_BG", "HOSTNAME_BG", "TIME_BG", "USERNAME_USER_BG", "USERNAME_ROOT_BG", "DOCKER_BG"
+]) {
+  assert.match(byId.starship.content, new RegExp(`^export ${placeholder}=""$`, "m"));
+}
+assert.equal(validateExternalTargetContent({
+  ...byId.starship,
+  content: byId.starship.content.replace(/^export OS_BG=.*\n/m, "")
+}), "target 'starship': generated content is missing a template placeholder export");
 assert.equal(JSON.parse(byId.nvim.content).variant, "dark");
 assert.equal(JSON.parse(byId.nvim.content).colors.surface_variant, "#3f4b56");
 assert.equal(JSON.parse(byId.nvim.content).colors.primary, "#9ecaff");
