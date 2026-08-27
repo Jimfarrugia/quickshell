@@ -46,7 +46,12 @@ assert.match(byId.kitty.content, /^color0 #101820$/m);
 assert.match(byId.kitty.content, /^color15 /m);
 assert.match(byId.hyprland.content, /hl\.config\(/);
 assert.match(byId.hyprlock.content, /^\$background/m);
-assert.match(byId.rofi.content, /@white;/);
+assert.match(byId.rofi.content, /^  surface-container-low: #1c2731;$/m);
+assert.match(byId.rofi.content, /^  active-background: @surface-container-low;$/m);
+assert.match(byId.rofi.content, /^  foreground: @on-background;$/m);
+for (const colorAlias of ["black", "gray", "gray-dark", "white", "blue", "cyan", "green", "purple", "yellow", "red"]) {
+  assert.doesNotMatch(byId.rofi.content, new RegExp(`^  ${colorAlias}:`, "m"));
+}
 assert.match(byId.tmux.content, /^set -g @default_fg/m);
 assert.match(byId.fzf.content, /--color=fg:/);
 assert.match(byId.nvim.content, /"schema":\s*"qe-nvim-palette"/);
