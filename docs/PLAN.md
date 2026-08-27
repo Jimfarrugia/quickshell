@@ -37,7 +37,7 @@ one.
 | Launcher/help | Not started | Phase 7 |
 | Dashboards/control center | Not started | Phases 8-10 |
 | Lock replacement | Not started | Phase 11 |
-| Production migration | Not started | Phase 12 |
+| Production hardening | Not started | Phase 12; final deployment location remains undecided |
 
 ### 2.1 Next-session handoff
 
@@ -91,8 +91,8 @@ Verified facts:
 - The session desktop file launches `/usr/bin/start-hyprland` directly.
 - One internal monitor, `eDP-1`, was active at 1920x1080, scale 1.2, with a
   28-pixel bottom reserved area from Waybar.
-- The repository begins at `~/Projects/quickshell` and will eventually move to
-  `~/.config/quickshell` under dotfiles management.
+- The repository currently runs from `~/Projects/quickshell`; Phase 12 will
+  decide whether relocation provides enough benefit to justify migration.
 
 Relevant files:
 
@@ -451,7 +451,7 @@ Phase 1 Foundation
         `--> Phase 11 Secure lock replacement
 
 Phases 3-11 complete enough for daily use
-        `--> Phase 12 production supervision, relocation, and cleanup
+        `--> Phase 12 production supervision, deployment decision, and cleanup
 ```
 
 Interfaces that must be stable before parallel feature work:
@@ -1808,9 +1808,9 @@ Out of scope:
 
 - fingerprint, face authentication, remote unlock, lock-screen dashboards
 
-### Phase 12: Production hardening and relocation
+### Phase 12: Production hardening and deployment
 
-Objective: make QE suitable for daily startup, dotfiles ownership, diagnostics,
+Objective: make QE suitable for daily startup, managed deployment, diagnostics,
 and clean retirement of replaced tools.
 
 Prerequisites:
@@ -1824,7 +1824,8 @@ Scope:
 - single-instance and restart policy
 - startup ordering and environment
 - journal/Quickshell log integration
-- move to `~/.config/quickshell` under dotfiles
+- decide whether QE remains a managed project checkout or moves to another
+  production location; no relocation is assumed
 - update all external contracts to XDG/project-independent paths
 - retire only replaced autostarts, keybindings, and generated target application
   themes
@@ -1841,7 +1842,7 @@ Likely affected files/subsystems:
 Deliverables:
 
 - production launch configuration
-- dotfiles-managed QE
+- documented, reproducible QE deployment in the selected location
 - dependency and troubleshooting documentation
 - clean fallback profile
 
@@ -1859,7 +1860,7 @@ Validation:
 
 - fresh-login tests
 - controlled crash/restart tests excluding secure lock crash on primary session
-- relocation and clean-state tests
+- selected-location and clean-state tests
 - complete rollback drill
 
 Rollback/recovery:
@@ -2474,11 +2475,11 @@ Consequences: external slot files are derived data written into app config
 trees by approved contract; failed or skipped targets are reported without
 rolling back already-promoted files. Promotion is content-idempotent and
 follows restore-managed slot symlinks, so generation never rewrites a tracked
-default. The dotfiles workflow keeps authored defaults under a dedicated
-`qe-defaults/wallpaper` snapshot. The preflighted `qe-wallpaper-default restore`
-command restores the stable XDG QE theme, wallpaper/lockscreen images, Neovim
-palette, and external runtime files before creating or repairing ignored live
-slot links; `capture` is the intentional default-change operation. This makes
+default. The QE repository keeps authored defaults under `defaults/wallpaper`.
+The preflighted `qe-defaults restore` command restores the stable XDG QE theme,
+wallpaper/lockscreen images, Neovim palette, and external runtime files before
+creating or repairing ignored live slot links; `capture` is the intentional
+default-change operation. This makes
 the generated QE `wallpaper` theme selectable before the first wallpaper
 selection on a fresh installation. The self-contained nvim colorscheme means
 neovim follows the wallpaper only while the wallpaper theme is active. The
@@ -2536,6 +2537,50 @@ Affected areas: `MatugenAdapter`, `Matugen.mjs`, `Opacity.mjs`,
 
 Revisit if: Kitty or Hyprland expose a stable native event/API that makes
 live synchronization valuable, or if the bar must match inactive windows too.
+
+## ADR-022: Project-owned authored defaults bundle
+
+Status: Accepted by user
+
+Context: the default theme was a behavior-config field in `config/qe.json`,
+while wallpaper images and generated wallpaper-theme artifacts were captured by
+a dotfiles-owned `qe-wallpaper-default` helper. Changing or restoring the
+desktop default therefore required two owners and two workflows.
+
+Decision: QE owns one authored bundle under `defaults/`. The validated
+`defaults/manifest.json` owns `defaultTheme`; `DefaultsService` exposes it to
+`ThemeService`, while persisted active theme state remains separate. Wallpaper
+images live under `defaults/wallpaper/images`, and generated QE/application
+theme artifacts live under `defaults/wallpaper/generated-theme`. The
+project-owned `scripts/qe-defaults capture|restore` command is the sole bundle
+writer. Capture reads confirmed active state through typed IPC and promotes a
+fully staged snapshot. Restore preflights all files, repairs runtime links, and
+applies the manifest theme through running QE or the external switcher fallback.
+
+Rationale: theme, wallpaper, and generated wallpaper-theme defaults form one
+desktop-state snapshot rather than general shell behavior configuration. One
+project owner makes capture reviewable, avoids cross-repository synchronization,
+and keeps runtime XDG state distinct from authored defaults.
+
+Alternatives considered: retain `defaultTheme` in `config/qe.json` (mixes
+captured state with manually authored behavior settings); keep wallpaper
+defaults in dotfiles (split ownership); automatically clear Quickshell state
+while QE is stopped (couples the helper to hashed internal state and can destroy
+an unrelated active selection).
+
+Consequences: `config/qe.json` no longer contains `defaultTheme`; a malformed
+manifest degrades to the safe Poimandres default. Capture requires a running QE
+instance and refuses pending operations. Restore can materialize files before QE
+starts, but only a running QE instance can confirm live QE theme and wallpaper
+application. External application remains best effort and does not roll back
+restored files.
+
+Affected areas: `DefaultsService`, `ThemeService`, defaults schemas and files,
+typed theme/wallpaper IPC, `scripts/qe-defaults`, dotfiles runtime-slot ignores,
+and default-management documentation and fixtures.
+
+Revisit if: QE gains a stable process-independent control endpoint or the
+authored defaults need versioned migration beyond the manifest schema.
 
 ## ADR-021: Vim-style selector navigation convention
 

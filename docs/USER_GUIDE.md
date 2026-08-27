@@ -114,18 +114,19 @@ enabled:
   interface used by QE.
 - The dotfiles-provided `qe-theme-switcher` wrapper, which forwards QE's
   machine-mode requests to `theme-switcher`.
-- The dotfiles-provided `qe-wallpaper-default` helper, which restores and
-  captures the committed wallpaper default snapshot.
+- The project-provided `qe-defaults` helper, which captures and restores the
+  complete authored theme and wallpaper default bundle.
 - Hyprland configuration that starts Hyprpaper and the guarded QE launcher.
 - Hyprpaper and Hyprlock configuration that reads the current image files from
   `$XDG_DATA_HOME`.
 - A wallpaper collection arranged as
   `~/Pictures/Wallpaper/themes/<theme-id>/` unless `QE_WALLPAPER_ROOT` is set.
 
-The current development setup uses `~/.local/bin/qe-shell` as a helper linked
-to `~/Projects/quickshell/scripts/run-qe.sh`. This absolute development path is
-intentional for now. If QE is cloned elsewhere, update that helper link before
-starting the session.
+The current development setup uses `~/.local/bin/qe-shell` and
+`~/.local/bin/qe-defaults` as helpers linked to scripts in
+`~/Projects/quickshell`. These absolute development paths are intentional for
+now. If QE is cloned elsewhere, update both helper links, or invoke the project
+scripts directly, before using QE.
 
 ### Paths and Environment Variables
 
@@ -199,26 +200,27 @@ packages that provide:
 - `~/.config/hyprpaper.conf` and `~/.config/hyprlock.conf`
 - `~/.local/bin/qe-shell`
 - `~/.local/bin/qe-theme-switcher`
-- `~/.local/bin/qe-wallpaper-default`
+- `~/.local/bin/qe-defaults`
 - Your application configuration directories and wallpaper collection.
 
-The committed `qe-defaults/wallpaper` directory is a snapshot source and is
-not itself a live XDG configuration directory. Do not replace its files with
-runtime-generated files.
+The project-owned `defaults/` directory is an authored snapshot source and is
+not itself a live XDG configuration directory. The QE project checkout must be
+present because it owns both this directory and the `qe-defaults` command.
+Update the snapshot only through `qe-defaults capture`.
 
 ### Restore the QE Defaults
 
-Run the restore helper after Stow has installed the dotfiles and before starting
-Hyprpaper or QE:
+After the QE project checkout exists and Stow has installed the dotfiles, run
+the restore helper before starting Hyprpaper or QE:
 
 ```sh
-qe-wallpaper-default restore
+qe-defaults restore
 ```
 
 If the helper is not yet on `PATH`, invoke it directly:
 
 ```sh
-~/dotfiles/scripts/.local/bin/qe-wallpaper-default restore
+~/Projects/quickshell/scripts/qe-defaults restore
 ```
 
 `restore` validates that the complete committed snapshot exists, then restores:
@@ -230,9 +232,10 @@ If the helper is not yet on `PATH`, invoke it directly:
 - The runtime symlinks from application `wallpaper` theme slots to the XDG
   runtime files.
 
-The operation is idempotent. Running it again does not rewrite files whose
-contents are already identical. It does not select the active QE theme and does
-not reload already-running applications.
+The file restore is idempotent. Before QE starts, the helper applies the
+manifest theme to external applications directly. If QE is already running, it
+also requests the default wallpaper and theme through QE IPC. Applications that
+cache themes may still require their documented restart.
 
 ### Start QE
 
@@ -326,18 +329,18 @@ a best-effort operation. A failure in the external switcher does not roll back
 the confirmed QE theme.
 
 The `wallpaper` theme can be selected immediately after
-`qe-wallpaper-default restore`, even before a wallpaper is selected in the
+`qe-defaults restore`, even before a wallpaper is selected in the
 current session. Selecting it applies the restored external wallpaper theme
 files through the external switcher with GTK excluded.
 
 ## 5. Changing the Default Theme and Wallpaper
 
-QE has separate concepts for the default theme, the currently active theme, the
-selected wallpaper, and the committed default wallpaper snapshot.
+QE has separate concepts for the authored default theme, the currently active
+theme, the selected wallpaper, and the authored wallpaper snapshot.
 
 ### Default Theme
 
-The QE default theme is configured in `config/qe.json`:
+The QE default theme is recorded in `defaults/manifest.json`:
 
 ```json
 {
@@ -350,33 +353,30 @@ The QE default theme is configured in `config/qe.json`:
 theme selected through QE takes precedence on that machine because the active
 selection is persisted separately.
 
-To change the authored QE default:
-
-1. Set `defaultTheme` to the desired theme ID.
-2. Validate the configuration.
-3. Commit the change to the QE repository.
+Change the active theme through QE, finish any pending theme or wallpaper work,
+then use `qe-defaults capture` to update the manifest and wallpaper snapshot as
+one reviewed change.
 
 To change the active theme immediately, use the QE theme selector. Do not edit
 generated theme files to change the active theme.
 
 ### Default Wallpaper Snapshot
 
-The committed wallpaper default is stored in the dotfiles repository under:
+The committed wallpaper default is stored in the QE repository under:
 
 ```text
-~/dotfiles/qe-defaults/wallpaper/
+~/Projects/quickshell/defaults/wallpaper/
 ```
 
 It contains the authored default snapshot for:
 
-- `current_wallpaper.png`
-- `current_lockscreen.png`
-- QE's generated `Wallpaper.json`
-- Neovim's generated palette
-- The external application's generated `wallpaper` theme slots
+- Processed wallpaper and lockscreen images under `images/`.
+- QE's generated `Wallpaper.json` under `generated-theme/qe/`.
+- Neovim's generated palette and application `wallpaper` theme slots under
+  `generated-theme/applications/`.
 
 Runtime copies are kept in XDG data, state, and cache directories. Normal
-wallpaper selection therefore does not modify the committed dotfiles snapshot.
+wallpaper selection therefore does not modify the committed project snapshot.
 
 ### Capture a New Default
 
@@ -389,34 +389,35 @@ Use this only when intentionally changing the default wallpaper/theme set:
 4. Capture the complete runtime set:
 
    ```sh
-   qe-wallpaper-default capture
+   qe-defaults capture
    ```
 
-5. Review the changes in the dotfiles repository:
+5. Review the changes in the QE repository:
 
    ```sh
-   git -C ~/dotfiles status
-   git -C ~/dotfiles diff -- qe-defaults/wallpaper
+   git -C ~/Projects/quickshell status
+   git -C ~/Projects/quickshell diff -- defaults
    ```
 
 6. Commit the snapshot when it represents the new intended default.
 
-`capture` refuses to update the snapshot if any required runtime artifact is
-missing. It does not partially replace the committed default.
+`capture` requires a running QE instance. It obtains the confirmed active theme
+through QE IPC and refuses to update the bundle if an operation is pending or a
+required runtime artifact is missing. It stages the complete bundle before
+replacing the authored default.
 
 ### Restore the Committed Default
 
 On a fresh machine, after Stow has installed the dotfiles, run:
 
 ```sh
-qe-wallpaper-default restore
+qe-defaults restore
 ```
 
 Run it again whenever the runtime wallpaper or generated theme files need to be
-returned to the committed default. The command restores the files and repairs
-the application theme-slot links, but it does not change the active QE theme.
-
-If the configured `defaultTheme` is `wallpaper`, the restored generated theme
-is immediately available for QE to select during startup. If the configured
-default is another theme, `wallpaper` remains available in the catalog but is
-not selected automatically.
+returned to the committed default. The command restores the files, repairs the
+application theme-slot links, and applies the manifest's default theme. A
+running QE instance is asked to apply the default wallpaper and theme through
+IPC; before QE starts, the external switcher applies the default application
+theme directly. External application is best effort: a missing or failed
+switcher is reported while restored files remain in place.

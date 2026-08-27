@@ -48,12 +48,14 @@ function validate(document, schema, rootSchema = schema, path = "$") {
 const configSchema = await load("../../config/schema/qe.schema.json");
 const themeSchema = await load("../../themes/schema.json");
 const stateSchema = await load("../../config/schema/theme-state.schema.json");
+const defaultsSchema = await load("../../defaults/schema.json");
 
 for (const path of ["../../config/qe.json", "../fixtures/config/valid.json"])
   assert.deepEqual(validate(await load(path), configSchema), [], path);
 for (const path of ["../../themes/poimandres.json", "../../themes/gruvbox.json", "../fixtures/themes/valid.json"])
   assert.deepEqual(validate(await load(path), themeSchema), [], path);
 assert.deepEqual(validate(await load("../fixtures/state/valid.json"), stateSchema), []);
+assert.deepEqual(validate(await load("../../defaults/manifest.json"), defaultsSchema), []);
 
 assert.ok(validate(await load("../fixtures/config/invalid-root.json"), configSchema).length > 0);
 assert.ok(validate(await load("../fixtures/config/invalid-field.json"), configSchema).length > 0);

@@ -38,7 +38,6 @@ const THEME_ID_PATTERN = /^[a-z0-9]+(?:_[a-z0-9]+)*$/;
 
 export const defaultConfig = Object.freeze({
   schemaVersion: 1,
-  defaultTheme: "poimandres",
   preview: Object.freeze({ enabled: true }),
   bar: Object.freeze({
     enabled: false,
@@ -74,6 +73,11 @@ export const defaultConfig = Object.freeze({
   })
 });
 
+export const safeDefaultsManifest = Object.freeze({
+  schemaVersion: 1,
+  defaultTheme: "poimandres"
+});
+
 function isObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
@@ -89,7 +93,6 @@ function numberIn(value, minimum, maximum) {
 function copyDefaults() {
   return {
     schemaVersion: defaultConfig.schemaVersion,
-    defaultTheme: defaultConfig.defaultTheme,
     preview: Object.assign({}, defaultConfig.preview),
     bar: Object.assign({}, defaultConfig.bar, {
       metrics: Object.assign({}, defaultConfig.bar.metrics, {
@@ -118,11 +121,6 @@ export function validateConfig(document) {
     return { ok: false, value, errors: ["config: root must be an object"] };
   if (document.schemaVersion !== 1)
     return { ok: false, value, errors: ["config.schemaVersion: expected 1"] };
-
-  if (typeof document.defaultTheme === "string" && THEME_ID_PATTERN.test(document.defaultTheme))
-    value.defaultTheme = document.defaultTheme;
-  else if (document.defaultTheme !== undefined)
-    errors.push("config.defaultTheme: expected a normalized theme ID");
 
   if (isObject(document.preview) && typeof document.preview.enabled === "boolean")
     value.preview.enabled = document.preview.enabled;
@@ -241,6 +239,25 @@ export function validateConfig(document) {
   }
 
   return { ok: true, value, errors };
+}
+
+export function validateDefaultsManifest(document) {
+  const value = Object.assign({}, safeDefaultsManifest);
+  const errors = [];
+
+  if (!isObject(document))
+    return { ok: false, value, errors: ["defaults manifest: root must be an object"] };
+  if (document.schemaVersion !== 1)
+    errors.push("defaults manifest.schemaVersion: expected 1");
+  if (typeof document.defaultTheme !== "string" || !THEME_ID_PATTERN.test(document.defaultTheme))
+    errors.push("defaults manifest.defaultTheme: expected a normalized theme ID");
+  else
+    value.defaultTheme = document.defaultTheme;
+  for (const key of Object.keys(document)) {
+    if (key !== "schemaVersion" && key !== "defaultTheme")
+      errors.push(`defaults manifest.${key}: unsupported property`);
+  }
+  return { ok: errors.length === 0, value, errors };
 }
 
 function resolveThemeValue(value, palette, tokens, trail) {

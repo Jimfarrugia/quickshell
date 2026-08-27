@@ -39,6 +39,9 @@ QE_SHELL_PID="$shell_pid" "$project_root/scripts/qe-launch.sh" qe-theme open
 [[ "$(qs ipc --pid "$shell_pid" call qe-theme isOpen)" == "true" ]]
 QE_SHELL_PID="$shell_pid" "$project_root/scripts/qe-launch.sh" qe-theme close
 [[ "$(qs ipc --pid "$shell_pid" call qe-theme isOpen)" == "false" ]]
+active_theme="$(QE_SHELL_PID="$shell_pid" "$project_root/scripts/qe-launch.sh" qe-theme activeTheme)"
+[[ "$active_theme" == "poimandres" ]]
+[[ "$(QE_SHELL_PID="$shell_pid" "$project_root/scripts/qe-launch.sh" qe-theme applyTheme "$active_theme")" == "true" ]]
 QE_SHELL_PID="$shell_pid" "$project_root/scripts/qe-launch.sh" qe-wallpaper open
 [[ "$(qs ipc --pid "$shell_pid" call qe-wallpaper isOpen)" == "true" ]]
 QE_SHELL_PID="$shell_pid" "$project_root/scripts/qe-launch.sh" qe-wallpaper close

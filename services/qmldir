@@ -2,6 +2,7 @@ module QE.Services
 singleton PathsService 1.0 PathsService.qml
 singleton DiagnosticsService 1.0 DiagnosticsService.qml
 singleton ConfigService 1.0 ConfigService.qml
+singleton DefaultsService 1.0 DefaultsService.qml
 singleton ThemeService 1.0 ThemeService.qml
 singleton ThemeCatalogService 1.0 ThemeCatalogService.qml
 singleton SurfaceService 1.0 SurfaceService.qml

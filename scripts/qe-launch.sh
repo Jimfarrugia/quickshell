@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -ne 2 ]]; then
-  printf 'Usage: %s <ipc-target> <function>\n' "$0" >&2
+if [[ $# -lt 2 ]]; then
+  printf 'Usage: %s <ipc-target> <function> [arguments...]\n' "$0" >&2
   exit 2
 fi
 
@@ -20,4 +20,7 @@ if [[ -z "$pid" ]]; then
   exit 1
 fi
 
-exec qs ipc --pid "$pid" call "$1" "$2"
+target=$1
+function=$2
+shift 2
+exec qs ipc --pid "$pid" call "$target" "$function" "$@"

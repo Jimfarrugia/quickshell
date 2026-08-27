@@ -1,0 +1,247 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    printf 'Usage: %s <capture|restore>\n' "$0" >&2
+    exit 2
+}
+
+[[ $# -eq 1 ]] || usage
+action=$1
+case "$action" in
+    capture|restore) ;;
+    *) usage ;;
+esac
+
+script_path=$(readlink -f -- "${BASH_SOURCE[0]}")
+script_dir=$(cd -- "$(dirname -- "$script_path")" && pwd -P)
+project_root=${QE_DEFAULTS_PROJECT_ROOT:-$(cd -- "$script_dir/.." && pwd -P)}
+defaults_root=${QE_DEFAULTS_ROOT:-$project_root/defaults}
+manifest="$defaults_root/manifest.json"
+data_home=${XDG_DATA_HOME:-$HOME/.local/share}
+state_home=${XDG_STATE_HOME:-$HOME/.local/state}
+cache_home=${XDG_CACHE_HOME:-$HOME/.cache}
+runtime_root="$state_home/qe/wallpaper"
+ipc_launcher=${QE_DEFAULTS_IPC:-$script_dir/qe-launch.sh}
+
+command -v jq >/dev/null 2>&1 || {
+    printf 'QE defaults failed: jq is unavailable.\n' >&2
+    exit 127
+}
+
+artifacts=(
+    "wallpaper/images/current-wallpaper.png|$data_home/current_wallpaper.png"
+    "wallpaper/images/current-lockscreen.png|$data_home/current_lockscreen.png"
+    "wallpaper/generated-theme/qe/Wallpaper.json|$data_home/qe/wallpaper/Wallpaper.json"
+    "wallpaper/generated-theme/applications/bat-wallpaper.tmTheme|$runtime_root/external/bat-wallpaper.tmTheme"
+    "wallpaper/generated-theme/applications/btop-wallpaper.theme|$runtime_root/external/btop-wallpaper.theme"
+    "wallpaper/generated-theme/applications/dunst-wallpaper.conf|$runtime_root/external/dunst-wallpaper.conf"
+    "wallpaper/generated-theme/applications/eza-wallpaper.yml|$runtime_root/external/eza-wallpaper.yml"
+    "wallpaper/generated-theme/applications/fzf-wallpaper.zsh|$runtime_root/external/fzf-wallpaper.zsh"
+    "wallpaper/generated-theme/applications/hyprland-wallpaper.lua|$runtime_root/external/hyprland-wallpaper.lua"
+    "wallpaper/generated-theme/applications/hyprlock-wallpaper.conf|$runtime_root/external/hyprlock-wallpaper.conf"
+    "wallpaper/generated-theme/applications/kitty-wallpaper.conf|$runtime_root/external/kitty-wallpaper.conf"
+    "wallpaper/generated-theme/applications/nvim-colors.json|$cache_home/matugen/nvim-colors.json"
+    "wallpaper/generated-theme/applications/opencode-wallpaper.json|$runtime_root/external/opencode-wallpaper.json"
+    "wallpaper/generated-theme/applications/rofi-wallpaper.rasi|$runtime_root/external/rofi-wallpaper.rasi"
+    "wallpaper/generated-theme/applications/starship-wallpaper.sh|$runtime_root/external/starship-wallpaper.sh"
+    "wallpaper/generated-theme/applications/tmux-wallpaper.conf|$runtime_root/external/tmux-wallpaper.conf"
+)
+
+declare -A live_slots=(
+    [bat-wallpaper.tmTheme]="$HOME/.config/bat/themes/wallpaper.tmTheme"
+    [btop-wallpaper.theme]="$HOME/.config/btop/themes/wallpaper.theme"
+    [dunst-wallpaper.conf]="$HOME/.config/dunst/themes/wallpaper.conf"
+    [eza-wallpaper.yml]="$HOME/.config/eza/themes/wallpaper.yml"
+    [fzf-wallpaper.zsh]="${ZSH_CONFIG_HOME:-$HOME/.config/zsh}/fzf_themes/wallpaper.zsh"
+    [hyprland-wallpaper.lua]="$HOME/.config/hypr/themes/hyprland/wallpaper.lua"
+    [hyprlock-wallpaper.conf]="$HOME/.config/hypr/themes/hyprlock/wallpaper.conf"
+    [kitty-wallpaper.conf]="$HOME/.config/kitty/themes/wallpaper.conf"
+    [opencode-wallpaper.json]="$HOME/.config/opencode/themes/wallpaper.json"
+    [rofi-wallpaper.rasi]="$HOME/.config/rofi/themes/colorschemes/wallpaper.rasi"
+    [starship-wallpaper.sh]="$HOME/.config/starship/themes/wallpaper.sh"
+    [tmux-wallpaper.conf]="$HOME/.config/tmux/themes/wallpaper.conf"
+)
+
+copy_file() {
+    local source=$1 target=$2
+    if [[ -f "$target" ]] && cmp -s -- "$source" "$target"; then
+        return 0
+    fi
+    install -D -m 0644 -- "$source" "$target"
+}
+
+validate_theme_id() {
+    local theme_id=$1
+    [[ "$theme_id" =~ ^[a-z0-9]+(_[a-z0-9]+)*$ ]] || return 1
+    [[ "$theme_id" == wallpaper || -f "$project_root/themes/$theme_id.json" ]]
+}
+
+read_manifest_theme() {
+    jq -er 'select(.schemaVersion == 1)
+        | .defaultTheme
+        | select(type == "string" and test("^[a-z0-9]+(_[a-z0-9]+)*$"))' "$manifest"
+}
+
+ipc_call() {
+    timeout 5 "$ipc_launcher" "$@"
+}
+
+preflight_artifacts() {
+    local source_mode=$1 pair relative runtime source
+    for pair in "${artifacts[@]}"; do
+        relative=${pair%%|*}
+        runtime=${pair#*|}
+        source=$runtime
+        [[ "$source_mode" == defaults ]] && source="$defaults_root/$relative"
+        if [[ ! -f "$source" || ! -r "$source" ]]; then
+            printf 'Missing QE defaults %s artifact: %s\n' "$action" "$source" >&2
+            return 1
+        fi
+    done
+}
+
+capture_defaults() {
+    local active_theme status pair relative runtime stage backup parent
+
+    if ! active_theme=$(ipc_call qe-theme activeTheme 2>/dev/null); then
+        printf 'QE defaults capture requires a running QE shell.\n' >&2
+        return 1
+    fi
+    if ! validate_theme_id "$active_theme"; then
+        printf 'QE defaults capture rejected unknown active theme: %s\n' "$active_theme" >&2
+        return 1
+    fi
+    for status in \
+        "$(ipc_call qe-theme operation)" \
+        "$(ipc_call qe-theme externalOperation)" \
+        "$(ipc_call qe-wallpaper operation)" \
+        "$(ipc_call qe-wallpaper generationStatus)" \
+        "$(ipc_call qe-wallpaper externalThemeStatus)"; do
+        if [[ "$status" == pending ]]; then
+            printf 'QE defaults capture rejected while a theme or wallpaper operation is pending.\n' >&2
+            return 1
+        fi
+    done
+    preflight_artifacts runtime
+
+    parent=$(dirname -- "$defaults_root")
+    stage="$parent/.qe-defaults.stage.$$"
+    backup="$parent/.qe-defaults.backup.$$"
+    rm -rf -- "$stage" "$backup"
+    mkdir -p -- "$stage"
+    if [[ -d "$defaults_root" ]]; then
+        cp -a -- "$defaults_root/." "$stage/"
+    fi
+    printf '{\n  "schemaVersion": 1,\n  "defaultTheme": "%s"\n}\n' "$active_theme" >"$stage/manifest.json"
+    for pair in "${artifacts[@]}"; do
+        relative=${pair%%|*}
+        runtime=${pair#*|}
+        copy_file "$runtime" "$stage/$relative"
+    done
+    jq -e . "$stage/manifest.json" >/dev/null
+
+    if [[ -d "$defaults_root" ]]; then
+        mv -- "$defaults_root" "$backup"
+    fi
+    if ! mv -- "$stage" "$defaults_root"; then
+        [[ ! -d "$defaults_root" && -d "$backup" ]] && mv -- "$backup" "$defaults_root"
+        return 1
+    fi
+    rm -rf -- "$backup"
+    printf 'QE defaults captured with theme %s.\n' "$active_theme"
+}
+
+repair_live_slots() {
+    local name source target target_directory temporary_link
+    for name in "${!live_slots[@]}"; do
+        source="$runtime_root/external/$name"
+        target=${live_slots[$name]}
+        target_directory=$(dirname -- "$target")
+        mkdir -p -- "$target_directory"
+        if [[ -L "$target" && $(readlink -f -- "$target") == "$source" ]]; then
+            continue
+        fi
+        temporary_link="$target_directory/.qe-wallpaper-link.$$"
+        rm -f -- "$temporary_link"
+        ln -s -- "$source" "$temporary_link"
+        mv -Tf -- "$temporary_link" "$target"
+    done
+}
+
+apply_external_theme() {
+    local theme_id=$1 external_switcher output_file external_exit
+    external_switcher=${QE_THEME_SWITCHER:-}
+    if [[ -z "$external_switcher" ]]; then
+        external_switcher=$(command -v qe-theme-switcher || true)
+    fi
+    if [[ -z "$external_switcher" || ! -x "$external_switcher" ]]; then
+        printf 'Warning: external theme switcher is unavailable; restored files only.\n' >&2
+        return 0
+    fi
+
+    output_file=$(mktemp)
+    if [[ "$theme_id" == wallpaper ]]; then
+        timeout 125 "$external_switcher" --machine --theme "$theme_id" --skip-gtk >"$output_file" 2>&1 || external_exit=$?
+    else
+        timeout 125 "$external_switcher" --machine --theme "$theme_id" >"$output_file" 2>&1 || external_exit=$?
+    fi
+    if [[ -n "${external_exit:-}" ]]; then
+        printf 'Warning: external default theme apply failed (exit %s): ' "$external_exit" >&2
+        dd if="$output_file" bs=1 count=4096 status=none >&2 || true
+        printf '\n' >&2
+    else
+        printf 'External default theme applied.\n'
+    fi
+    rm -f -- "$output_file"
+}
+
+restore_defaults() {
+    local default_theme pair relative runtime active_theme wallpaper_requested=false theme_requested=false
+
+    if [[ ! -f "$manifest" || ! -r "$manifest" ]]; then
+        printf 'Missing QE defaults manifest: %s\n' "$manifest" >&2
+        return 1
+    fi
+    if ! default_theme=$(read_manifest_theme) || ! validate_theme_id "$default_theme"; then
+        printf 'QE defaults restore rejected invalid manifest: %s\n' "$manifest" >&2
+        return 1
+    fi
+    preflight_artifacts defaults
+
+    for pair in "${artifacts[@]}"; do
+        relative=${pair%%|*}
+        runtime=${pair#*|}
+        copy_file "$defaults_root/$relative" "$runtime"
+    done
+    repair_live_slots
+
+    if active_theme=$(ipc_call qe-theme activeTheme 2>/dev/null); then
+        if [[ "$(ipc_call qe-wallpaper applyDefault 2>/dev/null || true)" == true ]]; then
+            wallpaper_requested=true
+            printf 'Default wallpaper application requested from QE.\n'
+        else
+            printf 'Warning: QE rejected default wallpaper application; restored files remain in place.\n' >&2
+        fi
+        if [[ "$active_theme" == "$default_theme" ]]; then
+            theme_requested=true
+        elif [[ "$(ipc_call qe-theme applyTheme "$default_theme" 2>/dev/null || true)" == true ]]; then
+            theme_requested=true
+            printf 'QE default theme application requested: %s.\n' "$default_theme"
+        else
+            printf 'Warning: QE rejected default theme application: %s.\n' "$default_theme" >&2
+        fi
+    fi
+
+    if [[ "$theme_requested" != true || ( "$active_theme" == "$default_theme" && "$default_theme" != wallpaper )
+            || ( "$default_theme" == wallpaper && "$wallpaper_requested" != true ) ]]; then
+        apply_external_theme "$default_theme"
+    fi
+    printf 'QE defaults restored with theme %s.\n' "$default_theme"
+}
+
+if [[ "$action" == capture ]]; then
+    capture_defaults
+else
+    restore_defaults
+fi

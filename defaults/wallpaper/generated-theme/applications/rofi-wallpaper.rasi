@@ -1,0 +1,31 @@
+* {
+  /* Theme Colors */
+  background: #121318;
+  outline: #90909a;
+  surface-container-low: #1b1b21;
+  on-background: #e4e1e9;
+  primary: #bbc3ff;
+  secondary: #c3c5dd;
+  tertiary: #e6bad7;
+  tertiary-container: #5d3c55;
+  secondary-container: #434659;
+  error: #ffb4ab;
+
+  /* Rofi Colors */
+  foreground: @on-background;
+  background-color: @background;
+  active-background: @surface-container-low;
+  active-foreground: @secondary;
+  urgent-background: @on-background;
+  urgent-foreground: @outline;
+  selected-background: @active-background;
+  selected-foreground: @secondary;
+  selected-urgent-background: @urgent-background;
+  selected-active-background: @active-background;
+  separatorcolor: @active-background;
+  textbox-prompt-colon-foreground: @tertiary-container;
+  bordercolor: @primary;
+  entry-foreground: @on-background;
+  prompt-foreground: @primary;
+}
+

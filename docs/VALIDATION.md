@@ -24,6 +24,7 @@ bash tests/helpers/wallpaper-promotion.test.sh
 bash tests/helpers/wallpaper-generation-failure.test.sh
 bash tests/helpers/wallpaper-selector-ipc.test.sh
 bash tests/helpers/qe-launch.test.sh
+bash tests/helpers/qe-defaults.test.sh
 bash tests/helpers/external-wallpaper-theme.test.sh
 bash tests/helpers/external-wallpaper-theme-service.test.sh
 bash tests/helpers/window-opacity.test.sh
@@ -72,8 +73,8 @@ recovered active-theme edits plus catalog add, malformed, duplicate-ID, removal,
 and active-source loss/recovery cases without restarting the test shell.
 The selector IPC helper starts an isolated shell process and must print
 `THEME_SELECTOR_IPC_TEST_PASSED` after proving the `qe-theme` and
-`qe-wallpaper` targets and their `open`, `close`, `toggle`, and `isOpen`
-methods against that exact PID.
+`qe-wallpaper` targets, selector visibility methods, confirmed theme queries,
+and idempotent theme application against that exact PID.
 The selector interaction test must print `THEME_SELECTOR_TEST_PASSED` after a
 catalog selection becomes the confirmed resolved live theme.
 The external theme service test uses a fake adapter and must print
@@ -130,6 +131,17 @@ The restored wallpaper fixture must print
 `RESTORED_WALLPAPER_THEME_HELPER_TEST_PASSED` after a default generated theme
 seeded at the stable XDG data path is catalogued, selected without a persisted
 wallpaper source, and delegated to the external switcher with GTK skipped.
+
+The authored defaults command contract is tested in isolated XDG and HOME
+directories:
+
+```sh
+tests/helpers/qe-defaults.test.sh
+```
+
+It must print `QE_DEFAULTS_TEST_PASSED` after staged capture, pending-operation
+rejection, artifact restore, live-slot repair, fixed-theme application, and the
+stopped-QE wallpaper `--skip-gtk` fallback pass.
 
 Relocation is checked by copying the project to a temporary directory and
 repeating the JavaScript validation and shell smoke test there. QE state created

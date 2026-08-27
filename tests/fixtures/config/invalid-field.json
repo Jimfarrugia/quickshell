@@ -1,5 +1,5 @@
 {
   "schemaVersion": 1,
-  "defaultTheme": "Not Normalized",
-  "commands": { "timeoutMs": -1 }
+  "commands": { "timeoutMs": -1 },
+  "preview": { "enabled": "yes" }
 }

@@ -12,7 +12,8 @@ ShellRoot {
     property bool testingUnknownTheme: false
 
     function begin() {
-        if (started || !stateProbeReady || !Services.ConfigService.hasLoaded || !Services.ThemeService.initialized
+        if (started || !stateProbeReady || !Services.ConfigService.hasLoaded || !Services.DefaultsService.hasLoaded
+                || !Services.ThemeService.initialized
                 || Services.ThemeService.catalog.length < 2) return;
         started = true;
 
@@ -26,6 +27,12 @@ ShellRoot {
             console.error("FOUNDATION_TEST_FAILED: invalid config mutated confirmed state");
             Qt.quit();
             return;
+        }
+
+        const confirmedDefaults = JSON.stringify(Services.DefaultsService.defaults);
+        if (Services.DefaultsService.applyText("{")
+                || JSON.stringify(Services.DefaultsService.defaults) !== confirmedDefaults) {
+            return fail("invalid defaults manifest mutated confirmed state");
         }
 
         if (Services.ThemeService.activeThemeId === "gruvbox") {
@@ -77,6 +84,11 @@ ShellRoot {
 
     Connections {
         target: Services.ConfigService
+        function onHasLoadedChanged() { root.begin(); }
+    }
+
+    Connections {
+        target: Services.DefaultsService
         function onHasLoadedChanged() { root.begin(); }
     }
 

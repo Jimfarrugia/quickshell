@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { themeTokenNames, validateConfig, validateTheme, validateThemeState, truncateUtf8 } from "../../utils/Validation.mjs";
+import { themeTokenNames, validateConfig, validateDefaultsManifest, validateTheme, validateThemeState, truncateUtf8 } from "../../utils/Validation.mjs";
 
 const fixture = async path => JSON.parse(await readFile(new URL(`../fixtures/${path}`, import.meta.url), "utf8"));
 
@@ -53,9 +53,15 @@ assert.equal(invalidIdle.value.bar.idleInhibitorEnabled, true);
 assert.match(invalidIdle.errors.join(" "), /idleInhibitorEnabled/);
 const fieldFallback = validateConfig(await fixture("config/invalid-field.json"));
 assert.equal(fieldFallback.ok, true);
-assert.equal(fieldFallback.value.defaultTheme, "poimandres");
 assert.ok(fieldFallback.errors.length >= 2);
 assert.equal(validateConfig(await fixture("config/invalid-root.json")).ok, false);
+assert.deepEqual(validateDefaultsManifest({ schemaVersion: 1, defaultTheme: "wallpaper" }), {
+  ok: true,
+  value: { schemaVersion: 1, defaultTheme: "wallpaper" },
+  errors: []
+});
+assert.equal(validateDefaultsManifest({ schemaVersion: 1, defaultTheme: "Not Valid" }).ok, false);
+assert.equal(validateDefaultsManifest({ schemaVersion: 1, defaultTheme: "poimandres", extra: true }).ok, false);
 
 for (const path of ["../../themes/poimandres.json", "../../themes/gruvbox.json", "../fixtures/themes/valid.json"]) {
   const result = validateTheme(JSON.parse(await readFile(new URL(path, import.meta.url), "utf8")));

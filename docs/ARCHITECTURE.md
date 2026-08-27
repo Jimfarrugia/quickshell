@@ -34,8 +34,8 @@ requiring all replacements to ship together.
 - Prefer event-driven Quickshell, Qt, Wayland, DBus, and IPC APIs.
 - Isolate optional integrations so one failure does not disable unrelated QE
   features.
-- Support development in this repository and later relocation to
-  `~/.config/quickshell` without source changes.
+- Support project-relative deployment without source changes; the final
+  production location remains a Phase 12 decision.
 - Make external operations observable, bounded, and independently testable.
 - Preserve a safe rollback path while replacing existing desktop tools.
 
@@ -272,7 +272,7 @@ The initial schema contains:
 - notification and OSD behavior
 - dashboard feature options
 
-Defaults live in the schema-aware `ConfigService` implementation and apply only
+Behavior defaults live in the schema-aware `ConfigService` implementation and apply only
 when a key is absent. They are not separately editable configuration. Invalid
 values produce diagnostics and fall back per field; an unreadable root document
 uses a complete safe default configuration and retains the last-known-good
@@ -285,7 +285,29 @@ Configuration reload must be transactional at the document level:
 3. Publish the candidate only when required fields are valid.
 4. Otherwise keep the last-known-good model and expose the validation error.
 
-### 5.2 Paths
+### 5.2 Authored default desktop state
+
+`defaults/manifest.json` is the authoritative owner of the default theme ID.
+`DefaultsService` validates it independently from behavior configuration,
+retains its last-known-good value after a rejected reload, and provides a safe
+`poimandres` fallback when no valid manifest has loaded. Persisted active theme
+state remains authoritative for the current session and machine;
+the default theme is the startup and explicit restore fallback.
+
+The complete authored bundle lives under `defaults/`. Wallpaper images are
+stored under `defaults/wallpaper/images`; the generated QE wallpaper theme and
+application artifacts are stored under
+`defaults/wallpaper/generated-theme/{qe,applications}`. `scripts/qe-defaults`
+is the sole capture/restore writer. Capture obtains confirmed active theme state
+through typed QE IPC, rejects pending theme or wallpaper operations, preflights
+all runtime artifacts, and stages the complete bundle before promotion. Restore
+preflights the authored bundle, restores XDG artifacts, repairs application slot
+links, and requests the manifest theme and default wallpaper from a running QE
+instance. When QE is absent, the external switcher applies the manifest theme
+directly. Runtime application failures do not modify the authored bundle or
+remove restored files.
+
+### 5.3 Paths
 
 No source file may assume `/home/jim`, `~/Projects/quickshell`, or the eventual
 dotfiles location.
@@ -306,7 +328,7 @@ dotfiles location.
 The `PathsService` is the sole QE-facing owner of resolved paths. Components do
 not derive paths from `$HOME`.
 
-### 5.3 Keybindings and commands
+### 5.4 Keybindings and commands
 
 Hyprland configuration remains authoritative for key combinations because the
 compositor owns global dispatch. QE exposes stable action endpoints through
@@ -820,12 +842,14 @@ Neovim), and `WallpaperExternalThemeAdapter` materializes them through
 skipping targets whose executables are absent, preserving unchanged files, and
 reporting per-target results. Stow-managed installations keep these live slots
 as ignored, restore-managed symlinks to XDG state; promotion resolves the link
-before replacing the runtime target so the dotfiles repository remains
-authored-default data rather than a runtime write target. The explicit
-`qe-wallpaper-default restore` operation preflights and restores the generated
-QE theme, wallpaper/lockscreen images, Neovim palette, and external slots before
-creating or repairing the live links. `capture` is the only operation that
-updates the authored default snapshot.
+before replacing the runtime target so the QE repository's authored defaults
+remain separate from runtime state. The explicit `qe-defaults restore` operation
+preflights and restores the generated QE theme, wallpaper/lockscreen images,
+Neovim palette, and external slots before creating or repairing the live links.
+It applies the manifest's default theme through running QE or, when QE is
+absent, directly through the external switcher. A missing or failed switcher
+leaves restored files in place and reports the failure. `capture` is the only
+operation that updates the authored default bundle.
 QE never writes an app's active configuration; the external switcher owns that
 copy. After promotion succeeds, QE delegates external application to the
 switcher with `--machine --theme wallpaper --skip-gtk` (GTK is excluded because

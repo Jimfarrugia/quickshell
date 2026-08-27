@@ -53,7 +53,12 @@ Singleton {
     }
 
     function validPath(path) {
-        return Wallpaper.isWallpaperPath(path, wallpaperRoot);
+        return path === PathsService.defaultWallpaperImage
+            || Wallpaper.isWallpaperPath(path, wallpaperRoot);
+    }
+
+    function requestDefaultWallpaper() {
+        return requestWallpaper(PathsService.defaultWallpaperImage);
     }
 
     function requestWallpaper(path) {

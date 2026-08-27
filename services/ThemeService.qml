@@ -73,6 +73,11 @@ Singleton {
 
     onExternalAdapterChanged: syncExternalState()
 
+    Connections {
+        target: DefaultsService
+        function onHasLoadedChanged() { root.initializeTheme(); }
+    }
+
     function synchronizeCatalog() {
         if (!ThemeCatalogService.initialized) return;
         const sourceMissing = initialized && activeThemeId !== emergencyTheme.id
@@ -98,8 +103,9 @@ Singleton {
     }
 
     function initializeTheme() {
-        if (initialized || !ThemeCatalogService.initialized || !ConfigService.hasLoaded || !stateReady) return;
-        let requestedId = ConfigService.config.defaultTheme;
+        if (initialized || !ThemeCatalogService.initialized || !ConfigService.hasLoaded
+                || !DefaultsService.hasLoaded || !stateReady) return;
+        let requestedId = DefaultsService.defaultTheme;
         if (stateFile.loaded) {
             const parsed = Validation.parseJson(stateFile.text(), "active theme state");
             if (parsed.ok) {
@@ -108,7 +114,7 @@ Singleton {
                 else reportStateError(state.errors);
             } else reportStateError(parsed.errors);
         }
-        const selected = findTheme(requestedId) || findTheme(ConfigService.config.defaultTheme);
+        const selected = findTheme(requestedId) || findTheme(DefaultsService.defaultTheme);
         if (selected) {
             theme = selected;
             activeThemeId = selected.id;

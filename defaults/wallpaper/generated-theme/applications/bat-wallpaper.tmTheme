@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0">
+<dict>
+  <key>name</key><string>Wallpaper</string>
+  <key>uuid</key><string>qe-wallpaper-external-bat</string>
+  <key>settings</key>
+  <array>
+    <dict><key>settings</key><dict>
+      <key>background</key><string>#121318</string>
+      <key>foreground</key><string>#e4e1e9</string>
+      <key>caret</key><string>#bbc3ff</string>
+      <key>selection</key><string>#3a4379</string>
+      <key>invisibles</key><string>#46464f</string>
+    </dict></dict>
+    <dict><key>scope</key><string>comment, comment.*</string><key>settings</key><dict><key>foreground</key><string>#90909a</string></dict></dict>
+    <dict><key>scope</key><string>keyword, storage, keyword.*</string><key>settings</key><dict><key>foreground</key><string>#bbc3ff</string></dict></dict>
+    <dict><key>scope</key><string>string, string.*</string><key>settings</key><dict><key>foreground</key><string>#e6bad7</string></dict></dict>
+    <dict><key>scope</key><string>constant.numeric</string><key>settings</key><dict><key>foreground</key><string>#c3c5dd</string></dict></dict>
+    <dict><key>scope</key><string>entity.name.function, entity.name.class, entity.name.type</string><key>settings</key><dict><key>foreground</key><string>#dee0ff</string></dict></dict>
+    <dict><key>scope</key><string>invalid, invalid.*, constant.language</string><key>settings</key><dict><key>foreground</key><string>#ffb4ab</string></dict></dict>
+  </array>
+</dict>
+</plist>
+

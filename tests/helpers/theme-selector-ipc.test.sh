@@ -28,6 +28,10 @@ targets="$(qs ipc --pid "$shell_pid" show)"
 [[ "$targets" == *"target qe-theme"* ]]
 [[ "$targets" == *"target qe-wallpaper"* ]]
 [[ "$(qs ipc --pid "$shell_pid" call qe-theme isOpen)" == "false" ]]
+active_theme="$(qs ipc --pid "$shell_pid" call qe-theme activeTheme)"
+[[ "$active_theme" =~ ^[a-z0-9]+(_[a-z0-9]+)*$ ]]
+[[ "$(qs ipc --pid "$shell_pid" call qe-theme applyTheme "$active_theme")" == "true" ]]
+[[ "$(qs ipc --pid "$shell_pid" call qe-theme operation)" != "pending" ]]
 [[ "$(qs ipc --pid "$shell_pid" call qe-wallpaper isOpen)" == "false" ]]
 qs ipc --pid "$shell_pid" call qe-theme open
 [[ "$(qs ipc --pid "$shell_pid" call qe-theme isOpen)" == "true" ]]

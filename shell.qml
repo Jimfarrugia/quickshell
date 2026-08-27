@@ -11,6 +11,7 @@ import "modules/bar"
 ShellRoot {
     // Referencing the singletons here establishes deterministic startup ownership.
     readonly property string shellDirectory: Services.PathsService.shellDirectory
+    readonly property string defaultTheme: Services.DefaultsService.defaultTheme
     readonly property string activeTheme: Services.ThemeService.activeThemeId
 
     TestSurface {}
