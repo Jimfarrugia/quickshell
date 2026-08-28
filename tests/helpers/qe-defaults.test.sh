@@ -60,16 +60,36 @@ run_defaults() {
 run_defaults restore
 cmp -s -- "$test_root/project/defaults/wallpaper/generated-theme/applications/rofi-wallpaper.rasi" \
     "$test_root/state/qe/wallpaper/external/rofi-wallpaper.rasi"
+cmp -s -- "$test_root/project/defaults/wallpaper/generated-theme/applications/yazi-wallpaper.sh" \
+    "$test_root/state/qe/wallpaper/external/yazi-wallpaper.sh"
+cmp -s -- "$test_root/project/defaults/wallpaper/generated-theme/applications/yazi-wallpaper.tmTheme" \
+    "$test_root/state/qe/wallpaper/external/yazi-wallpaper.tmTheme"
 [[ -L "$test_root/home/.config/rofi/themes/colorschemes/wallpaper.rasi" ]]
 [[ "$(readlink -f -- "$test_root/home/.config/rofi/themes/colorschemes/wallpaper.rasi")" \
     == "$test_root/state/qe/wallpaper/external/rofi-wallpaper.rasi" ]]
+[[ -L "$test_root/home/.config/yazi/flavors/wallpaper.yazi/wallpaper.sh" ]]
+[[ -L "$test_root/home/.config/yazi/flavors/wallpaper.yazi/tmtheme.xml" ]]
 grep -q -- '--machine --theme poimandres' "$test_root/switcher.log"
 
 printf '%s\n' gruvbox >"$test_root/active-theme"
 printf '%s\n' 'captured-rofi' >"$test_root/state/qe/wallpaper/external/rofi-wallpaper.rasi"
+
+# A newly-added target may have been generated directly in the application
+# config before qe-defaults restore created its runtime link. Capture migrates
+# that live file into runtime state and repairs the link.
+rm -f -- "$test_root/state/qe/wallpaper/external/yazi-wallpaper.sh" \
+    "$test_root/state/qe/wallpaper/external/yazi-wallpaper.tmTheme"
+rm -f -- "$test_root/home/.config/yazi/flavors/wallpaper.yazi/wallpaper.sh" \
+    "$test_root/home/.config/yazi/flavors/wallpaper.yazi/tmtheme.xml"
+cp -- "$test_root/project/defaults/wallpaper/generated-theme/applications/yazi-wallpaper.sh" \
+    "$test_root/home/.config/yazi/flavors/wallpaper.yazi/wallpaper.sh"
+cp -- "$test_root/project/defaults/wallpaper/generated-theme/applications/yazi-wallpaper.tmTheme" \
+    "$test_root/home/.config/yazi/flavors/wallpaper.yazi/tmtheme.xml"
 run_defaults capture
 [[ "$(jq -r .defaultTheme "$test_root/project/defaults/manifest.json")" == gruvbox ]]
 grep -q -- '^captured-rofi$' "$test_root/project/defaults/wallpaper/generated-theme/applications/rofi-wallpaper.rasi"
+[[ -L "$test_root/home/.config/yazi/flavors/wallpaper.yazi/wallpaper.sh" ]]
+[[ -L "$test_root/home/.config/yazi/flavors/wallpaper.yazi/tmtheme.xml" ]]
 
 printf '%s\n' 'stale-rofi' >"$test_root/state/qe/wallpaper/external/rofi-wallpaper.rasi"
 run_defaults restore

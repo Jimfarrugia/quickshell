@@ -27,6 +27,9 @@ bash tests/helpers/qe-launch.test.sh
 bash tests/helpers/qe-defaults.test.sh
 bash tests/helpers/external-wallpaper-theme.test.sh
 bash tests/helpers/external-wallpaper-theme-service.test.sh
+YAZI_TEMPLATE="$HOME/.config/yazi/flavors/flavor.template.toml" \
+QE_PROJECT_ROOT="$PWD" \
+  bash ../theme-switcher/tests/test_yazi.sh
 bash tests/helpers/window-opacity.test.sh
 bash tests/helpers/repeated-wallpaper-generation.test.sh
 bash tests/helpers/generated-theme-hot-reload.test.sh

@@ -11,7 +11,7 @@ ShellRoot {
     property bool started: false
     readonly property string imagePath: Quickshell.env("QE_TEST_WALLPAPER")
         || `${Services.WallpaperService.wallpaperRoot}/themes/poimandres/sample.png`
-    readonly property var expectedIds: ["bat","btop","dunst","eza","fzf","hyprland","hyprlock","kitty","nvim","opencode","rofi","starship","tmux"]
+    readonly property var expectedIds: ["bat","btop","dunst","eza","fzf","hyprland","hyprlock","kitty","nvim","opencode","rofi","starship","tmux","yazi_palette","yazi_tmtheme"]
 
     Scope {
         id: fakeExternal

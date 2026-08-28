@@ -46,6 +46,8 @@ artifacts=(
     "wallpaper/generated-theme/applications/rofi-wallpaper.rasi|$runtime_root/external/rofi-wallpaper.rasi"
     "wallpaper/generated-theme/applications/starship-wallpaper.sh|$runtime_root/external/starship-wallpaper.sh"
     "wallpaper/generated-theme/applications/tmux-wallpaper.conf|$runtime_root/external/tmux-wallpaper.conf"
+    "wallpaper/generated-theme/applications/yazi-wallpaper.sh|$runtime_root/external/yazi-wallpaper.sh"
+    "wallpaper/generated-theme/applications/yazi-wallpaper.tmTheme|$runtime_root/external/yazi-wallpaper.tmTheme"
 )
 
 declare -A live_slots=(
@@ -61,6 +63,8 @@ declare -A live_slots=(
     [rofi-wallpaper.rasi]="$HOME/.config/rofi/themes/colorschemes/wallpaper.rasi"
     [starship-wallpaper.sh]="$HOME/.config/starship/themes/wallpaper.sh"
     [tmux-wallpaper.conf]="$HOME/.config/tmux/themes/wallpaper.conf"
+    [yazi-wallpaper.sh]="$HOME/.config/yazi/flavors/wallpaper.yazi/wallpaper.sh"
+    [yazi-wallpaper.tmTheme]="$HOME/.config/yazi/flavors/wallpaper.yazi/tmtheme.xml"
 )
 
 copy_file() {
@@ -101,6 +105,26 @@ preflight_artifacts() {
     done
 }
 
+migrate_missing_runtime_artifacts() {
+    local pair relative runtime name target target_directory temporary_link
+    for pair in "${artifacts[@]}"; do
+        relative=${pair%%|*}
+        runtime=${pair#*|}
+        [[ -e "$runtime" ]] && continue
+        name=${relative##*/}
+        target=${live_slots[$name]-}
+        [[ -n "$target" && -f "$target" ]] || continue
+
+        printf 'Migrating live external artifact into QE runtime state: %s\n' "$name" >&2
+        copy_file "$target" "$runtime"
+        target_directory=$(dirname -- "$target")
+        temporary_link="$target_directory/.qe-wallpaper-link.$$"
+        rm -f -- "$temporary_link"
+        ln -s -- "$runtime" "$temporary_link"
+        mv -Tf -- "$temporary_link" "$target"
+    done
+}
+
 capture_defaults() {
     local active_theme status pair relative runtime stage backup parent
 
@@ -123,6 +147,7 @@ capture_defaults() {
             return 1
         fi
     done
+    migrate_missing_runtime_artifacts
     preflight_artifacts runtime
 
     parent=$(dirname -- "$defaults_root")

@@ -299,8 +299,9 @@ stored under `defaults/wallpaper/images`; the generated QE wallpaper theme and
 application artifacts are stored under
 `defaults/wallpaper/generated-theme/{qe,applications}`. `scripts/qe-defaults`
 is the sole capture/restore writer. Capture obtains confirmed active theme state
-through typed QE IPC, rejects pending theme or wallpaper operations, preflights
-all runtime artifacts, and stages the complete bundle before promotion. Restore
+through typed QE IPC, rejects pending theme or wallpaper operations, migrates a
+missing runtime artifact from its existing live slot when needed, preflights all
+runtime artifacts, and stages the complete bundle before promotion. Restore
 preflights the authored bundle, restores XDG artifacts, repairs application slot
 links, and requests the manifest theme and default wallpaper from a running QE
 instance. When QE is absent, the external switcher applies the manifest theme
@@ -844,8 +845,9 @@ When the active QE theme is the generated `wallpaper` theme, QE also generates
 standalone "wallpaper" theme slot files for external applications and the
 external switcher applies them. `ExternalWallpaperTheme` maps the same Matugen
 Material palette into per-application formats (kitty, bat, btop, eza, dunst,
-fzf, hyprland, hyprlock, rofi, starship, tmux, opencode, and a Palette JSON for
-Neovim), and `WallpaperExternalThemeAdapter` materializes them through
+fzf, hyprland, hyprlock, rofi, starship, tmux, opencode, and Yazi's semantic
+palette plus TextMate syntax file, and a Palette JSON for Neovim), and
+`WallpaperExternalThemeAdapter` materializes them through
 `scripts/promote-external-theme.sh`, which writes each file into the app's
 `themes/` `wallpaper` slot with staging and atomic same-filesystem replacement,
 skipping targets whose executables are absent, preserving unchanged files, and

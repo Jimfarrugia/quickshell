@@ -32,7 +32,7 @@ one.
 | Foundation | Complete | Phase 1 acceptance passed on 2026-08-24 |
 | Bar vertical slice | Complete | Phase 2; top reserved edge selected, tray host disabled during Waybar coexistence |
 | Bar parity and Waybar cutover | Complete | Phase 3 acceptance passed 2026-08-25 |
-| Theme/Matugen integration | Complete | Manual selector and external machine integration complete; Matugen mapping, staged promotion, QE-localized wallpaper selector, and Hyprpaper XDG-path application complete; external generated Matugen artifacts now delivered as QE-generated `wallpaper` theme slots applied by the external switcher; runtime/default artifact separation and idempotent promotion added; `QE_THEME_SWITCHER` wired for production through the installed `qe-theme-switcher` wrapper. Phase 4 acceptance passed on 2026-08-26 |
+| Theme/Matugen integration | Complete | Manual selector and external machine integration complete; Matugen mapping, staged promotion, QE-localized wallpaper selector, and Hyprpaper XDG-path application complete; external generated Matugen artifacts now delivered as QE-generated `wallpaper` theme slots applied by the external switcher, including Yazi's semantic palette and syntax theme; runtime/default artifact separation and idempotent promotion added; `QE_THEME_SWITCHER` wired for production through the installed `qe-theme-switcher` wrapper. Phase 4 acceptance passed on 2026-08-26 |
 | Notifications/OSDs | Not started | Phases 5-6 |
 | Launcher/help | Not started | Phase 7 |
 | Dashboards/control center | Not started | Phases 8-10 |
@@ -2624,6 +2624,39 @@ Affected areas: `modules/theme/ThemeSelector.qml`,
 
 Revisit if: a future input method requires modified vim keys, or a shared
 keyboard-navigation component becomes justified by additional surfaces.
+
+## ADR-022: QE-generated Yazi wallpaper flavor
+
+Status: Accepted by user
+
+Decision: generate Yazi's `wallpaper` flavor from the Matugen semantic palette as
+one shell palette plus one TextMate syntax file. Promote both files into the
+`wallpaper.yazi` slot, then let the external switcher generate `flavor.toml` from
+Yazi's shared template and select the flavor through `theme.toml`.
+
+Context: the external switcher's Yazi integration was redesigned to use a single
+semantic palette source and a shared flavor template. Yazi also requires a
+`tmtheme.xml` syntax artifact, so a palette-only integration would not satisfy
+the existing apply contract.
+
+Rationale: QE and the switcher share one wallpaper-derived color source while
+Yazi retains ownership of template expansion and active-flavor selection. The
+switcher replaces only generated `flavor.toml`, preserving restore-managed slot
+links and unrelated Yazi configuration.
+
+Consequences: QE reports two Yazi promotion results, and missing Yazi skips both
+artifacts. Capture migrates a directly-generated Yazi slot into QE runtime state
+and repairs its link when the slot has not yet been restored. Existing Yazi
+instances do not reload a changed flavor and require a restart. The generated
+Yazi syntax colors are intentionally derived from the same palette rather than
+copied from an authored flavor.
+
+Affected areas: `ExternalWallpaperTheme.mjs`, `apply_yazi_theme.sh`,
+`scripts/qe-defaults`, generated wallpaper artifacts, and Yazi integration
+fixtures.
+
+Revisit if: Yazi gains reliable live theme reload or changes its flavor slot
+contract.
 
 ## 14. Planning Change Procedure
 

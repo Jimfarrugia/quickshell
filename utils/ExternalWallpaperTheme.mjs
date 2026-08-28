@@ -27,6 +27,7 @@ function buildCode(palette) {
     background: read("background"),
     surfaceContainer: read("surface_container"),
     surfaceContainerLow: read("surface_container_low"),
+    surfaceContainerHigh: read("surface_container_high"),
     foreground: read("on_background"),
     surface: read("surface"),
     onSurface: read("on_surface"),
@@ -90,6 +91,62 @@ function batTheme(c) {
     "<dict>",
     "  <key>name</key><string>Wallpaper</string>",
     "  <key>uuid</key><string>qe-wallpaper-external-bat</string>",
+    "  <key>settings</key>",
+    "  <array>",
+    "    <dict><key>settings</key><dict>",
+    `      <key>background</key><string>${c.background}</string>`,
+    `      <key>foreground</key><string>${c.foreground}</string>`,
+    `      <key>caret</key><string>${c.primary}</string>`,
+    `      <key>selection</key><string>${c.primaryContainer}</string>`,
+    `      <key>invisibles</key><string>${c.outlineVariant}</string>`,
+    "    </dict></dict>",
+    `    <dict><key>scope</key><string>comment, comment.*</string><key>settings</key><dict><key>foreground</key><string>${c.outline}</string></dict></dict>`,
+    `    <dict><key>scope</key><string>keyword, storage, keyword.*</string><key>settings</key><dict><key>foreground</key><string>${c.primary}</string></dict></dict>`,
+    `    <dict><key>scope</key><string>string, string.*</string><key>settings</key><dict><key>foreground</key><string>${c.tertiary}</string></dict></dict>`,
+    `    <dict><key>scope</key><string>constant.numeric</string><key>settings</key><dict><key>foreground</key><string>${c.secondary}</string></dict></dict>`,
+    `    <dict><key>scope</key><string>entity.name.function, entity.name.class, entity.name.type</string><key>settings</key><dict><key>foreground</key><string>${c.onPrimaryContainer}</string></dict></dict>`,
+    `    <dict><key>scope</key><string>invalid, invalid.*, constant.language</string><key>settings</key><dict><key>foreground</key><string>${c.error}</string></dict></dict>`,
+    "  </array>",
+    "</dict>",
+    "</plist>",
+    "",
+  ].join("\n");
+}
+
+function yaziPalette(c) {
+  const lines = [
+    "#!/usr/bin/env bash",
+    "",
+    "# Yazi semantic palette generated from the active wallpaper palette",
+    `export BACKGROUND="${c.background}"`,
+    `export SURFACE="${c.surface}"`,
+    `export SURFACE_HIGH="${c.surfaceContainerHigh}"`,
+    `export BORDER="${c.outlineVariant}"`,
+    `export FOREGROUND="${c.foreground}"`,
+    `export FOREGROUND_MUTED="${c.onSurfaceVariant}"`,
+    `export FOREGROUND_SUBTLE="${c.outline}"`,
+    `export PRIMARY="${c.primary}"`,
+    `export PRIMARY_BRIGHT="${c.primaryContainer}"`,
+    `export SECONDARY="${c.secondary}"`,
+    `export SECONDARY_BRIGHT="${c.tertiary}"`,
+    `export SECONDARY_LIGHT="${c.onSurfaceVariant}"`,
+    `export SECONDARY_PALE="${c.onSurface}"`,
+    `export ACCENT="${c.tertiary}"`,
+    `export WARNING="${c.tertiary}"`,
+    `export DESTRUCTIVE="${c.error}"`,
+    `export ERROR="${c.error}"`,
+    "",
+  ];
+  return lines.join("\n");
+}
+
+function yaziTmTheme(c) {
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    "<plist version=\"1.0\">",
+    "<dict>",
+    "  <key>name</key><string>Wallpaper</string>",
+    "  <key>uuid</key><string>qe-wallpaper-external-yazi</string>",
     "  <key>settings</key>",
     "  <array>",
     "    <dict><key>settings</key><dict>",
@@ -774,6 +831,18 @@ const TARGETS = [
     path: (b, c) => `${b.cache}/matugen/nvim-colors.json`,
     generate: (code, palette, variant) => nvimPalette(palette, variant),
   },
+  {
+    id: "yazi_palette",
+    executable: "yazi",
+    path: (b, c) => `${b.config}/yazi/flavors/wallpaper.yazi/wallpaper.sh`,
+    generate: yaziPalette,
+  },
+  {
+    id: "yazi_tmtheme",
+    executable: "yazi",
+    path: (b, c) => `${b.config}/yazi/flavors/wallpaper.yazi/tmtheme.xml`,
+    generate: yaziTmTheme,
+  },
 ];
 
 const ABSOLUTE_PATH_PATTERN = /^\/(?:[^/]+\/)*[^/]+$/;
@@ -874,6 +943,8 @@ export function validateExternalTargetContent(target) {
     { id: "tmux", probe: /^set -g @default_fg/m },
     { id: "opencode", probe: /"defs"/ },
     { id: "nvim", probe: /"schema":\s*"qe-nvim-palette"/ },
+    { id: "yazi_palette", probe: /^export BACKGROUND=/m },
+    { id: "yazi_tmtheme", probe: /<\/plist>/ },
   ];
   const check = checks.find((entry) => entry.id === target.id);
   if (
