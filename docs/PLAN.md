@@ -69,6 +69,19 @@ one.
   changes current behavior.
   The live NetworkManager loopback test is opt-in. Relocation was revalidated
   from `/tmp` at the Phase 2 exit.
+- The palette viewer is implemented as a transient `qe-palette` surface. It
+  displays the selected validated catalog theme's canonical semantic-token order
+  (with `charging` last) or validated raw palette order, and copies normalized hex
+  values through the native Quickshell clipboard property. Its view-local theme
+  dropdown never applies or persists a theme; viewer chrome remains styled by the
+  active theme. The dropdown, mode toggle, and grid are keyboard-focusable;
+  dropdown options support j/k navigation, Enter/l selection, and h/Escape
+  dismissal; l opens the focused dropdown. The mode toggle uses the shared binary
+  `SegmentedToggle` and supports Enter/Space switching. q closes from every focus
+  layer, while Escape closes an open
+  dropdown before closing the viewer. The grid supports Tab mode switching, hjkl
+  navigation, Enter/Space-to-copy, and a responsive second column above 25% of
+  the active display width.
 - Physical external-monitor attach, independent-output startup, reorder, detach,
   and mirror restoration passed in Phase 3. A connected mirror changed to
   extended does not create a new Qt `QScreen`; reconnect the output or restart

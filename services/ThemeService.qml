@@ -13,6 +13,21 @@ Singleton {
         id: "emergency",
         name: "Emergency",
         variant: "dark",
+        palette: {
+            background: "#000000",
+            foreground: "#ffffff",
+            surface: "#181818",
+            surface_variant: "#242424",
+            muted: "#b0b0b0",
+            primary: "#ffffff",
+            secondary: "#b0b0b0",
+            link: "#8ab4f8",
+            highlight: "#e0c060",
+            success: "#70c070",
+            error: "#e06060",
+            shadow: "#80000000",
+            scrim: "#99000000"
+        },
         tokens: {
             background: "#000000",
             on_background: "#ffffff",
@@ -41,11 +56,11 @@ Singleton {
             highlight: "#e0c060",
             on_highlight: "#000000",
             success: "#70c070",
-            charging: "#e0c060",
             warning: "#e0c060",
             error: "#e06060",
             shadow: "#80000000",
-            scrim: "#99000000"
+            scrim: "#99000000",
+            charging: "#e0c060"
         }
     })
     property var theme: emergencyTheme

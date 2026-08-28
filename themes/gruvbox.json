@@ -58,10 +58,10 @@
     "highlight": "{palette.yellowLight}",
     "on_highlight": "{palette.black}",
     "success": "{palette.green}",
-    "charging": "{palette.yellowLight}",
     "warning": "{palette.yellow}",
     "error": "{palette.red}",
     "shadow": "#80000000",
-    "scrim": "#99000000"
+    "scrim": "#99000000",
+    "charging": "{palette.yellowLight}"
   }
 }

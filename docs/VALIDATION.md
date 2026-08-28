@@ -33,7 +33,7 @@ bash tests/helpers/generated-theme-hot-reload.test.sh
 bash tests/helpers/queued-wallpaper-generation.test.sh
 bash tests/helpers/wallpaper-theme-select-external.test.sh
 bash tests/helpers/restored-wallpaper-theme.test.sh
-qmllint $(find . -maxdepth 1 -name '*.qml') $(find components modules services tests -name '*.qml') $(find integrations -maxdepth 1 -name '*.qml' ! -name 'ThemeSelectorIpc.qml' ! -name 'WallpaperSelectorIpc.qml')
+qmllint $(find . -maxdepth 1 -name '*.qml') $(find components modules services tests -name '*.qml') $(find integrations -maxdepth 1 -name '*.qml' ! -name 'ThemeSelectorIpc.qml' ! -name 'WallpaperSelectorIpc.qml' ! -name 'PaletteViewerIpc.qml')
 timeout 5 quickshell -p tests/qml/command-runner-test.qml
 timeout 5 quickshell -p tests/qml/foundation-service-test.qml
 timeout 5 quickshell -p tests/qml/foundation-service-test.qml
@@ -49,6 +49,8 @@ timeout 5 quickshell -p tests/qml/bluetooth-adapter-test.qml
 timeout 5 quickshell -p tests/qml/idle-service-test.qml
 timeout 5 quickshell -p tests/qml/tray-tint-test.qml
 timeout 5 quickshell -p tests/qml/theme-selector-test.qml
+timeout 5 quickshell -p tests/qml/segmented-toggle-test.qml
+timeout 5 quickshell -p tests/qml/palette-viewer-test.qml
 timeout 5 quickshell -p tests/qml/external-theme-service-test.qml
 timeout 5 env QE_MATUGEN=<absolute-path-to-fixture> quickshell -p tests/qml/matugen-adapter-test.qml
 timeout 5 quickshell -p shell.qml

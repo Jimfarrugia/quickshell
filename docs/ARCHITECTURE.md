@@ -428,7 +428,8 @@ published and marks it stale until a valid matching source returns.
 `ThemeService` owns the active QE theme and application operation:
 
 1. Validate the requested ID and complete theme document.
-2. Construct a candidate resolved token set.
+2. Construct a candidate resolved theme projection containing the authored palette
+   and resolved semantic token set.
 3. Persist active QE theme state atomically.
 4. Publish the theme in one binding-visible change.
 5. Invoke the external switcher automatically as a separate best-effort phase.
@@ -697,7 +698,7 @@ contract. The initial shape is:
     "on_surface_panel": "{palette.foreground}",
     "surface_tooltip": "{palette.black}",
     "on_surface_tooltip": "{palette.foreground}",
-    "surface_hover": "{palette.grayDark}",
+    "surface_hover": "#41434F",
     "surface_pressed": "{palette.gray}",
     "primary": "{palette.green}",
     "on_primary": "{palette.black}",
@@ -714,11 +715,11 @@ contract. The initial shape is:
     "highlight": "{palette.yellow}",
     "on_highlight": "{palette.black}",
     "success": "{palette.greenLight}",
-    "charging": "{palette.yellow}",
     "warning": "{palette.yellow}",
     "error": "{palette.red}",
     "shadow": "#80000000",
-    "scrim": "#99000000"
+    "scrim": "#99000000",
+    "charging": "{palette.yellow}"
   }
 }
 ```
@@ -729,12 +730,16 @@ that supersedes the provisional vocabulary and the individual additions in
 ADR-012 and ADR-014 while retaining their charging and tooltip semantics.
 Any explicit pre-release contract revision is recorded in an ADR and updates all
 themes, fixtures, fallbacks, and validators together. Token references are
-resolved once by pure validation logic; components consume resolved semantic
-tokens only.
+resolved once by pure validation logic; normal components consume resolved
+semantic tokens only.
 
 Raw palette names describe source colors. Semantic tokens describe UI roles.
-Components never consume palette entries directly, which allows Matugen and
-manually authored palettes to map different raw vocabularies to the same UI.
+Normal components never consume palette entries directly, which allows Matugen
+and manually authored palettes to map different raw vocabularies to the same UI.
+The palette viewer is an explicit inspection surface and may display any validated
+catalog theme's raw palette and resolved tokens without applying that theme.
+Its selected theme is view-local and its viewer chrome remains styled by the
+active QE theme.
 
 Authored and generated `on_*` pairs target at least 4.5:1 contrast for normal
 text. Meaningful icons, focus indicators, and strong boundaries target at least

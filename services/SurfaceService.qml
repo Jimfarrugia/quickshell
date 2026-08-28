@@ -5,6 +5,7 @@ import Quickshell
 Singleton {
     property bool themeSelectorVisible: false
     property bool wallpaperSelectorVisible: false
+    property bool paletteViewerVisible: false
 
     function openThemeSelector() { themeSelectorVisible = true; }
     function closeThemeSelector() { themeSelectorVisible = false; }
@@ -12,4 +13,7 @@ Singleton {
     function openWallpaperSelector() { wallpaperSelectorVisible = true; }
     function closeWallpaperSelector() { wallpaperSelectorVisible = false; }
     function toggleWallpaperSelector() { wallpaperSelectorVisible = !wallpaperSelectorVisible; }
+    function openPaletteViewer() { paletteViewerVisible = true; }
+    function closePaletteViewer() { paletteViewerVisible = false; }
+    function togglePaletteViewer() { paletteViewerVisible = !paletteViewerVisible; }
 }

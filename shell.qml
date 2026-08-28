@@ -18,6 +18,7 @@ ShellRoot {
     BarHost {}
     ThemeSelectorIpc {}
     WallpaperSelectorIpc {}
+    PaletteViewerIpc {}
     ExternalThemeAdapter {
         id: externalThemeAdapter
     }
@@ -46,6 +47,11 @@ ShellRoot {
     QS.LazyLoader {
         active: Services.SurfaceService.wallpaperSelectorVisible
         source: "modules/wallpaper/WallpaperSelector.qml"
+    }
+
+    QS.LazyLoader {
+        active: Services.SurfaceService.paletteViewerVisible
+        source: "modules/palette/PaletteViewer.qml"
     }
 
     QS.LazyLoader {

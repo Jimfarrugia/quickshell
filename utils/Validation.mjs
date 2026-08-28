@@ -26,11 +26,11 @@ const THEME_TOKENS = [
   "highlight",
   "on_highlight",
   "success",
-  "charging",
   "warning",
   "error",
   "shadow",
-  "scrim"
+  "scrim",
+  "charging"
 ];
 
 const COLOR_PATTERN = /^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
@@ -298,8 +298,11 @@ export function validateTheme(document) {
     if (THEME_TOKENS.indexOf(token) === -1) errors.push(`theme.tokens.${token}: unsupported token`);
   }
 
+  const resolvedPalette = {};
   const resolvedTokens = {};
   if (errors.length === 0) {
+    for (const [key, color] of Object.entries(document.palette))
+      resolvedPalette[key] = color.toLowerCase();
     for (const token of THEME_TOKENS) {
       try {
         resolvedTokens[token] = resolveThemeValue(document.tokens[token], document.palette, document.tokens, [`tokens.${token}`]);
@@ -317,6 +320,7 @@ export function validateTheme(document) {
       id: document.id,
       name: document.name,
       variant: document.variant,
+      palette: resolvedPalette,
       tokens: resolvedTokens
     } : null
   };

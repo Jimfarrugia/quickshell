@@ -9,8 +9,8 @@ const expectedThemeTokens = [
   "surface_panel", "on_surface_panel", "surface_tooltip", "on_surface_tooltip", "surface_hover",
   "surface_pressed", "primary", "on_primary", "primary_container", "on_primary_container", "secondary",
   "on_secondary", "outline", "outline_variant", "focus_ring", "on_surface_disabled",
-  "on_surface_placeholder", "link", "highlight", "on_highlight", "success", "charging", "warning",
-  "error", "shadow", "scrim"
+  "on_surface_placeholder", "link", "highlight", "on_highlight", "success", "warning", "error",
+  "shadow", "scrim", "charging"
 ];
 
 function contrastRatio(first, second) {
@@ -68,10 +68,14 @@ for (const path of ["../../themes/poimandres.json", "../../themes/gruvbox.json",
   assert.equal(result.ok, true, `${path}: ${result.errors.join("; ")}`);
 }
 const poimandres = validateTheme(JSON.parse(await readFile(new URL("../../themes/poimandres.json", import.meta.url), "utf8")));
+const poimandresSource = JSON.parse(await readFile(new URL("../../themes/poimandres.json", import.meta.url), "utf8"));
+assert.deepEqual(Object.keys(poimandres.value.palette), Object.keys(poimandresSource.palette));
+assert.equal(Object.keys(poimandres.value.tokens).at(-1), "charging");
 assert.equal(poimandres.value.tokens.surface_tooltip, "#171922");
 assert.equal(poimandres.value.tokens.outline, "#8290a5");
 assert.equal(poimandres.value.tokens.on_primary, "#171922");
 const gruvbox = validateTheme(JSON.parse(await readFile(new URL("../../themes/gruvbox.json", import.meta.url), "utf8")));
+assert.equal(Object.keys(gruvbox.value.tokens).at(-1), "charging");
 assert.equal(gruvbox.value.tokens.surface_tooltip, "#3c3836");
 assert.equal(gruvbox.value.tokens.outline, "#b8a98a");
 assert.equal(gruvbox.value.tokens.on_primary_container, "#32302f");

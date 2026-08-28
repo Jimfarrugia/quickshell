@@ -30,7 +30,7 @@
     "on_surface_panel": "{palette.foreground}",
     "surface_tooltip": "{palette.black}",
     "on_surface_tooltip": "{palette.foreground}",
-    "surface_hover": "{palette.grayDark}",
+    "surface_hover": "#41434F",
     "surface_pressed": "{palette.gray}",
     "primary": "{palette.green}",
     "on_primary": "{palette.black}",
@@ -47,10 +47,10 @@
     "highlight": "{palette.yellow}",
     "on_highlight": "{palette.black}",
     "success": "{palette.greenLight}",
-    "charging": "{palette.yellow}",
     "warning": "{palette.yellow}",
     "error": "{palette.red}",
     "shadow": "#80000000",
-    "scrim": "#99000000"
+    "scrim": "#99000000",
+    "charging": "{palette.yellow}"
   }
 }
