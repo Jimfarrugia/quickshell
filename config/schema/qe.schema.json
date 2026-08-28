@@ -51,6 +51,19 @@
         "format24h": { "type": "boolean", "default": false }
       }
     },
+    "notifications": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "popupEnabled": { "type": "boolean", "default": true },
+        "historyEnabled": { "type": "boolean", "default": true },
+        "historyLimit": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 },
+        "maxSummaryBytes": { "type": "integer", "minimum": 64, "maximum": 4096, "default": 512 },
+        "maxBodyBytes": { "type": "integer", "minimum": 256, "maximum": 65536, "default": 8192 },
+        "maxActions": { "type": "integer", "minimum": 0, "maximum": 16, "default": 8 }
+      }
+    },
     "commands": {
       "type": "object",
       "additionalProperties": false,

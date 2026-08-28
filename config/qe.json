@@ -25,6 +25,15 @@
     "showSeconds": false,
     "format24h": false
   },
+  "notifications": {
+    "enabled": false,
+    "popupEnabled": true,
+    "historyEnabled": true,
+    "historyLimit": 20,
+    "maxSummaryBytes": 512,
+    "maxBodyBytes": 8192,
+    "maxActions": 8
+  },
   "commands": {
     "timeoutMs": 5000,
     "termGraceMs": 1000,

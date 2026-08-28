@@ -58,6 +58,15 @@ export const defaultConfig = Object.freeze({
     })
   }),
   clock: Object.freeze({ showSeconds: false, format24h: false }),
+  notifications: Object.freeze({
+    enabled: false,
+    popupEnabled: true,
+    historyEnabled: true,
+    historyLimit: 20,
+    maxSummaryBytes: 512,
+    maxBodyBytes: 8192,
+    maxActions: 8
+  }),
   commands: Object.freeze({ timeoutMs: 5000, termGraceMs: 1000, maxOutputBytes: 32768 }),
   appearance: Object.freeze({
     fontFamily: "Inter",
@@ -100,6 +109,7 @@ function copyDefaults() {
       })
     }),
     clock: Object.assign({}, defaultConfig.clock),
+    notifications: Object.assign({}, defaultConfig.notifications),
     commands: Object.assign({}, defaultConfig.commands),
     appearance: Object.assign({}, defaultConfig.appearance)
   };
@@ -188,6 +198,25 @@ export function validateConfig(document) {
     else if (document.clock.format24h !== undefined) errors.push("config.clock.format24h: expected a boolean");
   } else if (document.clock !== undefined) {
     errors.push("config.clock: expected an object");
+  }
+
+  if (isObject(document.notifications)) {
+    if (typeof document.notifications.enabled === "boolean") value.notifications.enabled = document.notifications.enabled;
+    else if (document.notifications.enabled !== undefined) errors.push("config.notifications.enabled: expected a boolean");
+    if (typeof document.notifications.popupEnabled === "boolean") value.notifications.popupEnabled = document.notifications.popupEnabled;
+    else if (document.notifications.popupEnabled !== undefined) errors.push("config.notifications.popupEnabled: expected a boolean");
+    if (typeof document.notifications.historyEnabled === "boolean") value.notifications.historyEnabled = document.notifications.historyEnabled;
+    else if (document.notifications.historyEnabled !== undefined) errors.push("config.notifications.historyEnabled: expected a boolean");
+    if (integerIn(document.notifications.historyLimit, 1, 100)) value.notifications.historyLimit = document.notifications.historyLimit;
+    else if (document.notifications.historyLimit !== undefined) errors.push("config.notifications.historyLimit: expected an integer from 1 to 100");
+    if (integerIn(document.notifications.maxSummaryBytes, 64, 4096)) value.notifications.maxSummaryBytes = document.notifications.maxSummaryBytes;
+    else if (document.notifications.maxSummaryBytes !== undefined) errors.push("config.notifications.maxSummaryBytes: expected an integer from 64 to 4096");
+    if (integerIn(document.notifications.maxBodyBytes, 256, 65536)) value.notifications.maxBodyBytes = document.notifications.maxBodyBytes;
+    else if (document.notifications.maxBodyBytes !== undefined) errors.push("config.notifications.maxBodyBytes: expected an integer from 256 to 65536");
+    if (integerIn(document.notifications.maxActions, 0, 16)) value.notifications.maxActions = document.notifications.maxActions;
+    else if (document.notifications.maxActions !== undefined) errors.push("config.notifications.maxActions: expected an integer from 0 to 16");
+  } else if (document.notifications !== undefined) {
+    errors.push("config.notifications: expected an object");
   }
 
   if (isObject(document.commands)) {
@@ -357,6 +386,19 @@ export function truncateUtf8(text, maximumBytes) {
     end += surrogatePair ? 2 : 1;
   }
   return { text, truncated: false };
+}
+
+export function validateNotificationState(document) {
+  if (!isObject(document)) return { ok: false, value: { schemaVersion: 1, dnd: false }, errors: ["notification state: root must be an object"] };
+  if (document.schemaVersion !== 1)
+    return { ok: false, value: { schemaVersion: 1, dnd: false }, errors: ["notification state.schemaVersion: expected 1"] };
+  if (typeof document.dnd !== "boolean")
+    return { ok: false, value: { schemaVersion: 1, dnd: false }, errors: ["notification state.dnd: expected a boolean"] };
+  for (const key of Object.keys(document)) {
+    if (key !== "schemaVersion" && key !== "dnd")
+      return { ok: false, value: { schemaVersion: 1, dnd: false }, errors: [`notification state.${key}: unsupported property`] };
+  }
+  return { ok: true, value: { schemaVersion: 1, dnd: document.dnd }, errors: [] };
 }
 
 export function themeTokenNames() {

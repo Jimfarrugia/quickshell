@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { themeTokenNames, validateConfig, validateDefaultsManifest, validateTheme, validateThemeState, truncateUtf8 } from "../../utils/Validation.mjs";
+import { themeTokenNames, validateConfig, validateDefaultsManifest, validateTheme, validateThemeState, validateNotificationState, truncateUtf8 } from "../../utils/Validation.mjs";
+import { normalizeNotification, sanitizeMarkup, shouldKeepHistory, shouldShowPopup } from "../../utils/Notifications.mjs";
 
 const fixture = async path => JSON.parse(await readFile(new URL(`../fixtures/${path}`, import.meta.url), "utf8"));
 
@@ -55,6 +56,8 @@ const fieldFallback = validateConfig(await fixture("config/invalid-field.json"))
 assert.equal(fieldFallback.ok, true);
 assert.ok(fieldFallback.errors.length >= 2);
 assert.equal(validateConfig(await fixture("config/invalid-root.json")).ok, false);
+assert.equal(validateConfig({ schemaVersion: 1, notifications: { enabled: true, historyLimit: 30 } }).value.notifications.historyLimit, 30);
+assert.equal(validateConfig({ schemaVersion: 1, notifications: { maxActions: 99 } }).value.notifications.maxActions, 8);
 assert.deepEqual(validateDefaultsManifest({ schemaVersion: 1, defaultTheme: "wallpaper" }), {
   ok: true,
   value: { schemaVersion: 1, defaultTheme: "wallpaper" },
@@ -108,6 +111,31 @@ assert.equal(validateTheme(emptyPalette).ok, false);
 assert.match(validateTheme(await fixture("themes/cycle.json")).errors.join(" "), /cycle/);
 assert.equal(validateThemeState(await fixture("state/valid.json")).ok, true);
 assert.equal(validateThemeState(await fixture("state/invalid.json")).ok, false);
+assert.deepEqual(validateNotificationState({ schemaVersion: 1, dnd: true }), {
+  ok: true, value: { schemaVersion: 1, dnd: true }, errors: []
+});
+assert.equal(validateNotificationState({ schemaVersion: 1, dnd: "yes" }).ok, false);
 assert.deepEqual(truncateUtf8("abcd", 3), { text: "abc", truncated: true });
+
+assert.equal(sanitizeMarkup("<b>safe</b><script>bad</script><a href='x'>link</a>"), "<b>safe</b>badlink");
+const notification = normalizeNotification({
+  id: 7,
+  appName: "Fixture",
+  summary: "Summary",
+  body: "<i>Body</i>",
+  urgency: 2,
+  actions: [{ identifier: "open", text: "Open" }, { identifier: "", text: "Discard" }],
+  image: "https://example.invalid/image.png",
+  hints: { value: 45 }
+});
+assert.equal(notification.urgency, "critical");
+assert.equal(notification.body, "<i>Body</i>");
+assert.equal(notification.actions.length, 1);
+assert.equal(notification.image, "");
+assert.equal(normalizeNotification({ appIcon: "dialog-information" }).image, "image://icon/dialog-information");
+assert.equal(notification.progress, 45);
+assert.equal(shouldShowPopup(notification, true), true);
+assert.equal(shouldKeepHistory(notification, true), true);
+assert.equal(shouldKeepHistory({ transient: true }, true), false);
 
 console.log("validation fixtures passed");

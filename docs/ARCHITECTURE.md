@@ -1140,7 +1140,7 @@ a rollback exercise.
 ## 15. Architectural Constraints Pending Verification
 
 These are not approved implementation facts until their milestone verifies
-them against installed Quickshell 0.3.0:
+them against installed Quickshell 0.3.1:
 
 - Hyprland IPC reconnection behavior after compositor restart
 - NetworkManager behavior for hidden and enterprise networks

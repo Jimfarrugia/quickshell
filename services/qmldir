@@ -17,3 +17,4 @@ singleton SystemMetricsService 1.0 SystemMetricsService.qml
 singleton BrightnessService 1.0 BrightnessService.qml
 singleton BluetoothService 1.0 BluetoothService.qml
 singleton IdleService 1.0 IdleService.qml
+singleton NotificationService 1.0 NotificationService.qml

@@ -27,6 +27,10 @@ bash tests/helpers/qe-launch.test.sh
 bash tests/helpers/qe-defaults.test.sh
 bash tests/helpers/external-wallpaper-theme.test.sh
 bash tests/helpers/external-wallpaper-theme-service.test.sh
+bash tests/helpers/notification-owner.test.sh
+bash tests/helpers/notification-service.test.sh
+bash tests/helpers/notification-reload.test.sh
+bash tests/helpers/notifications.test.sh
 YAZI_TEMPLATE="$HOME/.config/yazi/flavors/flavor.template.toml" \
 QE_PROJECT_ROOT="$PWD" \
   bash ../theme-switcher/tests/test_yazi.sh
@@ -91,6 +95,19 @@ focused-filename publication.
 The external theme service test uses a fake adapter and must print
 `EXTERNAL_THEME_SERVICE_TEST_PASSED` after QE commits first and retains that
 theme through a truthful external partial-failure result.
+
+The notification service helper must print `NOTIFICATION_SERVICE_TEST_PASSED` after
+testing bounded markup, actions, progress, replacement updates, DND urgency rules,
+dismissal, and `lastGeneration` replay without creating duplicate history or
+popups. The owner helper must print `NOTIFICATION_OWNER_HELPER_TEST_PASSED` after
+validating the structured current-owner record. The live notification acceptance
+helper must print `NOTIFICATIONS_TEST_PASSED`; it temporarily stops the active
+Dunst user service, verifies QE ownership, sends the representative notification
+matrix, verifies QE releases the DBus name, and restores Dunst through its trap.
+The reload helper must print `NOTIFICATION_RELOAD_TEST_PASSED` after real QE-owned
+notifications populate the popup host and history, then a soft reload preserves
+history without duplicate visible or history entries; replayed prior-generation
+notifications are not shown again as new popups.
 The external adapter helper must print `EXTERNAL_THEME_ADAPTER_TEST_PASSED`
 after sandboxed success, partial, malformed-output, timeout, invalid theme ID,
 missing-executable, independent valid/malformed state updates, and

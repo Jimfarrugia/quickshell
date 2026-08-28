@@ -31,7 +31,9 @@ BarChip {
     text: unavailable
         ? "Light..."
         : `${displayPercent}%`
-     textColor: Services.ThemeService.theme.tokens.on_surface_disabled
+     textColor: unavailable
+         ? Services.ThemeService.theme.tokens.on_surface_disabled
+         : Services.ThemeService.theme.tokens.on_surface_variant
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
     configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily
     configuredFontSize: Services.ConfigService.config.appearance.fontSize

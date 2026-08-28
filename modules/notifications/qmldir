@@ -1,0 +1,4 @@
+module QE.Modules.Notifications
+NotificationPopup 1.0 NotificationPopup.qml
+NotificationPopupHost 1.0 NotificationPopupHost.qml
+NotificationCenter 1.0 NotificationCenter.qml

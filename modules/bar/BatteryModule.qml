@@ -34,7 +34,7 @@ BarChip {
         ? `${Services.PowerService.percentage}%`
         : "Battery..."
     textColor: Services.PowerService.charging
-        ? Services.ThemeService.theme.tokens.on_surface_disabled
+        ? Services.ThemeService.theme.tokens.on_surface_variant
         : (critical || low ? stateColor : Services.ThemeService.theme.tokens.on_surface_disabled)
     warning: false
     hoverText: Services.PowerService.availability === "available"

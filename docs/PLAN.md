@@ -1,8 +1,8 @@
 # QE Implementation Plan
 
-Status: Phases 1-4 complete
+Status: Phases 1-4 complete; Phase 5 in progress
 
-Last inventory: 2026-08-27
+Last inventory: 2026-08-29
 
 This is the authoritative roadmap, implementation sequence, dependency map,
 project-status reference, risk register, and architectural decision log for the
@@ -33,7 +33,7 @@ one.
 | Bar vertical slice | Complete | Phase 2; top reserved edge selected, tray host disabled during Waybar coexistence |
 | Bar parity and Waybar cutover | Complete | Phase 3 acceptance passed 2026-08-25 |
 | Theme/Matugen integration | Complete | Manual selector and external machine integration complete; Matugen mapping, staged promotion, QE-localized wallpaper selector, and Hyprpaper XDG-path application complete; external generated Matugen artifacts now delivered as QE-generated `wallpaper` theme slots applied by the external switcher, including imv, mpv, and Yazi; runtime/default artifact separation and idempotent promotion added; `QE_THEME_SWITCHER` wired for production through the installed `qe-theme-switcher` wrapper. Phase 4 acceptance passed on 2026-08-26 |
-| Notifications/OSDs | Not started | Phases 5-6 |
+| Notifications/OSDs | Phase 5 complete | Phase 6 cutover and OSDs remain deferred |
 | Launcher/help | Not started | Phase 7 |
 | Dashboards/control center | Not started | Phases 8-10 |
 | Lock replacement | Not started | Phase 11 |
@@ -216,8 +216,8 @@ Verified installed versions during inventory:
 
 | Dependency | Version/condition |
 | --- | --- |
-| Quickshell | 0.3.0-2 |
-| Qt Declarative | 6.11.1-3 |
+| Quickshell | 0.3.1-1 |
+| Qt Declarative | 6.11.2-1 |
 | PipeWire | 1.6.8 |
 | WirePlumber | 0.5.15 |
 | NetworkManager | 1.58.0 |
@@ -348,8 +348,9 @@ Important limits:
 - a lock-owner crash leaves the compositor securely locked and unrecoverable by
   a replacement client
 
-The local Quickshell source reference is 0.3.1, but implementation must verify
-all used APIs against installed 0.3.0 metadata and documentation.
+The installed Quickshell package is now 0.3.1-1 and the local source reference is
+0.3.1. Notification APIs used in Phase 5 are verified against the installed
+0.3.1 metadata; future upgrades must repeat this check.
 
 ## 4. Accepted Requirements and Decisions
 
@@ -1434,6 +1435,8 @@ Out of scope:
 
 ### Phase 5: Notification prototype in isolated ownership mode
 
+Status: Complete (2026-08-29)
+
 Objective: validate notification correctness without disrupting daily Dunst use.
 
 Prerequisites:
@@ -1485,11 +1488,28 @@ Rollback/recovery:
 
 - stop QE notification instance and restore Dunst service/activation
 
+Implementation decisions:
+
+- DND suppresses Low and Normal popup presentation while retaining those
+  notifications in current-process history; Critical notifications remain visible.
+- Native `NotificationServer` owns notification delivery. A reviewed structured
+  DBus owner watcher reports owner transitions because Quickshell does not expose
+  server registration state to QML.
+- The exclusive acceptance test may stop Dunst in the current graphical session,
+  but only inside a trapped script that verifies ownership at every transition and
+  restores Dunst on success or failure. Production service, autostart, keybinding,
+  and legacy producer changes remain out of scope.
+- The initial capability policy advertises body, actions, images, and standard
+  progress hints after bounded rendering validation; persistence, action icons,
+  hyperlinks, and inline replies remain disabled.
+
 Out of scope:
 
 - production Dunst disablement, persistent history, hardware OSD migration
 
 ### Phase 6: Notification cutover and OSD migration
+
+Status: Ready to begin implementation (Phase 5 and service prerequisites passed 2026-08-29)
 
 Objective: make QE the production notification owner and replace Dunst-based
 hardware feedback with native QE OSDs.
@@ -2691,6 +2711,45 @@ external-theme fixtures.
 
 Revisit if: either application changes its configuration syntax or gains a
 reliable runtime background update path.
+
+## ADR-024: Isolated QE notification ownership prototype
+
+Status: Accepted by user on 2026-08-29
+
+Decision: implement notification ownership through the native Quickshell
+`NotificationServer`, with a separate structured DBus owner watcher for readiness
+and diagnostics. DND suppresses Low and Normal popups but retains their
+current-process history; Critical notifications remain visible. The Phase 5
+acceptance test may stop Dunst in the current graphical session only within a
+trapped stop/test/restart procedure. Production Dunst disablement, keybinding
+migration, legacy producer changes, and hardware OSDs remain deferred to Phase 6.
+
+Context: the notification DBus name is exclusive, while Quickshell 0.3.1 exposes
+notification capabilities and objects but no QML property reporting successful
+service acquisition. Dunst currently owns the name through a static DBus-activated
+user service, and existing hardware producers still target Dunst.
+
+Rationale: native notification delivery preserves Quickshell object lifetime and
+event handling. A structured owner boundary prevents QE from claiming readiness
+when Dunst or another service owns the name. The trapped test preserves the daily
+fallback without pretending that two notification servers can coexist.
+
+Alternatives considered: one-shot owner probes, early production Dunst disablement,
+and keeping notification work entirely behind Dunst. One-shot probes do not report
+owner loss promptly; early disablement violates staged migration; deferral provides
+no validation of the notification contract.
+
+Consequences: Phase 5 requires an independently tested owner-watcher contract,
+bounded untrusted-content rendering, and explicit owner checks before and after the
+exclusive test. Notification history is intentionally lost when QE exits, and
+existing Dunst-based keybindings and producers remain the rollback path.
+
+Affected areas: `NotificationService`, `NotificationsIntegration`, notification
+modules, owner-watcher helper, notification configuration, diagnostics, and Phase 5
+validation scripts.
+
+Revisit if: Quickshell exposes reliable notification ownership state, or a separate
+DBus test session becomes necessary to protect the primary session.
 
 ## 14. Planning Change Procedure
 

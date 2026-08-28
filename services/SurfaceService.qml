@@ -6,6 +6,7 @@ Singleton {
     property bool themeSelectorVisible: false
     property bool wallpaperSelectorVisible: false
     property bool paletteViewerVisible: false
+    property bool notificationCenterVisible: false
 
     function openThemeSelector() { themeSelectorVisible = true; }
     function closeThemeSelector() { themeSelectorVisible = false; }
@@ -16,4 +17,7 @@ Singleton {
     function openPaletteViewer() { paletteViewerVisible = true; }
     function closePaletteViewer() { paletteViewerVisible = false; }
     function togglePaletteViewer() { paletteViewerVisible = !paletteViewerVisible; }
+    function openNotificationCenter() { notificationCenterVisible = true; }
+    function closeNotificationCenter() { notificationCenterVisible = false; }
+    function toggleNotificationCenter() { notificationCenterVisible = !notificationCenterVisible; }
 }
