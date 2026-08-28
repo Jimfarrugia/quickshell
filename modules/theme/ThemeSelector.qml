@@ -30,50 +30,27 @@ FloatingWindow {
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 20
-            spacing: 16
+            spacing: 14
 
-            RowLayout {
+            ColumnLayout {
                 Layout.fillWidth: true
-                spacing: 12
+                spacing: 5
 
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 2
-
-                    Text {
-                        text: "QE THEMES"
-                        color: Services.ThemeService.theme.tokens.secondary
-                        font.family: Services.ConfigService.config.appearance.monospaceFontFamily
-                        font.pixelSize: 11
-                        font.weight: Font.DemiBold
-                        font.letterSpacing: 1.5
-                    }
-
-                    Text {
-                        text: "Choose the shell's visual language"
-                        color: Services.ThemeService.theme.tokens.on_surface_panel
-                        font.family: Services.ConfigService.config.appearance.fontFamily
-                        font.pixelSize: 22
-                        font.weight: Font.DemiBold
-                    }
+                Text {
+                    text: "QE THEMES"
+                    color: Services.ThemeService.theme.tokens.secondary
+                    font.family: Services.ConfigService.config.appearance.monospaceFontFamily
+                    font.pixelSize: 11
+                    font.weight: Font.DemiBold
+                    font.letterSpacing: 1.5
                 }
 
-                Rectangle {
-                    implicitWidth: 34
-                    implicitHeight: 34
-                    radius: 17
-                    color: closeHover.hovered ? Services.ThemeService.theme.tokens.surface_hover : "transparent"
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "close"
-                        color: Services.ThemeService.theme.tokens.on_surface_panel
-                        font.family: Services.ConfigService.config.appearance.iconFontFamily
-                        font.pixelSize: 20
-                    }
-
-                    HoverHandler { id: closeHover }
-                    TapHandler { onTapped: Services.SurfaceService.closeThemeSelector() }
+                Text {
+                    text: "Select Theme"
+                    color: Services.ThemeService.theme.tokens.on_surface_panel
+                    font.family: Services.ConfigService.config.appearance.fontFamily
+                    font.pixelSize: 22
+                    font.weight: Font.DemiBold
                 }
             }
 
@@ -83,7 +60,8 @@ FloatingWindow {
                 Layout.fillHeight: true
                 clip: true
                 focus: true
-                cellWidth: Math.max(280, width / 2)
+                readonly property int columnCount: width >= 560 ? 2 : 1
+                cellWidth: width / columnCount
                 cellHeight: 230
                 model: Services.ThemeService.catalog
                 currentIndex: Math.max(0, Services.ThemeService.catalog.findIndex(theme => theme.id === Services.ThemeService.activeThemeId))
@@ -129,20 +107,27 @@ FloatingWindow {
                     readonly property bool selectable: Services.ThemeService.operation !== "pending"
                         && Services.ThemeService.externalOperation !== "pending"
                         && themeId !== Services.ThemeService.activeThemeId
+                    readonly property int gridColumn: index % themeGrid.columnCount
+                    readonly property int gridRow: Math.floor(index / themeGrid.columnCount)
+                    readonly property int lastGridRow: Math.floor((themeGrid.count - 1) / themeGrid.columnCount)
+                    readonly property real gridGap: Services.ConfigService.config.appearance.spacing
                     width: themeGrid.cellWidth
                     height: themeGrid.cellHeight
 
                     Rectangle {
                         anchors.fill: parent
-                        anchors.margins: 6
+                        anchors.leftMargin: delegateRoot.gridColumn === 0 ? 0 : delegateRoot.gridGap / 2
+                        anchors.rightMargin: delegateRoot.gridColumn === themeGrid.columnCount - 1 ? 0 : delegateRoot.gridGap / 2
+                        anchors.topMargin: delegateRoot.gridRow === 0 ? 0 : delegateRoot.gridGap / 2
+                        anchors.bottomMargin: delegateRoot.gridRow === delegateRoot.lastGridRow ? 0 : delegateRoot.gridGap / 2
                         radius: Services.ConfigService.config.appearance.radius + 2
                         opacity: delegateRoot.selectable ? 1 : 0.52
                         color: modelData.id === Services.ThemeService.activeThemeId
                             ? modelData.tokens.primary_container
                             : (cardTap.pressed ? modelData.tokens.surface_pressed
                                 : (cardHover.hovered ? modelData.tokens.surface_hover : modelData.tokens.surface))
-                        border.width: delegateRoot.GridView.isCurrentItem ? 2 : Services.ConfigService.config.appearance.borderWidth
-                        border.color: delegateRoot.GridView.isCurrentItem ? modelData.tokens.focus_ring : modelData.tokens.outline_variant
+                        border.width: Services.ConfigService.config.appearance.borderWidth
+                        border.color: modelData.tokens.outline_variant
 
                         ColumnLayout {
                             anchors.fill: parent
@@ -237,6 +222,25 @@ FloatingWindow {
                                 themeGrid.currentIndex = delegateRoot.index;
                                 root.applyTheme(delegateRoot.themeId);
                             }
+                        }
+
+                        Rectangle {
+                            anchors.fill: parent
+                            z: 3
+                            radius: Services.ConfigService.config.appearance.radius + 2
+                            color: "transparent"
+                            border.width: themeGrid.activeFocus && delegateRoot.GridView.isCurrentItem ? 2 : 0
+                            border.color: modelData.tokens.focus_ring
+                        }
+
+                        Rectangle {
+                            anchors.fill: parent
+                            anchors.margins: themeGrid.activeFocus && delegateRoot.GridView.isCurrentItem ? 2 : 0
+                            z: 4
+                            radius: Services.ConfigService.config.appearance.radius
+                            color: "transparent"
+                            border.width: themeGrid.activeFocus && delegateRoot.GridView.isCurrentItem ? 2 : 0
+                            border.color: modelData.tokens.outline_variant
                         }
                     }
                 }

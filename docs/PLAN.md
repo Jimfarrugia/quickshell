@@ -1330,8 +1330,10 @@ Implementation record (foundation, 2026-08-25):
 - A QE-localized wallpaper selector (`modules/wallpaper/WallpaperSelector.qml`)
   opens through the `qe-wallpaper` IPC target, remains open after a successful
   apply, prevents selection while an apply is pending, excludes the confirmed
-  active wallpaper, and uses QE-owned thumbnail cache and apply state. Theme and
-  wallpaper selectors are launched via temporary `.desktop` entries
+  active wallpaper, and uses QE-owned thumbnail cache and apply state. Its
+  responsive one-to-four-column grid presents full-bleed, rounded 16:9 previews
+  with layered focus borders and publishes the focused filename in the footer.
+  Theme and wallpaper selectors are launched via temporary `.desktop` entries
   (`qe-theme-selector.desktop`, `qe-wallpaper-selector.desktop`) and a
   `scripts/qe-launch.sh` helper that discovers the running `--no-duplicate` QE
   shell. These temporary launchers will be superseded by the planned control

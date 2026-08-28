@@ -35,6 +35,7 @@ bash tests/helpers/wallpaper-theme-select-external.test.sh
 bash tests/helpers/restored-wallpaper-theme.test.sh
 qmllint $(find . -maxdepth 1 -name '*.qml') $(find components modules services tests -name '*.qml') $(find integrations -maxdepth 1 -name '*.qml' ! -name 'ThemeSelectorIpc.qml' ! -name 'WallpaperSelectorIpc.qml' ! -name 'PaletteViewerIpc.qml')
 timeout 5 quickshell -p tests/qml/command-runner-test.qml
+# Run the next command twice without changing XDG_STATE_HOME between runs.
 timeout 5 quickshell -p tests/qml/foundation-service-test.qml
 timeout 5 quickshell -p tests/qml/foundation-service-test.qml
 timeout 5 quickshell -p tests/qml/phase2-service-test.qml
@@ -49,6 +50,7 @@ timeout 5 quickshell -p tests/qml/bluetooth-adapter-test.qml
 timeout 5 quickshell -p tests/qml/idle-service-test.qml
 timeout 5 quickshell -p tests/qml/tray-tint-test.qml
 timeout 5 quickshell -p tests/qml/theme-selector-test.qml
+timeout 5 quickshell -p tests/qml/wallpaper-selector-test.qml
 timeout 5 quickshell -p tests/qml/segmented-toggle-test.qml
 timeout 5 quickshell -p tests/qml/palette-viewer-test.qml
 timeout 5 quickshell -p tests/qml/external-theme-service-test.qml
@@ -79,6 +81,9 @@ The selector IPC helper starts an isolated shell process and must print
 and idempotent theme application against that exact PID.
 The selector interaction test must print `THEME_SELECTOR_TEST_PASSED` after a
 catalog selection becomes the confirmed resolved live theme.
+The wallpaper selector test must print `WALLPAPER_SELECTOR_TEST_PASSED` after
+verifying responsive breakpoints, exact 16:9 card sizing after grid gaps, and
+focused-filename publication.
 The external theme service test uses a fake adapter and must print
 `EXTERNAL_THEME_SERVICE_TEST_PASSED` after QE commits first and retains that
 theme through a truthful external partial-failure result.

@@ -25,7 +25,6 @@ Rectangle {
         spacing: 0
 
         Repeater {
-            id: optionRepeater
             model: 2
             delegate: Item {
                 id: optionRoot
@@ -82,6 +81,15 @@ Rectangle {
     Rectangle {
         anchors.fill: parent
         z: 1
+        radius: Services.ConfigService.config.appearance.radius
+        color: "transparent"
+        border.width: 1
+        border.color: Services.ThemeService.theme.tokens.outline
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        z: 2
         radius: Services.ConfigService.config.appearance.radius
         color: "transparent"
         border.width: root.activeFocus ? 2 : 0

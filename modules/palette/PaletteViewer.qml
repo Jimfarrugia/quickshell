@@ -17,8 +17,14 @@ FloatingWindow {
     property string viewMode: "tokens"
     property string focusTarget: "grid"
     property string viewedThemeId: Services.ThemeService.activeThemeId
+    readonly property var availableThemes: {
+        const catalog = Services.ThemeService.catalog;
+        if (catalog.some(theme => theme.id === Services.ThemeService.activeThemeId))
+            return catalog;
+        return [Services.ThemeService.theme].concat(catalog);
+    }
     readonly property var viewedTheme: {
-        const selected = Services.ThemeService.catalog.find(theme => theme.id === root.viewedThemeId);
+        const selected = root.availableThemes.find(theme => theme.id === root.viewedThemeId);
         return selected || Services.ThemeService.theme;
     }
     readonly property bool twoColumns: root.screen !== null && root.width > root.screen.width * 0.25
@@ -85,7 +91,7 @@ FloatingWindow {
     onClosed: Services.SurfaceService.closePaletteViewer()
 
     function syncViewedTheme() {
-        if (Services.ThemeService.catalog.some(theme => theme.id === root.viewedThemeId)) return;
+        if (root.availableThemes.some(theme => theme.id === root.viewedThemeId)) return;
         root.viewedThemeId = Services.ThemeService.activeThemeId;
     }
 
@@ -108,32 +114,28 @@ FloatingWindow {
 
             ColumnLayout {
                 Layout.fillWidth: true
+                spacing: 5
 
-                RowLayout {
+                Text {
                     Layout.fillWidth: true
-
-                    Text {
-                        Layout.fillWidth: true
-                        text: "QE PALETTE"
-                        color: Services.ThemeService.theme.tokens.secondary
-                        font.family: Services.ConfigService.config.appearance.monospaceFontFamily
-                        font.pixelSize: 11
-                        font.weight: Font.DemiBold
-                        font.letterSpacing: 1.5
-                    }
-
+                    text: "QE PALETTE"
+                    color: Services.ThemeService.theme.tokens.secondary
+                    font.family: Services.ConfigService.config.appearance.monospaceFontFamily
+                    font.pixelSize: 11
+                    font.weight: Font.DemiBold
+                    font.letterSpacing: 1.5
                 }
 
-                RowLayout {
-                    Layout.fillWidth: true
-                    ComboBox {
+                ComboBox {
                         id: themeMenu
-                        implicitHeight: 34
+                        implicitHeight: 26
+                        topPadding: 0
+                        bottomPadding: 0
                         implicitWidth: contentItem.implicitWidth
-                        model: Services.ThemeService.catalog
+                        model: root.availableThemes
                         textRole: "name"
                         valueRole: "id"
-                        currentIndex: Math.max(0, Services.ThemeService.catalog.findIndex(
+                        currentIndex: Math.max(0, root.availableThemes.findIndex(
                             theme => theme.id === root.viewedThemeId))
                         displayText: `Theme: ${currentText}`
                         focus: root.focusTarget === "dropdown"
@@ -255,16 +257,14 @@ FloatingWindow {
                                         themePopup.close();
                                         event.accepted = true;
                                     } else if (event.key === Qt.Key_L) {
-                                        themeMenu.currentIndex = currentIndex;
-                                        root.viewedThemeId = themeMenu.currentValue;
+                                        root.viewedThemeId = root.availableThemes[currentIndex].id;
                                         themePopup.close();
                                         event.accepted = true;
                                     } else if (event.key === Qt.Key_K) {
                                         currentIndex = Math.max(currentIndex - 1, 0);
                                         event.accepted = true;
                                     } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                        themeMenu.currentIndex = currentIndex;
-                                        root.viewedThemeId = themeMenu.currentValue;
+                                        root.viewedThemeId = root.availableThemes[currentIndex].id;
                                         themeMenu.popup.close();
                                         event.accepted = true;
                                     }
@@ -286,7 +286,6 @@ FloatingWindow {
                             }
                         }
                     }
-                }
 
             Components.SegmentedToggle {
                 id: modeToggle

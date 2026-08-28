@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
 import "../../services" as Services
@@ -12,10 +13,31 @@ FloatingWindow {
     implicitHeight: 560
     color: "transparent"
 
+    property var wallpaperModel: Services.WallpaperService.catalogModel
+    property alias focusedIndex: wallpaperGrid.currentIndex
+    readonly property string focusedWallpaperFileName: wallpaperGrid.currentItem
+        ? wallpaperGrid.currentItem.fileName : ""
+
     function applyWallpaper(path) {
         if (Services.WallpaperService.operation === "pending"
                 || path === Services.WallpaperService.appliedPath) return false;
         return Services.WallpaperService.requestWallpaper(path);
+    }
+
+    function columnsForWidth(windowWidth, displayWidth) {
+        if (displayWidth <= 0) return 4;
+        if (windowWidth < displayWidth * 0.25) return 1;
+        if (windowWidth < displayWidth * 0.4) return 2;
+        if (windowWidth < displayWidth * 0.6) return 3;
+        return 4;
+    }
+
+    function cardWidthForGrid(gridWidth, columns, gap) {
+        return Math.max(0, (gridWidth - gap * (columns - 1)) / columns);
+    }
+
+    function cardOffsetForColumn(column, columns, gap) {
+        return column * gap / columns;
     }
 
     onClosed: Services.SurfaceService.closeWallpaperSelector()
@@ -30,49 +52,31 @@ FloatingWindow {
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 20
-            spacing: 16
+            spacing: 14
 
-            RowLayout {
+            ColumnLayout {
                 Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                spacing: 5
 
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 2
-
-                    Text {
-                        text: "QE WALLPAPERS"
-                        color: Services.ThemeService.theme.tokens.secondary
-                        font.family: Services.ConfigService.config.appearance.monospaceFontFamily
-                        font.pixelSize: 11
-                        font.weight: Font.DemiBold
-                        font.letterSpacing: 1.5
-                    }
-
-                    Text {
-                        text: "Choose a wallpaper for the current theme"
-                        color: Services.ThemeService.theme.tokens.on_surface_panel
-                        font.family: Services.ConfigService.config.appearance.fontFamily
-                        font.pixelSize: 22
-                        font.weight: Font.DemiBold
-                    }
+                Text {
+                    text: "QE WALLPAPERS"
+                    color: Services.ThemeService.theme.tokens.secondary
+                    font.family: Services.ConfigService.config.appearance.monospaceFontFamily
+                    font.pixelSize: 11
+                    font.weight: Font.DemiBold
+                    font.letterSpacing: 1.5
                 }
 
-                Rectangle {
-                    implicitWidth: 34
-                    implicitHeight: 34
-                    radius: 17
-                    color: closeHover.hovered ? Services.ThemeService.theme.tokens.surface_hover : "transparent"
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "close"
-                        color: Services.ThemeService.theme.tokens.on_surface_panel
-                        font.family: Services.ConfigService.config.appearance.iconFontFamily
-                        font.pixelSize: 20
-                    }
-
-                    HoverHandler { id: closeHover }
-                    TapHandler { onTapped: Services.SurfaceService.closeWallpaperSelector() }
+                Text {
+                    Layout.fillWidth: true
+                    Layout.minimumWidth: 0
+                    text: "Select Wallpaper"
+                    color: Services.ThemeService.theme.tokens.on_surface_panel
+                    font.family: Services.ConfigService.config.appearance.fontFamily
+                    font.pixelSize: 22
+                    font.weight: Font.DemiBold
+                    wrapMode: Text.WordWrap
                 }
             }
 
@@ -80,11 +84,19 @@ FloatingWindow {
                 id: wallpaperGrid
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                Layout.minimumWidth: 0
                 clip: true
                 focus: true
-                cellWidth: Math.max(220, width / 3)
-                cellHeight: 160
-                model: Services.WallpaperService.catalogModel
+                readonly property real gridGap: Services.ConfigService.config.appearance.spacing
+                readonly property int columnCount: root.columnsForWidth(root.width,
+                    root.screen === null ? 0 : root.screen.width)
+                readonly property real cardWidth: root.cardWidthForGrid(width, columnCount, gridGap)
+                readonly property real cardHeight: cardWidth * 9 / 16
+                cellWidth: width / columnCount
+                cellHeight: cardHeight + gridGap
+                contentHeight: count === 0 ? 0
+                    : Math.ceil(count / columnCount) * cellHeight - gridGap
+                model: root.wallpaperModel
                 currentIndex: 0
 
                 Keys.onEscapePressed: Services.SurfaceService.closeWallpaperSelector()
@@ -130,48 +142,75 @@ FloatingWindow {
                     required property int index
                     readonly property bool selectable: Services.WallpaperService.operation !== "pending"
                         && sourcePath !== Services.WallpaperService.appliedPath
+                    readonly property int gridColumn: index % wallpaperGrid.columnCount
+                    readonly property real imageInset: delegateRoot.GridView.isCurrentItem
+                        ? 2 : Services.ConfigService.config.appearance.borderWidth
                     width: wallpaperGrid.cellWidth
                     height: wallpaperGrid.cellHeight
 
                     Rectangle {
-                        anchors.fill: parent
-                        anchors.margins: 6
+                        x: root.cardOffsetForColumn(delegateRoot.gridColumn,
+                            wallpaperGrid.columnCount, wallpaperGrid.gridGap)
+                        width: wallpaperGrid.cardWidth
+                        height: wallpaperGrid.cardHeight
                         radius: Services.ConfigService.config.appearance.radius
                         opacity: delegateRoot.selectable ? 1 : 0.52
                         color: cardTap.pressed ? Services.ThemeService.theme.tokens.surface_pressed
                             : (cardHover.hovered ? Services.ThemeService.theme.tokens.surface_hover
                                 : Services.ThemeService.theme.tokens.surface)
-                        border.width: delegateRoot.GridView.isCurrentItem ? 2 : Services.ConfigService.config.appearance.borderWidth
-                        border.color: delegateRoot.GridView.isCurrentItem
-                            ? Services.ThemeService.theme.tokens.focus_ring
-                            : Services.ThemeService.theme.tokens.outline_variant
+                        border.width: 0
 
                         Image {
+                            id: wallpaperImage
                             anchors.fill: parent
-                            anchors.margins: 6
                             source: delegateRoot.thumbnailUrl
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
+                            visible: false
+                        }
+
+                        Item {
+                            id: imageMask
+                            anchors.fill: parent
+                            visible: false
+                            layer.enabled: true
+
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.margins: delegateRoot.imageInset
+                                radius: Math.max(0, Services.ConfigService.config.appearance.radius
+                                    - delegateRoot.imageInset)
+                                color: "white"
+                            }
+                        }
+
+                        MultiEffect {
+                            anchors.fill: parent
+                            source: wallpaperImage
+                            maskEnabled: true
+                            maskSource: imageMask
+                            autoPaddingEnabled: false
                         }
 
                         Rectangle {
-                            anchors.left: parent.left
-                            anchors.right: parent.right
-                            anchors.bottom: parent.bottom
-                            anchors.margins: 6
-                            height: 30
-                            color: Services.ThemeService.theme.tokens.scrim
+                            anchors.fill: parent
+                            z: 2
+                            radius: Services.ConfigService.config.appearance.radius
+                            color: "transparent"
+                            border.width: delegateRoot.GridView.isCurrentItem ? 2 : Services.ConfigService.config.appearance.borderWidth
+                            border.color: delegateRoot.GridView.isCurrentItem
+                                ? Services.ThemeService.theme.tokens.focus_ring
+                                : Services.ThemeService.theme.tokens.outline_variant
+                        }
 
-                            Text {
-                                anchors.fill: parent
-                                anchors.leftMargin: 8
-                                verticalAlignment: Text.AlignVCenter
-                                elide: Text.ElideMiddle
-                                text: delegateRoot.fileName
-                                color: Services.ThemeService.theme.tokens.on_surface
-                                font.family: Services.ConfigService.config.appearance.monospaceFontFamily
-                                font.pixelSize: 10
-                            }
+                        Rectangle {
+                            anchors.fill: parent
+                            anchors.margins: delegateRoot.GridView.isCurrentItem ? 2 : 0
+                            z: 3
+                            radius: Services.ConfigService.config.appearance.radius
+                            color: "transparent"
+                            border.width: delegateRoot.GridView.isCurrentItem ? 2 : 0
+                            border.color: Services.ThemeService.theme.tokens.outline_variant
                         }
 
                         HoverHandler {
@@ -201,9 +240,11 @@ FloatingWindow {
 
             RowLayout {
                 Layout.fillWidth: true
+                Layout.minimumWidth: 0
 
                 Text {
                     Layout.fillWidth: true
+                    Layout.minimumWidth: 0
                     text: Services.WallpaperService.operation === "pending"
                         ? "Applying wallpaper..."
                         : Services.WallpaperService.operation === "failed"
@@ -217,26 +258,15 @@ FloatingWindow {
                 }
 
                 Text {
-                    text: Services.WallpaperService.generationStatus === "pending"
-                        ? "Generating Wallpaper theme..."
-                        : Services.WallpaperService.generationStatus === "succeeded"
-                            ? "Wallpaper theme generated"
-                            : Services.WallpaperService.generationStatus === "unavailable"
-                                ? "Matugen unavailable"
-                                : "Click a wallpaper to apply"
-                    color: Services.WallpaperService.generationStatus === "failed"
-                        ? Services.ThemeService.theme.tokens.error
-                        : Services.ThemeService.theme.tokens.on_surface_variant
-                    font.family: Services.ConfigService.config.appearance.monospaceFontFamily
-                    font.pixelSize: 11
-                }
-
-                Text {
-                    text: "h/j/k/l navigate / q or Esc close / Enter apply"
+                    Layout.fillWidth: true
+                    horizontalAlignment: Text.AlignRight
+                    elide: Text.ElideMiddle
+                    text: root.focusedWallpaperFileName
                     color: Services.ThemeService.theme.tokens.on_surface_variant
                     font.family: Services.ConfigService.config.appearance.monospaceFontFamily
                     font.pixelSize: 11
                 }
+
             }
         }
     }

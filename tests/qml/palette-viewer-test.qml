@@ -33,6 +33,11 @@ ShellRoot {
             return fail("charging is not the final emergency token");
         if (viewer.viewedThemeId !== Services.ThemeService.activeThemeId)
             return fail("viewer did not start on the active theme");
+        if (!viewer.availableThemes.some(theme => theme.id === Services.ThemeService.activeThemeId))
+            return fail("active theme is missing from viewer choices");
+        if (viewer.availableThemes.filter(theme =>
+                theme.id === Services.ThemeService.activeThemeId).length !== 1)
+            return fail("active theme is duplicated in viewer choices");
         if (Services.ThemeService.catalog.length < 2)
             return fail("catalog does not contain an alternate theme");
         const alternate = Services.ThemeService.catalog.find(theme =>

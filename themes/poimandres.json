@@ -28,7 +28,7 @@
     "on_background": "{palette.foreground}",
     "surface": "{palette.gray}",
     "on_surface": "{palette.foreground}",
-    "surface_variant": "{palette.blueGrayDark}",
+    "surface_variant": "{palette.black}",
     "on_surface_variant": "{palette.foreground}",
     "surface_panel": "#f21b1e28",
     "on_surface_panel": "{palette.foreground}",
