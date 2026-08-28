@@ -13,7 +13,7 @@ Row {
             icon: modelData.focused ? "adjust" : "circle"
             warning: modelData.urgent
             iconColor: modelData.focused ? Services.ThemeService.theme.tokens.secondary
-                                         : Services.ThemeService.theme.tokens.on_surface_variant
+                                         : Services.ThemeService.theme.tokens.on_surface_disabled
             backgroundColor: "transparent"
             horizontalPadding: Services.ConfigService.config.bar.moduleSpacing * 3 / 8
             configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily

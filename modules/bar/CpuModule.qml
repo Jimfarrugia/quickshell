@@ -19,7 +19,7 @@ BarChip {
     : (Services.SystemMetricsService.cpu.availability === "unavailable" ? "CPU!" : "CPU...")
   iconColor: usageColor
   textColor: highUsage || Services.SystemMetricsService.cpu.availability === "unavailable"
-    ? usageColor : Services.ThemeService.theme.tokens.on_surface_variant
+    ? usageColor : Services.ThemeService.theme.tokens.on_surface_disabled
   warning: Services.SystemMetricsService.cpu.freshness === "stale"
   hoverText: Services.SystemMetricsService.cpuHoverText
   configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily

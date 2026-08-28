@@ -10,8 +10,8 @@ BarChip {
     trailingText: wifiConnected ? `${Services.NetworkService.signalStrength}%` : ""
     icon: wifiConnected ? "wifi" : (wiredConnected ? "lan" : "signal_wifi_bad")
     textColor: wifiConnected ? Services.ThemeService.theme.tokens.secondary
-                             : Services.ThemeService.theme.tokens.on_surface_variant
-    trailingTextColor: Services.ThemeService.theme.tokens.on_surface_variant
+                             : Services.ThemeService.theme.tokens.on_surface_disabled
+    trailingTextColor: Services.ThemeService.theme.tokens.on_surface_disabled
     iconColor: wifiConnected || wiredConnected ? Services.ThemeService.theme.tokens.secondary
                                                : Services.ThemeService.theme.tokens.error
     warning: false

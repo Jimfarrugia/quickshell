@@ -72,7 +72,11 @@ const poimandresSource = JSON.parse(await readFile(new URL("../../themes/poimand
 assert.deepEqual(Object.keys(poimandres.value.palette), Object.keys(poimandresSource.palette));
 assert.equal(Object.keys(poimandres.value.tokens).at(-1), "charging");
 assert.equal(poimandres.value.tokens.surface_tooltip, "#171922");
-assert.equal(poimandres.value.tokens.outline, "#8290a5");
+assert.equal(poimandres.value.tokens.on_surface_tooltip, "#8290a5");
+assert.equal(poimandres.value.tokens.surface, "#303340");
+assert.equal(poimandres.value.tokens.surface_hover, "#41434f");
+assert.equal(poimandres.value.tokens.outline_variant, "#506477");
+assert.equal(poimandres.value.tokens.outline, "#767c9d");
 assert.equal(poimandres.value.tokens.on_primary, "#171922");
 const gruvbox = validateTheme(JSON.parse(await readFile(new URL("../../themes/gruvbox.json", import.meta.url), "utf8")));
 assert.equal(Object.keys(gruvbox.value.tokens).at(-1), "charging");

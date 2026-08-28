@@ -21,7 +21,7 @@ Rectangle {
     property color iconColor: active ? Services.ThemeService.theme.tokens.on_primary_container
                                      : Services.ThemeService.theme.tokens.secondary
     property color textColor: active ? Services.ThemeService.theme.tokens.on_primary_container
-                                     : Services.ThemeService.theme.tokens.on_surface_variant
+                                      : Services.ThemeService.theme.tokens.on_surface_disabled
     property color trailingTextColor: textColor
     property string hoverText: ""
     property color warningColor: Services.ThemeService.theme.tokens.warning

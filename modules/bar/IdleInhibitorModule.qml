@@ -8,7 +8,7 @@ BarChip {
     icon: Services.IdleService.requested ? "visibility" : "visibility_off"
     iconColor: Services.IdleService.requested
         ? Services.ThemeService.theme.tokens.primary
-        : Services.ThemeService.theme.tokens.on_surface_variant
+        : Services.ThemeService.theme.tokens.secondary
     hoverText: Services.IdleService.requested ? "Requested" : "Disabled"
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
     configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily

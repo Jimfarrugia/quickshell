@@ -62,7 +62,7 @@ PopupWindow {
         id: content
         anchors.fill: parent
         anchors.margins: 1
-        implicitWidth: Math.ceil(Math.min(textMeasure.implicitWidth + 16, 264))
+        implicitWidth: Math.ceil(Math.min(textMeasure.implicitWidth + 20, 264))
         implicitHeight: Math.ceil(tooltipText.implicitHeight + 14)
         radius: 7
         color: Services.ThemeService.theme.tokens.surface_tooltip
@@ -71,9 +71,9 @@ PopupWindow {
 
         Text {
             id: tooltipText
-            x: 8
+            x: 10
             y: 8
-            width: content.implicitWidth - 16
+            width: content.implicitWidth - 20
             text: root.text
             color: Services.ThemeService.theme.tokens.on_surface_tooltip
             font.family: Services.ConfigService.config.appearance.fontFamily

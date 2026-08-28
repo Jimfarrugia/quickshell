@@ -19,7 +19,7 @@ BarChip {
     : (Services.SystemMetricsService.disk.availability === "unavailable" ? "Disk!" : "Disk...")
   iconColor: usageColor
   textColor: highUsage || Services.SystemMetricsService.disk.availability === "unavailable"
-    ? usageColor : Services.ThemeService.theme.tokens.on_surface_variant
+    ? usageColor : Services.ThemeService.theme.tokens.on_surface_disabled
   warning: Services.SystemMetricsService.disk.freshness === "stale"
   hoverText: Services.SystemMetricsService.diskHoverText
   configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily

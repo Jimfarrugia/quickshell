@@ -19,7 +19,7 @@ BarChip {
     : (Services.SystemMetricsService.memory.availability === "unavailable" ? "Mem!" : "Mem...")
   iconColor: usageColor
   textColor: highUsage || Services.SystemMetricsService.memory.availability === "unavailable"
-    ? usageColor : Services.ThemeService.theme.tokens.on_surface_variant
+    ? usageColor : Services.ThemeService.theme.tokens.on_surface_disabled
   warning: Services.SystemMetricsService.memory.freshness === "stale"
   hoverText: Services.SystemMetricsService.memoryHoverText
   configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
