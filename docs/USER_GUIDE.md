@@ -18,6 +18,7 @@
 - [4. Themes](#4-themes)
   - [Adding a New Theme](#adding-a-new-theme)
   - [Modifying an Existing Theme](#modifying-an-existing-theme)
+  - [Modifying the Wallpaper Theme](#modifying-the-wallpaper-theme)
   - [Selecting a Theme](#selecting-a-theme)
 - [5. Changing the Default Theme and Wallpaper](#5-changing-the-default-theme-and-wallpaper)
   - [Default Theme](#default-theme)
@@ -42,11 +43,6 @@ The current implementation provides:
 - Generated wallpaper theme slots for supported external applications.
 - IPC entry points for opening, closing, and toggling the theme and wallpaper
   selectors.
-
-QE owns its shell presentation, shared state, theme catalog, wallpaper state,
-and generation pipeline. External applications remain independent. QE asks the
-external theme switcher to apply an external theme, but does not write an
-application's active configuration directly.
 
 QE is still under active development. Notifications, dashboards, the control
 center, and the replacement lock screen are not yet complete. The current
@@ -154,12 +150,8 @@ source.
 
 - QE is currently launched from the development checkout through
   `~/Projects/quickshell`.
-- The final production supervision model, whether Hyprland autostart or a
-  systemd user service, has not been selected.
 - OpenCode loads and caches theme colors at launch. Regenerated wallpaper
   colors require an OpenCode restart.
-- QE and the legacy external wallpaper picker do not automatically synchronize
-  wallpaper source state while QE is stopped.
 - External theme application is best effort. QE can commit its own theme while
   an external target reports a partial or unavailable result.
 
@@ -193,11 +185,13 @@ set `QE_THEME_SWITCHER_REPO` if the repository is elsewhere.
 
 ### Stow the Dotfiles
 
-Use the dotfiles repository's normal Stow procedure. At minimum, stow the
-packages that provide:
+Use the dotfiles repository's normal Stow procedure. Stow the packages that
+provide the Hyprland configuration, application configurations, and QE helpers.
+Ensure the wallpaper collection is also available. The relevant installed paths
+are:
 
 - `~/.config/hypr`
-- `~/.config/hyprpaper.conf` and `~/.config/hyprlock.conf`
+- `~/.config/hypr/hyprpaper.conf` and `~/.config/hypr/hyprlock.conf`
 - `~/.local/bin/qe-shell`
 - `~/.local/bin/qe-theme-switcher`
 - `~/.local/bin/qe-defaults`
@@ -211,7 +205,7 @@ Update the snapshot only through `qe-defaults capture`.
 ### Restore the QE Defaults
 
 After the QE project checkout exists and Stow has installed the dotfiles, run
-the restore helper before starting Hyprpaper or QE:
+the restore helper before starting QE:
 
 ```sh
 qe-defaults restore
@@ -223,19 +217,9 @@ If the helper is not yet on `PATH`, invoke it directly:
 ~/Projects/quickshell/scripts/qe-defaults restore
 ```
 
-`restore` validates that the complete committed snapshot exists, then restores:
-
-- The current wallpaper and lockscreen images.
-- QE's generated `Wallpaper.json`.
-- Neovim's generated wallpaper palette.
-- The external wallpaper theme files.
-- The runtime symlinks from application `wallpaper` theme slots to the XDG
-  runtime files.
-
-The file restore is idempotent. Before QE starts, the helper applies the
-manifest theme to external applications directly. If QE is already running, it
-also requests the default wallpaper and theme through QE IPC. Applications that
-cache themes may still require their documented restart.
+`restore` validates and restores the committed wallpaper, generated theme, and
+external application artifacts. It also repairs the application `wallpaper`
+theme slots and applies the manifest theme. The operation is idempotent.
 
 ### Start QE
 
@@ -250,14 +234,6 @@ and the external theme switcher. To restart the running instance:
 
 ```sh
 ~/.local/bin/qe-shell --restart
-```
-
-The Hyprland autostart configuration normally starts Hyprpaper before QE and
-starts QE through the same helper. During development, the equivalent direct
-command is:
-
-```sh
-~/Projects/quickshell/scripts/run-qe.sh
 ```
 
 The selector launchers use QE IPC targets named `qe-theme` and `qe-wallpaper`.
@@ -285,14 +261,24 @@ Theme IDs use lowercase letters, digits, and underscores, for example
    `themes/<theme-id>.json`.
 2. Change `id`, `name`, `variant`, and the palette values.
 3. Update every required semantic token in the `tokens` object.
-4. Validate the JSON and check the theme against `themes/schema.json`.
-5. Start or restart QE if necessary. The catalog normally discovers the new
-   file while QE is running.
-6. Select the new theme from the QE theme selector.
+4. Check that the file is valid JSON:
 
-The required token names are defined by the schema. Copying an existing valid
-theme is the simplest way to preserve the complete token set. Token values may
-be literal colors or references such as `{palette.background}`.
+   ```sh
+   jq empty themes/<theme-id>.json
+   ```
+
+5. Run the theme validation tests from the project root:
+
+   ```sh
+   node tests/js/validation.test.mjs
+   node tests/js/schema.test.mjs
+   ```
+
+6. Start or restart QE if necessary, then select the new theme. QE validates
+   the catalog and ignores invalid theme files.
+
+Copying an existing valid theme preserves the required token set. Token values
+may be literal colors or references such as `{palette.background}`.
 
 Adding a QE theme does not automatically create corresponding external
 application themes. If external applications need that theme, their files and
@@ -304,26 +290,52 @@ and must not be manually added or edited in `themes/`.
 
 ### Modifying an Existing Theme
 
-Edit the authored JSON file in `themes/` and preserve its schema-compatible
-shape. QE watches theme files and updates the catalog after a valid change.
+1. Edit `themes/<theme-id>.json`.
+2. Change palette values or token references while preserving the existing
+   schema and token names.
+3. Check the JSON:
 
-If an edited file is malformed or fails validation:
+   ```sh
+   jq empty themes/<theme-id>.json
+   ```
 
-- QE excludes that catalog entry.
-- A previously confirmed active theme remains in use where possible.
-- QE reports the validation problem through its diagnostics state.
+4. Run the validation tests from the project root:
 
-Do not edit these generated runtime files directly:
+   ```sh
+   node tests/js/validation.test.mjs
+   node tests/js/schema.test.mjs
+   ```
 
-- `$XDG_DATA_HOME/qe/wallpaper/Wallpaper.json`
-- `$XDG_STATE_HOME/qe/wallpaper/external/*`
-- `$XDG_CACHE_HOME/matugen/nvim-colors.json`
-- `~/.config/imv/themes/wallpaper.conf`
-- `~/.config/mpv/themes/wallpaper.conf`
-- `~/.config/yazi/flavors/wallpaper.yazi/wallpaper.sh`
-- `~/.config/yazi/flavors/wallpaper.yazi/tmtheme.xml`
+5. Select the theme again if it is active. QE watches the catalog and reloads a
+   valid change.
 
-They will be replaced by the wallpaper generation or restore workflows.
+Do not edit generated wallpaper files directly. They are replaced by wallpaper
+generation or the defaults restore workflow.
+
+### Modifying the Wallpaper Theme
+
+The wallpaper theme is generated from Matugen output. Its QE color mapping is
+defined in `utils/Matugen.mjs`.
+
+1. Edit `mapMatugenTheme()` in `utils/Matugen.mjs`.
+2. Change which Matugen palette roles are assigned to the QE tokens. Preserve
+   the required token names and valid hex colors.
+3. Run the mapping tests from the project root:
+
+   ```sh
+   node tests/js/matugen.test.mjs
+   ```
+
+   The command should print `matugen fixtures passed`. If the intended mapping
+   changes an existing assertion, update the corresponding test expectation.
+4. Start or restart QE with Matugen available.
+5. Select a wallpaper while the `wallpaper` theme is active to regenerate the
+   theme.
+6. Restart applications that cache their generated theme, such as OpenCode,
+   imv, mpv, or Yazi.
+
+Mappings for external application wallpaper themes are separate and are defined
+in `utils/ExternalWallpaperTheme.mjs`.
 
 ### Selecting a Theme
 
