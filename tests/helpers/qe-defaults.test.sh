@@ -64,11 +64,17 @@ cmp -s -- "$test_root/project/defaults/wallpaper/generated-theme/applications/ya
     "$test_root/state/qe/wallpaper/external/yazi-wallpaper.sh"
 cmp -s -- "$test_root/project/defaults/wallpaper/generated-theme/applications/yazi-wallpaper.tmTheme" \
     "$test_root/state/qe/wallpaper/external/yazi-wallpaper.tmTheme"
+cmp -s -- "$test_root/project/defaults/wallpaper/generated-theme/applications/imv-wallpaper.conf" \
+    "$test_root/state/qe/wallpaper/external/imv-wallpaper.conf"
+cmp -s -- "$test_root/project/defaults/wallpaper/generated-theme/applications/mpv-wallpaper.conf" \
+    "$test_root/state/qe/wallpaper/external/mpv-wallpaper.conf"
 [[ -L "$test_root/home/.config/rofi/themes/colorschemes/wallpaper.rasi" ]]
 [[ "$(readlink -f -- "$test_root/home/.config/rofi/themes/colorschemes/wallpaper.rasi")" \
     == "$test_root/state/qe/wallpaper/external/rofi-wallpaper.rasi" ]]
 [[ -L "$test_root/home/.config/yazi/flavors/wallpaper.yazi/wallpaper.sh" ]]
 [[ -L "$test_root/home/.config/yazi/flavors/wallpaper.yazi/tmtheme.xml" ]]
+[[ -L "$test_root/home/.config/imv/themes/wallpaper.conf" ]]
+[[ -L "$test_root/home/.config/mpv/themes/wallpaper.conf" ]]
 grep -q -- '--machine --theme poimandres' "$test_root/switcher.log"
 
 printf '%s\n' gruvbox >"$test_root/active-theme"

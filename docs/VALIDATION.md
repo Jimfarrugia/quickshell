@@ -30,6 +30,7 @@ bash tests/helpers/external-wallpaper-theme-service.test.sh
 YAZI_TEMPLATE="$HOME/.config/yazi/flavors/flavor.template.toml" \
 QE_PROJECT_ROOT="$PWD" \
   bash ../theme-switcher/tests/test_yazi.sh
+bash ../theme-switcher/tests/test_media_themes.sh
 bash tests/helpers/window-opacity.test.sh
 bash tests/helpers/repeated-wallpaper-generation.test.sh
 bash tests/helpers/generated-theme-hot-reload.test.sh
@@ -116,7 +117,8 @@ files (success plus absent-executable skip), preserving unchanged files and
 Stow-style symlink slots, rejecting invalid specs and paths, and proving
 partial promotion. The external wallpaper theme service
 fixture must print `EXTERNAL_WALLPAPER_THEME_TEST_PASSED` after the wallpaper
-generation pipeline produces the full 13-target spec, the fake promotion
+generation pipeline produces the full 17-target spec, including imv, mpv, and
+Yazi artifacts, the fake promotion
 adapter promotes it, and `externalThemeStatus` reaches `succeeded`.
 The repeated wallpaper generation fixture must print
 `REPEATED_WALLPAPER_GENERATION_TEST_PASSED` after two successive Matugen

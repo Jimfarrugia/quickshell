@@ -95,8 +95,8 @@ QE can generate or apply external themes for these applications when they are
 installed and supported by the local theme-switcher configuration:
 
 ```text
-bat, btop, dunst, eza, fzf, Hyprland, hyprlock, kitty, Neovim, OpenCode,
-rofi, starship, tmux, and Yazi
+bat, btop, dunst, eza, fzf, Hyprland, hyprlock, imv, kitty, mpv, Neovim,
+OpenCode, rofi, starship, tmux, and Yazi
 ```
 
 These applications are not all required to run QE. An unavailable application
@@ -318,6 +318,8 @@ Do not edit these generated runtime files directly:
 - `$XDG_DATA_HOME/qe/wallpaper/Wallpaper.json`
 - `$XDG_STATE_HOME/qe/wallpaper/external/*`
 - `$XDG_CACHE_HOME/matugen/nvim-colors.json`
+- `~/.config/imv/themes/wallpaper.conf`
+- `~/.config/mpv/themes/wallpaper.conf`
 - `~/.config/yazi/flavors/wallpaper.yazi/wallpaper.sh`
 - `~/.config/yazi/flavors/wallpaper.yazi/tmtheme.xml`
 
@@ -335,9 +337,10 @@ The `wallpaper` theme can be selected immediately after
 current session. Selecting it applies the restored external wallpaper theme
 files through the external switcher with GTK excluded.
 
-Yazi's generated wallpaper flavor is loaded by new Yazi instances. Restart an
-already-running Yazi instance after selecting or regenerating the wallpaper
-theme.
+The generated imv and mpv background settings are loaded by new instances.
+Restart already-running imv or mpv processes after selecting or regenerating
+the wallpaper theme. Yazi likewise requires a restart because existing Yazi
+instances do not reload the generated flavor.
 
 ## 5. Changing the Default Theme and Wallpaper
 

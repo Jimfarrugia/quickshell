@@ -32,7 +32,7 @@ one.
 | Foundation | Complete | Phase 1 acceptance passed on 2026-08-24 |
 | Bar vertical slice | Complete | Phase 2; top reserved edge selected, tray host disabled during Waybar coexistence |
 | Bar parity and Waybar cutover | Complete | Phase 3 acceptance passed 2026-08-25 |
-| Theme/Matugen integration | Complete | Manual selector and external machine integration complete; Matugen mapping, staged promotion, QE-localized wallpaper selector, and Hyprpaper XDG-path application complete; external generated Matugen artifacts now delivered as QE-generated `wallpaper` theme slots applied by the external switcher, including Yazi's semantic palette and syntax theme; runtime/default artifact separation and idempotent promotion added; `QE_THEME_SWITCHER` wired for production through the installed `qe-theme-switcher` wrapper. Phase 4 acceptance passed on 2026-08-26 |
+| Theme/Matugen integration | Complete | Manual selector and external machine integration complete; Matugen mapping, staged promotion, QE-localized wallpaper selector, and Hyprpaper XDG-path application complete; external generated Matugen artifacts now delivered as QE-generated `wallpaper` theme slots applied by the external switcher, including imv, mpv, and Yazi; runtime/default artifact separation and idempotent promotion added; `QE_THEME_SWITCHER` wired for production through the installed `qe-theme-switcher` wrapper. Phase 4 acceptance passed on 2026-08-26 |
 | Notifications/OSDs | Not started | Phases 5-6 |
 | Launcher/help | Not started | Phase 7 |
 | Dashboards/control center | Not started | Phases 8-10 |
@@ -2463,14 +2463,16 @@ switcher's existing apply scripts consume without writing any live config.
 
 Decision: while the active QE theme is `wallpaper`, QE maps the captured
 Matugen palette into a `wallpaper` theme slot per supported app and promotes
-each file atomically into the app's `themes/` directory (kitty, bat, btop,
-eza, dunst, fzf, hyprland, hyprlock, rofi, starship, tmux, opencode) plus an
-nvim palette JSON under XDG cache for the local `colors/wallpaper.vim`
+each file atomically into the app-specific slot (kitty, bat, btop, eza, dunst,
+fzf, hyprland, hyprlock, imv, mpv, rofi, starship, tmux, opencode, and Yazi)
+plus an nvim palette JSON under XDG cache for the local `colors/wallpaper.vim`
 colorscheme. `WallpaperExternalThemeAdapter` materializes a validated spec via
 `scripts/promote-external-theme.sh`, skips targets whose executables are
 absent, and reports per-target results. QE never writes active application
 configuration; after promotion it delegates `--machine --theme wallpaper
 --skip-gtk` to the switcher, which performs the documented copy-to-active.
+imv and mpv consume generated background slots, while Yazi consumes its
+generated semantic palette and syntax file.
 GTK is excluded because Matugen has no GTK generator.
 
 Rationale: this preserves standalone switcher function, avoids two owners of
@@ -2505,7 +2507,8 @@ match authored themes, and the generated `wallpaper` rofi colorscheme defines
 the full variable set the main rofi theme references. opencode loads and caches
 its theme colors at launch, so a regenerated wallpaper theme requires an
 opencode restart even when the switcher live-re-selects the theme name in
-tmux-hosted instances.
+tmux-hosted instances. imv, mpv, and Yazi similarly require new instances to
+load regenerated configuration.
 
 Affected areas: `ExternalWallpaperTheme.mjs`, `WallpaperExternalThemeAdapter`,
 `promote-external-theme.sh`, `WallpaperService`, `ThemeService`,
@@ -2657,6 +2660,37 @@ fixtures.
 
 Revisit if: Yazi gains reliable live theme reload or changes its flavor slot
 contract.
+
+## ADR-023: QE-generated imv and mpv wallpaper slots
+
+Status: Accepted by user
+
+Decision: generate dedicated `wallpaper` background slots for imv and mpv from
+the current Matugen palette. The external switcher's imv and mpv scripts consume
+those slots when applying `wallpaper`; authored themes continue using their
+existing static mappings.
+
+Context: adding a fixed `wallpaper` value to each switcher script would make the
+theme stale after the next wallpaper change. imv and mpv use different config
+syntax, but both expose a single background color relevant to this integration.
+
+Rationale: generated slots preserve the established QE generation and external
+switcher ownership boundary while allowing every wallpaper change to update the
+actual color. The scripts validate the generated slot before editing the active
+config.
+
+Consequences: QE adds imv and mpv to wallpaper promotion and defaults capture/
+restore. Missing applications are skipped by the existing executable checks;
+missing or malformed wallpaper slots are reported as target failures. Existing
+imv and mpv processes are not restarted and require a new process to load the
+updated configuration.
+
+Affected areas: `ExternalWallpaperTheme.mjs`, `apply_imv_theme.sh`,
+`apply_mpv_theme.sh`, `scripts/qe-defaults`, generated wallpaper artifacts, and
+external-theme fixtures.
+
+Revisit if: either application changes its configuration syntax or gains a
+reliable runtime background update path.
 
 ## 14. Planning Change Procedure
 

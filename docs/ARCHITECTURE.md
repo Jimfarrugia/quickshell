@@ -845,16 +845,16 @@ When the active QE theme is the generated `wallpaper` theme, QE also generates
 standalone "wallpaper" theme slot files for external applications and the
 external switcher applies them. `ExternalWallpaperTheme` maps the same Matugen
 Material palette into per-application formats (kitty, bat, btop, eza, dunst,
-fzf, hyprland, hyprlock, rofi, starship, tmux, opencode, and Yazi's semantic
-palette plus TextMate syntax file, and a Palette JSON for Neovim), and
+fzf, hyprland, hyprlock, imv, mpv, rofi, starship, tmux, opencode, and Yazi's
+semantic palette plus TextMate syntax file, and a Palette JSON for Neovim), and
 `WallpaperExternalThemeAdapter` materializes them through
 `scripts/promote-external-theme.sh`, which writes each file into the app's
-`themes/` `wallpaper` slot with staging and atomic same-filesystem replacement,
-skipping targets whose executables are absent, preserving unchanged files, and
-reporting per-target results. Stow-managed installations keep these live slots
-as ignored, restore-managed symlinks to XDG state; promotion resolves the link
-before replacing the runtime target so the QE repository's authored defaults
-remain separate from runtime state. The explicit `qe-defaults restore` operation
+the app-specific `wallpaper` slot with staging and atomic same-filesystem
+replacement, skipping targets whose executables are absent, preserving unchanged
+files, and reporting per-target results. Stow-managed installations keep these
+live slots as ignored, restore-managed symlinks to XDG state; promotion resolves
+the link before replacing the runtime target so the QE repository's authored
+defaults remain separate from runtime state. The explicit `qe-defaults restore` operation
 preflights and restores the generated QE theme, wallpaper/lockscreen images,
 Neovim palette, and external slots before creating or repairing the live links.
 It applies the manifest's default theme through running QE or, when QE is

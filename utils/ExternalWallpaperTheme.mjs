@@ -169,6 +169,14 @@ function yaziTmTheme(c) {
   ].join("\n");
 }
 
+function imvTheme(c) {
+  return `background = ${c.background}\n`;
+}
+
+function mpvTheme(c) {
+  return `background-color="${c.background}"\n`;
+}
+
 function gradientSuffix(c) {
   return [
     `theme[temp_start]="${stripHash(c.secondary)}"`,
@@ -754,6 +762,12 @@ function nvimPalette(palette, variant) {
 
 const TARGETS = [
   {
+    id: "imv",
+    executable: "imv",
+    path: (b, c) => `${b.config}/imv/themes/wallpaper.conf`,
+    generate: imvTheme,
+  },
+  {
     id: "kitty",
     executable: "kitty",
     path: (b, c) => `${b.config}/kitty/themes/wallpaper.conf`,
@@ -830,6 +844,12 @@ const TARGETS = [
     executable: "nvim",
     path: (b, c) => `${b.cache}/matugen/nvim-colors.json`,
     generate: (code, palette, variant) => nvimPalette(palette, variant),
+  },
+  {
+    id: "mpv",
+    executable: "mpv",
+    path: (b, c) => `${b.config}/mpv/themes/wallpaper.conf`,
+    generate: mpvTheme,
   },
   {
     id: "yazi_palette",
@@ -931,6 +951,7 @@ export function validateExternalTargetContent(target) {
     return `target '${target.id}': generated content is empty`;
   const checks = [
     { id: "kitty", probe: /^color0 #/m },
+    { id: "imv", probe: /^background = #[0-9a-f]{6}$/m },
     { id: "bat", probe: /<\/plist>/ },
     { id: "btop", probe: /theme\[main_bg\]/ },
     { id: "eza", probe: /^colourful: false/m },
@@ -943,6 +964,7 @@ export function validateExternalTargetContent(target) {
     { id: "tmux", probe: /^set -g @default_fg/m },
     { id: "opencode", probe: /"defs"/ },
     { id: "nvim", probe: /"schema":\s*"qe-nvim-palette"/ },
+    { id: "mpv", probe: /^background-color="#[0-9a-f]{6}"$/m },
     { id: "yazi_palette", probe: /^export BACKGROUND=/m },
     { id: "yazi_tmtheme", probe: /<\/plist>/ },
   ];
