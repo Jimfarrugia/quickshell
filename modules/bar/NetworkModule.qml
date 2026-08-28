@@ -9,7 +9,7 @@ BarChip {
                         : (wiredConnected ? (Services.NetworkService.ipv4Address || "Connecting...") : "Disconnected")
     trailingText: wifiConnected ? `${Services.NetworkService.signalStrength}%` : ""
     icon: wifiConnected ? "wifi" : (wiredConnected ? "lan" : "signal_wifi_bad")
-    textColor: wifiConnected ? Services.ThemeService.theme.tokens.secondary
+    textColor: wifiConnected ? Services.ThemeService.theme.tokens.primary
                              : Services.ThemeService.theme.tokens.on_surface_disabled
     trailingTextColor: Services.ThemeService.theme.tokens.on_surface_disabled
     iconColor: wifiConnected || wiredConnected ? Services.ThemeService.theme.tokens.secondary
