@@ -145,6 +145,8 @@ project-resolved `shell.qml` path. The launcher resolves its own symlink before
 finding the project, and production autostart invokes it through the stable XDG
 user-bin path `~/.local/bin/qe-shell`. Direct unguarded `quickshell --path`
 launches are development-only and can bypass the single-instance guarantee.
+Manual launches that must survive terminal closure may pass `--detach`; this
+starts the guarded shell in a separate session with terminal hangups ignored.
 
 ### 3.2 Lock process
 

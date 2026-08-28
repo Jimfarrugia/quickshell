@@ -236,6 +236,15 @@ and the external theme switcher. To restart the running instance:
 ~/.local/bin/qe-shell --restart
 ```
 
+To launch or restart QE from a terminal and keep it running after the terminal
+closes, use detached mode:
+
+```sh
+~/.local/bin/qe-shell --restart --detach
+```
+
+Detached mode starts QE in its own session and sends its output to `/dev/null`.
+
 The selector launchers use QE IPC targets named `qe-theme` and `qe-wallpaper`.
 If the desktop entries are installed, launch the corresponding QE selector
 from the application menu. The project helper can also open one directly while

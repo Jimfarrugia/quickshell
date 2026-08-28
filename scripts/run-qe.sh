@@ -2,14 +2,18 @@
 set -euo pipefail
 
 restart=0
-if [[ $# -gt 0 ]]; then
-    if [[ "$1" == "--restart" ]]; then
-        restart=1
-    else
-        printf 'Usage: %s [--restart]\n' "$0" >&2
-        exit 2
-    fi
-fi
+detach=0
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --restart) restart=1 ;;
+        --detach) detach=1 ;;
+        *)
+            printf 'Usage: %s [--restart] [--detach]\n' "$0" >&2
+            exit 2
+            ;;
+    esac
+    shift
+done
 
 script_path=$(readlink -f -- "${BASH_SOURCE[0]}")
 script_dir=$(cd -- "$(dirname -- "$script_path")" && pwd)
@@ -71,5 +75,12 @@ if [[ -z "${QE_THEME_SWITCHER:-}" ]]; then
     fi
 fi
 export QE_THEME_SWITCHER
+
+if ((detach)); then
+    nohup setsid quickshell --no-duplicate --path "$project_root/shell.qml" \
+        </dev/null >/dev/null 2>&1 &
+    printf 'QE started in detached mode (PID %s).\n' "$!"
+    exit 0
+fi
 
 exec quickshell --no-duplicate --path "$project_root/shell.qml"
