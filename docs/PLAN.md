@@ -1,6 +1,6 @@
 # QE Implementation Plan
 
-Status: Phases 1-4 complete; Phase 5 in progress
+Status: Phases 1-6 complete; Phase 7 not started
 
 Last inventory: 2026-08-29
 
@@ -33,7 +33,7 @@ one.
 | Bar vertical slice | Complete | Phase 2; top reserved edge selected, tray host disabled during Waybar coexistence |
 | Bar parity and Waybar cutover | Complete | Phase 3 acceptance passed 2026-08-25 |
 | Theme/Matugen integration | Complete | Manual selector and external machine integration complete; Matugen mapping, staged promotion, QE-localized wallpaper selector, and Hyprpaper XDG-path application complete; external generated Matugen artifacts now delivered as QE-generated `wallpaper` theme slots applied by the external switcher, including imv, mpv, and Yazi; runtime/default artifact separation and idempotent promotion added; `QE_THEME_SWITCHER` wired for production through the installed `qe-theme-switcher` wrapper. Phase 4 acceptance passed on 2026-08-26 |
-| Notifications/OSDs | Phase 5 complete | Phase 6 cutover and OSDs remain deferred |
+| Notifications/OSDs | Complete | QE owns notifications and OSDs; reversible Dunst cutover and rollback passed 2026-08-29 |
 | Launcher/help | Not started | Phase 7 |
 | Dashboards/control center | Not started | Phases 8-10 |
 | Lock replacement | Not started | Phase 11 |
@@ -1509,7 +1509,7 @@ Out of scope:
 
 ### Phase 6: Notification cutover and OSD migration
 
-Status: Ready to begin implementation (Phase 5 and service prerequisites passed 2026-08-29)
+Status: Complete (implementation and reversible production cutover validated 2026-08-29)
 
 Objective: make QE the production notification owner and replace Dunst-based
 hardware feedback with native QE OSDs.
@@ -1566,6 +1566,60 @@ Validation:
 Rollback/recovery:
 
 - restore Dunst service/activation and original Hyprland keybindings
+
+Implementation record:
+
+- Added the versioned `osd` configuration block with bounded duration and queue
+  length. `OSDService` owns a priority/replacement-key queue and remains
+  independent from the notification DBus server.
+- Added native PipeWire output mute, microphone mute, and bounded volume
+  actions. Volume stepping preserves the existing behavior of unmuting and
+  allowing values through 200 percent; native events remain authoritative.
+- Added native MPRIS media actions with capability checks instead of
+  `playerctl`.
+- Added class-aware brightness helper discovery and a keyboard LED service;
+  keyboard devices are selected by stable name hints rather than the previous
+  machine-specific `smc::kbd_backlight` value.
+- Added the typed `qe-actions` IPC target and allowlisted `qe-action` wrapper.
+  Production keybindings remain unchanged until the cutover gate passes.
+- Added notification-center dismiss-all, per-notification dismissal, and
+  action invocation controls. Existing process-session history and DND policy
+  remain unchanged.
+- QML action, OSD, schema, brightness, ShellCheck, and persistent-shell smoke
+  checks pass. Full Phase 1-5 regression validation and live cutover remain
+  pending.
+
+Cutover decision record:
+
+- Persistent Dunst blocking will use a user-service mask in the symlinked
+  dotfiles systemd directory; `disable` is not suitable because the packaged
+  unit is static and DBus-activated.
+- The Dunst target must be added to `~/Projects/theme-switcher/retired-targets`
+  before the mask is activated. The apply script itself remains preserved.
+- The active Lua keybindings will call the stable `qe-action` wrapper. The
+  inactive `hyprlang/_keybinds.conf` remains unchanged.
+
+Completion record:
+
+- Full JavaScript, helper, QML, theme-switcher, QML-lint, ShellCheck, and
+  persistent-shell validation passed. Headless QML tests are accepted by their
+  success markers because this installed Quickshell build may leave `Qt.quit()`
+  for the timeout to reap.
+- Production checks passed with Dunst masked and inactive, QE owning
+  `org.freedesktop.Notifications`, the active `qe-action` wrapper and Lua
+  bindings loaded, and the external theme switcher explicitly skipping Dunst.
+- Rollback passed by stopping QE, restoring the pre-cutover config and active
+  bindings, removing the wrapper, unmasking/starting Dunst, and confirming
+  Dunst reclaimed the notification bus. The cutover was then re-applied and
+  re-verified.
+- Follow-up user-testing fixes preserve PipeWire volume confirmation through
+  200 percent, propagate brightness step results, suppress transient non-full
+  battery `Fully charged` OSDs, and align brightness/charging battery text
+  with the muted bar color contract.
+- A second user-test pass confirmed the volume ceiling now produces a confirmed
+  200 percent OSD without issuing another setter request, while brightness
+  actions defer OSD presentation until the fast external operation confirms or
+  fails, avoiding a misleading transient pending state.
 
 Out of scope:
 
@@ -2750,6 +2804,36 @@ validation scripts.
 
 Revisit if: Quickshell exposes reliable notification ownership state, or a separate
 DBus test session becomes necessary to protect the primary session.
+
+## ADR-025: QE-owned OSD and reversible action cutover
+
+Status: Accepted for Phase 6 implementation
+
+Decision: hardware feedback is owned by an independent QE OSD queue rather than
+being sent through desktop notifications. Hardware keybindings call typed QE
+IPC actions. Dunst is blocked with a reversible user-service mask only after
+the switcher's Dunst target is retired, and rollback restores the original
+bindings, target list, service activation, and legacy producers.
+
+Context: Dunst and QE cannot own `org.freedesktop.Notifications` concurrently.
+The existing hardware scripts also combine subsystem mutation with Dunst
+feedback, while native PipeWire and MPRIS APIs are available for the required
+operations.
+
+Rationale: separating OSD feedback from notification delivery prevents a
+notification-owner failure from breaking hardware controls, preserves truthful
+pending/confirmed state, and makes the ownership transition independently
+reversible. The user selected persistent masking in the symlinked dotfiles
+systemd directory and approved preservation of the legacy volume semantics.
+
+Consequences: Phase 6 adds OSD/action fixtures, native microphone and media
+coverage, and a keyboard LED adapter. The external theme switcher continues to
+support Dunst as a source target but skips it through the validated retirement
+list after cutover. Persistent notification history remains deferred.
+
+Revisit if: QE gains a native action transport that is more stable than the
+current namespaced IPC contract, or keyboard LED discovery cannot be made
+portable without a user-authored device override.
 
 ## 14. Planning Change Procedure
 

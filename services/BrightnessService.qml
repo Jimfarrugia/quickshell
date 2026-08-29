@@ -60,7 +60,7 @@ Singleton {
 
   function stepBrightness(delta) {
     const base = pendingPercent >= 0 ? pendingPercent : confirmedPercent;
-    setBrightness(base + delta);
+    return setBrightness(base + delta);
   }
 
   function wheelStep(angleDeltaY) {

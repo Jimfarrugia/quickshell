@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Bounded structured helper for backlight discovery, read, and set.
 # Contract: --mode discover | read | set [--root <fake proc/sys root>]
-#           [--device <name>] [--percent <1..100>]
+#           [--class backlight|leds] [--device <name>] [--percent <1..100>]
 # Emits one JSON object on stdout; diagnostics on stderr.
 
 set -euo pipefail
@@ -10,6 +10,7 @@ mode=""
 root=""
 device=""
 percent=""
+device_class="backlight"
 export LC_ALL=C
 
 while [[ $# -gt 0 ]]; do
@@ -34,6 +35,11 @@ while [[ $# -gt 0 ]]; do
       percent="$2"
       shift 2
       ;;
+    --class)
+      [[ $# -ge 2 ]] || { printf 'Missing value for --class\n' >&2; exit 2; }
+      device_class="$2"
+      shift 2
+      ;;
     *)
       printf 'Unknown argument: %s\n' "$1" >&2
       exit 2
@@ -46,11 +52,16 @@ if [[ -z "$mode" ]]; then
   exit 2
 fi
 
+if [[ "$device_class" != "backlight" && "$device_class" != "leds" ]]; then
+  printf 'Unsupported brightness class: %s\n' "$device_class" >&2
+  exit 2
+fi
+
 sysroot() {
   if [[ -n "$root" ]]; then
-    printf '%s/sys/class/backlight' "$root"
+    printf '%s/sys/class/%s' "$root" "$device_class"
   else
-    printf '/sys/class/backlight'
+    printf '/sys/class/%s' "$device_class"
   fi
 }
 
@@ -114,7 +125,7 @@ PY
 
 discover_brightnessctl() {
   local output
-  if ! output=$(brightnessctl -c backlight -m -l 2>/dev/null); then
+  if ! output=$(brightnessctl -c "$device_class" -m -l 2>/dev/null); then
     printf 'brightnessctl discovery failed\n' >&2
     return 1
   fi
@@ -204,7 +215,7 @@ PY
     fi
     printf '%s\n' "$raw" > "$path/brightness"
   else
-    if ! brightnessctl -c backlight -d "$device" -q s "${percent}%" >/dev/null 2>&1; then
+    if ! brightnessctl -c "$device_class" -d "$device" -q s "${percent}%" >/dev/null 2>&1; then
       printf 'brightnessctl set failed for %s\n' "$device" >&2
       return 1
     fi

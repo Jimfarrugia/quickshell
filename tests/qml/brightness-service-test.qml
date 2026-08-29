@@ -26,8 +26,8 @@ ShellRoot {
     Services.BrightnessService.__confirmedDeviceName = "intel_backlight";
     Services.BrightnessService.__confirmedDeviceClass = "backlight";
     Services.BrightnessService.__confirmedDeviceMaxBrightness = 1060;
-    if (brightnessModule.textColor.toString() !== Services.ThemeService.theme.tokens.on_surface_variant.toString())
-      return fail("brightness text did not use the standard secondary text color");
+    if (brightnessModule.textColor.toString() !== Services.ThemeService.theme.tokens.on_surface_disabled.toString())
+      return fail("brightness text did not use the standard muted text color");
     if (brightnessModule.hoverText !== "")
       return fail("brightness module unexpectedly exposed hover content");
 
@@ -116,7 +116,8 @@ ShellRoot {
       return fail("coalesced request did not confirm");
 
     // Wheel step method: positive raises, negative lowers by 5%.
-    Services.BrightnessService.wheelStep(120);
+    if (!Services.BrightnessService.stepBrightness(5))
+      return fail("brightness step did not return the operation result");
     if (Services.BrightnessService.pendingPercent !== 58)
       return fail(`wheel up did not raise by 5%, got ${Services.BrightnessService.pendingPercent}`);
     fakeIntegration.emitSetFinished({ ok: true, name: "intel_backlight", brightness: 615, maxBrightness: 1060, percent: 58 });

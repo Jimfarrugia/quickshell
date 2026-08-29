@@ -79,6 +79,21 @@ if "$helper" --mode set --root "$tmp_root" --device intel_backlight --percent 10
   exit 1
 fi
 
+keyboard_root=$(mktemp -d)
+trap 'rm -rf "$keyboard_root" "$tmp_root"' EXIT
+mkdir -p "$keyboard_root/sys/class/leds/tpacpi::power" "$keyboard_root/sys/class/leds/tpacpi::kbd_backlight"
+printf '255\n' > "$keyboard_root/sys/class/leds/tpacpi::power/max_brightness"
+printf '255\n' > "$keyboard_root/sys/class/leds/tpacpi::power/brightness"
+printf '1\n' > "$keyboard_root/sys/class/leds/tpacpi::kbd_backlight/max_brightness"
+printf '0\n' > "$keyboard_root/sys/class/leds/tpacpi::kbd_backlight/brightness"
+keyboard_discover=$($helper --mode discover --root "$keyboard_root" --class leds)
+python3 - "$keyboard_discover" <<'PY'
+import json, sys
+data = json.loads(sys.argv[1])
+assert len(data["devices"]) == 2, data
+assert any(device["name"] == "tpacpi::kbd_backlight" for device in data["devices"]), data
+PY
+
 if "$helper" --mode read --root "$fixtures" --device '../etc/passwd' >/dev/null 2>&1; then
   echo "helper accepted a device name with path traversal" >&2
   exit 1

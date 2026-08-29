@@ -67,6 +67,7 @@ export const defaultConfig = Object.freeze({
     maxBodyBytes: 8192,
     maxActions: 8
   }),
+  osd: Object.freeze({ enabled: false, durationMs: 2000, maxQueue: 8 }),
   commands: Object.freeze({ timeoutMs: 5000, termGraceMs: 1000, maxOutputBytes: 32768 }),
   appearance: Object.freeze({
     fontFamily: "Inter",
@@ -110,6 +111,7 @@ function copyDefaults() {
     }),
     clock: Object.assign({}, defaultConfig.clock),
     notifications: Object.assign({}, defaultConfig.notifications),
+    osd: Object.assign({}, defaultConfig.osd),
     commands: Object.assign({}, defaultConfig.commands),
     appearance: Object.assign({}, defaultConfig.appearance)
   };
@@ -217,6 +219,17 @@ export function validateConfig(document) {
     else if (document.notifications.maxActions !== undefined) errors.push("config.notifications.maxActions: expected an integer from 0 to 16");
   } else if (document.notifications !== undefined) {
     errors.push("config.notifications: expected an object");
+  }
+
+  if (isObject(document.osd)) {
+    if (typeof document.osd.enabled === "boolean") value.osd.enabled = document.osd.enabled;
+    else if (document.osd.enabled !== undefined) errors.push("config.osd.enabled: expected a boolean");
+    if (integerIn(document.osd.durationMs, 500, 10000)) value.osd.durationMs = document.osd.durationMs;
+    else if (document.osd.durationMs !== undefined) errors.push("config.osd.durationMs: expected an integer from 500 to 10000");
+    if (integerIn(document.osd.maxQueue, 1, 32)) value.osd.maxQueue = document.osd.maxQueue;
+    else if (document.osd.maxQueue !== undefined) errors.push("config.osd.maxQueue: expected an integer from 1 to 32");
+  } else if (document.osd !== undefined) {
+    errors.push("config.osd: expected an object");
   }
 
   if (isObject(document.commands)) {

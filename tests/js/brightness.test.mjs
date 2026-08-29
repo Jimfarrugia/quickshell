@@ -7,6 +7,7 @@ import {
   parseReadOutput,
   parseSetOutput,
   selectBacklightDevice,
+  selectDevice,
   parseSysfsSnapshot,
   clampPercent,
   percentToRaw
@@ -27,6 +28,8 @@ assert.equal(selectBacklightDevice(validDiscover.devices).name, "intel_backlight
 const nonBacklight = parseDiscoverOutput('{"schemaVersion":1,"devices":[{"name":"tpacpi::power","class":"leds","brightness":255,"maxBrightness":255,"percent":100}]}');
 assert.equal(nonBacklight.ok, true);
 assert.equal(selectBacklightDevice(nonBacklight.devices), null);
+const keyboardDevices = parseDiscoverOutput('{"schemaVersion":1,"devices":[{"name":"tpacpi::power","class":"leds","brightness":255,"maxBrightness":255,"percent":100},{"name":"tpacpi::kbd_backlight","class":"leds","brightness":1,"maxBrightness":2,"percent":50}]}');
+assert.equal(selectDevice(keyboardDevices.devices, "leds").name, "tpacpi::kbd_backlight");
 
 const emptyDiscover = parseDiscoverOutput('{"schemaVersion":1,"devices":[]}');
 assert.equal(emptyDiscover.ok, true);

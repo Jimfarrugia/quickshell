@@ -26,13 +26,18 @@
     "format24h": false
   },
   "notifications": {
-    "enabled": false,
+    "enabled": true,
     "popupEnabled": true,
     "historyEnabled": true,
     "historyLimit": 20,
     "maxSummaryBytes": 512,
     "maxBodyBytes": 8192,
     "maxActions": 8
+  },
+  "osd": {
+    "enabled": true,
+    "durationMs": 2000,
+    "maxQueue": 8
   },
   "commands": {
     "timeoutMs": 5000,

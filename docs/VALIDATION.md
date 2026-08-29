@@ -62,13 +62,16 @@ timeout 5 quickshell -p tests/qml/wallpaper-selector-test.qml
 timeout 5 quickshell -p tests/qml/segmented-toggle-test.qml
 timeout 5 quickshell -p tests/qml/palette-viewer-test.qml
 timeout 5 quickshell -p tests/qml/external-theme-service-test.qml
+timeout 5 quickshell -p tests/qml/osd-service-test.qml
+timeout 5 quickshell -p tests/qml/phase6-action-test.qml
 timeout 5 env QE_MATUGEN=<absolute-path-to-fixture> quickshell -p tests/qml/matugen-adapter-test.qml
 timeout 5 quickshell -p shell.qml
 ```
 
-Of the timeout-wrapped commands, exit code `124` is expected only from the
-`shell.qml` smoke test because it proves the persistent shell remained alive.
-The command-runner test must print `COMMAND_TEST_PASSED`. Run the foundation
+Of the timeout-wrapped commands, exit code `124` is acceptable when a headless
+QML test has already printed its success marker; the `shell.qml` smoke test
+must return `124` because it proves the persistent shell remained alive. The
+command-runner test must print `COMMAND_TEST_PASSED`. Run the foundation
 test twice with the same XDG state root: the first run may print
 `FOUNDATION_THEME_SEEDED`; the second must print
 `FOUNDATION_PERSISTENCE_TEST_PASSED`.
@@ -112,6 +115,13 @@ The external adapter helper must print `EXTERNAL_THEME_ADAPTER_TEST_PASSED`
 after sandboxed success, partial, malformed-output, timeout, invalid theme ID,
 missing-executable, independent valid/malformed state updates, and
 executable-loss cases.
+
+The OSD service fixture must print `OSD_SERVICE_TEST_PASSED` after validating
+bounded queueing, replacement keys, priority ordering, expiry, and operation
+resolution, plus non-full charging/discharging battery state normalization. The
+Phase 6 action fixture must print `PHASE6_ACTION_TEST_PASSED` after validating
+native output mute, microphone mute, OSD publication, volume unmute-on-step
+behavior, confirmation above 100 percent, and the 200 percent upper bound.
 
 The Matugen adapter fixture must print `MATUGEN_ADAPTER_TEST_PASSED` after
 mapping a schema-compatible JSON response into a validated QE `Wallpaper`
@@ -176,6 +186,11 @@ Relocation is checked by copying the project to a temporary directory and
 repeating the JavaScript validation and shell smoke test there. QE state created
 by a development run is isolated under Quickshell's per-shell XDG state path and
 can be removed after QE is stopped.
+
+Headless QML test configurations are validated by their success markers. With
+the installed Quickshell build, `Qt.quit()` may emit a warning and leave the
+process for the timeout to reap, so exit code `124` is acceptable for these
+test configurations as well as for the persistent `shell.qml` smoke test.
 
 `integrations/ThemeSelectorIpc.qml` and `integrations/WallpaperSelectorIpc.qml`
 use Quickshell typed IPC functions that `qmllint 1.0` cannot parse (the process

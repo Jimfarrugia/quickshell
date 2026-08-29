@@ -64,6 +64,15 @@
         "maxActions": { "type": "integer", "minimum": 0, "maximum": 16, "default": 8 }
       }
     },
+    "osd": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "durationMs": { "type": "integer", "minimum": 500, "maximum": 10000, "default": 2000 },
+        "maxQueue": { "type": "integer", "minimum": 1, "maximum": 32, "default": 8 }
+      }
+    },
     "commands": {
       "type": "object",
       "additionalProperties": false,

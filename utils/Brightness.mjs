@@ -72,10 +72,18 @@ export function parseSetOutput(text) {
 }
 
 export function selectBacklightDevice(devices) {
+  return selectDevice(devices, "backlight");
+}
+
+export function selectDevice(devices, deviceClass) {
   if (!Array.isArray(devices) || devices.length === 0) return null;
-  const backlights = devices.filter(device => device.class === "backlight");
-  if (backlights.length > 0) return backlights[0];
-  return null;
+  const candidates = devices.filter(device => device.class === deviceClass);
+  if (candidates.length === 0) return null;
+  if (deviceClass === "leds") {
+    const keyboard = candidates.find(device => /kbd|keyboard/i.test(device.name));
+    if (keyboard) return keyboard;
+  }
+  return candidates[0];
 }
 
 export function parseSysfsSnapshot(brightnessText, maxBrightnessText, name, deviceClass) {

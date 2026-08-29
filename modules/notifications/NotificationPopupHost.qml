@@ -18,7 +18,7 @@ PanelWindow {
         top: true
         right: true
     }
-    margins: { top: 12; right: 12; }
+    margins { top: 12; right: 12 }
 
     ColumnLayout {
         id: popupColumn

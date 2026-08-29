@@ -18,3 +18,6 @@ singleton BrightnessService 1.0 BrightnessService.qml
 singleton BluetoothService 1.0 BluetoothService.qml
 singleton IdleService 1.0 IdleService.qml
 singleton NotificationService 1.0 NotificationService.qml
+singleton KeyboardBrightnessService 1.0 KeyboardBrightnessService.qml
+singleton MediaService 1.0 MediaService.qml
+singleton OSDService 1.0 OSDService.qml

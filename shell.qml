@@ -20,6 +20,7 @@ ShellRoot {
     WallpaperSelectorIpc {}
     PaletteViewerIpc {}
     NotificationsIpc {}
+    ActionsIpc {}
     ExternalThemeAdapter {
         id: externalThemeAdapter
     }
@@ -58,6 +59,11 @@ ShellRoot {
     QS.LazyLoader {
         active: Services.SurfaceService.notificationCenterVisible
         source: "modules/notifications/NotificationCenter.qml"
+    }
+
+    QS.LazyLoader {
+        active: Services.ConfigService.config.osd.enabled
+        source: "modules/osd/OSDHost.qml"
     }
 
     QS.LazyLoader {

@@ -622,6 +622,15 @@ replacement keys, and expiry policy.
 
 Hardware-key operations call the relevant domain service. The OSD appears from
 confirmed or clearly marked pending state and reports failed operations.
+The OSD queue is independent of `NotificationServer`; disabling notifications
+does not route OSDs through a desktop notification daemon. OSD values are
+bounded and queue length is configuration-controlled. Startup snapshots of
+network, Bluetooth, and battery state suppress synthetic initial-change OSDs.
+
+`MediaService` uses the native Quickshell MPRIS model and capability guards; it
+does not invoke `playerctl`. `AudioService` owns default PipeWire sink and
+source mute/volume actions. `KeyboardBrightnessService` reuses the bounded
+brightness adapter with the `leds` class and keyboard-device selection.
 
 ### 7.13 IdleService
 
@@ -648,6 +657,16 @@ authoritative for actual keybindings unless a future verified parser derives
 the catalog. Help entries that describe keybindings must be labeled reference
 data and may become stale; duplication is accepted only until derivation from
 the Lua config is feasible.
+
+### 7.15 Hardware action IPC
+
+The persistent shell exposes typed, non-security-sensitive hardware actions
+through the namespaced `qe-actions` IPC target. The stable user-bin
+`qe-action` wrapper allowlists those operations and forwards them to the
+guarded QE instance. Hyprland remains authoritative for key combinations; its
+bindings invoke the wrapper rather than constructing commands for PipeWire,
+MPRIS, or brightness state directly. Missing QE makes an action fail visibly
+without activating a retired desktop notification service.
 
 ## 8. Theme Architecture
 

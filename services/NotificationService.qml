@@ -120,6 +120,14 @@ Singleton {
 
     function clearHistory() { history = []; }
 
+    function dismissAll() {
+        const current = records.slice();
+        for (const record of current) {
+            if (record.native && typeof record.native.dismiss === "function") record.native.dismiss();
+        }
+        popupNotifications = [];
+    }
+
     function setDnd(value) {
         if (!stateReady || typeof value !== "boolean") return false;
         dnd = value;

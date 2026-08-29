@@ -23,21 +23,22 @@ QtObject {
   readonly property bool setRunning: setRunner.running
 
   property string deviceName: ""
-  property string deviceClass: ""
+  property string deviceClass: "backlight"
   property int deviceMaxBrightness: 0
 
   property int __failureCount: 0
   property bool __lastReadOk: false
-  property string sysfsRoot: "/sys/class/backlight"
+  property string sysfsRoot: `/sys/class/${deviceClass}`
 
   signal read(var result)
   signal setFinished(var result)
 
   readonly property string helperPath: Quickshell.shellPath("scripts/qe-brightness.sh")
 
-  function discoverCommand() { return [helperPath, "--mode", "discover"]; }
+  function discoverCommand() { return [helperPath, "--mode", "discover", "--class", deviceClass]; }
   function setCommand(percent) {
-    return [helperPath, "--mode", "set", "--device", deviceName, "--percent", String(percent)];
+    return [helperPath, "--mode", "set", "--class", deviceClass,
+      "--device", deviceName, "--percent", String(percent)];
   }
 
   function publishDiscover(result) {
@@ -53,7 +54,7 @@ QtObject {
         read({ ok: false, error: parsed.error });
         return;
       }
-      const selected = Brightness.selectBacklightDevice(parsed.devices);
+      const selected = Brightness.selectDevice(parsed.devices, root.deviceClass);
       if (!selected) {
         __failureCount++;
         lastError = "BRIGHTNESS_NO_DEVICE: no backlight device discovered";

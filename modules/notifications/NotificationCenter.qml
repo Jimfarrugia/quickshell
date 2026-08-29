@@ -47,19 +47,34 @@ FloatingWindow {
                 }
 
                 Rectangle {
-                    implicitWidth: 70
+                    implicitWidth: 104
                     implicitHeight: 32
                     radius: 6
                     color: clearHover.hovered ? Services.ThemeService.theme.tokens.surface_hover : Services.ThemeService.theme.tokens.surface_variant
                     Text {
                         anchors.centerIn: parent
-                        text: "Clear"
+                        text: "Clear history"
                         color: Services.ThemeService.theme.tokens.on_surface_variant
                         font.family: Services.ConfigService.config.appearance.fontFamily
                         font.pixelSize: 12
                     }
                     HoverHandler { id: clearHover }
                     TapHandler { onTapped: Services.NotificationService.clearHistory() }
+                }
+                Rectangle {
+                    implicitWidth: 92
+                    implicitHeight: 32
+                    radius: 6
+                    color: dismissHover.hovered ? Services.ThemeService.theme.tokens.surface_hover : Services.ThemeService.theme.tokens.surface_variant
+                    Text {
+                        anchors.centerIn: parent
+                        text: "Dismiss all"
+                        color: Services.ThemeService.theme.tokens.on_surface_variant
+                        font.family: Services.ConfigService.config.appearance.fontFamily
+                        font.pixelSize: 12
+                    }
+                    HoverHandler { id: dismissHover }
+                    TapHandler { onTapped: Services.NotificationService.dismissAll() }
                 }
             }
 
@@ -95,6 +110,7 @@ FloatingWindow {
                 model: Services.NotificationService.history
 
                 delegate: Rectangle {
+                    id: historyDelegate
                     required property var modelData
                     width: historyList.width
                     implicitHeight: historyContent.implicitHeight + 20
@@ -124,6 +140,46 @@ FloatingWindow {
                             font.pixelSize: 14
                             font.weight: Font.DemiBold
                             wrapMode: Text.WordWrap
+                        }
+                        RowLayout {
+                            Layout.fillWidth: true
+                            visible: actionRepeater.count > 0
+                            Repeater {
+                                id: actionRepeater
+                                model: modelData.data.actions
+                                delegate: Rectangle {
+                                    required property var modelData
+                                    Layout.fillWidth: true
+                                    implicitHeight: 28
+                                    radius: 5
+                                    color: actionHover.hovered ? Services.ThemeService.theme.tokens.surface_hover : Services.ThemeService.theme.tokens.surface_variant
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: modelData.text
+                                        color: Services.ThemeService.theme.tokens.on_surface_variant
+                                        font.family: Services.ConfigService.config.appearance.fontFamily
+                                        font.pixelSize: 11
+                                    }
+                                    HoverHandler { id: actionHover }
+                                    TapHandler { onTapped: Services.NotificationService.invokeAction(historyDelegate.modelData.data.id, modelData.identifier) }
+                                }
+                            }
+                        }
+                        Rectangle {
+                            Layout.alignment: Qt.AlignRight
+                            implicitWidth: 70
+                            implicitHeight: 26
+                            radius: 5
+                            color: dismissOneHover.hovered ? Services.ThemeService.theme.tokens.surface_hover : "transparent"
+                            Text {
+                                anchors.centerIn: parent
+                                text: "Dismiss"
+                                color: Services.ThemeService.theme.tokens.on_surface_placeholder
+                                font.family: Services.ConfigService.config.appearance.fontFamily
+                                font.pixelSize: 11
+                            }
+                            HoverHandler { id: dismissOneHover }
+                            TapHandler { onTapped: Services.NotificationService.dismiss(modelData.data.id) }
                         }
                         Text {
                             Layout.fillWidth: true
