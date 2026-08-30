@@ -15,13 +15,14 @@ QtObject {
     property int setCallCount: 0
     property int lastSetPercent: -1
     property bool acceptSet: true
+    property bool autoConfirmVolume: true
     property bool acceptMute: true
     property bool acceptMicrophoneMute: true
 
     function setVolume(percent) {
         setCallCount++;
         lastSetPercent = percent;
-        if (acceptSet) volumePercent = percent;
+        if (acceptSet && autoConfirmVolume) volumePercent = percent;
         return acceptSet;
     }
 

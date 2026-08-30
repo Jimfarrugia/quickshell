@@ -13,6 +13,10 @@ Singleton {
     property string lastNetworkState: ""
     property string lastBluetoothState: ""
     property string lastBatteryState: ""
+    readonly property int lowBatteryThreshold: 20
+    readonly property int criticalBatteryThreshold: 15
+    property bool lowBatteryAlerted: false
+    property bool criticalBatteryAlerted: false
 
     function duration() {
         return ConfigService.config.osd.durationMs;
@@ -105,18 +109,67 @@ Singleton {
         root.showItem({ title: "Bluetooth", detail: BluetoothService.connectedSummary || (BluetoothService.enabled ? "No devices connected" : "Disabled"), icon: "bluetooth", priority: 1, replacementKey: "bluetooth" });
     }
 
+    function batteryAlert() {
+        if (!PowerService.present) return null;
+        if (PowerService.charging) {
+            root.lowBatteryAlerted = false;
+            root.criticalBatteryAlerted = false;
+            return null;
+        }
+
+        if (PowerService.percentage > root.lowBatteryThreshold)
+            root.lowBatteryAlerted = false;
+        if (PowerService.percentage > root.criticalBatteryThreshold)
+            root.criticalBatteryAlerted = false;
+
+        if (PowerService.percentage <= root.criticalBatteryThreshold && !root.criticalBatteryAlerted) {
+            root.criticalBatteryAlerted = true;
+            root.lowBatteryAlerted = true;
+            return {
+                title: "Critical battery",
+                detail: `${PowerService.percentage}% remaining`,
+                value: PowerService.percentage,
+                icon: "battery_android_alert",
+                priority: 3,
+                replacementKey: "battery",
+                state: "confirmed"
+            };
+        }
+
+        if (PowerService.percentage <= root.lowBatteryThreshold && !root.lowBatteryAlerted) {
+            root.lowBatteryAlerted = true;
+            return {
+                title: "Low battery",
+                detail: `${PowerService.percentage}% remaining`,
+                value: PowerService.percentage,
+                icon: "battery_android_frame_1",
+                priority: 2,
+                replacementKey: "battery",
+                state: "confirmed"
+            };
+        }
+
+        return null;
+    }
+
     function batteryChanged() {
         if (!root.primed || !PowerService.present) return;
         const level = PowerService.percentage <= 15 ? "critical" : (PowerService.percentage <= 24 ? "low" : "normal");
         const fullyCharged = PowerService.fullyCharged && PowerService.percentage >= 99;
+        const charging = PowerService.charging || fullyCharged;
         const state = `${PowerService.charging}:${fullyCharged}:${level}`;
         if (state === root.lastBatteryState) return;
         root.lastBatteryState = state;
-        root.showItem({
-            title: "Battery",
-            detail: fullyCharged ? "Fully charged" : (PowerService.charging ? "Charging" : `${PowerService.percentage}% remaining`),
+        const alert = root.batteryAlert();
+        const percentage = `${PowerService.percentage}%`;
+        const detail = fullyCharged ? `${percentage} remaining`
+            : (PowerService.remainingTimeEstimate === "unavailable"
+                ? percentage : `${percentage} remaining (${PowerService.remainingTimeEstimate})`);
+        root.showItem(alert || {
+            title: charging ? "Charging" : "Discharging",
+            detail: detail,
             value: PowerService.percentage,
-            icon: PowerService.charging ? "battery_charging_full" : "battery_std",
+            icon: charging ? "battery_charging_full" : "battery_std",
             priority: level === "critical" ? 3 : 1,
             replacementKey: "battery",
             state: "confirmed"
@@ -128,6 +181,8 @@ Singleton {
         root.lastBluetoothState = `${BluetoothService.enabled}:${BluetoothService.connectedSummary}`;
         root.lastBatteryState = `${PowerService.charging}:${PowerService.fullyCharged}:${PowerService.percentage <= 15 ? "critical" : (PowerService.percentage <= 24 ? "low" : "normal")}`;
         root.primed = true;
+        const alert = root.batteryAlert();
+        if (alert) root.showItem(alert);
     }
 
     Timer {

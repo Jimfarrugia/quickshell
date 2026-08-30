@@ -8,6 +8,7 @@ const REQUIRED_COLORS = [
   "on_primary_container", "secondary", "on_secondary", "secondary_container",
   "on_secondary_container", "outline", "outline_variant", "error"
 ];
+const SIDEBAR_LIGHTNESS_DELTA = 9 / 255;
 
 function isObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -25,6 +26,41 @@ function colorAt(colors, key, variant, fallback = null) {
 
 function withAlpha(color, alpha) {
   return color.length === 7 ? `#${alpha}${color.slice(1)}` : color;
+}
+
+function darkenHsl(hex, lightnessDelta) {
+  const [red, green, blue] = hex.slice(1, 7).match(/../g).map(value => Number.parseInt(value, 16) / 255);
+  const maximum = Math.max(red, green, blue);
+  const minimum = Math.min(red, green, blue);
+  const lightness = (maximum + minimum) / 2;
+  const chroma = maximum - minimum;
+  const saturation = chroma === 0 ? 0 : chroma / (1 - Math.abs(2 * lightness - 1));
+  let hue = 0;
+  if (chroma !== 0) {
+    if (maximum === red) hue = ((green - blue) / chroma) % 6;
+    else if (maximum === green) hue = (blue - red) / chroma + 2;
+    else hue = (red - green) / chroma + 4;
+    hue /= 6;
+    if (hue < 0) hue += 1;
+  }
+
+  const nextLightness = Math.max(0, lightness - lightnessDelta);
+  const nextChroma = (1 - Math.abs(2 * nextLightness - 1)) * saturation;
+  const second = nextLightness - nextChroma / 2;
+  const huePrime = hue * 6;
+  const x = nextChroma * (1 - Math.abs((huePrime % 2) - 1));
+  let redPrime = 0;
+  let greenPrime = 0;
+  let bluePrime = 0;
+  if (huePrime < 1) [redPrime, greenPrime] = [nextChroma, x];
+  else if (huePrime < 2) [redPrime, greenPrime] = [x, nextChroma];
+  else if (huePrime < 3) [greenPrime, bluePrime] = [nextChroma, x];
+  else if (huePrime < 4) [greenPrime, bluePrime] = [x, nextChroma];
+  else if (huePrime < 5) [redPrime, bluePrime] = [x, nextChroma];
+  else [redPrime, bluePrime] = [nextChroma, x];
+
+  return `#${[redPrime + second, greenPrime + second, bluePrime + second]
+    .map(value => Math.round(value * 255).toString(16).padStart(2, "0")).join("")}`;
 }
 
 export function mapMatugenTheme(document, variant = "dark", opacitySnapshot = null) {
@@ -46,6 +82,7 @@ export function mapMatugenTheme(document, variant = "dark", opacitySnapshot = nu
   if (errors.length > 0) return { ok: false, errors, value: null };
 
   const color = (key, fallback) => colorAt(colors, key, variant, fallback);
+  const sidebarBackground = darkenHsl(color("background"), SIDEBAR_LIGHTNESS_DELTA);
   const palette = {};
   for (const [key, value] of Object.entries(colors)) {
     const resolved = colorAt(colors, key, variant);
@@ -68,6 +105,7 @@ export function mapMatugenTheme(document, variant = "dark", opacitySnapshot = nu
       surface_variant: color("surface_variant"),
       on_surface_variant: color("on_surface_variant"),
       surface_panel: withAlpha(color("background"), alphaHex(opacitySnapshot)),
+      surface_sidebar: withAlpha(sidebarBackground, alphaHex(opacitySnapshot)),
       on_surface_panel: color("on_surface"),
       surface_tooltip: color("surface_variant"),
       on_surface_tooltip: color("on_surface_variant"),

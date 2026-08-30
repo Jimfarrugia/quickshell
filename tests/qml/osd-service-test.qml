@@ -35,21 +35,59 @@ ShellRoot {
         fakePower.percentage = 86;
         fakePower.charging = true;
         fakePower.fullyCharged = true;
+        fakePower.timeToFullSeconds = 5400;
         Services.PowerService.integration = fakePower;
         Services.OSDService.primed = true;
         Services.OSDService.lastBatteryState = "";
         Services.OSDService.clear();
         Services.OSDService.batteryChanged();
-        if (!Services.OSDService.activeItem || Services.OSDService.activeItem.detail !== "Charging")
-            return fail("non-full charging battery was reported as fully charged");
+        if (!Services.OSDService.activeItem || Services.OSDService.activeItem.title !== "Charging"
+                || Services.OSDService.activeItem.detail !== "86% remaining (1h 30m)")
+            return fail("charging battery popup did not include the expected title and estimate");
         if (batteryModule.textColor.toString() !== Services.ThemeService.theme.tokens.on_surface_disabled.toString())
             return fail("charging battery text did not use the standard muted text color");
 
         fakePower.charging = false;
+        fakePower.timeToEmptySeconds = 16200;
         Services.OSDService.lastBatteryState = "";
         Services.OSDService.batteryChanged();
-        if (!Services.OSDService.activeItem || Services.OSDService.activeItem.detail !== "86% remaining")
-            return fail("non-full discharging battery was reported as fully charged");
+        if (!Services.OSDService.activeItem || Services.OSDService.activeItem.title !== "Discharging"
+                || Services.OSDService.activeItem.detail !== "86% remaining (4h 30m)")
+            return fail("discharging battery popup did not include the expected title and estimate");
+
+        fakePower.percentage = 100;
+        fakePower.timeToEmptySeconds = 0;
+        fakePower.fullyCharged = false;
+        Services.OSDService.lastBatteryState = "";
+        Services.OSDService.batteryChanged();
+        if (!Services.OSDService.activeItem || Services.OSDService.activeItem.title !== "Discharging"
+                || Services.OSDService.activeItem.detail !== "100%")
+            return fail("discharging battery popup did not omit an unavailable estimate");
+
+        fakePower.fullyCharged = true;
+        Services.OSDService.lastBatteryState = "";
+        Services.OSDService.batteryChanged();
+        if (!Services.OSDService.activeItem || Services.OSDService.activeItem.title !== "Charging"
+                || Services.OSDService.activeItem.detail !== "100% remaining")
+            return fail("fully charged battery popup did not use charging semantics");
+
+        fakePower.percentage = 20;
+        Services.OSDService.lowBatteryAlerted = false;
+        Services.OSDService.criticalBatteryAlerted = false;
+        Services.OSDService.primed = false;
+        Services.OSDService.clear();
+        Services.OSDService.prime();
+        if (!Services.OSDService.activeItem || Services.OSDService.activeItem.title !== "Low battery")
+            return fail("low battery threshold did not produce a native alert");
+
+        fakePower.percentage = 14;
+        if (!Services.OSDService.activeItem || Services.OSDService.activeItem.title !== "Critical battery")
+            return fail("critical battery threshold did not supersede the low alert");
+
+        fakePower.charging = true;
+        fakePower.charging = false;
+        if (!Services.OSDService.activeItem || Services.OSDService.activeItem.title !== "Critical battery")
+            return fail("battery alert latch was not reset after a charge cycle");
 
         Services.OSDService.clear();
         if (Services.OSDService.activeItem !== null || Services.OSDService.queue.length !== 0)

@@ -7,7 +7,7 @@ const fixture = async path => JSON.parse(await readFile(new URL(`../fixtures/${p
 
 const expectedThemeTokens = [
   "background", "on_background", "surface", "on_surface", "surface_variant", "on_surface_variant",
-  "surface_panel", "on_surface_panel", "surface_tooltip", "on_surface_tooltip", "surface_hover",
+  "surface_panel", "surface_sidebar", "on_surface_panel", "surface_tooltip", "on_surface_tooltip", "surface_hover",
   "surface_pressed", "primary", "on_primary", "primary_container", "on_primary_container", "secondary",
   "on_secondary", "outline", "outline_variant", "focus_ring", "on_surface_disabled",
   "on_surface_placeholder", "link", "highlight", "on_highlight", "success", "warning", "error",
@@ -15,15 +15,16 @@ const expectedThemeTokens = [
 ];
 
 function contrastRatio(first, second) {
-  function luminance(color) {
-    const channels = color.slice(1).match(/../g).map(value => Number.parseInt(value, 16) / 255)
-      .map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
-    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
-  }
-  const firstLuminance = luminance(first);
-  const secondLuminance = luminance(second);
+  const firstLuminance = relativeLuminance(first);
+  const secondLuminance = relativeLuminance(second);
   return (Math.max(firstLuminance, secondLuminance) + 0.05)
     / (Math.min(firstLuminance, secondLuminance) + 0.05);
+}
+
+function relativeLuminance(color) {
+  const channels = color.slice(1).match(/../g).map(value => Number.parseInt(value, 16) / 255)
+    .map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
 }
 
 function compositeArgb(color, background) {
@@ -74,6 +75,7 @@ const poimandres = validateTheme(JSON.parse(await readFile(new URL("../../themes
 const poimandresSource = JSON.parse(await readFile(new URL("../../themes/poimandres.json", import.meta.url), "utf8"));
 assert.deepEqual(Object.keys(poimandres.value.palette), Object.keys(poimandresSource.palette));
 assert.equal(Object.keys(poimandres.value.tokens).at(-1), "charging");
+assert.equal(poimandres.value.tokens.surface_sidebar, "#f5171922");
 assert.equal(poimandres.value.tokens.surface_tooltip, "#171922");
 assert.equal(poimandres.value.tokens.on_surface_tooltip, "#8290a5");
 assert.equal(poimandres.value.tokens.surface, "#303340");
@@ -83,6 +85,8 @@ assert.equal(poimandres.value.tokens.outline, "#767c9d");
 assert.equal(poimandres.value.tokens.on_primary, "#171922");
 const gruvbox = validateTheme(JSON.parse(await readFile(new URL("../../themes/gruvbox.json", import.meta.url), "utf8")));
 assert.equal(Object.keys(gruvbox.value.tokens).at(-1), "charging");
+assert.equal(gruvbox.value.palette.sidebar, "#1d2021");
+assert.equal(gruvbox.value.tokens.surface_sidebar, "#f51d2021");
 assert.equal(gruvbox.value.tokens.surface_tooltip, "#3c3836");
 assert.equal(gruvbox.value.tokens.outline, "#b8a98a");
 assert.equal(gruvbox.value.tokens.on_primary_container, "#32302f");
@@ -103,6 +107,9 @@ for (const theme of [poimandres.value, gruvbox.value]) {
   const compositedPanel = compositeArgb(theme.tokens.surface_panel, theme.tokens.background);
   assert.ok(contrastRatio(compositedPanel, theme.tokens.on_surface_panel) >= 4.5,
     `${theme.id}: on_surface_panel must contrast with surface_panel over background`);
+  const compositedSidebar = compositeArgb(theme.tokens.surface_sidebar, theme.tokens.background);
+  assert.ok(relativeLuminance(compositedSidebar) < relativeLuminance(theme.tokens.background),
+    `${theme.id}: surface_sidebar must be darker than background`);
 }
 assert.equal(validateTheme(await fixture("themes/missing-token.json")).ok, false);
 const emptyPalette = await fixture("themes/valid.json");

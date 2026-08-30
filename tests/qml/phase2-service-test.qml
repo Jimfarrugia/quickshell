@@ -24,6 +24,7 @@ ShellRoot {
     Component.onCompleted: {
         Services.CompositorService.integration = fakeCompositor;
         Services.AudioService.integration = fakeAudio;
+        fakeAudio.autoConfirmVolume = false;
         Services.NetworkService.integration = fakeNetwork;
         Services.NetworkService.addressIntegration = fakeNetworkAddress;
         Services.PowerService.integration = fakePower;
@@ -122,7 +123,7 @@ ShellRoot {
         if (batteryModule.icon !== "battery_android_frame_bolt")
             return fail("charging battery did not use the bolt icon");
         if (batteryModule.iconColor.toString() !== Services.ThemeService.theme.tokens.charging
-                || batteryModule.textColor.toString() !== Services.ThemeService.theme.tokens.on_surface_variant)
+                || batteryModule.textColor.toString() !== Services.ThemeService.theme.tokens.on_surface_disabled)
             return fail("charging battery did not use charging semantics");
         if (batteryModule.hoverText !== "Time to full: 1h 30m")
             return fail(`charging battery hover was '${batteryModule.hoverText}'`);

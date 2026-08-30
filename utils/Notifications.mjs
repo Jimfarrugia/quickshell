@@ -41,6 +41,7 @@ export function normalizeUrgency(value) {
 export function normalizeImage(value) {
   if (typeof value !== "string" || value.length === 0 || value.length > MAX_IMAGE_LENGTH) return "";
   if (/^image:\/\/icon\/[A-Za-z0-9._+-]+(?:\/[A-Za-z0-9._+-]+)*$/.test(value)) return value;
+  if (/^file:\/\/\/[^?#\s]+$/.test(value)) return value;
   return "";
 }
 
@@ -60,11 +61,19 @@ function normalizeProgress(hints) {
 }
 
 function normalizeActions(actions, maximum) {
-  if (!Array.isArray(actions)) return [];
-  return actions.slice(0, maximum).map(action => ({
-    identifier: bounded(action && action.identifier, 256),
-    text: bounded(action && action.text, 256)
-  })).filter(action => action.identifier.length > 0 && action.text.length > 0);
+  if (!actions || typeof actions.length !== "number") return [];
+  const result = [];
+  const count = Math.min(Math.max(0, Math.floor(actions.length)), maximum);
+  for (let index = 0; index < count; index++) {
+    const action = actions[index];
+    const normalized = {
+      identifier: bounded(action && action.identifier, 256),
+      text: bounded(action && action.text, 256)
+    };
+    if (normalized.identifier.length > 0 && normalized.text.length > 0)
+      result.push(normalized);
+  }
+  return result;
 }
 
 export function normalizeNotification(input, options = {}) {
@@ -73,16 +82,24 @@ export function normalizeNotification(input, options = {}) {
   const actionLimit = options.maxActions === undefined ? DEFAULT_ACTIONS : options.maxActions;
   const progress = normalizeProgress(input && input.hints);
   const body = bounded(input && input.body, bodyBytes);
+  const appName = bounded(input && input.appName, 256, "Unknown application");
+  const urgency = normalizeUrgency(input && input.urgency);
+  const image = normalizeImage(input && input.image) || normalizeIcon(input && input.appIcon);
+  let iconName = urgency === "critical" ? "warning" : "notifications";
+  if (image.length === 0 && appName.toLowerCase() === "opencode") iconName = "robot_2";
+  const isScreenshot = image.length > 0 && appName.toLowerCase() === "hyprshot";
   return {
     id: Number(input && input.id) || 0,
-    appName: bounded(input && input.appName, 256, "Unknown application"),
+    appName: appName,
     appIcon: bounded(input && input.appIcon, MAX_IMAGE_LENGTH),
     summary: bounded(input && input.summary, summaryBytes),
     body: sanitizeMarkup(body, bodyBytes),
     plainBody: plainText(body, bodyBytes),
-    urgency: normalizeUrgency(input && input.urgency),
+    urgency: urgency,
     actions: normalizeActions(input && input.actions, actionLimit),
-    image: normalizeImage(input && input.image) || normalizeIcon(input && input.appIcon),
+    image: image,
+    iconName: iconName,
+    isScreenshot: isScreenshot,
     progress: progress.progress,
     hasProgress: progress.hasProgress,
     resident: input && input.resident === true,

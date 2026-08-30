@@ -9,6 +9,8 @@ import "../utils/Validation.mjs" as Validation
 Singleton {
     id: root
 
+    signal historyAboutToChange()
+
     property var integration: null
     readonly property string availability: integration === null ? "unavailable" : integration.availability
     readonly property string freshness: integration === null ? "unknown" : integration.freshness
@@ -19,9 +21,12 @@ Singleton {
     readonly property string owner: integration === null ? "none" : integration.owner
     property bool dnd: false
     property bool stateReady: false
+    property bool popupsBlocked: false
     property var popupNotifications: []
+    property var popupExpirations: ({})
     property var history: []
     property var records: []
+    readonly property int popupExpiryMs: 5000
 
     function limits() {
         const config = ConfigService.config.notifications;
@@ -55,22 +60,33 @@ Singleton {
         const data = Notifications.normalizeNotification(nativeNotification, root.limits());
         if (data.id <= 0) return false;
         const index = root.recordIndex(data.id);
+        const previousData = index >= 0 ? records[index].data : null;
+        data.receivedAt = previousData && Number.isFinite(previousData.receivedAt)
+            ? previousData.receivedAt : Date.now();
         const record = { data: data, native: nativeNotification };
         if (index >= 0) {
             records = replaceAt(records, index, record);
+            root.historyAboutToChange();
             updateHistory(record);
             updatePopup(record);
+            if (root.popupIndex(data.id) >= 0 && data.urgency !== "critical")
+                root.schedulePopupExpiry(data.id);
+            else
+                root.removePopupExpiry(data.id);
             return true;
         }
 
         records = records.concat([record]);
         if (Notifications.shouldKeepHistory(data, ConfigService.config.notifications.historyEnabled)) {
+            root.historyAboutToChange();
             history = [{ data: data, native: nativeNotification }].concat(history)
                 .slice(0, ConfigService.config.notifications.historyLimit);
         }
-        if (!data.lastGeneration && ConfigService.config.notifications.popupEnabled
-                && Notifications.shouldShowPopup(data, dnd))
+        if (!root.popupsBlocked && !data.lastGeneration && ConfigService.config.notifications.popupEnabled
+                && Notifications.shouldShowPopup(data, dnd)) {
             popupNotifications = popupNotifications.concat([record]);
+            if (data.urgency !== "critical") root.schedulePopupExpiry(data.id);
+        }
         return true;
     }
 
@@ -84,11 +100,63 @@ Singleton {
         if (index >= 0) popupNotifications = replaceAt(popupNotifications, index, record);
     }
 
+    function hidePopup(id) {
+        const index = popupIndex(id);
+        if (index >= 0) popupNotifications = popupNotifications.filter((_, popupIndex) => popupIndex !== index);
+        root.removePopupExpiry(id);
+    }
+
+    function schedulePopupExpiry(id) {
+        const next = Object.assign({}, popupExpirations);
+        next[id] = Date.now() + root.popupExpiryMs;
+        popupExpirations = next;
+        root.scheduleNextPopupExpiry();
+    }
+
+    function removePopupExpiry(id) {
+        if (popupExpirations[id] === undefined) return;
+        const next = Object.assign({}, popupExpirations);
+        delete next[id];
+        popupExpirations = next;
+        root.scheduleNextPopupExpiry();
+    }
+
+    function scheduleNextPopupExpiry() {
+        const ids = Object.keys(popupExpirations);
+        if (ids.length === 0) {
+            popupExpiryTimer.stop();
+            return;
+        }
+        let next = popupExpirations[ids[0]];
+        for (let index = 1; index < ids.length; index++)
+            next = Math.min(next, popupExpirations[ids[index]]);
+        popupExpiryTimer.interval = Math.max(1, next - Date.now());
+        popupExpiryTimer.restart();
+    }
+
+    function expireDuePopups() {
+        const now = Date.now();
+        const next = {};
+        for (const id of Object.keys(popupExpirations)) {
+            if (popupExpirations[id] > now) next[id] = popupExpirations[id];
+            else {
+                const index = root.recordIndex(Number(id));
+                if (index >= 0 && records[index].data.actions.length > 0)
+                    root.hidePopup(Number(id));
+                else
+                    root.expire(Number(id));
+            }
+        }
+        popupExpirations = next;
+        root.scheduleNextPopupExpiry();
+    }
+
     function closeNotification(nativeNotification) {
         if (!nativeNotification) return;
         const id = Number(nativeNotification.id);
         const popup = popupIndex(id);
         if (popup >= 0) popupNotifications = popupNotifications.filter((_, index) => index !== popup);
+        root.removePopupExpiry(id);
     }
 
     function dismiss(id) {
@@ -109,7 +177,8 @@ Singleton {
         const index = recordIndex(id);
         if (index < 0 || typeof identifier !== "string") return false;
         const actions = records[index].native.actions || [];
-        for (const action of actions) {
+        for (let actionIndex = 0; actionIndex < actions.length; actionIndex++) {
+            const action = actions[actionIndex];
             if (action.identifier === identifier) {
                 action.invoke();
                 return true;
@@ -118,14 +187,36 @@ Singleton {
         return false;
     }
 
+    function removeFromHistory(id) {
+        const index = historyIndex(Number(id));
+        if (index < 0) return false;
+        root.historyAboutToChange();
+        history = history.filter((_, entryIndex) => entryIndex !== index);
+        return true;
+    }
+
     function clearHistory() { history = []; }
+
+    function dismissPopups() {
+        const ids = popupNotifications.map(record => record.data.id);
+        for (const id of ids) root.hidePopup(id);
+        popupExpirations = {};
+        popupExpiryTimer.stop();
+    }
+
+    function setPopupsBlocked(blocked) {
+        if (typeof blocked !== "boolean") return false;
+        popupsBlocked = blocked;
+        if (blocked) root.dismissPopups();
+        return true;
+    }
 
     function dismissAll() {
         const current = records.slice();
         for (const record of current) {
             if (record.native && typeof record.native.dismiss === "function") record.native.dismiss();
         }
-        popupNotifications = [];
+        root.dismissPopups();
     }
 
     function setDnd(value) {
@@ -159,6 +250,12 @@ Singleton {
         function onNotificationReceived(notification) { root.accept(notification); }
         function onNotificationUpdated(notification) { root.accept(notification); }
         function onNotificationClosed(notification) { root.closeNotification(notification); }
+    }
+
+    Timer {
+        id: popupExpiryTimer
+        repeat: false
+        onTriggered: root.expireDuePopups()
     }
 
     FileView {

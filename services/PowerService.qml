@@ -17,6 +17,7 @@ Singleton {
     readonly property int timeToEmptySeconds: integration.timeToEmptySeconds
     readonly property int timeToFullSeconds: integration.timeToFullSeconds
     readonly property int remainingTimeSeconds: charging ? timeToFullSeconds : timeToEmptySeconds
+    readonly property string remainingTimeEstimate: formatDuration(remainingTimeSeconds)
     readonly property string remainingTimeText: fullyCharged
         ? "Fully charged."
         : (charging

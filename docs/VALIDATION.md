@@ -101,8 +101,10 @@ theme through a truthful external partial-failure result.
 
 The notification service helper must print `NOTIFICATION_SERVICE_TEST_PASSED` after
 testing bounded markup, actions, progress, replacement updates, DND urgency rules,
-dismissal, and `lastGeneration` replay without creating duplicate history or
-popups. The owner helper must print `NOTIFICATION_OWNER_HELPER_TEST_PASSED` after
+individual history removal, dismissal with history retention, and `lastGeneration` replay without creating
+duplicate history or popups. The live notification helper additionally verifies
+that low and normal popups expire after five seconds while history remains. The
+owner helper must print `NOTIFICATION_OWNER_HELPER_TEST_PASSED` after
 validating the structured current-owner record. The live notification acceptance
 helper must print `NOTIFICATIONS_TEST_PASSED`; it temporarily stops the active
 Dunst user service, verifies QE ownership, sends the representative notification
@@ -110,7 +112,20 @@ matrix, verifies QE releases the DBus name, and restores Dunst through its trap.
 The reload helper must print `NOTIFICATION_RELOAD_TEST_PASSED` after real QE-owned
 notifications populate the popup host and history, then a soft reload preserves
 history without duplicate visible or history entries; replayed prior-generation
-notifications are not shown again as new popups.
+notifications are not shown again as new popups. The notification-center
+interaction check must confirm that opening at the newest position clears and
+blocks all popups, including critical ones; scrolling away restores popups, and
+returning to the newest position blocks them again without clearing history.
+While scrolled away from the newest position, prepending new history entries
+must preserve the visible scroll anchor and must not jump the list to the top.
+The screenshot wrapper check must verify that a saved screenshot produces
+`View Image` and `Open Folder` actions, and that each action opens the
+expected validated path without modifying the packaged `hyprshot` executable.
+It must also publish the saved screenshot through the standard `image-path`
+hint so the notification displays its thumbnail.
+The notification service check must also verify that actionable notifications
+retain their persistent sender endpoint after the popup is hidden and after a
+first action so history actions remain repeatedly invokable.
 The external adapter helper must print `EXTERNAL_THEME_ADAPTER_TEST_PASSED`
 after sandboxed success, partial, malformed-output, timeout, invalid theme ID,
 missing-executable, independent valid/malformed state updates, and
@@ -122,6 +137,10 @@ resolution, plus non-full charging/discharging battery state normalization. The
 Phase 6 action fixture must print `PHASE6_ACTION_TEST_PASSED` after validating
 native output mute, microphone mute, OSD publication, volume unmute-on-step
 behavior, confirmation above 100 percent, and the 200 percent upper bound.
+The active Hyprland binding check must confirm that volume and screen/keyboard
+brightness bindings have press and release handlers for 250 ms per-key timers;
+the global keyboard repeat settings must remain unchanged. A manual hold test
+must produce repeated QE actions without changing mute behavior.
 
 The Matugen adapter fixture must print `MATUGEN_ADAPTER_TEST_PASSED` after
 mapping a schema-compatible JSON response into a validated QE `Wallpaper`

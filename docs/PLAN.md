@@ -47,12 +47,12 @@ one.
   selector, and external machine integration are complete. Matugen mapping,
   staged promotion, the QE-localized wallpaper selector, and Hyprpaper
   IPC-confirmed application are complete.
-- Phase 4's 32-role Matugen-style semantic-token contract was approved on
+- Phase 4's 33-role Matugen-style semantic-token contract was approved on
   2026-08-25 and its atomic in-repository migration is complete. Matugen and
   external-project work retain their separate approval gate.
-- The semantic-token audit is complete. ADR-015 records the approved 32-role
-  vocabulary and contrast policy; do not reopen the contract without concrete
-  evidence and the planning change procedure.
+- The semantic-token audit is complete. ADR-015 and ADR-027 record the approved
+  33-role vocabulary and contrast policy; do not reopen the contract without
+  concrete evidence and the planning change procedure.
 - The reviewed Waybar module classification, metrics adapter contract, and
   narrow permission to edit `~/Projects/theme-switcher` were approved on
   2026-08-24. The authorization and implementation boundaries are recorded in
@@ -1620,6 +1620,119 @@ Completion record:
   200 percent OSD without issuing another setter request, while brightness
   actions defer OSD presentation until the fast external operation confirms or
   fails, avoiding a misleading transient pending state.
+- Native battery alerts now emit latched low and critical OSDs at 20% and 15%,
+  respectively, with critical escalation and charging reset behavior. The
+  legacy `battery-alert.timer` was disabled after the native alert tests passed;
+  its scripts and unit files remain available for rollback.
+
+Phase 6 follow-up implementation:
+
+- Volume and screen/keyboard brightness active Hyprland bindings use
+  per-key press/release timers at a 250 ms interval, leaving the global keyboard
+  repeat rate and delay unchanged.
+- Low and normal notification popups now expire after five seconds. Critical
+  popups remain visible until explicitly dismissed or closed by their sender.
+  Card dismissal removes the popup while retaining eligible history entries;
+  action buttons remain independent of card dismissal.
+- Opening the notification center at its newest position clears visible popups
+  and blocks new popup presentation, including critical notifications. Scrolling
+  away from the newest position restores popup presentation; returning to the
+  newest position blocks it again. The center no longer exposes dismiss-all or
+  per-history-notification dismiss controls. New history entries prepended while
+  scrolled preserve the existing visible scroll anchor.
+- Each notification-center history card now provides an icon-only remove action
+  that deletes only that record from current-session history; it does not
+  dismiss the underlying notification or alter popup state.
+- Notification popups and history cards share the media-first card layout. Popup
+  cards retain their existing maximum width and omit the close control; supplied
+  images are preferred over fallback icons, with `robot_2` for OpenCode,
+  `warning` for critical notifications, and `notifications` for low/normal
+  notifications.
+- Notification popups use the sidebar's 20px top and screen-facing right margin
+  treatment, with a 20px left inset and final bottom margin, plus 20px between
+  popup cards. Their 1px border matches the border size of critical
+  notification-center cards.
+- The notification center uses the reusable `components/Sidebar.qml` layer-shell
+  sidebar on the overlay layer rather than a Hyprland-managed window. It spans
+  the available vertical space with 20px outer screen margins and is sized to
+  the 384px card maximum
+  plus the existing content margins, so it remains visible across workspaces
+  without changing card layout or sizing.
+- The reusable sidebar now owns a dedicated `surface_sidebar` background role.
+  Authored themes use their prepared alpha colors, while generated wallpaper
+  themes derive the role by reducing background HSL lightness by 9/255 while
+  preserving hue and saturation. Its surface radius matches theme-selector
+  cards, and its configured border width and `outline_variant` color match the
+  inactive border treatment used by Hyprland floating windows.
+- The reusable `IconButton` now supports controlled toggle state without
+  changing non-toggle behavior. The notification center uses it for DND with
+  `do_not_disturb_on`. Toggle buttons retain regular background states; a
+  toggled-on button uses the default `success` token for its foreground and
+  border. Notification-center IconButtons override those colors with
+  `outline_variant` to match normal notification cards, while DND uses
+  `warning` when toggled on.
+- Active screenshot bindings now use `scripts/qe-hyprshot.sh`, which preserves
+  `hyprshot` capture behavior while replacing its fixed notification with
+  `View Image` and `Open Folder` actions. The latter opens the screenshot
+  directory directly in Thunar. The notification body contains the saved
+  filename and publishes the screenshot through the standard `image-path` hint.
+  A persistent D-Bus sender keeps both action endpoints reusable from popup and
+  history and marks the notification resident so action dispatch does not close
+  it after the first click.
+- Charging and discharging battery status OSDs now use `Charging` and
+  `Discharging` titles with percentage and confirmed UPower time estimates in
+  the body. Unavailable estimates are omitted; a fully charged battery uses
+  charging semantics without a time estimate. Low/critical alert presentations
+  remain unchanged.
+
+Deferred dotfiles cleanup:
+
+- After the Phase 6 rollback window is closed, move the following deprecated
+  files owned by the dotfiles repository into `~/dotfiles/_legacy`, preserving
+  their history and documenting the recovery path: `scripts/.local/bin/battery-alert`,
+  `scripts/.local/bin/battery-charging`, `scripts/.local/bin/volume` (the legacy
+  audio control script), `scripts/.local/bin/brightness`,
+  `scripts/.local/bin/mic-mute-toggle`, `scripts/.local/bin/kbd_brightness`,
+  `_hyprland/systemd/.config/systemd/user/battery-alert.service`,
+  `_hyprland/systemd/.config/systemd/user/battery-alert.timer`, and the full
+  `_hyprland/dunst/.config/dunst/` configuration and icon tree, plus the full
+  unstowed `_unstowed/walker/` configuration and desktop-entry tree.
+- Do not move or delete these files as part of the native-alert cutover. Native
+  QE alerts and hardware controls must remain independently verified before
+  legacy cleanup.
+
+Native hardware-control ownership:
+
+- Active audio, microphone, and screen-brightness bindings are QE-owned through
+  `scripts/qe-action.sh`, `integrations/ActionsIpc.qml`, `services/AudioService.qml`,
+  `integrations/PipewireIntegration.qml`, `services/BrightnessService.qml`, and
+  `scripts/qe-brightness.sh`.
+- The dotfiles `volume`, `brightness`, and `mic-mute-toggle` scripts are no
+  longer used by active Hyprland bindings. The inactive
+  `_hyprland/hypr/.config/hypr/hyprlang/_keybinds.conf` still references them
+  and remains outside QE project scope. Before the legacy cleanup milestone,
+  remind the user to move the `hyprlang` files to `~/dotfiles/_legacy`.
+
+Native media ownership:
+
+- Active media keybindings are QE-owned through `services/MediaService.qml`,
+  `integrations/MprisIntegration.qml`, and `qe-actions`; they do not invoke
+  `playerctl`.
+- The unstowed Walker configuration is not active because Walker is not
+  installed or deployed. Its `playerctl` lock-screen entry is retained only as
+  a legacy reference and is included in the planned `_legacy` move. The
+  `playerctl` package itself is not scheduled for removal.
+
+Native battery ownership:
+
+- QE owns native battery state through `integrations/UPowerIntegration.qml` and
+  `services/PowerService.qml`.
+- QE owns low/critical alert policy and OSD presentation through
+  `services/OSDService.qml`; `modules/bar/BatteryModule.qml` owns the bar
+  presentation.
+- No dotfiles script, systemd unit, `acpi` command, or `dunstify` call is part
+  of the native alert path. The deprecated files above are fallback/legacy
+  producers only and are currently retained for rollback.
 
 Out of scope:
 
@@ -2834,6 +2947,72 @@ list after cutover. Persistent notification history remains deferred.
 Revisit if: QE gains a native action transport that is more stable than the
 current namespaced IPC contract, or keyboard LED discovery cannot be made
 portable without a user-authored device override.
+
+## ADR-026: Notification center as a layer-shell sidebar
+
+Status: Accepted by user on 2026-08-30
+
+Decision: implement a reusable `components/Sidebar.qml` around a Quickshell
+`PanelWindow` on the Wayland `WlrLayer.Overlay` layer instead of a normal
+Hyprland-managed window. The panel uses ignored exclusive zones,
+top/bottom/right anchors, and
+20px outer screen margins. Its bottom margin additionally includes the enabled
+bottom bar height when the bar is docked at the bottom. Its width is the 384px
+notification-card maximum plus the existing 20px content margins. Notification
+card layout and styling remain unchanged.
+
+Context: the existing `FloatingWindow` is a normal compositor-managed window,
+so its visibility and workspace placement are subject to Hyprland window
+behavior. The notification center must overlay normal windows and remain
+available while switching workspaces.
+
+Rationale: layer-shell surfaces are compositor-owned panels and are presented
+independently of normal workspace window placement. The overlay layer places
+the sidebar above normal windows, while ignored exclusive zones prevent it from
+altering application layout. Matching the card maximum and existing margins
+avoids unnecessary width and preserves the established card presentation.
+
+Consequences: the notification center is Wayland-specific in its overlay
+behavior and is no longer represented as a normal Hyprland client. Pointer
+interaction remains available without taking keyboard focus. Multi-monitor
+placement continues to follow the existing notification surface screen
+selection.
+
+Affected areas: `components/Sidebar.qml`, `NotificationCenter.qml`,
+notification-center lifecycle tests, and overlay/sidebar validation.
+
+Revisit if: notification-center placement must become configurable per monitor,
+or a non-Wayland backend requires an alternate surface implementation.
+
+## ADR-027: Dedicated sidebar surface token
+
+Status: Accepted by user on 2026-08-30
+
+Decision: add `surface_sidebar` as a required semantic theme token and make the
+reusable `components/Sidebar.qml` consume it by default. Poimandres uses its
+`palette.black` color with alpha `f5` (`#f5171922`). Gruvbox adds
+`palette.sidebar` as `#1d2021` and uses the corresponding alpha color
+`#f51d2021`. The generated wallpaper theme derives its sidebar source color by
+reducing the Matugen background's HSL lightness by 9/255 while preserving hue
+and saturation, then applies the existing captured opacity.
+
+Context: `surface_panel` is shared by bars, selectors, and panels, while the
+sidebar needs a distinct darker surface. Matugen's optional `surface_container*`
+colors do not guarantee the required relationship across variants.
+
+Rationale: a schema-wide semantic role keeps normal components independent of
+raw palette names. The measured HSL delta matches the requested Gruvbox
+separation without imposing Gruvbox's cool tint on generated wallpaper themes.
+
+Consequences: the theme-v1 contract expands from 32 to 33 roles. Runtime
+validation, JSON Schema, emergency fallback, authored themes, fixtures, the
+generated wallpaper artifact, and theme tests must be updated together.
+
+Affected areas: `components/Sidebar.qml`, `utils/Matugen.mjs`, theme schema and
+validation, authored and generated themes, and theme/QML validation.
+
+Revisit if: generated wallpaper palettes need a user-configurable sidebar
+darkening amount or a distinct sidebar foreground role.
 
 ## 14. Planning Change Procedure
 

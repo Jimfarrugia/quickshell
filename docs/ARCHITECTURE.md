@@ -542,6 +542,16 @@ Battery state includes UPower's native time-to-full and time-to-empty estimates
 in seconds; the domain service selects and formats the estimate appropriate to
 confirmed charging state. Zero or invalid estimates are exposed as unavailable,
 not as a fabricated duration.
+Battery low and critical alerts are derived from those native events in
+`OSDService`, using 20% and 15% threshold crossings. Alert latches prevent
+repetition while the battery remains below a threshold; charging resets the
+latches. A direct transition below 15% emits only the critical alert. There is
+no full-battery alert and no battery alert poller. Charging and discharging
+status OSDs use the confirmed percentage and the corresponding UPower time
+estimate; invalid estimates remain explicitly unavailable. The fully charged
+state uses charging semantics for its OSD and omits the time estimate when it is
+not available. Discharging status OSDs likewise show only the percentage when
+UPower has no valid time-to-empty estimate.
 
 `SystemMetricsService` owns CPU, memory, disk, and temperature reads that lack a
 native event API. It uses narrow adapters for `/proc`, `/sys`, and filesystem
@@ -607,11 +617,68 @@ Responsibilities:
 - own do-not-disturb policy
 - invoke actions, inline replies, dismiss, and expire operations
 - sanitize markup and constrain image/resource loading
+- remove individual records from current-session history without dismissing the
+  underlying notification
 
 History exists only for the current QE process. DND suppresses presentation
 according to urgency policy but does not claim notifications were delivered.
-Critical notifications require an explicit policy and remain visible by
-default.
+Low and normal popup notifications are removed from presentation after five
+seconds, while critical notifications remain visible by default. Notifications
+with actions hide their popup without expiring the native notification, keeping
+sender action endpoints available from history. Explicit dismissal and expiry
+remove only the popup from QE history presentation; history is retained
+according to the existing transient and history policies. Notification action
+controls remain separate from card dismissal.
+
+Notification cards and popups share the same media-first layout and normalized
+fallback icon policy. A supplied image is preferred; otherwise OpenCode uses
+`robot_2`, critical notifications use `warning`, and low/normal notifications
+use `notifications`. Fallback icons use `on_surface_disabled`, except critical
+icons, which use the theme error color.
+
+The notification center's DND control is a controlled toggle `IconButton` with
+the `do_not_disturb_on` icon. Its state is owned by `NotificationService`.
+Toggle buttons retain the regular `IconButton` background states and expose the
+next state through `toggled(bool)`; while toggled on, their foreground and
+border use `toggleColor`, which defaults to the theme `success` token. The
+notification-center instances override their foreground, border, and DND
+off-state colors with `outline_variant` to match normal notification cards, while
+DND retains `warning` for its toggled-on foreground and border.
+Non-toggle buttons retain the regular `clicked()` behavior.
+
+When the notification center is open at its newest position, it clears visible
+popups and blocks new popup presentation, including critical notifications.
+Scrolling away from the newest position restores popup presentation; returning
+to the newest position clears visible popups and blocks presentation again.
+This policy does not dismiss tracked notifications or remove eligible history.
+
+Popup hosting uses the same 20px sidebar margin on the top and screen-facing
+right edge, with a matching 20px content inset on the left and below the final
+popup. Popup cards are separated by 20px. Popup cards retain a 1px border,
+matching the critical notification-center card border.
+
+The notification center uses the reusable `components/Sidebar.qml` Wayland
+layer-shell surface, implemented with `PanelWindow` at `WlrLayer.Overlay`, not a
+Hyprland-managed normal window. It
+ignores exclusive zones, is anchored to the top, bottom, and right screen edges,
+and remains visible across workspaces. Its width is the maximum notification
+card width plus the existing horizontal content margins; its outer screen
+margin matches those content margins, with the bottom margin additionally
+including the enabled bottom bar height. The reusable sidebar surface uses the
+configured appearance radius plus 2px and the configured border width with the
+theme `outline_variant` color, matching the inactive border treatment used by
+Hyprland floating windows.
+
+Screenshot capture remains owned by `hyprshot`; the QE wrapper suppresses its
+fixed notification and starts a persistent D-Bus notification sender with
+actions to open the captured image or its containing directory in Thunar with
+the image selected. The notification body contains the captured filename, and
+the sender publishes the image through the standard `image-path` hint for
+notification thumbnails.
+Action handling remains owned by that sender and does not add
+screenshot-specific command parsing to the presentation layer. The sender keeps
+the notification resident and keeps its action endpoint alive until the
+notification is closed, so popup and history controls can be reused.
 
 ### 7.12 OSDService
 
@@ -665,8 +732,10 @@ through the namespaced `qe-actions` IPC target. The stable user-bin
 `qe-action` wrapper allowlists those operations and forwards them to the
 guarded QE instance. Hyprland remains authoritative for key combinations; its
 bindings invoke the wrapper rather than constructing commands for PipeWire,
-MPRIS, or brightness state directly. Missing QE makes an action fail visibly
-without activating a retired desktop notification service.
+MPRIS, or brightness state directly. Volume and brightness press/release
+bindings use per-key 250-millisecond timers, leaving the global keyboard repeat
+settings unchanged. Missing QE makes an action fail visibly without activating
+a retired desktop notification service.
 
 ## 8. Theme Architecture
 
@@ -721,6 +790,7 @@ contract. The initial shape is:
     "surface_variant": "{palette.blueGrayDark}",
     "on_surface_variant": "{palette.foreground}",
     "surface_panel": "#f21b1e28",
+    "surface_sidebar": "#f5171922",
     "on_surface_panel": "{palette.foreground}",
     "surface_tooltip": "{palette.black}",
     "on_surface_tooltip": "{palette.muted}",
@@ -750,7 +820,7 @@ contract. The initial shape is:
 }
 ```
 
-The approved 32-role token names use Matugen-style `snake_case` and paired
+The approved 33-role token names use Matugen-style `snake_case` and paired
 `on_*` foregrounds. ADR-015 records the Phase 4 pre-release contract revision
 that supersedes the provisional vocabulary and the individual additions in
 ADR-012 and ADR-014 while retaining their charging and tooltip semantics.
@@ -769,8 +839,9 @@ active QE theme.
 
 Authored and generated `on_*` pairs target at least 4.5:1 contrast for normal
 text. Meaningful icons, focus indicators, and strong boundaries target at least
-3:1 against their intended surface. `surface_panel` may contain alpha, so static
-validation composites it over the theme background; live acceptance also checks
+3:1 against their intended surface. `surface_panel` and `surface_sidebar` may
+contain alpha, so static validation composites them over the theme background;
+live acceptance also checks
 representative wallpapers because no fixed foreground can guarantee contrast
 over every external image.
 
@@ -831,13 +902,16 @@ including nested includes, and queries Hyprland's live
 `decoration:active_opacity` through `hyprctl`. Missing, unavailable, malformed,
 or out-of-range upstream values fall back to `1.0`; the snapshot is not watched
 at runtime. The generated wallpaper `surface_panel` uses the palette background
-with the product of those opacities as its alpha, so later upstream config
-changes take effect on the next wallpaper-theme generation or application.
+with the product of those opacities as its alpha. `surface_sidebar` applies the
+same alpha to a hue-preserving HSL darkening of the palette background by 9/255
+lightness units, matching the measured difference between `#282828` and
+`#1d2021`. Later upstream config changes take effect on the next wallpaper-theme
+generation or application.
 
 The current adapter boundary requires `QE_MATUGEN` to name the executable; an
 unset or missing executable is an isolated unavailable state. `MatugenAdapter`
 requests noninteractive JSON output with an explicit mode and source-color
-preference, bounds the process, and validates the mapped 32-role theme before
+preference, bounds the process, and validates the mapped 33-role theme before
 the service stages it. `WallpaperPromotionAdapter` then promotes the staged QE
 `Wallpaper.json` into its stable XDG data path, preserving the previous artifact
 when staging or promotion fails. External Matugen artifacts use the separate
