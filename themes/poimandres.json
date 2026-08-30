@@ -29,7 +29,7 @@
     "surface": "{palette.gray}",
     "on_surface": "{palette.foreground}",
     "surface_variant": "{palette.black}",
-    "on_surface_variant": "{palette.foreground}",
+    "on_surface_variant": "{palette.purpleLight}",
     "surface_panel": "#f21b1e28",
     "surface_sidebar": "#f5171922",
     "on_surface_panel": "{palette.foreground}",

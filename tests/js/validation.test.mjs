@@ -88,7 +88,7 @@ assert.equal(Object.keys(gruvbox.value.tokens).at(-1), "charging");
 assert.equal(gruvbox.value.palette.sidebar, "#1d2021");
 assert.equal(gruvbox.value.tokens.surface_sidebar, "#f51d2021");
 assert.equal(gruvbox.value.tokens.surface_tooltip, "#3c3836");
-assert.equal(gruvbox.value.tokens.outline, "#b8a98a");
+assert.equal(gruvbox.value.tokens.outline, "#928374");
 assert.equal(gruvbox.value.tokens.on_primary_container, "#32302f");
 for (const theme of [poimandres.value, gruvbox.value]) {
   for (const [surface, foreground] of [

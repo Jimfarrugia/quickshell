@@ -1658,6 +1658,13 @@ Phase 6 follow-up implementation:
   the 384px card maximum
   plus the existing content margins, so it remains visible across workspaces
   without changing card layout or sizing.
+- The notification center overlays a horizontally centered `surface_hover` info pill
+  40px above its bottom edge when history cards remain entirely below the list
+  viewport. The pill reports the view-local below-fold count in
+  `on_surface_variant` `keyboard_arrow_down` icon plus count, adds a 1px
+  `outline` top edge at 30% alpha and a 24px blurred theme shadow
+  when shadows are enabled, and does not reserve list space or add service
+  state.
 - The reusable sidebar now owns a dedicated `surface_sidebar` background role.
   Authored themes use their prepared alpha colors, while generated wallpaper
   themes derive the role by reducing background HSL lightness by 9/255 while
@@ -1671,6 +1678,11 @@ Phase 6 follow-up implementation:
   border. Notification-center IconButtons override those colors with
   `outline_variant` to match normal notification cards, while DND uses
   `warning` when toggled on.
+- The notification center includes a view-local controlled `warning` toggle
+  beside Clear All. When enabled, it partitions current and future history into
+  critical-first and non-critical groups while preserving newest-to-oldest order
+  within each group; disabling it restores the service order. The service
+  history is not mutated, and the toggle resets when the center is recreated.
 - Active screenshot bindings now use `scripts/qe-hyprshot.sh`, which preserves
   `hyprshot` capture behavior while replacing its fixed notification with
   `View Image` and `Open Folder` actions. The latter opens the screenshot

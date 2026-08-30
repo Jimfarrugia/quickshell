@@ -642,15 +642,29 @@ Toggle buttons retain the regular `IconButton` background states and expose the
 next state through `toggled(bool)`; while toggled on, their foreground and
 border use `toggleColor`, which defaults to the theme `success` token. The
 notification-center instances override their foreground, border, and DND
-off-state colors with `outline_variant` to match normal notification cards, while
+off-state colors with `on_surface_disabled`, while
 DND retains `warning` for its toggled-on foreground and border.
 Non-toggle buttons retain the regular `clicked()` behavior.
+
+The notification center also provides a controlled icon-only critical-first
+toggle using the `warning` icon. When enabled, it partitions the current and
+future view history into critical and non-critical groups while preserving
+newest-to-oldest order within each group. When disabled, it restores the
+service's original newest-to-oldest history order. The state is view-local and
+does not mutate service history, so it resets when the center is recreated.
 
 When the notification center is open at its newest position, it clears visible
 popups and blocks new popup presentation, including critical notifications.
 Scrolling away from the newest position restores popup presentation; returning
 to the newest position clears visible popups and blocks presentation again.
 This policy does not dismiss tracked notifications or remove eligible history.
+When history extends below the viewport, a view-local info pill overlays the
+list when one or more history cards are entirely below it. It reports the
+number of those cards without changing the list's available viewport or
+notification service state. The pill uses `surface_hover` with centered
+`on_surface_variant` `keyboard_arrow_down` icon and count, a 1px
+`outline` top edge at 30% alpha, and the theme shadow token with a
+24px blur when appearance shadows are enabled.
 
 Popup hosting uses the same 20px sidebar margin on the top and screen-facing
 right edge, with a matching 20px content inset on the left and below the final

@@ -1,5 +1,7 @@
 import QtQuick
+import QtQuick.Effects
 import QtQuick.Layouts
+import QtQuick.Shapes
 import "../../components" as Components
 import "../../services" as Services
 
@@ -14,6 +16,46 @@ Components.Sidebar {
     property bool preserveHistoryScroll: false
     property real historyScrollY: 0
     property real historyContentHeight: 0
+    property int notificationsBelowFold: 0
+    property bool criticalFirst: false
+
+    readonly property var displayedHistory: root.historyForView(
+        Services.NotificationService.history)
+
+    function historyForView(records) {
+        if (!root.criticalFirst) return records;
+        const critical = [];
+        const other = [];
+        for (const record of records) {
+            if (record.data.urgency === "critical") critical.push(record);
+            else other.push(record);
+        }
+        return critical.concat(other);
+    }
+
+    function scheduleNotificationsBelowFoldUpdate() {
+        notificationsBelowFoldTimer.restart();
+    }
+
+    function updateNotificationsBelowFold() {
+        const count = historyList.count;
+        if (count === 0 || historyList.height <= 0) {
+            root.notificationsBelowFold = 0;
+            return;
+        }
+
+        let lastVisibleIndex = -1;
+        for (let index = 0; index < count; index++) {
+            const item = historyList.itemAtIndex(index);
+            if (!item) continue;
+            const itemTop = historyList.mapFromItem(item, 0, 0).y;
+            const itemBottom = itemTop + item.height;
+            if (itemTop < historyList.height && itemBottom > 0)
+                lastVisibleIndex = index;
+        }
+        root.notificationsBelowFold = lastVisibleIndex < 0
+            ? 0 : Math.max(0, count - lastVisibleIndex - 1);
+    }
 
     function captureHistoryScroll() {
         if (historyList.atYBeginning || root.preserveHistoryScroll) return;
@@ -30,6 +72,7 @@ Components.Sidebar {
             historyList.contentY = Math.max(0, root.historyScrollY + heightDelta);
             root.preserveHistoryScroll = false;
             root.updatePopupPolicy();
+            root.scheduleNotificationsBelowFoldUpdate();
         });
     }
 
@@ -43,7 +86,10 @@ Components.Sidebar {
         Services.NotificationService.setPopupsBlocked(false);
         Services.SurfaceService.closeNotificationCenter();
     }
-    Component.onCompleted: root.updatePopupPolicy()
+    Component.onCompleted: {
+        root.updatePopupPolicy();
+        root.scheduleNotificationsBelowFoldUpdate();
+    }
     Component.onDestruction: {
         if (!Services.SurfaceService.notificationCenterVisible)
             Services.NotificationService.setPopupsBlocked(false);
@@ -74,9 +120,21 @@ Components.Sidebar {
                 Components.IconButton {
                     Layout.alignment: Qt.AlignVCenter
                     iconName: "clear_all"
-                    foregroundColor: Services.ThemeService.theme.tokens.outline_variant
-                    borderColor: Services.ThemeService.theme.tokens.outline_variant
+                    foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
+                    borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     onClicked: Services.NotificationService.clearHistory()
+                }
+                Components.IconButton {
+                    Layout.alignment: Qt.AlignVCenter
+                    iconName: "warning"
+                    toggleable: true
+                    checked: root.criticalFirst
+                    toggleColor: Services.ThemeService.theme.tokens.warning
+                    foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
+                    borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
+                    onToggled: function(nextChecked) {
+                        root.criticalFirst = nextChecked;
+                    }
                 }
                 Components.IconButton {
                     id: dndToggle
@@ -85,8 +143,8 @@ Components.Sidebar {
                     toggleable: true
                     checked: Services.NotificationService.dnd
                     toggleColor: Services.ThemeService.theme.tokens.warning
-                    foregroundColor: Services.ThemeService.theme.tokens.outline_variant
-                    borderColor: Services.ThemeService.theme.tokens.outline_variant
+                    foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
+                    borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     onToggled: function(nextChecked) {
                         Services.NotificationService.setDnd(nextChecked);
                     }
@@ -99,14 +157,24 @@ Components.Sidebar {
                 Layout.fillHeight: true
                 clip: true
                 spacing: 12
-                model: Services.NotificationService.history
+                model: root.displayedHistory
                 onAtYBeginningChanged: root.updatePopupPolicy()
+                onContentYChanged: {
+                    root.updatePopupPolicy();
+                    root.scheduleNotificationsBelowFoldUpdate();
+                }
+                onContentHeightChanged: root.scheduleNotificationsBelowFoldUpdate()
+                onCountChanged: root.scheduleNotificationsBelowFoldUpdate()
+                onHeightChanged: root.scheduleNotificationsBelowFoldUpdate()
+                onWidthChanged: root.scheduleNotificationsBelowFoldUpdate()
                 Connections {
                     target: Services.NotificationService
                     function onHistoryAboutToChange() { root.captureHistoryScroll(); }
-                    function onHistoryChanged() { root.restoreHistoryScroll(); }
+                    function onHistoryChanged() {
+                        root.restoreHistoryScroll();
+                        root.scheduleNotificationsBelowFoldUpdate();
+                    }
                 }
-                onContentYChanged: root.updatePopupPolicy()
 
                 delegate: Rectangle {
                     id: historyDelegate
@@ -180,7 +248,7 @@ Components.Sidebar {
                                     Layout.fillWidth: true
                                     Layout.alignment: Qt.AlignTop
                                     text: modelData.data.summary
-                                    color: Services.ThemeService.theme.tokens.on_surface
+                                    color: Services.ThemeService.theme.tokens.on_surface_variant
                                     font.family: Services.ConfigService.config.appearance.fontFamily
                                     font.pixelSize: 16
                                     font.weight: Font.DemiBold
@@ -303,6 +371,107 @@ Components.Sidebar {
                     font.pixelSize: 14
                 }
             }
+        }
+
+        Timer {
+            id: notificationsBelowFoldTimer
+            interval: 0
+            repeat: false
+            onTriggered: root.updateNotificationsBelowFold()
+        }
+
+        Rectangle {
+            id: infoPill
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 40
+            z: 1
+            visible: root.notificationsBelowFold > 0
+            implicitWidth: infoContent.implicitWidth + 24
+            implicitHeight: 32
+            radius: height / 2
+            color: Services.ThemeService.theme.tokens.surface_hover
+
+            Shape {
+                id: infoPillTopBorder
+                anchors.fill: parent
+                property real borderInset: 0.5
+                property real borderRadius: infoPill.radius - borderInset
+                property real cornerControl: borderRadius * 0.5522848
+                property color borderSource: Services.ThemeService.theme.tokens.outline
+                z: 1
+
+                ShapePath {
+                    strokeColor: Qt.rgba(
+                        infoPillTopBorder.borderSource.r,
+                        infoPillTopBorder.borderSource.g,
+                        infoPillTopBorder.borderSource.b,
+                        0.3)
+                    strokeWidth: 1
+                    fillColor: "transparent"
+                    capStyle: ShapePath.FlatCap
+                    joinStyle: ShapePath.RoundJoin
+                    startX: infoPillTopBorder.borderInset
+                    startY: infoPill.radius
+
+                    PathCubic {
+                        x: infoPill.radius
+                        y: infoPillTopBorder.borderInset
+                        control1X: infoPillTopBorder.borderInset
+                        control1Y: infoPill.radius - infoPillTopBorder.cornerControl
+                        control2X: infoPill.radius - infoPillTopBorder.cornerControl
+                        control2Y: infoPillTopBorder.borderInset
+                    }
+                    PathLine {
+                        x: infoPill.width - infoPill.radius
+                        y: infoPillTopBorder.borderInset
+                    }
+                    PathCubic {
+                        x: infoPill.width - infoPillTopBorder.borderInset
+                        y: infoPill.radius
+                        control1X: infoPill.width - infoPill.radius
+                            + infoPillTopBorder.cornerControl
+                        control1Y: infoPillTopBorder.borderInset
+                        control2X: infoPill.width - infoPillTopBorder.borderInset
+                        control2Y: infoPill.radius - infoPillTopBorder.cornerControl
+                    }
+                }
+            }
+
+            Row {
+                id: infoContent
+                anchors.centerIn: parent
+                spacing: 4
+
+                Text {
+                    text: "keyboard_arrow_down"
+                    color: Services.ThemeService.theme.tokens.on_surface_variant
+                    font.family: Services.ConfigService.config.appearance.iconFontFamily
+                    font.pixelSize: 24
+                    height: infoPill.height
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+                Text {
+                    text: root.notificationsBelowFold
+                    color: Services.ThemeService.theme.tokens.on_surface_variant
+                    font.family: Services.ConfigService.config.appearance.fontFamily
+                    font.pixelSize: 14
+                    height: infoPill.height
+                    rightPadding: 6
+                    verticalAlignment: Text.AlignVCenter
+                }
+            }
+        }
+
+        RectangularShadow {
+            anchors.fill: infoPill
+            offset: Qt.vector2d(0, 4)
+            color: Services.ThemeService.theme.tokens.shadow
+            blur: 24
+            radius: infoPill.radius
+            spread: 0
+            visible: infoPill.visible && Services.ConfigService.config.appearance.shadows
         }
     }
 }

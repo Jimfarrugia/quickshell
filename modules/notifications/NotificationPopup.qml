@@ -92,7 +92,7 @@ Item {
                     Layout.fillWidth: true
                     Layout.bottomMargin: 12
                     text: root.record.data.summary
-                    color: Services.ThemeService.theme.tokens.on_surface
+                    color: Services.ThemeService.theme.tokens.on_surface_variant
                     font.family: Services.ConfigService.config.appearance.fontFamily
                     font.pixelSize: 16
                     font.weight: Font.DemiBold

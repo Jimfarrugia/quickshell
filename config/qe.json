@@ -29,7 +29,7 @@
     "enabled": true,
     "popupEnabled": true,
     "historyEnabled": true,
-    "historyLimit": 20,
+    "historyLimit": 100,
     "maxSummaryBytes": 512,
     "maxBodyBytes": 8192,
     "maxActions": 8

@@ -84,7 +84,7 @@ Rectangle {
         radius: Services.ConfigService.config.appearance.radius
         color: "transparent"
         border.width: 1
-        border.color: Services.ThemeService.theme.tokens.outline
+        border.color: Services.ThemeService.theme.tokens.outline_variant
     }
 
     Rectangle {
