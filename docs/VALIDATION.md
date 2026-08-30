@@ -132,15 +132,17 @@ missing-executable, independent valid/malformed state updates, and
 executable-loss cases.
 
 The OSD service fixture must print `OSD_SERVICE_TEST_PASSED` after validating
-bounded queueing, replacement keys, priority ordering, expiry, and operation
-resolution, plus non-full charging/discharging battery state normalization. The
-Phase 6 action fixture must print `PHASE6_ACTION_TEST_PASSED` after validating
-native output mute, microphone mute, OSD publication, volume unmute-on-step
-behavior, confirmation above 100 percent, and the 200 percent upper bound.
+immediate active-item replacement without stale replay, expiry, operation
+resolution, network-state presentation, and non-full charging/discharging
+battery state normalization. The Phase 6 action fixture must print
+`PHASE6_ACTION_TEST_PASSED` after validating native output mute, microphone mute,
+OSD publication, volume unmute-on-step behavior, confirmation above 100 percent,
+and the 200 percent upper bound.
 The active Hyprland binding check must confirm that volume and screen/keyboard
-brightness bindings have press and release handlers for 250 ms per-key timers;
-the global keyboard repeat settings must remain unchanged. A manual hold test
-must produce repeated QE actions without changing mute behavior.
+brightness bindings have press and release handlers controlling one shared
+250ms repeat timer; the global keyboard repeat settings must remain unchanged.
+Manual hold and rapid opposite-direction tests must produce bounded QE actions,
+stop immediately on release, and preserve mute behavior.
 
 The Matugen adapter fixture must print `MATUGEN_ADAPTER_TEST_PASSED` after
 mapping a schema-compatible JSON response into a validated QE `Wallpaper`

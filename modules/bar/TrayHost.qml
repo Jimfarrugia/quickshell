@@ -1,19 +1,13 @@
 import QtQuick
-import QtQuick.Effects
+import Qt5Compat.GraphicalEffects
 import "../../services" as Services
 
 Row {
     id: root
     property var parentWindow
     property var items: Services.TrayService.items
-    property var tintedItemIds: ["nextcloud"]
     property real itemHorizontalPadding: 8
     spacing: Services.ConfigService.config.bar.moduleSpacing
-
-    function shouldTint(item) {
-        const identifier = String(item.id || item.title || "").toLowerCase();
-        return tintedItemIds.indexOf(identifier) !== -1;
-    }
 
     function itemAt(index) {
         return trayRepeater.itemAt(index);
@@ -29,7 +23,7 @@ Row {
         delegate: Rectangle {
             id: trayItem
             required property var modelData
-            readonly property bool themedIcon: root.shouldTint(modelData)
+            readonly property bool themedIcon: true
             readonly property string iconSource: modelData.icon
             readonly property color tintColor: Services.ThemeService.theme.tokens.secondary
 
@@ -50,13 +44,11 @@ Row {
                 visible: !trayItem.themedIcon
             }
 
-            MultiEffect {
+            ColorOverlay {
                 anchors.fill: nativeIcon
                 source: nativeIcon
                 visible: trayItem.themedIcon
-                colorization: 1
-                colorizationColor: trayItem.tintColor
-                autoPaddingEnabled: false
+                color: trayItem.tintColor
             }
 
             HoverHandler { id: trayHover }

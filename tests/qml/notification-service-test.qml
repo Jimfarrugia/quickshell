@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import "services" as Services
+import "modules/bar" as Bar
 import "fixtures/qml" as Fixtures
 import "utils/Notifications.mjs" as Notifications
 
@@ -12,6 +13,7 @@ ShellRoot {
     property var fakeNotification
 
     Fixtures.FakeNotificationsIntegration { id: fakeIntegration }
+    Bar.DoNotDisturbModule { id: dndModule; visible: false }
 
     function fail(message) {
         if (done) return;
@@ -25,6 +27,21 @@ ShellRoot {
         if (done || started || !Services.NotificationService.stateReady) return;
         started = true;
         Services.NotificationService.integration = fakeIntegration;
+
+        Services.NotificationService.setDnd(false);
+        if (dndModule.icon !== "do_not_disturb_off"
+                || dndModule.hoverText !== "Do not disturb disabled"
+                || dndModule.iconColor.toString() !== Services.ThemeService.theme.tokens.secondary.toString())
+            return fail("disabled DND bar presentation was incorrect");
+        dndModule.clicked();
+        if (!Services.NotificationService.dnd
+                || dndModule.icon !== "do_not_disturb_on"
+                || dndModule.hoverText !== "Do not disturb enabled"
+                || dndModule.iconColor.toString() !== Services.ThemeService.theme.tokens.warning.toString())
+            return fail("DND bar button did not enable DND or update presentation");
+        dndModule.clicked();
+        if (Services.NotificationService.dnd)
+            return fail("DND bar button did not disable DND");
 
         fakeNotification = {
             id: 1,

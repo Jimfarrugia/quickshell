@@ -653,6 +653,23 @@ newest-to-oldest order within each group. When disabled, it restores the
 service's original newest-to-oldest history order. The state is view-local and
 does not mutate service history, so it resets when the center is recreated.
 
+The notification center keeps one presentation-local keyboard focus identity.
+`j` and `k` move between the header and history cards, while `h` and `l` move
+between controls within the focused row or card. Enter and Space activate the
+focused control, `x` removes the focused history record, and `q` closes the
+center. The center's layer-shell surface takes exclusive keyboard focus when it
+opens; Escape releases that focus without closing the visible panel. Other
+reusable sidebar instances retain their default focus policy. Focused cards are
+tracked by notification ID and actions by
+identifier so insertion, removal, and critical-first reordering do not redirect
+focus to an unrelated record. Card close icons remain pointer-only and are not
+part of keyboard navigation.
+
+Initial keyboard focus is the first history card when history is non-empty, or
+the first header control otherwise. Vertical navigation always lands on the
+card itself; `l` enters its first action and subsequent `h`/`l` movement selects
+adjacent actions.
+
 When the notification center is open at its newest position, it clears visible
 popups and blocks new popup presentation, including critical notifications.
 Scrolling away from the newest position restores popup presentation; returning
@@ -698,14 +715,15 @@ notification is closed, so popup and history controls can be reused.
 
 OSDs are QE-owned feedback, not synthetic desktop notifications. `OSDService`
 coalesces volume, microphone, brightness, media, network, Bluetooth, battery,
-and notification-related events into one presentation queue with priority,
-replacement keys, and expiry policy.
+and notification-related events into one active presentation slot with
+replacement keys and expiry policy. New feedback replaces the active OSD
+immediately and restarts expiry; superseded feedback is not replayed.
 
 Hardware-key operations call the relevant domain service. The OSD appears from
 confirmed or clearly marked pending state and reports failed operations.
-The OSD queue is independent of `NotificationServer`; disabling notifications
+OSD presentation is independent of `NotificationServer`; disabling notifications
 does not route OSDs through a desktop notification daemon. OSD values are
-bounded and queue length is configuration-controlled. Startup snapshots of
+bounded and display duration is configuration-controlled. Startup snapshots of
 network, Bluetooth, and battery state suppress synthetic initial-change OSDs.
 
 `MediaService` uses the native Quickshell MPRIS model and capability guards; it
@@ -747,9 +765,11 @@ through the namespaced `qe-actions` IPC target. The stable user-bin
 guarded QE instance. Hyprland remains authoritative for key combinations; its
 bindings invoke the wrapper rather than constructing commands for PipeWire,
 MPRIS, or brightness state directly. Volume and brightness press/release
-bindings use per-key 250-millisecond timers, leaving the global keyboard repeat
-settings unchanged. Missing QE makes an action fail visibly without activating
-a retired desktop notification service.
+bindings share one 250-millisecond repeat timer whose owner is replaced on each
+press and cleared on every bound release, leaving the global keyboard repeat
+settings unchanged. The single owner prevents opposite-direction timers from
+remaining active concurrently. Missing QE makes an action fail visibly without
+activating a retired desktop notification service.
 
 ## 8. Theme Architecture
 

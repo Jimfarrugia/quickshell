@@ -22,10 +22,6 @@ Singleton {
         return ConfigService.config.osd.durationMs;
     }
 
-    function maxQueue() {
-        return ConfigService.config.osd.maxQueue;
-    }
-
     function showItem(item) {
         if (!item || typeof item !== "object") return false;
         const normalized = {
@@ -39,37 +35,17 @@ Singleton {
             duration: Number.isFinite(Number(item.duration)) ? Math.max(500, Math.min(10000, Number(item.duration))) : root.duration()
         };
 
-        if (normalized.replacementKey.length > 0 && root.activeItem
-                && root.activeItem.replacementKey === normalized.replacementKey) {
-            root.activeItem = normalized;
-            expiry.restart();
-            return true;
-        }
-
-        let next = root.queue.slice();
-        if (normalized.replacementKey.length > 0) {
-            const index = next.findIndex(entry => entry.replacementKey === normalized.replacementKey);
-            if (index >= 0) next[index] = normalized;
-            else next.push(normalized);
-        } else {
-            next.push(normalized);
-        }
-        next.sort((left, right) => right.priority - left.priority);
-        root.queue = next.slice(0, root.maxQueue());
-        if (root.activeItem === null) root.advance();
+        root.queue = [];
+        root.activeItem = normalized;
+        expiry.interval = normalized.duration;
+        expiry.restart();
         return true;
     }
 
     function advance() {
-        if (root.queue.length === 0) {
-            root.activeItem = null;
-            expiry.stop();
-            return;
-        }
-        root.activeItem = root.queue[0];
-        root.queue = root.queue.slice(1);
-        expiry.interval = root.activeItem.duration;
-        expiry.restart();
+        root.queue = [];
+        root.activeItem = null;
+        expiry.stop();
     }
 
     function clear() {
@@ -95,10 +71,27 @@ Singleton {
 
     function networkChanged() {
         if (!root.primed) return;
-        const state = `${NetworkService.connectionType}:${NetworkService.connectivity}:${NetworkService.ssid}`;
+        const state = `${NetworkService.connectionType}:${NetworkService.connectivity}:${NetworkService.ssid}:${NetworkService.ipv4Address}`;
         if (state === root.lastNetworkState) return;
         root.lastNetworkState = state;
-        root.showItem({ title: "Network", detail: NetworkService.summary, icon: "network_check", priority: 1, replacementKey: "network" });
+
+        const disconnected = NetworkService.connectionType === "disconnected"
+            || NetworkService.connectivity === "none";
+        if (!disconnected && NetworkService.connectionType === "wired"
+                && NetworkService.ipv4Address.length === 0)
+            return;
+
+        const detail = disconnected ? "Disconnected"
+            : (NetworkService.connectionType === "wifi"
+                ? `Connected to ${NetworkService.ssid}`
+                : NetworkService.ipv4Address);
+        root.showItem({
+            title: "Network",
+            detail: detail,
+            icon: NetworkService.connectionType === "wired" ? "lan" : "network_check",
+            priority: 1,
+            replacementKey: "network"
+        });
     }
 
     function bluetoothChanged() {
@@ -177,7 +170,7 @@ Singleton {
     }
 
     function prime() {
-        root.lastNetworkState = `${NetworkService.connectionType}:${NetworkService.connectivity}:${NetworkService.ssid}`;
+        root.lastNetworkState = `${NetworkService.connectionType}:${NetworkService.connectivity}:${NetworkService.ssid}:${NetworkService.ipv4Address}`;
         root.lastBluetoothState = `${BluetoothService.enabled}:${BluetoothService.connectedSummary}`;
         root.lastBatteryState = `${PowerService.charging}:${PowerService.fullyCharged}:${PowerService.percentage <= 15 ? "critical" : (PowerService.percentage <= 24 ? "low" : "normal")}`;
         root.primed = true;
@@ -226,6 +219,7 @@ Singleton {
         function onConnectivityChanged() { root.networkChanged(); }
         function onConnectionTypeChanged() { root.networkChanged(); }
         function onSsidChanged() { root.networkChanged(); }
+        function onIpv4AddressChanged() { root.networkChanged(); }
     }
 
     Connections {

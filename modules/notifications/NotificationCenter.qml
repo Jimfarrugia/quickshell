@@ -2,11 +2,15 @@ import QtQuick
 import QtQuick.Effects
 import QtQuick.Layouts
 import QtQuick.Shapes
+import Quickshell.Wayland
 import "../../components" as Components
 import "../../services" as Services
 
 Components.Sidebar {
     id: root
+
+    WlrLayershell.keyboardFocus: root.keyboardCaptured
+        ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     function updatePopupPolicy() {
         Services.NotificationService.setPopupsBlocked(root.visible
@@ -18,6 +22,11 @@ Components.Sidebar {
     property real historyContentHeight: 0
     property int notificationsBelowFold: 0
     property bool criticalFirst: false
+    property bool keyboardCaptured: true
+    property int focusRow: -1
+    property int focusColumn: 0
+    property int focusedNotificationId: -1
+    property string focusedActionIdentifier: ""
 
     readonly property var displayedHistory: root.historyForView(
         Services.NotificationService.history)
@@ -31,6 +40,92 @@ Components.Sidebar {
             else other.push(record);
         }
         return critical.concat(other);
+    }
+
+    function focusHeader(column) {
+        root.focusRow = -1;
+        root.focusColumn = Math.max(0, Math.min(2, column));
+        root.focusedNotificationId = -1;
+        root.focusedActionIdentifier = "";
+    }
+
+    function focusCard(index, preferredColumn) {
+        const records = root.displayedHistory;
+        if (index < 0 || index >= records.length) return;
+        const record = records[index];
+        const actions = record.data.actions || [];
+        root.focusRow = index;
+        root.focusedNotificationId = record.data.id;
+        root.focusColumn = actions.length === 0 || preferredColumn < 0
+            ? -1 : Math.min(actions.length - 1, preferredColumn);
+        root.focusedActionIdentifier = root.focusColumn < 0
+            ? "" : actions[root.focusColumn].identifier;
+        historyList.positionViewAtIndex(index, ListView.Contain);
+    }
+
+    function focusInitialTarget() {
+        if (root.displayedHistory.length > 0) root.focusCard(0, -1);
+        else root.focusHeader(0);
+    }
+
+    function reconcileKeyboardFocus() {
+        if (root.focusRow < 0) return;
+        const oldRow = root.focusRow;
+        const oldColumn = root.focusColumn;
+        const index = root.displayedHistory.findIndex(record =>
+            record.data.id === root.focusedNotificationId);
+        if (index < 0) {
+            if (root.displayedHistory.length === 0) root.focusHeader(0);
+            else root.focusCard(Math.min(oldRow, root.displayedHistory.length - 1), -1);
+            return;
+        }
+
+        const actions = root.displayedHistory[index].data.actions || [];
+        const actionIndex = actions.findIndex(action =>
+            action.identifier === root.focusedActionIdentifier);
+        root.focusCard(index, actionIndex >= 0 ? actionIndex : oldColumn);
+    }
+
+    function activateFocusedControl() {
+        if (root.focusRow < 0) {
+            if (root.focusColumn === 0) Services.NotificationService.clearHistory();
+            else if (root.focusColumn === 1) root.criticalFirst = !root.criticalFirst;
+            else Services.NotificationService.setDnd(!Services.NotificationService.dnd);
+            return;
+        }
+        if (root.focusedActionIdentifier.length > 0)
+            Services.NotificationService.invokeAction(
+                root.focusedNotificationId, root.focusedActionIdentifier);
+    }
+
+    function handleNavigationKey(key, modifiers) {
+        if (modifiers !== Qt.NoModifier) return false;
+        if (key === Qt.Key_Q) {
+            Services.SurfaceService.closeNotificationCenter();
+        } else if (key === Qt.Key_Escape) {
+            root.keyboardCaptured = false;
+        } else if (key === Qt.Key_J) {
+            if (root.displayedHistory.length > 0)
+                root.focusCard(Math.min(root.focusRow + 1,
+                    root.displayedHistory.length - 1), -1);
+        } else if (key === Qt.Key_K) {
+            if (root.focusRow === 0) root.focusHeader(0);
+            else if (root.focusRow > 0) root.focusCard(root.focusRow - 1, -1);
+        } else if (key === Qt.Key_H) {
+            if (root.focusRow < 0) root.focusHeader(root.focusColumn - 1);
+            else root.focusCard(root.focusRow, root.focusColumn - 1);
+        } else if (key === Qt.Key_L) {
+            if (root.focusRow < 0) root.focusHeader(root.focusColumn + 1);
+            else root.focusCard(root.focusRow, root.focusColumn + 1);
+        } else if (key === Qt.Key_X) {
+            if (root.focusRow >= 0)
+                Services.NotificationService.removeFromHistory(root.focusedNotificationId);
+        } else if (key === Qt.Key_Return || key === Qt.Key_Enter || key === Qt.Key_Space) {
+            root.activateFocusedControl();
+        } else {
+            return false;
+        }
+        return true;
     }
 
     function scheduleNotificationsBelowFoldUpdate() {
@@ -87,17 +182,28 @@ Components.Sidebar {
         Services.SurfaceService.closeNotificationCenter();
     }
     Component.onCompleted: {
+        root.focusInitialTarget();
+        Qt.callLater(notificationSurface.forceActiveFocus);
         root.updatePopupPolicy();
         root.scheduleNotificationsBelowFoldUpdate();
     }
+    onDisplayedHistoryChanged: Qt.callLater(root.reconcileKeyboardFocus)
+    onVisibleChanged: if (visible && root.keyboardCaptured)
+        Qt.callLater(notificationSurface.forceActiveFocus)
     Component.onDestruction: {
         if (!Services.SurfaceService.notificationCenterVisible)
             Services.NotificationService.setPopupsBlocked(false);
     }
 
     Rectangle {
+        id: notificationSurface
         anchors.fill: parent
         color: "transparent"
+        focus: root.keyboardCaptured
+
+        Keys.onPressed: function(event) {
+            if (root.handleNavigationKey(event.key, event.modifiers)) event.accepted = true;
+        }
 
         ColumnLayout {
             anchors.fill: parent
@@ -118,13 +224,26 @@ Components.Sidebar {
                     font.weight: Font.DemiBold
                 }
                 Components.IconButton {
+                    id: clearHistoryButton
                     Layout.alignment: Qt.AlignVCenter
                     iconName: "clear_all"
                     foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
-                    onClicked: Services.NotificationService.clearHistory()
+                    onClicked: {
+                        root.focusHeader(0);
+                        Services.NotificationService.clearHistory();
+                    }
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: parent.radius
+                        color: "transparent"
+                        border.width: root.keyboardCaptured && root.focusRow < 0
+                            && root.focusColumn === 0 ? 2 : 0
+                        border.color: Services.ThemeService.theme.tokens.focus_ring
+                    }
                 }
                 Components.IconButton {
+                    id: criticalFirstButton
                     Layout.alignment: Qt.AlignVCenter
                     iconName: "warning"
                     toggleable: true
@@ -133,7 +252,16 @@ Components.Sidebar {
                     foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     onToggled: function(nextChecked) {
+                        root.focusHeader(1);
                         root.criticalFirst = nextChecked;
+                    }
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: parent.radius
+                        color: "transparent"
+                        border.width: root.keyboardCaptured && root.focusRow < 0
+                            && root.focusColumn === 1 ? 2 : 0
+                        border.color: Services.ThemeService.theme.tokens.focus_ring
                     }
                 }
                 Components.IconButton {
@@ -146,7 +274,16 @@ Components.Sidebar {
                     foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     onToggled: function(nextChecked) {
+                        root.focusHeader(2);
                         Services.NotificationService.setDnd(nextChecked);
+                    }
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: parent.radius
+                        color: "transparent"
+                        border.width: root.keyboardCaptured && root.focusRow < 0
+                            && root.focusColumn === 2 ? 2 : 0
+                        border.color: Services.ThemeService.theme.tokens.focus_ring
                     }
                 }
             }
@@ -179,14 +316,22 @@ Components.Sidebar {
                 delegate: Rectangle {
                     id: historyDelegate
                     required property var modelData
+                    required property int index
                     width: Math.min(historyList.width, 384)
                     x: (historyList.width - width) / 2
                     implicitHeight: historyLayout.implicitHeight + 24
                     radius: Services.ConfigService.config.appearance.radius
                     color: Services.ThemeService.theme.tokens.background
-                    border.width: modelData.data.urgency === "critical" ? 1 : 0
-                    border.color: modelData.data.urgency === "critical"
-                        ? Services.ThemeService.theme.tokens.error : Services.ThemeService.theme.tokens.outline_variant
+                    readonly property bool keyboardFocused: root.keyboardCaptured
+                        && root.focusRow >= 0
+                        && root.focusedNotificationId === modelData.data.id
+                        && root.focusedActionIdentifier.length === 0
+                    border.width: keyboardFocused ? 2
+                        : (modelData.data.urgency === "critical" ? 1 : 0)
+                    border.color: keyboardFocused ? Services.ThemeService.theme.tokens.focus_ring
+                        : (modelData.data.urgency === "critical"
+                            ? Services.ThemeService.theme.tokens.error
+                            : Services.ThemeService.theme.tokens.outline_variant)
 
                     RowLayout {
                         id: historyLayout
@@ -309,10 +454,15 @@ Components.Sidebar {
                                     model: modelData.data.actions
                                     delegate: Rectangle {
                                         required property var modelData
+                                        required property int index
                                         Layout.fillWidth: true
                                         Layout.columnSpan: actionRepeater.count === 1 ? 2 : 1
                                         implicitHeight: 28
                                         radius: 5
+                                        border.width: root.keyboardCaptured && root.focusedNotificationId
+                                            === historyDelegate.modelData.data.id
+                                            && root.focusedActionIdentifier === modelData.identifier ? 2 : 0
+                                        border.color: Services.ThemeService.theme.tokens.focus_ring
                                         color: actionHover.hovered
                                             ? Services.ThemeService.theme.tokens.surface_hover
                                             : Services.ThemeService.theme.tokens.surface_variant
@@ -326,8 +476,11 @@ Components.Sidebar {
                                         }
                                         HoverHandler { id: actionHover }
                                         TapHandler {
-                                            onTapped: Services.NotificationService.invokeAction(
-                                                historyDelegate.modelData.data.id, modelData.identifier)
+                                            onTapped: {
+                                                root.focusCard(historyDelegate.index, index);
+                                                Services.NotificationService.invokeAction(
+                                                    historyDelegate.modelData.data.id, modelData.identifier);
+                                            }
                                         }
                                     }
                                 }

@@ -7,13 +7,16 @@ PanelWindow {
     id: root
     screen: Quickshell.screens.length > 0 ? Quickshell.screens[0] : null
     visible: Services.ConfigService.config.osd.enabled && Services.OSDService.activeItem !== null
-    implicitWidth: 354
-    implicitHeight: osd.implicitHeight + 24
+    implicitWidth: osd.implicitWidth + 48
+    implicitHeight: osd.implicitHeight + 48
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
     aboveWindows: true
-    anchors { bottom: true; right: true }
-    margins { bottom: 42; right: 12 }
+    anchors { top: true }
+    margins {
+        // The extra host height provides 24px of shadow clearance above the card.
+        top: 20 - 24
+    }
 
     Loader {
         id: osd

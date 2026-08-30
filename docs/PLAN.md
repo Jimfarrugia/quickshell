@@ -1032,12 +1032,13 @@ Implementation record (initial slice, 2026-08-24):
 - Post-acceptance tray polish gives each tray delegate the same eight-pixel
   horizontal padding, configured inter-module spacing, seven-pixel radius, and
   `tooltip` hover background as other bar modules.
-  The Nextcloud item retains its native reactive pixmap source for synced,
-  syncing, paused, attention, and other application-controlled variants, while
-  a Nextcloud-only `MultiEffect` colorizes those pixels with the current
-  `accentSecondary` token. Other tray applications retain native colors. A
-  fixture proves item matching, theme-token selection, native source reactivity,
-  and non-Nextcloud fallback.
+  Every tray item retains its native reactive pixmap source for
+  application-controlled variants, while a `ColorOverlay` replaces source RGB
+  with the current default bar icon token, `secondary`, using only source alpha
+  as the mask. This intentionally presents all tray icons with one uniform
+  monochrome color while preserving their transparency, shape, and source
+  updates. A fixture proves universal tinting, theme-token selection, and native
+  source reactivity across multiple items.
 - Added the approved target-retirement mechanism to
   `~/Projects/theme-switcher`: a validated repository-local list can skip an
   existing target without modifying its apply script. Missing, malformed,
@@ -1627,9 +1628,9 @@ Completion record:
 
 Phase 6 follow-up implementation:
 
-- Volume and screen/keyboard brightness active Hyprland bindings use
-  per-key press/release timers at a 250 ms interval, leaving the global keyboard
-  repeat rate and delay unchanged.
+- Volume and screen/keyboard brightness active Hyprland bindings share one
+  250ms repeat timer whose owner is replaced on press and cleared on release,
+  leaving the global keyboard repeat rate and delay unchanged.
 - Low and normal notification popups now expire after five seconds. Critical
   popups remain visible until explicitly dismissed or closed by their sender.
   Card dismissal removes the popup while retaining eligible history entries;
@@ -1643,6 +1644,15 @@ Phase 6 follow-up implementation:
 - Each notification-center history card now provides an icon-only remove action
   that deletes only that record from current-session history; it does not
   dismiss the underlying notification or alter popup state.
+- Notification-center keyboard navigation uses `j`/`k` between the header and
+  history cards and `h`/`l` between controls within the selected row. Enter and
+  Space activate the focused control, `x` removes the focused history record,
+  and `q` closes the center. The notification-center layer surface takes
+  exclusive keyboard focus when opened; Escape releases focus while leaving the
+  panel visible. Stable notification IDs and action identifiers preserve focus
+  through list changes; card close icons remain pointer-only and excluded from
+  keyboard focus. Initial focus selects the first history card when present,
+  and vertical navigation selects each card before `l` enters its first action.
 - Notification popups and history cards share the media-first card layout. Popup
   cards retain their existing maximum width and omit the close control; supplied
   images are preferred over fallback icons, with `robot_2` for OpenCode,
@@ -1696,6 +1706,29 @@ Phase 6 follow-up implementation:
   the body. Unavailable estimates are omitted; a fully charged battery uses
   charging semantics without a time estimate. Low/critical alert presentations
   remain unchanged.
+- OSD presentation now uses one centered 56px row with a `surface` surface,
+  sidebar radius, `on_surface` foregrounds, and an `outline` top edge matching
+  the notification-center info pill. Volume, screen/keyboard brightness, and
+  battery use an icon, `primary` meter, and percentage; other OSDs shrink to an
+  icon and body text. The surface has the same optional 24px shadow and is
+  horizontally centered 20px below the top screen edge.
+- Text-only OSDs use their natural body width without elision, and muted volume
+  uses the icon-and-`Muted` text layout instead of exposing a meter or level.
+  New OSD feedback immediately replaces the active presentation and restarts
+  expiry; superseded feedback is discarded rather than queued for stale replay.
+- Network OSDs identify Wi-Fi connections as `Connected to <SSID>`, identify
+  wired connections by their confirmed LAN IPv4 address with the `lan` icon,
+  and use `Disconnected` for offline state. Wired presentation waits for the
+  asynchronous address adapter rather than showing an empty transient OSD.
+- Volume and screen/keyboard brightness holds now share one 250ms repeat timer.
+  Each press cancels and replaces its owner, while every bound release stops the
+  sole timer, preventing rapid opposite-direction presses from leaving an
+  independent timer running.
+- The bar now places a DND toggle between idle inhibition and Bluetooth. It uses
+  `do_not_disturb_off` with the default `secondary` icon foreground while off,
+  and `do_not_disturb_on` with a `warning` foreground while on. Clicking it
+  updates the persisted state through `NotificationService.setDnd()`; the bar
+  does not own a duplicate DND value.
 
 Deferred dotfiles cleanup:
 
@@ -2934,7 +2967,7 @@ DBus test session becomes necessary to protect the primary session.
 
 Status: Accepted for Phase 6 implementation
 
-Decision: hardware feedback is owned by an independent QE OSD queue rather than
+Decision: hardware feedback is owned by an independent QE OSD service rather than
 being sent through desktop notifications. Hardware keybindings call typed QE
 IPC actions. Dunst is blocked with a reversible user-service mask only after
 the switcher's Dunst target is retired, and rollback restores the original
@@ -2950,6 +2983,9 @@ notification-owner failure from breaking hardware controls, preserves truthful
 pending/confirmed state, and makes the ownership transition independently
 reversible. The user selected persistent masking in the symlinked dotfiles
 systemd directory and approved preservation of the legacy volume semantics.
+The presentation policy uses one active slot so newly triggered feedback is
+visible immediately and superseded state is not replayed after its relevance
+has passed.
 
 Consequences: Phase 6 adds OSD/action fixtures, native microphone and media
 coverage, and a keyboard LED adapter. The external theme switcher continues to

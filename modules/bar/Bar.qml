@@ -77,6 +77,7 @@ PanelWindow {
             }
             HealthModule {}
             IdleInhibitorModule {}
+            DoNotDisturbModule {}
             BluetoothModule {}
             AudioModule {}
             BrightnessModule {}

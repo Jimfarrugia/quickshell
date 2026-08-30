@@ -17,3 +17,4 @@ TemperatureModule 1.0 TemperatureModule.qml
 BrightnessModule 1.0 BrightnessModule.qml
 BluetoothModule 1.0 BluetoothModule.qml
 IdleInhibitorModule 1.0 IdleInhibitorModule.qml
+DoNotDisturbModule 1.0 DoNotDisturbModule.qml

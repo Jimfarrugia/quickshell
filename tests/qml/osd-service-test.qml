@@ -8,6 +8,8 @@ ShellRoot {
     id: root
     property bool done: false
     Fixtures.FakePowerIntegration { id: fakePower }
+    Fixtures.FakeNetworkIntegration { id: fakeNetwork }
+    Fixtures.FakeNetworkAddressIntegration { id: fakeNetworkAddress }
     Bar.BatteryModule { id: batteryModule; visible: false }
 
     function fail(message) {
@@ -26,9 +28,35 @@ ShellRoot {
         if (Services.OSDService.activeItem.detail !== "45%" || Services.OSDService.activeItem.state !== "pending")
             return fail("replacement key did not update active OSD");
         Services.OSDService.showItem({ title: "Network", detail: "Online", priority: 1, replacementKey: "network" });
+        if (!Services.OSDService.activeItem || Services.OSDService.activeItem.title !== "Network")
+            return fail("new OSD did not immediately replace the active item");
         Services.OSDService.showItem({ title: "Battery", detail: "15%", priority: 3, replacementKey: "battery" });
-        if (Services.OSDService.queue.length !== 2 || Services.OSDService.queue[0].title !== "Battery")
-            return fail("priority queue was not ordered or bounded");
+        if (!Services.OSDService.activeItem || Services.OSDService.activeItem.title !== "Battery"
+                || Services.OSDService.queue.length !== 0)
+            return fail("replacement retained stale queued OSDs");
+
+        Services.OSDService.primed = false;
+        Services.NetworkService.integration = fakeNetwork;
+        Services.NetworkService.addressIntegration = fakeNetworkAddress;
+        Services.OSDService.primed = true;
+        Services.OSDService.lastNetworkState = "";
+        Services.OSDService.networkChanged();
+        if (!Services.OSDService.activeItem
+                || Services.OSDService.activeItem.detail !== "Connected to Fixture WiFi")
+            return fail("Wi-Fi OSD did not include the connected SSID");
+
+        fakeNetwork.wiredInterface = "fixture0";
+        fakeNetwork.connectionType = "wired";
+        if (!Services.OSDService.activeItem
+                || Services.OSDService.activeItem.detail !== "192.0.2.10"
+                || Services.OSDService.activeItem.icon !== "lan")
+            return fail("wired OSD did not use the LAN address and icon");
+
+        fakeNetwork.connectionType = "disconnected";
+        fakeNetwork.connectivity = "none";
+        if (!Services.OSDService.activeItem
+                || Services.OSDService.activeItem.detail !== "Disconnected")
+            return fail("offline OSD did not use disconnected text");
 
         fakePower.present = true;
         fakePower.availability = "available";

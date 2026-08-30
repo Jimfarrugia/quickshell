@@ -33,24 +33,29 @@ ShellRoot {
         const otherDelegate = tray.itemAt(1);
         if (!nextcloudDelegate || !otherDelegate)
             return fail("tray delegates were not created");
-        if (!nextcloudDelegate.themedIcon
-                || nextcloudDelegate.tintColor.toString() !== Services.ThemeService.theme.tokens.secondary.toString())
-            return fail("Nextcloud did not use the secondary tint path");
+        if (!nextcloudDelegate.themedIcon || !otherDelegate.themedIcon)
+            return fail("not every tray icon used the color-overlay path");
+        if (nextcloudDelegate.tintColor.toString() !== Services.ThemeService.theme.tokens.secondary.toString()
+                || otherDelegate.tintColor.toString() !== Services.ThemeService.theme.tokens.secondary.toString())
+            return fail("tray icons did not use the default bar icon color");
         if (nextcloudDelegate.iconSource !== nextcloud.icon)
-            return fail("Nextcloud tint path did not retain the native dynamic icon source");
-        if (otherDelegate.themedIcon || otherDelegate.iconSource !== other.icon)
-            return fail("non-Nextcloud tray icon was modified");
+            return fail("color-overlay path did not retain the native dynamic icon source");
+        if (otherDelegate.iconSource !== other.icon)
+            return fail("second tray icon did not retain its native icon source");
         if (tray.hoverBackground(true).toString() !== Services.ThemeService.theme.tokens.surface_hover.toString()
                 || nextcloudDelegate.radius !== 7)
             return fail("tray hover styling does not match BarChip");
 
         nextcloud.icon = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==#syncing";
+        other.icon = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==#updated";
         Qt.callLater(checkReactiveSource);
     }
 
     function checkReactiveSource() {
         if (tray.itemAt(0).iconSource !== nextcloud.icon)
-            return fail("Nextcloud native icon update did not remain reactive");
+            return fail("first native icon update did not remain reactive");
+        if (tray.itemAt(1).iconSource !== other.icon)
+            return fail("second native icon update did not remain reactive");
         console.log("TRAY_TINT_TEST_PASSED");
         Qt.quit();
     }
