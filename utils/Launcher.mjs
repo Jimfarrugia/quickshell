@@ -64,6 +64,10 @@ export function validateUsage(document) {
 
 export function boundedUsage(usage, ids) {
     const allowed = new Set(ids);
-    return Object.fromEntries(Object.entries(usage).filter(([id]) => allowed.has(id))
-        .sort(([, a], [, b]) => b.launchCount - a.launchCount).slice(0, 512));
+    const records = Object.keys(usage).map(id => [id, usage[id]])
+        .filter(([id]) => allowed.has(id));
+    records.sort(([, a], [, b]) => b.launchCount - a.launchCount);
+    const bounded = {};
+    for (const [id, record] of records.slice(0, 512)) bounded[id] = record;
+    return bounded;
 }

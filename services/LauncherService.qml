@@ -34,16 +34,19 @@ Singleton {
         if (!entry || !Launcher.isEligible(entry)) return false;
         lastFailure = "";
         try {
-            entry.execute();
+            const command = Array.from(entry.command || []).map(argument => String(argument));
+            launcherProcess.command = command;
+            launcherProcess.workingDirectory = String(entry.workingDirectory || "");
+            launcherProcess.startDetached();
             const current = usage[entry.id]?.launchCount || 0;
-            usage = Object.assign({}, usage, { [entry.id]: { launchCount: current + 1 } });
-            usage = Launcher.boundedUsage(usage, DesktopEntries.applications.values.map(item => item.id));
+            const nextUsage = Object.assign({}, usage, { [entry.id]: { launchCount: current + 1 } });
+            usage = Launcher.boundedUsage(nextUsage, DesktopEntries.applications.values.map(item => item.id));
             lastPersistenceError = "";
             stateFile.setText(JSON.stringify({ schemaVersion: 1, entries: usage }, null, 2) + "\n");
             close();
             return true;
         } catch (error) {
-            lastFailure = `Could not launch ${entry.name}: ${String(error)}`;
+            lastFailure = `Could not launch ${entry.name}: ${String(error)}`.slice(0, 256);
             DiagnosticsService.report("LAUNCH_FAILED", "launcher", "Application launch failed", lastFailure, true, null);
             return false;
         }
@@ -80,5 +83,6 @@ Singleton {
             DiagnosticsService.report("LAUNCHER_USAGE_SAVE_FAILED", "launcher", "Usage count was not persisted", root.lastPersistenceError, true, null);
         }
     }
+    Process { id: launcherProcess }
     Component.onCompleted: { root.loadUsage(); root.refresh(); }
 }
