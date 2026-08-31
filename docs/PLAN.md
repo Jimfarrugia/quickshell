@@ -2,7 +2,7 @@
 
 Status: Phases 1-6 complete; Phase 7 not started
 
-Last inventory: 2026-08-29
+Last inventory: 2026-08-31
 
 This is the authoritative roadmap, implementation sequence, dependency map,
 project-status reference, risk register, and architectural decision log for the
@@ -33,7 +33,7 @@ one.
 | Bar vertical slice | Complete | Phase 2; top reserved edge selected, tray host disabled during Waybar coexistence |
 | Bar parity and Waybar cutover | Complete | Phase 3 acceptance passed 2026-08-25 |
 | Theme/Matugen integration | Complete | Manual selector and external machine integration complete; Matugen mapping, staged promotion, QE-localized wallpaper selector, and Hyprpaper XDG-path application complete; external generated Matugen artifacts now delivered as QE-generated `wallpaper` theme slots applied by the external switcher, including imv, mpv, and Yazi; runtime/default artifact separation and idempotent promotion added; `QE_THEME_SWITCHER` wired for production through the installed `qe-theme-switcher` wrapper. Phase 4 acceptance passed on 2026-08-26 |
-| Notifications/OSDs | Complete | QE owns notifications and OSDs; reversible Dunst cutover and rollback passed 2026-08-29 |
+| Notifications/OSDs | Complete | QE owns notifications and OSDs; Dunst cutover, rollback, and post-cutover legacy cleanup passed 2026-08-31 |
 | Launcher/help | Not started | Phase 7 |
 | Dashboards/control center | Not started | Phases 8-10 |
 | Lock replacement | Not started | Phase 11 |
@@ -64,6 +64,10 @@ one.
   provisional Phase 1 vocabulary while retaining the charging and tooltip
   semantics from ADR-012 and ADR-014.
 - Full developer commands and expected markers are in `docs/VALIDATION.md`.
+- Phase 6 is complete, including the closed rollback window and post-cutover
+  archival of deprecated Dunst, Walker, battery, and legacy hardware-control
+  files under `~/dotfiles/_legacy`. QE owns notifications and hardware feedback;
+  begin new work at Phase 7.
 - QE-internal wallpaper-theme startup self-heal and external wallpaper source
   recovery are documented deferred items (see Deferred decisions); neither
   changes current behavior.
@@ -417,7 +421,6 @@ Known requirements:
 
 - systemd user service versus Hyprland autostart for production
 - final visual design and animation language
-- persistent notification history and retention/privacy schema
 - fingerprint authentication
 - enterprise Wi-Fi, hidden networks, VPN, proxy, and full profile editing
 - Bluetooth OBEX and advanced profile management
@@ -1510,7 +1513,8 @@ Out of scope:
 
 ### Phase 6: Notification cutover and OSD migration
 
-Status: Complete (implementation and reversible production cutover validated 2026-08-29)
+Status: Complete (implementation, reversible production cutover, rollback, and
+post-cutover cleanup validated 2026-08-31)
 
 Objective: make QE the production notification owner and replace Dunst-based
 hardware feedback with native QE OSDs.
@@ -1775,10 +1779,6 @@ Native battery ownership:
 - No dotfiles script, systemd unit, `acpi` command, or `dunstify` call is part
   of the native alert path. The deprecated files above are fallback/legacy
   producers only and are currently retained for rollback.
-
-Out of scope:
-
-- persistent notification history
 
 ### Phase 7: Launcher and help
 
@@ -2987,7 +2987,7 @@ has passed.
 Consequences: Phase 6 adds OSD/action fixtures, native microphone and media
 coverage, and a keyboard LED adapter. The external theme switcher continues to
 support Dunst as a source target but skips it through the validated retirement
-list after cutover. Persistent notification history remains deferred.
+list after cutover.
 
 Revisit if: QE gains a native action transport that is more stable than the
 current namespaced IPC contract, or keyboard LED discovery cannot be made

@@ -25,6 +25,7 @@
   - [Default Wallpaper Snapshot](#default-wallpaper-snapshot)
   - [Capture a New Default](#capture-a-new-default)
   - [Restore the Committed Default](#restore-the-committed-default)
+- [6. Notifications and OSDs](#6-notifications-and-osds)
 
 ## 1. What Is QE?
 
@@ -43,11 +44,17 @@ The current implementation provides:
 - Generated wallpaper theme slots for supported external applications.
 - IPC entry points for opening, closing, and toggling the theme and wallpaper
   selectors.
+- Native desktop notifications with popup and current-session history.
+- A notification center with dismiss controls and Do Not Disturb (DND).
+- Native hardware feedback OSDs for audio, brightness, media, network, and
+  battery state.
+- Screenshot notifications with actions to view the image or open its folder.
 
-QE is still under active development. Notifications, dashboards, the control
-center, and the replacement lock screen are not yet complete. The current
-development launcher is intentionally based on the repository at
-`~/Projects/quickshell`.
+QE is still under active development. Notifications, the notification center,
+and native OSDs are production features of the current development shell.
+Dashboards, the replacement lock screen, and the QE application launcher are
+not yet complete. The current development launcher is still Rofi, based on the
+repository at `~/Projects/quickshell`.
 
 ## 2. Dependencies and Integrations
 
@@ -96,9 +103,11 @@ OpenCode, rofi, starship, tmux, and Yazi
 ```
 
 These applications are not all required to run QE. An unavailable application
-is reported as an unavailable or skipped external target. GTK is intentionally
-excluded from the Matugen wallpaper-theme apply because QE does not generate a
-GTK theme.
+is reported as an unavailable or skipped external target. Dunst is retired from
+the active notification path and retained only in the dotfiles rollback archive;
+the theme-switcher still knows about its target but skips it after cutover. GTK
+is intentionally excluded from the Matugen wallpaper-theme apply because QE
+does not generate a GTK theme.
 
 ### Local Integrations
 
@@ -112,6 +121,8 @@ enabled:
   machine-mode requests to `theme-switcher`.
 - The project-provided `qe-defaults` helper, which captures and restores the
   complete authored theme and wallpaper default bundle.
+- The `qe-action` wrapper for allowlisted hardware and notification actions.
+- The `qe-hyprshot` wrapper for screenshot notifications and actions.
 - Hyprland configuration that starts Hyprpaper and the guarded QE launcher.
 - Hyprpaper and Hyprlock configuration that reads the current image files from
   `$XDG_DATA_HOME`.
@@ -451,3 +462,43 @@ running QE instance is asked to apply the default wallpaper and theme through
 IPC; before QE starts, the external switcher applies the default application
 theme directly. External application is best effort: a missing or failed
 switcher is reported while restored files remain in place.
+
+## 6. Notifications and OSDs
+
+QE owns desktop notifications after the Dunst cutover. Notifications appear as
+popups and are also available in the notification center during the current QE
+process. History is cleared when QE restarts.
+
+### Notification Shortcuts
+
+| Shortcut | Action |
+| --- | --- |
+| `Super+N` | Open or close the notification center. |
+| `Super+Shift+N` | Dismiss active notification popups. |
+| Notification-center DND button | Toggle Do Not Disturb. |
+
+DND suppresses ordinary popups. Critical notifications remain eligible for
+popup presentation.
+
+### Hardware OSDs
+
+Hardware keys update the underlying service and show confirmed QE feedback:
+
+| Key | Action |
+| --- | --- |
+| `XF86AudioRaiseVolume` / `XF86AudioLowerVolume` | Adjust volume. |
+| `XF86AudioMute` | Toggle output mute. |
+| `XF86AudioMicMute` | Toggle microphone mute. |
+| `XF86MonBrightnessUp` / `XF86MonBrightnessDown` | Adjust screen brightness. |
+| `XF86KbdBrightnessUp` / `XF86KbdBrightnessDown` | Adjust keyboard brightness. |
+| `XF86AudioNext` / `XF86AudioPrev` | Change media track. |
+| `XF86AudioPlay` / `XF86AudioPause` | Toggle media playback. |
+
+OSDs show the confirmed value when available and report failed operations rather
+than presenting an unconfirmed success value. Volume and brightness keys can be
+held to repeat.
+
+### Screenshots
+
+`Print` and `Super+S` capture a region through QE. The resulting notification
+includes actions to view the image and open the screenshot directory.
