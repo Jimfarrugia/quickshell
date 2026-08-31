@@ -13,6 +13,8 @@ Singleton {
     readonly property string operation: integration.operation
     readonly property var workspaceModel: integration.workspaceModel
     readonly property var focusedWorkspace: integration.focusedWorkspace
+    readonly property string focusedMonitorName: integration.focusedWorkspace && integration.focusedWorkspace.monitor
+        ? integration.focusedWorkspace.monitor.name : ""
     readonly property string focusedWindowTitle: integration.focusedWindowTitle
 
     function activateWorkspace(workspace) { return integration.activateWorkspace(workspace); }

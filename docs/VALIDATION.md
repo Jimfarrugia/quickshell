@@ -23,6 +23,7 @@ node tests/js/brightness.test.mjs
 node tests/js/external-theme.test.mjs
 node tests/js/matugen.test.mjs
 node tests/js/external-wallpaper-theme.test.mjs
+node tests/js/launcher.test.mjs
 bash tests/helpers/system-metrics-helper.test.sh
 bash tests/helpers/brightness-helper.test.sh
 bash tests/helpers/single-instance.test.sh

@@ -20,6 +20,7 @@ ShellRoot {
     WallpaperSelectorIpc {}
     PaletteViewerIpc {}
     NotificationsIpc {}
+    LauncherIpc {}
     ActionsIpc {}
     ExternalThemeAdapter {
         id: externalThemeAdapter
@@ -39,6 +40,11 @@ ShellRoot {
 
     WallpaperExternalThemeAdapter {
         id: wallpaperExternalThemeAdapter
+    }
+
+    QS.LazyLoader {
+        active: Services.SurfaceService.launcherVisible
+        source: "modules/launcher/Launcher.qml"
     }
 
     QS.LazyLoader {

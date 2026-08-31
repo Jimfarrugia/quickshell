@@ -7,6 +7,7 @@ Singleton {
     property bool wallpaperSelectorVisible: false
     property bool paletteViewerVisible: false
     property bool notificationCenterVisible: false
+    property bool launcherVisible: false
 
     function openThemeSelector() { themeSelectorVisible = true; }
     function closeThemeSelector() { themeSelectorVisible = false; }
@@ -20,4 +21,7 @@ Singleton {
     function openNotificationCenter() { notificationCenterVisible = true; }
     function closeNotificationCenter() { notificationCenterVisible = false; }
     function toggleNotificationCenter() { notificationCenterVisible = !notificationCenterVisible; }
+    function openLauncher() { launcherVisible = true; }
+    function closeLauncher() { launcherVisible = false; }
+    function toggleLauncher() { launcherVisible ? closeLauncher() : openLauncher(); }
 }

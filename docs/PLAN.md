@@ -1,6 +1,6 @@
 # QE Implementation Plan
 
-Status: Phases 1-6 complete; Phase 7 not started
+Status: Phases 1-6 complete; Phase 7 launcher slice in progress
 
 Last inventory: 2026-08-31
 
@@ -40,15 +40,15 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 | Bar parity and Waybar cutover | Complete | Phase 3 acceptance passed 2026-08-25 |
 | Theme/Matugen integration | Complete | Manual selector and external machine integration complete; Matugen mapping, staged promotion, QE-localized wallpaper selector, and Hyprpaper XDG-path application complete; external generated Matugen artifacts now delivered as QE-generated `wallpaper` theme slots applied by the external switcher, including imv, mpv, and Yazi; runtime/default artifact separation and idempotent promotion added; `QE_THEME_SWITCHER` wired for production through the installed `qe-theme-switcher` wrapper. Phase 4 acceptance passed on 2026-08-26 |
 | Notifications/OSDs | Complete | QE owns notifications and OSDs; Dunst cutover, rollback, and post-cutover legacy cleanup passed 2026-08-31 |
-| Launcher/help | Not started | Phase 7 |
+| Launcher/help | In progress | Launcher surface and service implemented; help and cutover remain |
 | Dashboards/control center | Not started | Phases 8-10 |
 | Lock replacement | Not started | Phase 11 |
 | Production hardening | Not started | Phase 12; final deployment location remains undecided |
 
 ### 2.1 Current handoff
 
-- Phases 1-6 are complete. Begin new implementation work at Phase 7: Launcher
-  and help.
+- Phases 1-6 are complete. Phase 7 launcher implementation is in progress;
+  help and the `Super+R` cutover remain pending acceptance.
 - Normal runtime is one guarded QE shell from `shell.qml`, reserving 26 pixels
   at the bottom with `trayHostEnabled` true. Waybar is absent from autostart and
   retired in the theme-switcher; QE owns `org.kde.StatusNotifierWatcher`.
