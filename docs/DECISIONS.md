@@ -58,6 +58,21 @@ accepted ADR merely to tidy the sequence.
 | ADR-025 | QE-owned OSD and reversible action cutover | Accepted for Phase 6 implementation |
 | ADR-026 | Notification center as a layer-shell sidebar | Accepted by user on 2026-08-30 |
 | ADR-027 | Dedicated sidebar surface token | Accepted by user on 2026-08-30 |
+| ADR-032 | Add low surface semantic token | Accepted by user on 2026-09-01 |
+
+## ADR-032: Add low surface semantic token
+
+Status: Accepted by user on 2026-09-01
+
+Decision: add required theme token `surface_low`, mapped to the same resolved
+color as `surface_sidebar` in every authored, generated, and fallback theme.
+
+Context: consumers need a semantic low-surface role while preserving the
+existing sidebar color mapping and theme-specific palette ownership.
+
+Consequences: the theme-v1 contract expands from 33 to 34 roles. Validators,
+schemas, fixtures, fallbacks, and Matugen-generated themes must provide the
+token together.
 
 ## ADR-001: Layered QE platform
 
@@ -967,3 +982,27 @@ tests, Phase 7 documentation, and the terminal application acceptance matrix.
 
 Revisit if: QE adds an authored terminal-emulator configuration or needs
 terminal-specific arguments beyond the standard `--` separator.
+
+## ADR-031: Launcher uses a centered overlay panel
+
+Status: Accepted by user on 2026-09-01
+
+Decision: the launcher uses a transparent, non-exclusive `PanelWindow` on the
+overlay layer for the focused monitor. Its visible surface is centered, is 35%
+of the monitor width, and sizes to one through six result rows. Empty results
+use the one-row minimum. The top edge is positioned from the six-row centered
+baseline, so shorter states shrink from the bottom. It does not reserve screen
+space for normal windows.
+
+Context: the launcher must consistently overlay normal windows and remain
+usable across monitor sizes without depending on compositor-managed floating
+window placement. Showing six rows without a fixed-height empty area keeps the
+surface compact for short result sets.
+
+Consequences: the panel host spans the selected monitor, while the styled
+launcher surface remains centered within it. The panel takes exclusive keyboard
+focus only while visible and uses the existing launcher lifecycle to destroy or
+hide the surface.
+
+Affected areas: launcher presentation, focused-monitor placement, and Phase 7
+manual overlay validation.

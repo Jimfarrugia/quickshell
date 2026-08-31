@@ -107,6 +107,7 @@ export function mapMatugenTheme(document, variant = "dark", opacitySnapshot = nu
       on_surface_variant: color("on_surface_variant"),
       surface_panel: withAlpha(color("background"), alphaHex(opacitySnapshot)),
       surface_sidebar: sidebarBackground,
+      surface_low: sidebarBackground,
       on_surface_panel: color("on_surface"),
       surface_tooltip: color("surface_variant"),
       on_surface_tooltip: color("on_surface_variant"),

@@ -19,7 +19,7 @@
     "tokens": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["background", "on_background", "surface", "on_surface", "surface_variant", "on_surface_variant", "surface_panel", "surface_sidebar", "on_surface_panel", "surface_tooltip", "on_surface_tooltip", "surface_hover", "surface_pressed", "primary", "on_primary", "primary_container", "on_primary_container", "secondary", "on_secondary", "outline", "outline_variant", "focus_ring", "on_surface_disabled", "on_surface_placeholder", "link", "highlight", "on_highlight", "success", "charging", "warning", "error", "shadow", "scrim"],
+      "required": ["background", "on_background", "surface", "on_surface", "surface_variant", "on_surface_variant", "surface_panel", "surface_sidebar", "surface_low", "on_surface_panel", "surface_tooltip", "on_surface_tooltip", "surface_hover", "surface_pressed", "primary", "on_primary", "primary_container", "on_primary_container", "secondary", "on_secondary", "outline", "outline_variant", "focus_ring", "on_surface_disabled", "on_surface_placeholder", "link", "highlight", "on_highlight", "success", "charging", "warning", "error", "shadow", "scrim"],
       "properties": {
         "background": { "$ref": "#/$defs/colorOrReference" },
         "on_background": { "$ref": "#/$defs/colorOrReference" },
@@ -29,6 +29,7 @@
         "on_surface_variant": { "$ref": "#/$defs/colorOrReference" },
         "surface_panel": { "$ref": "#/$defs/colorOrReference" },
         "surface_sidebar": { "$ref": "#/$defs/colorOrReference" },
+        "surface_low": { "$ref": "#/$defs/colorOrReference" },
         "on_surface_panel": { "$ref": "#/$defs/colorOrReference" },
         "surface_tooltip": { "$ref": "#/$defs/colorOrReference" },
         "on_surface_tooltip": { "$ref": "#/$defs/colorOrReference" },

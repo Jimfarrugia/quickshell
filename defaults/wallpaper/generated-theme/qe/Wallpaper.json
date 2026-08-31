@@ -64,6 +64,7 @@
     "on_surface_variant": "#c7c5d0",
     "surface_panel": "#f5131318",
     "surface_sidebar": "#f50b0b0e",
+    "surface_low": "#f50b0b0e",
     "on_surface_panel": "#e4e1e9",
     "surface_tooltip": "#46464f",
     "on_surface_tooltip": "#c7c5d0",

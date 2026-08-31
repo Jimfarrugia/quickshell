@@ -7,7 +7,7 @@ const fixture = async path => JSON.parse(await readFile(new URL(`../fixtures/${p
 
 const expectedThemeTokens = [
   "background", "on_background", "surface", "on_surface", "surface_variant", "on_surface_variant",
-  "surface_panel", "surface_sidebar", "on_surface_panel", "surface_tooltip", "on_surface_tooltip", "surface_hover",
+  "surface_panel", "surface_sidebar", "surface_low", "on_surface_panel", "surface_tooltip", "on_surface_tooltip", "surface_hover",
   "surface_pressed", "primary", "on_primary", "primary_container", "on_primary_container", "secondary",
   "on_secondary", "outline", "outline_variant", "focus_ring", "on_surface_disabled",
   "on_surface_placeholder", "link", "highlight", "on_highlight", "success", "warning", "error",
@@ -76,6 +76,7 @@ const poimandresSource = JSON.parse(await readFile(new URL("../../themes/poimand
 assert.deepEqual(Object.keys(poimandres.value.palette), Object.keys(poimandresSource.palette));
 assert.equal(Object.keys(poimandres.value.tokens).at(-1), "charging");
 assert.equal(poimandres.value.tokens.surface_sidebar, "#171922");
+assert.equal(poimandres.value.tokens.surface_low, "#171922");
 assert.equal(poimandres.value.tokens.surface_tooltip, "#171922");
 assert.equal(poimandres.value.tokens.on_surface_tooltip, "#8290a5");
 assert.equal(poimandres.value.tokens.surface, "#1b1e28");
@@ -88,6 +89,7 @@ const gruvbox = validateTheme(JSON.parse(await readFile(new URL("../../themes/gr
 assert.equal(Object.keys(gruvbox.value.tokens).at(-1), "charging");
 assert.equal(gruvbox.value.palette.sidebar, "#1d2021");
 assert.equal(gruvbox.value.tokens.surface_sidebar, "#1d2021");
+assert.equal(gruvbox.value.tokens.surface_low, "#1d2021");
 assert.equal(gruvbox.value.tokens.surface_tooltip, "#3c3836");
 assert.equal(gruvbox.value.tokens.surface_hover, "#504945");
 assert.equal(gruvbox.value.tokens.surface_pressed, "#458588");

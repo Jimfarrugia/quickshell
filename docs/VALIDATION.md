@@ -74,6 +74,8 @@ timeout 5 quickshell -p tests/qml/theme-selector-test.qml
 timeout 5 quickshell -p tests/qml/wallpaper-selector-test.qml
 timeout 5 quickshell -p tests/qml/segmented-toggle-test.qml
 timeout 5 quickshell -p tests/qml/palette-viewer-test.qml
+timeout 5 quickshell -p tests/qml/launcher-usage-test.qml
+timeout 5 quickshell -p tests/qml/launcher-selection-test.qml
 timeout 5 quickshell -p tests/qml/external-theme-service-test.qml
 timeout 5 quickshell -p tests/qml/osd-service-test.qml
 timeout 5 quickshell -p tests/qml/phase6-action-test.qml
@@ -109,6 +111,11 @@ The selector IPC helper starts an isolated shell process and must print
 and idempotent theme application against that exact PID.
 The selector interaction test must print `THEME_SELECTOR_TEST_PASSED` after a
 catalog selection becomes the confirmed resolved live theme.
+The launcher usage test must print `LAUNCHER_USAGE_TEST_PASSED` after validating
+persisted usage with the QML JavaScript runtime used by the shell.
+The launcher selection test must print `LAUNCHER_SELECTION_TEST_PASSED` after
+provisional startup selection resets to the first result while explicit user
+selection survives a catalog refresh.
 The wallpaper selector test must print `WALLPAPER_SELECTOR_TEST_PASSED` after
 verifying responsive breakpoints, exact 16:9 card sizing after grid gaps, and
 focused-filename publication.

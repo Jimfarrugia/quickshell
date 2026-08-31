@@ -32,6 +32,7 @@
     "on_surface_variant": "{palette.purpleLight}",
     "surface_panel": "#f21b1e28",
     "surface_sidebar": "#171922",
+    "surface_low": "#171922",
     "on_surface_panel": "{palette.foreground}",
     "surface_tooltip": "{palette.black}",
     "on_surface_tooltip": "{palette.muted}",

@@ -85,7 +85,7 @@ launch failure, and preserves Rofi as the explicit rollback path until the
 - Increment usage only when the structured launch operation reports success. Failed attempts do not increment the count.
 - Keep the in-memory count updated when a launch succeeds even if persistence fails. Report persistence failure as a bounded non-blocking diagnostic and do not claim the count survived restart.
 - Treat missing, malformed, or incompatible usage state as empty usage data, retain normal launcher operation, and report a bounded diagnostic.
-- Keep failed-launch entries selected and the launcher open. Show the bounded actionable reason and a retry action; allow normal selection changes and dismissal.
+- Keep failed-launch entries associated with the displayed error and the launcher open. Show the bounded actionable reason and a retry action that targets the failed entry; allow normal selection changes and dismissal.
 - Close the launcher after successful launch. Refresh results safely if an entry disappears during activation.
 - Use a single-column launcher surface on the active monitor. Focus the query field on open and select the first ranked result.
 - Support arrow keys, `Enter`, pointer selection/activation, and `Escape`. Support `Alt+h/j/k/l` as modified vim-style navigation; `Alt+j/k` move vertically in v1 and `Alt+h/l` are harmless no-ops.

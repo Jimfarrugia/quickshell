@@ -59,7 +59,9 @@ export function validateUsage(document) {
     const records = Object.entries(document.entries);
     if (records.some(([, value]) => !value || !Number.isInteger(value.launchCount) || value.launchCount < 0))
         return null;
-    return Object.fromEntries(records.map(([id, value]) => [id, { launchCount: value.launchCount }]));
+    const usage = {};
+    for (const [id, value] of records) usage[id] = { launchCount: value.launchCount };
+    return usage;
 }
 
 export function boundedUsage(usage, ids) {

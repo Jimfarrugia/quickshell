@@ -6,7 +6,7 @@
   "palette": { "base": "#000000" },
   "tokens": {
     "background": "{tokens.surface}", "on_background": "#ffffff", "surface": "{tokens.background}", "on_surface": "#ffffff",
-    "surface_variant": "#222222", "on_surface_variant": "#aaaaaa", "surface_panel": "#ee000000", "surface_sidebar": "#000000", "on_surface_panel": "#ffffff",
+    "surface_variant": "#222222", "on_surface_variant": "#aaaaaa", "surface_panel": "#ee000000", "surface_sidebar": "#000000", "surface_low": "#000000", "on_surface_panel": "#ffffff",
     "surface_tooltip": "#111111", "on_surface_tooltip": "#ffffff", "surface_hover": "#222222", "surface_pressed": "#333333",
     "primary": "#00aaff", "on_primary": "#000000", "primary_container": "#005577", "on_primary_container": "#ffffff",
     "secondary": "#aa00ff", "on_secondary": "#ffffff", "outline": "#777777", "outline_variant": "#444444",

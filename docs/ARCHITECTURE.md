@@ -789,7 +789,14 @@ toggles it or the configuration/window/process lifecycle forces safe release.
 launches the structured `DesktopEntry.command` with its working directory. For
 entries marked `Terminal=true`, it prepends the configured `$TERMINAL` command
 and `--` as separate arguments. It does not execute raw desktop `Exec` strings
-through a shell.
+through a shell. The launcher presentation is a transparent, non-exclusive
+`PanelWindow` on the overlay layer for the focused monitor; its content surface
+is centered at 35% of the monitor width, sizes to one through six result rows
+(with one row as the minimum for empty results), and shrinks from the bottom
+while retaining the six-row centered position. It does not reserve screen
+space.
+When a launch fails, `LauncherService` retains the failed desktop entry separately
+from the current selection, and Retry always invokes that retained entry.
 
 Successful launches increment a persisted, QE-owned usage count keyed by stable
 desktop-entry ID in `launcher-usage.json` under the XDG state directory. The
@@ -876,6 +883,7 @@ contract. The initial shape is:
     "on_surface_variant": "{palette.foreground}",
     "surface_panel": "#f21b1e28",
     "surface_sidebar": "#f5171922",
+    "surface_low": "#f5171922",
     "on_surface_panel": "{palette.foreground}",
     "surface_tooltip": "{palette.black}",
     "on_surface_tooltip": "{palette.muted}",
@@ -905,7 +913,7 @@ contract. The initial shape is:
 }
 ```
 
-The approved 33-role token names use Matugen-style `snake_case` and paired
+The approved 34-role token names use Matugen-style `snake_case` and paired
 `on_*` foregrounds. ADR-015 records the Phase 4 pre-release contract revision
 that supersedes the provisional vocabulary and the individual additions in
 ADR-012 and ADR-014 while retaining their charging and tooltip semantics.
@@ -996,7 +1004,7 @@ generation or application.
 The current adapter boundary requires `QE_MATUGEN` to name the executable; an
 unset or missing executable is an isolated unavailable state. `MatugenAdapter`
 requests noninteractive JSON output with an explicit mode and source-color
-preference, bounds the process, and validates the mapped 33-role theme before
+preference, bounds the process, and validates the mapped 34-role theme before
 the service stages it. `WallpaperPromotionAdapter` then promotes the staged QE
 `Wallpaper.json` into its stable XDG data path, preserving the previous artifact
 when staging or promotion fails. External Matugen artifacts use the separate

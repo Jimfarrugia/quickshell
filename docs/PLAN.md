@@ -55,7 +55,7 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 - QE owns desktop notifications and hardware-feedback OSDs. The Phase 6 Dunst
   cutover, rollback exercise, closed rollback window, and legacy cleanup are
   complete.
-- The current theme-v1 contract has 33 semantic roles. ADR-015 and ADR-027 in
+- The current theme-v1 contract has 34 semantic roles. ADR-015 and ADR-027 in
   `docs/DECISIONS.md` record the accepted vocabulary and sidebar-token revision;
   do not reopen that contract without concrete evidence and the planning-change
   procedure.
@@ -277,9 +277,11 @@ surface while leaving specialized Rofi flows available.
 
 Design baseline (2026-08-31): launcher decisions are settled for valid desktop
 entries, including terminal applications launched through `$TERMINAL`,
-active-monitor placement, persistent successful launch counts, deterministic
-search ranking, modified vim-style navigation, and explicit launch-failure
-handling. See ADR-029 and ADR-030 in `docs/DECISIONS.md`.
+active-monitor placement, a centered 35%-wide content-sized overlay panel with
+up to six visible result rows, persistent successful launch counts, deterministic
+search ranking, modified vim-style
+navigation, and explicit launch-failure handling. See ADR-029, ADR-030, and
+ADR-031 in `docs/DECISIONS.md`.
 
 Prerequisites:
 

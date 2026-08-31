@@ -15,23 +15,45 @@ Singleton {
     property bool loaded: false
     property string lastPersistenceError: ""
     property var pendingLaunch: null
+    property var failedLaunch: null
+    property bool selectionExplicit: false
 
-    function refresh() {
-        const selectedId = results[selectedIndex]?.id || "";
+    function refresh(preserveSelection = selectionExplicit) {
+        const selectedId = preserveSelection ? results[selectedIndex]?.id || "" : "";
         results = Launcher.rank(DesktopEntries.applications.values, query, usage);
         const retained = results.findIndex(entry => entry.id === selectedId);
         selectedIndex = retained >= 0 ? retained : 0;
+        if (preserveSelection && retained < 0) selectionExplicit = false;
     }
-    function open() { query = ""; selectedIndex = 0; refresh(); SurfaceService.openLauncher(); }
+    function open() {
+        query = "";
+        selectedIndex = 0;
+        selectionExplicit = false;
+        lastFailure = "";
+        failedLaunch = null;
+        refresh(false);
+        SurfaceService.openLauncher();
+    }
     function toggle() { SurfaceService.launcherVisible ? close() : open(); }
-    function close() { SurfaceService.closeLauncher(); }
-    function setQuery(value) { query = value; refresh(); }
+    function close() {
+        lastFailure = "";
+        failedLaunch = null;
+        SurfaceService.closeLauncher();
+    }
+    function setQuery(value) { query = value; selectionExplicit = false; refresh(false); }
+    function select(index) {
+        if (index < 0 || index >= results.length) return;
+        selectedIndex = index;
+        selectionExplicit = true;
+    }
     function move(delta) {
         if (!results.length) return;
         selectedIndex = Math.max(0, Math.min(results.length - 1, selectedIndex + delta));
+        selectionExplicit = true;
     }
-    function launch(index) {
-        const entry = results[index];
+    function launch(index) { return launchEntry(results[index]); }
+    function retry() { return launchEntry(failedLaunch); }
+    function launchEntry(entry) {
         if (!entry || !Launcher.isEligible(entry)) return false;
         if (pendingLaunch !== null || launcherProcess.running) return false;
         lastFailure = "";
@@ -63,6 +85,7 @@ Singleton {
         if (pendingLaunch === null) return;
         const entry = pendingLaunch;
         pendingLaunch = null;
+        failedLaunch = null;
         const current = usage[entry.id]?.launchCount || 0;
         const nextUsage = Object.assign({}, usage, { [entry.id]: { launchCount: current + 1 } });
         usage = Launcher.boundedUsage(nextUsage, DesktopEntries.applications.values.map(item => item.id));
@@ -74,6 +97,7 @@ Singleton {
         if (pendingLaunch === null) return;
         const entry = pendingLaunch;
         pendingLaunch = null;
+        failedLaunch = entry;
         lastFailure = `Could not launch ${entry.name}: the application could not be started`.slice(0, 256);
         DiagnosticsService.report("LAUNCH_FAILED", "launcher", "Application launch failed", lastFailure, true, null);
     }
@@ -89,17 +113,18 @@ Singleton {
             DiagnosticsService.report("LAUNCHER_USAGE_REJECTED", "launcher", "Usage state ignored", "Malformed or incompatible launcher-usage.json", false, null);
         }
         loaded = true;
-        refresh();
+        refresh(false);
     }
 
     Connections {
         target: DesktopEntries.applications
-        function onValuesChanged() { root.refresh(); }
+        function onValuesChanged() { root.refresh(root.selectionExplicit); }
     }
     FileView {
         id: stateFile
         path: PathsService.launcherUsageState
         blockLoading: true
+        blockWrites: true
         atomicWrites: true
         printErrors: false
         onLoaded: root.loadUsage()

@@ -40,6 +40,7 @@
     "on_surface_variant": "{palette.muted}",
     "surface_panel": "#f2282828",
     "surface_sidebar": "#1d2021",
+    "surface_low": "#1d2021",
     "on_surface_panel": "{palette.foreground}",
     "surface_tooltip": "{palette.blackLight}",
     "on_surface_tooltip": "{palette.foreground}",

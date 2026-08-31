@@ -7,6 +7,7 @@ const THEME_TOKENS = [
   "on_surface_variant",
   "surface_panel",
   "surface_sidebar",
+  "surface_low",
   "on_surface_panel",
   "surface_tooltip",
   "on_surface_tooltip",
