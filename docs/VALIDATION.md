@@ -1,5 +1,17 @@
 # Developer Validation
 
+## How to use this file
+
+`docs/PLAN.md` owns phase acceptance criteria. This file owns the concrete
+developer commands, expected success markers, and special test conditions.
+
+Implementation agents should read the subsection relevant to the changed
+subsystem before testing. Run the broader command catalogue when the active
+phase or regression scope requires it; do not load unrelated historical phase
+records merely to discover test commands.
+
+## Command catalogue
+
 Run from the project root. This file is stored under `docs/`, but all commands
 below are intended to be run from the repository root:
 
@@ -68,6 +80,10 @@ timeout 5 env QE_MATUGEN=<absolute-path-to-fixture> quickshell -p tests/qml/matu
 timeout 5 quickshell -p shell.qml
 ```
 
+## Expected markers and special conditions
+
+### Core, foundation, bar, and theme-selection tests
+
 Of the timeout-wrapped commands, exit code `124` is acceptable when a headless
 QML test has already printed its success marker; the `shell.qml` smoke test
 must return `124` because it proves the persistent shell remained alive. The
@@ -99,6 +115,8 @@ The external theme service test uses a fake adapter and must print
 `EXTERNAL_THEME_SERVICE_TEST_PASSED` after QE commits first and retains that
 theme through a truthful external partial-failure result.
 
+### Notification tests
+
 The notification service helper must print `NOTIFICATION_SERVICE_TEST_PASSED` after
 testing bounded markup, actions, progress, replacement updates, DND urgency rules,
 individual history removal, dismissal with history retention, and `lastGeneration` replay without creating
@@ -106,9 +124,12 @@ duplicate history or popups. The live notification helper additionally verifies
 that low and normal popups expire after five seconds while history remains. The
 owner helper must print `NOTIFICATION_OWNER_HELPER_TEST_PASSED` after
 validating the structured current-owner record. The live notification acceptance
-helper must print `NOTIFICATIONS_TEST_PASSED`; it temporarily stops the active
-Dunst user service, verifies QE ownership, sends the representative notification
-matrix, verifies QE releases the DBus name, and restores Dunst through its trap.
+helper must print `NOTIFICATIONS_TEST_PASSED`; it validates QE ownership, sends
+the representative notification matrix, and verifies QE releases the DBus name.
+Run it only in an isolated or explicitly approved test session because
+notification ownership is exclusive. Dunst is normally masked/inactive after
+the completed cutover; Dunst restoration applies only to an explicit rollback
+test.
 The reload helper must print `NOTIFICATION_RELOAD_TEST_PASSED` after real QE-owned
 notifications populate the popup host and history, then a soft reload preserves
 history without duplicate visible or history entries; replayed prior-generation
@@ -131,6 +152,8 @@ after sandboxed success, partial, malformed-output, timeout, invalid theme ID,
 missing-executable, independent valid/malformed state updates, and
 executable-loss cases.
 
+### OSD and hardware-action tests
+
 The OSD service fixture must print `OSD_SERVICE_TEST_PASSED` after validating
 immediate active-item replacement without stale replay, expiry, operation
 resolution, network-state presentation, and non-full charging/discharging
@@ -143,6 +166,8 @@ brightness bindings have press and release handlers controlling one shared
 250ms repeat timer; the global keyboard repeat settings must remain unchanged.
 Manual hold and rapid opposite-direction tests must produce bounded QE actions,
 stop immediately on release, and preserve mute behavior.
+
+### Matugen, wallpaper, and generated-theme tests
 
 The Matugen adapter fixture must print `MATUGEN_ADAPTER_TEST_PASSED` after
 mapping a schema-compatible JSON response into a validated QE `Wallpaper`
@@ -192,6 +217,8 @@ The restored wallpaper fixture must print
 seeded at the stable XDG data path is catalogued, selected without a persisted
 wallpaper source, and delegated to the external switcher with GTK skipped.
 
+### Authored-defaults tests
+
 The authored defaults command contract is tested in isolated XDG and HOME
 directories:
 
@@ -202,6 +229,8 @@ tests/helpers/qe-defaults.test.sh
 It must print `QE_DEFAULTS_TEST_PASSED` after staged capture, pending-operation
 rejection, artifact restore, live-slot repair, fixed-theme application, and the
 stopped-QE wallpaper `--skip-gtk` fallback pass.
+
+### Relocation, lint exceptions, degradation, and opt-in live checks
 
 Relocation is checked by copying the project to a temporary directory and
 repeating the JavaScript validation and shell smoke test there. QE state created

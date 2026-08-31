@@ -1,12 +1,14 @@
 # QE Architecture
 
-Status: Proposed architecture approved for implementation planning
+Status: Current architecture implemented through Phase 6; remaining planned
+surfaces and deployment choices are tracked in `docs/PLAN.md`
 
 This document is the authoritative description of the Quickshell Environment
 (QE) architecture, ownership boundaries, runtime topology, and service
-contracts. `docs/PLAN.md` is authoritative for sequence, project status, milestones,
-and the decision log. `AGENTS.md` tells implementation agents how to use both
-documents.
+contracts. `docs/PLAN.md` is authoritative for roadmap, sequence, project status,
+active/future phase scope, risks, and polling policy. `docs/DECISIONS.md` is the
+authoritative architectural decision log. `AGENTS.md` defines how implementation
+agents select the minimum relevant documentation for a task.
 
 ## 1. Scope
 
@@ -16,12 +18,32 @@ diagnostics, IPC, and failure behavior are platform responsibilities.
 
 ## 1.1 Documentation Governance
 
-`docs/USER_GUIDE.md` is a concise, user-facing document. It must not receive
-new or updated content without explicit user approval. Agents and maintainers
-may suggest additions or corrections, but must obtain approval before applying
-them. Authoritative design, implementation status, validation procedures, and
-internal decisions belong in `docs/ARCHITECTURE.md`, `docs/PLAN.md`, and
-`docs/VALIDATION.md` instead.
+Documentation has deliberately separate authority domains:
+
+- `docs/ARCHITECTURE.md` is authoritative for current architecture, ownership,
+  boundaries, runtime topology, service contracts, lifecycle, failure, and
+  security policy.
+- `docs/PLAN.md` is authoritative for roadmap, project status, active/future
+  phase scope, prerequisites, acceptance criteria, risks, deferred work, and
+  polling policy.
+- `docs/DECISIONS.md` is the authoritative architectural decision log and
+  rationale. Accepted ADRs remain there unless explicitly superseded or revised.
+- `docs/VALIDATION.md` is the developer validation catalogue and expected-result
+  reference.
+- `docs/history/` preserves old inventories, completed implementation records,
+  rollback evidence, and superseded working context. Historical files are
+  non-authoritative for current behavior and are not default agent reading.
+- `docs/USER_GUIDE.md` is concise, user-facing, and non-authoritative for project
+  status. It must not receive new or updated content without explicit user
+  approval. Agents and maintainers may suggest additions or corrections, but
+  must obtain approval before applying them.
+
+Authority does not imply mandatory context. `AGENTS.md` defines selective reading
+rules so implementation agents load only the live plan sections, architecture
+sections, ADRs, and validation material relevant to the task.
+
+If authoritative documents conflict, the conflict must be resolved explicitly;
+agents must not infer a precedence rule and silently choose one.
 
 The architecture must support incremental replacement of Waybar, Hyprlock,
 Rofi, Dunst, Blueman Manager, `nm-connection-editor`, and `pavucontrol` without
@@ -127,7 +149,7 @@ One long-lived Quickshell instance owns:
 
 - the bar
 - launcher and help surfaces
-- notification server, popups, and process-session history after Dunst cutover
+- notification server, popups, and process-session history
 - notification center and control center
 - OSD coordination
 - wallpaper and theme selectors
@@ -182,11 +204,12 @@ The following remain separate boundaries:
 - Hyprland and its IPC sockets
 - the external theme-switcher project
 - Matugen
-- the wallpaper application helper during migration
+- the wallpaper application helper
 - `brightnessctl` or a later brightness helper
 - NetworkManager, BlueZ, PipeWire, WirePlumber, UPower, and PAM
-- Dunst until the notification cutover
-- Waybar, Rofi, Hyprlock, and current dashboards until their individual cutovers
+- Rofi and Hyprlock until their documented replacements complete
+- Blueman Manager, `nm-connection-editor`, and `pavucontrol` as dashboard
+  fallbacks until their supported replacement scopes complete
 
 Production supervision is deferred. Development launch and process identity
 must not assume either Hyprland autostart or a systemd user service. A later
@@ -229,8 +252,16 @@ contracts.
 |-- docs/
 |   |-- ARCHITECTURE.md
 |   |-- PLAN.md
+|   |-- DECISIONS.md
+|   |-- VALIDATION.md
 |   |-- USER_GUIDE.md
-|   `-- VALIDATION.md
+|   `-- history/               # non-authoritative completed/historical records
+|-- .opencode/
+|   |-- commands/
+|   |   `-- docs-maintain.md
+|   `-- skills/
+|       `-- qe-doc-maintenance/
+|           `-- SKILL.md
 `-- AGENTS.md
 ```
 
@@ -316,7 +347,7 @@ No source file may assume `/home/jim`, `~/Projects/quickshell`, or the eventual
 dotfiles location.
 
 - Repository assets use paths relative to Quickshell's shell directory property.
-  `Quickshell.shellDir` is canonical in 0.3.0 and current source; the older
+  `Quickshell.shellDir` is canonical in installed Quickshell 0.3.1 and current source; the older
   `shellRoot` and `configDir` aliases are deprecated. The exact property must
   still be verified before a Quickshell upgrade.
 - QE persistent state uses `Quickshell.statePath(...)`.
@@ -579,12 +610,12 @@ Responsibilities:
 - expose guarded play/pause/next/previous/seek operations
 - update position only while a consumer is visible and the player is playing
 
-Track lists and playlists are not initial goals because Quickshell 0.3.0 does
+Track lists and playlists are not initial goals because Quickshell 0.3.1 does
 not expose them.
 
 ### 7.10 BrightnessService
 
-Quickshell 0.3.0 has no native brightness API. The integration uses a stable
+Quickshell 0.3.1 has no native brightness API. The integration uses a stable
 helper contract around `brightnessctl` initially.
 
 The service exposes devices, current percent, pending percent, and bounded set
@@ -734,7 +765,7 @@ brightness adapter with the `leds` class and keyboard-device selection.
 ### 7.13 IdleService
 
 `IdleService` owns the compositor `IdleInhibitor` and binds it to a persistent QE
-window. Quickshell 0.3.0 exposes only the local `enabled` request and bound
+window. Quickshell 0.3.1 exposes only the local `enabled` request and bound
 window; it provides no compositor-confirmed active state or failure signal.
 `IdleService` therefore exposes requested state only and never presents it as
 confirmed external state. The request is process-session local, defaults off,
@@ -1056,11 +1087,11 @@ reverted atomically and rollback can also fail.
 | ----------------- | -------------------------------- | --------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
 | Hyprland          | Hyprland IPC                     | native singleton models           | socket events                     | typed dispatch adapter             | mark stale on disconnect; explicit refresh only for known API gaps                                                             | recorded events/models and live opt-in test                   |
 | PipeWire          | PipeWire/WirePlumber             | `Pipewire.ready`, nodes/defaults  | libpipewire events                | defaults, volume, mute             | native adapter reconnects; clear stale object references                                                                       | mock node model and live audio test                           |
-| NetworkManager    | NetworkManager                   | native Networking models; bounded `nmcli` IPv4 enrichment because 0.3.0 exposes only hardware addresses | DBus signals trigger native updates and active-interface address refresh; no polling | toggle/connect/disconnect/forget   | unavailable/degraded while daemon absent; cancel or supersede stale IPv4 lookups; repopulate on return                          | fixture model plus isolated live test network and loopback IPv4 lookup |
+| NetworkManager    | NetworkManager                   | native Networking models; bounded `nmcli` IPv4 enrichment because 0.3.1 exposes only hardware addresses | DBus signals trigger native updates and active-interface address refresh; no polling | toggle/connect/disconnect/forget   | unavailable/degraded while daemon absent; cancel or supersede stale IPv4 lookups; repopulate on return                          | fixture model plus isolated live test network and loopback IPv4 lookup |
 | BlueZ             | BlueZ                            | DBus ObjectManager via native API | DBus object/property signals      | power/discover/pair/connect/forget | preserve no false connected state; repopulate on service return                                                                | mock devices and manual hardware test                         |
 | UPower            | UPower and power-profiles-daemon | native singleton                  | DBus signals                      | profile selection                  | battery may remain absent on desktop; profile feature degrades separately                                                      | fixture devices and live read-only test                       |
 | MPRIS             | player applications              | service watcher                   | DBus properties/signals           | capability-guarded controls        | remove vanished player; deterministic reselection                                                                              | mock player capabilities                                      |
-| System tray       | status notifier services         | native singleton                  | DBus watcher/menu events          | activate/menu/scroll               | remove vanished items; malformed menu affects only item; do not instantiate the QE tray host in normal Waybar-coexistence mode; once instantiated, 0.3.0 ownership is process-lifetime and returning ownership requires stopping QE | mock item delegate and live tray apps                         |
+| System tray       | status notifier services         | native singleton                  | DBus watcher/menu events          | activate/menu/scroll               | remove vanished items; malformed menu affects only item; do not instantiate the QE tray host in a second shell instance; once instantiated, 0.3.1 ownership is process-lifetime and returning ownership requires stopping QE | mock item delegate and live tray apps                         |
 | Notifications     | sending apps                     | DBus service acquisition          | notification calls                | action/reply/dismiss               | cannot coexist with Dunst; ownership state visible                                                                             | `notify-send` acceptance suite in isolated session            |
 | Brightness        | kernel backlight                 | helper structured read            | watcher or documented poll        | bounded set/step                   | timeout, malformed output, permission error; retain stale last value                                                           | helper fixtures and fake sysfs root                           |
 | System metrics    | procfs/sysfs/filesystem          | adapter reads                     | documented polling                | read only                          | per-metric stale/error; no bar-wide failure                                                                                    | fixture roots and parser tests                                |
@@ -1250,10 +1281,11 @@ supervision may additionally route output to the user journal later.
   inspect stderr/logs.
 - Exercise native services against the current session only in opt-in tests.
 - Use non-exclusive development surfaces or a non-conflicting alternate edge
-  while Waybar remains active. Verify that any development reservation does not
-  alter Waybar's edge reservation.
-- Test notification ownership only after explicitly stopping Dunst in an
-  isolated test window/session, then restore Dunst.
+  when intentionally testing alongside a legacy bar. Verify that any
+  development reservation does not alter the other bar's edge reservation.
+- Test notification ownership only in an isolated test window/session using the
+  current QE owner. Dunst restoration applies only to an explicit rollback test;
+  the normal post-cutover state is masked/inactive Dunst with QE owning the name.
 - Test lock behavior in a disposable session or nested compositor where
   protocol support permits, followed by a documented real-session checklist.
 

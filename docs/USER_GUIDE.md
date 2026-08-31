@@ -50,11 +50,10 @@ The current implementation provides:
   battery state.
 - Screenshot notifications with actions to view the image or open its folder.
 
-QE is still under active development. Notifications, the notification center,
-and native OSDs are production features of the current development shell.
-Dashboards, the replacement lock screen, and the QE application launcher are
-not yet complete. The current development launcher is still Rofi, based on the
-repository at `~/Projects/quickshell`.
+QE is still under active development. This guide documents supported
+user-facing workflows and operational requirements, but it is not authoritative
+for project status or remaining implementation phases. See `docs/PLAN.md` for
+the current roadmap and status.
 
 ## 2. Dependencies and Integrations
 
