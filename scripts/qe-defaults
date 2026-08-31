@@ -13,6 +13,21 @@ case "$action" in
     *) usage ;;
 esac
 
+send_notification() {
+    local urgency=$1 body=$2
+    if command -v notify-send >/dev/null 2>&1; then
+        notify-send -a qe-defaults -u "$urgency" "QE Defaults" "$body" >/dev/null 2>&1 || true
+    fi
+}
+
+notify_failure() {
+    if [[ "$action" == capture ]]; then
+        send_notification critical 'Failed to capture new defaults.'
+    else
+        send_notification critical 'Failed to restore defaults.'
+    fi
+}
+
 script_path=$(readlink -f -- "${BASH_SOURCE[0]}")
 script_dir=$(cd -- "$(dirname -- "$script_path")" && pwd -P)
 project_root=${QE_DEFAULTS_PROJECT_ROOT:-$(cd -- "$script_dir/.." && pwd -P)}
@@ -26,6 +41,7 @@ ipc_launcher=${QE_DEFAULTS_IPC:-$script_dir/qe-launch.sh}
 
 command -v jq >/dev/null 2>&1 || {
     printf 'QE defaults failed: jq is unavailable.\n' >&2
+    notify_failure
     exit 127
 }
 
@@ -270,7 +286,19 @@ restore_defaults() {
 }
 
 if [[ "$action" == capture ]]; then
-    capture_defaults
+    capture_defaults & operation_pid=$!
+    if wait "$operation_pid"; then
+        send_notification normal 'Captured new defaults.'
+    else
+        notify_failure
+        exit 1
+    fi
 else
-    restore_defaults
+    restore_defaults & operation_pid=$!
+    if wait "$operation_pid"; then
+        send_notification normal 'Restored defaults.'
+    else
+        notify_failure
+        exit 1
+    fi
 fi

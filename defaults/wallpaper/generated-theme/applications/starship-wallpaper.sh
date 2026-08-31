@@ -1,9 +1,9 @@
 # starship semantic colors generated from the active wallpaper palette
 primary="#bbc3ff"
-secondary="#c3c5dd"
+secondary="#c4c5dd"
 tertiary="#e6bad7"
-tertiary_container="#5d3c55"
-secondary_container="#434659"
+tertiary_container="#5d3c54"
+secondary_container="#434559"
 error="#ffb4ab"
 on_surface_variant="#c7c5d0"
 

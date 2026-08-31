@@ -45,10 +45,15 @@ export function normalizeImage(value) {
   return "";
 }
 
-function normalizeIcon(value) {
+function normalizeIconName(value) {
   if (typeof value !== "string" || value.length === 0 || value.length > 256
       || !/^[A-Za-z0-9._+-]+(?:\/[A-Za-z0-9._+-]+)*$/.test(value)) return "";
-  return `image://icon/${value}`;
+  return value;
+}
+
+function normalizeIcon(value) {
+  const name = normalizeIconName(value);
+  return name.length > 0 ? `image://icon/${name}` : "";
 }
 
 function normalizeProgress(hints) {
@@ -84,9 +89,12 @@ export function normalizeNotification(input, options = {}) {
   const body = bounded(input && input.body, bodyBytes);
   const appName = bounded(input && input.appName, 256, "Unknown application");
   const urgency = normalizeUrgency(input && input.urgency);
-  const image = normalizeImage(input && input.image) || normalizeIcon(input && input.appIcon);
+  const appIconName = normalizeIconName(input && input.appIcon);
+  const appNameKey = appName.toLowerCase();
+  const image = normalizeImage(input && input.image) || normalizeIcon(appIconName);
   let iconName = urgency === "critical" ? "warning" : "notifications";
-  if (image.length === 0 && appName.toLowerCase() === "opencode") iconName = "robot_2";
+  if (image.length === 0 && appNameKey === "qe-defaults") iconName = "colors";
+  else if (image.length === 0 && appNameKey === "opencode") iconName = "robot_2";
   const isScreenshot = image.length > 0 && appName.toLowerCase() === "hyprshot";
   return {
     id: Number(input && input.id) || 0,

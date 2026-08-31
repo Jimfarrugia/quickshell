@@ -1730,21 +1730,20 @@ Phase 6 follow-up implementation:
   updates the persisted state through `NotificationService.setDnd()`; the bar
   does not own a duplicate DND value.
 
-Deferred dotfiles cleanup:
+Post-cutover dotfiles cleanup (completed 2026-08-31):
 
-- After the Phase 6 rollback window is closed, move the following deprecated
-  files owned by the dotfiles repository into `~/dotfiles/_legacy`, preserving
-  their history and documenting the recovery path: `scripts/.local/bin/battery-alert`,
-  `scripts/.local/bin/battery-charging`, `scripts/.local/bin/volume` (the legacy
-  audio control script), `scripts/.local/bin/brightness`,
-  `scripts/.local/bin/mic-mute-toggle`, `scripts/.local/bin/kbd_brightness`,
-  `_hyprland/systemd/.config/systemd/user/battery-alert.service`,
-  `_hyprland/systemd/.config/systemd/user/battery-alert.timer`, and the full
-  `_hyprland/dunst/.config/dunst/` configuration and icon tree, plus the full
-  unstowed `_unstowed/walker/` configuration and desktop-entry tree.
-- Do not move or delete these files as part of the native-alert cutover. Native
-  QE alerts and hardware controls must remain independently verified before
-  legacy cleanup.
+- The Phase 6 rollback window is closed. Deprecated battery, audio, brightness,
+  microphone, keyboard-brightness, battery-unit, Dunst, Walker, and inactive
+  Hyprlang files were moved with `git mv` into `~/dotfiles/_legacy`, preserving
+  their history and original relative layouts.
+- The corresponding stale deployed files and Dunst link were removed after
+  verifying they matched the archived sources. Native QE alerts, hardware
+  controls, notification ownership, and the active Lua Hyprland bindings remain
+  independent of the archive.
+- Recovery requires moving the relevant archived tree back to its original
+  package path, restoring the deployed files/links, unmasking and starting
+  Dunst, and restoring the pre-cutover Hyprland bindings as described in the
+  Phase 6 rollback procedure.
 
 Native hardware-control ownership:
 
@@ -1753,10 +1752,8 @@ Native hardware-control ownership:
   `integrations/PipewireIntegration.qml`, `services/BrightnessService.qml`, and
   `scripts/qe-brightness.sh`.
 - The dotfiles `volume`, `brightness`, and `mic-mute-toggle` scripts are no
-  longer used by active Hyprland bindings. The inactive
-  `_hyprland/hypr/.config/hypr/hyprlang/_keybinds.conf` still references them
-  and remains outside QE project scope. Before the legacy cleanup milestone,
-  remind the user to move the `hyprlang` files to `~/dotfiles/_legacy`.
+  longer used by active Hyprland bindings. The inactive Hyprlang configuration,
+  including its old keybindings, is archived under `~/dotfiles/_legacy/hypr`.
 
 Native media ownership:
 
@@ -1765,7 +1762,7 @@ Native media ownership:
   `playerctl`.
 - The unstowed Walker configuration is not active because Walker is not
   installed or deployed. Its `playerctl` lock-screen entry is retained only as
-  a legacy reference and is included in the planned `_legacy` move. The
+  a legacy reference under `~/dotfiles/_legacy/walker`. The
   `playerctl` package itself is not scheduled for removal.
 
 Native battery ownership:

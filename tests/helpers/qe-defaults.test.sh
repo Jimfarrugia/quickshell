@@ -6,9 +6,17 @@ test_root=$(mktemp -d)
 trap 'rm -rf -- "$test_root"' EXIT
 
 mkdir -p -- "$test_root/project" "$test_root/home" "$test_root/state" "$test_root/data" "$test_root/cache"
+mkdir -p -- "$test_root/bin"
 cp -a -- "$project_root/defaults" "$test_root/project/defaults"
 printf '%s\n' poimandres >"$test_root/active-theme"
 printf '%s\n' idle >"$test_root/operation"
+
+cat >"$test_root/bin/notify-send" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$@" >>"$TEST_ROOT/notifications.log"
+EOF
+chmod +x "$test_root/bin/notify-send"
 
 cat >"$test_root/ipc" <<'EOF'
 #!/usr/bin/env bash
@@ -44,6 +52,7 @@ EOF
 chmod +x "$test_root/switcher"
 
 run_defaults() {
+    PATH="$test_root/bin:$PATH" \
     HOME="$test_root/home" \
     XDG_DATA_HOME="$test_root/data" \
     XDG_STATE_HOME="$test_root/state" \
@@ -58,6 +67,13 @@ run_defaults() {
 }
 
 run_defaults restore
+grep -Fxq -- 'Restored defaults.' "$test_root/notifications.log"
+grep -Fxq -- normal "$test_root/notifications.log"
+grep -Fxq -- qe-defaults "$test_root/notifications.log"
+if grep -Fxq -- reset_colors "$test_root/notifications.log"; then
+    printf '%s\n' 'qe-defaults unexpectedly sent a file-based icon' >&2
+    exit 1
+fi
 cmp -s -- "$test_root/project/defaults/wallpaper/generated-theme/applications/rofi-wallpaper.rasi" \
     "$test_root/state/qe/wallpaper/external/rofi-wallpaper.rasi"
 cmp -s -- "$test_root/project/defaults/wallpaper/generated-theme/applications/yazi-wallpaper.sh" \
@@ -92,6 +108,7 @@ cp -- "$test_root/project/defaults/wallpaper/generated-theme/applications/yazi-w
 cp -- "$test_root/project/defaults/wallpaper/generated-theme/applications/yazi-wallpaper.tmTheme" \
     "$test_root/home/.config/yazi/flavors/wallpaper.yazi/tmtheme.xml"
 run_defaults capture
+grep -Fxq -- 'Captured new defaults.' "$test_root/notifications.log"
 [[ "$(jq -r .defaultTheme "$test_root/project/defaults/manifest.json")" == gruvbox ]]
 grep -q -- '^captured-rofi$' "$test_root/project/defaults/wallpaper/generated-theme/applications/rofi-wallpaper.rasi"
 [[ -L "$test_root/home/.config/yazi/flavors/wallpaper.yazi/wallpaper.sh" ]]
@@ -103,10 +120,13 @@ grep -q -- '^captured-rofi$' "$test_root/state/qe/wallpaper/external/rofi-wallpa
 
 manifest_before=$(sha256sum "$test_root/project/defaults/manifest.json")
 printf '%s\n' pending >"$test_root/operation"
+: >"$test_root/notifications.log"
 if run_defaults capture >/dev/null 2>&1; then
     printf '%s\n' 'capture unexpectedly succeeded while an operation was pending' >&2
     exit 1
 fi
+grep -Fxq -- 'Failed to capture new defaults.' "$test_root/notifications.log"
+grep -Fxq -- critical "$test_root/notifications.log"
 [[ "$(sha256sum "$test_root/project/defaults/manifest.json")" == "$manifest_before" ]]
 printf '%s\n' idle >"$test_root/operation"
 
@@ -115,5 +135,13 @@ mv -- "$test_root/manifest.tmp" "$test_root/project/defaults/manifest.json"
 : >"$test_root/switcher.log"
 TEST_IPC_AVAILABLE=0 run_defaults restore
 grep -q -- '--machine --theme wallpaper --skip-gtk' "$test_root/switcher.log"
+
+printf '{\n' >"$test_root/project/defaults/manifest.json"
+: >"$test_root/notifications.log"
+if run_defaults restore >/dev/null 2>&1; then
+    printf '%s\n' 'restore unexpectedly succeeded with an invalid manifest' >&2
+    exit 1
+fi
+grep -Fxq -- 'Failed to restore defaults.' "$test_root/notifications.log"
 
 printf '%s\n' QE_DEFAULTS_TEST_PASSED

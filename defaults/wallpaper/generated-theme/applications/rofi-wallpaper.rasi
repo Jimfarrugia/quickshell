@@ -1,14 +1,14 @@
 * {
   /* Theme Colors */
-  background: #121318;
+  background: #131318;
   outline: #90909a;
   surface-container-low: #1b1b21;
   on-background: #e4e1e9;
   primary: #bbc3ff;
-  secondary: #c3c5dd;
+  secondary: #c4c5dd;
   tertiary: #e6bad7;
-  tertiary-container: #5d3c55;
-  secondary-container: #434659;
+  tertiary-container: #5d3c54;
+  secondary-container: #434559;
   error: #ffb4ab;
 
   /* Rofi Colors */

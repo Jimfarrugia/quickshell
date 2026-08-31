@@ -1,10 +1,10 @@
 FZF_DEFAULT_OPTS=""
 
-FZF_DEFAULT_OPTS+=" --color=border:#9f8d84,label:#e5bfa9"
-FZF_DEFAULT_OPTS+=" --color=fg:#f0dfd7,bg:#1a120d,hl:#ffb68b"
-FZF_DEFAULT_OPTS+=" --color=fg+:#ffdbc8,bg+:#6f3811,hl+:#ffb68b"
-FZF_DEFAULT_OPTS+=" --color=info:#cbc992,prompt:#e5bfa9,pointer:#e5bfa9"
-FZF_DEFAULT_OPTS+=" --color=marker:#cbc992,spinner:#cbc992,header:#52443c"
+FZF_DEFAULT_OPTS+=" --color=border:#90909a,label:#c4c5dd"
+FZF_DEFAULT_OPTS+=" --color=fg:#e4e1e9,bg:#131318,hl:#bbc3ff"
+FZF_DEFAULT_OPTS+=" --color=fg+:#dee0ff,bg+:#3a4379,hl+:#bbc3ff"
+FZF_DEFAULT_OPTS+=" --color=info:#e6bad7,prompt:#c4c5dd,pointer:#c4c5dd"
+FZF_DEFAULT_OPTS+=" --color=marker:#e6bad7,spinner:#e6bad7,header:#46464f"
 
 export FZF_DEFAULT_OPTS
 

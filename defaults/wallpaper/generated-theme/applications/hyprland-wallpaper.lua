@@ -1,11 +1,11 @@
 -- hyprland colors generated from the active wallpaper palette
-local black = "rgb(121318)"
+local black = "rgb(131318)"
 local white = "rgb(E4E1E9)"
 local gray = "rgb(46464F)"
 local red = "rgb(FFB4AB)"
 local yellow = "rgb(E6BAD7)"
 local blue = "rgb(BBC3FF)"
-local cyan = "rgb(C3C5DD)"
+local cyan = "rgb(C4C5DD)"
 
 hl.config({
 	general = {
