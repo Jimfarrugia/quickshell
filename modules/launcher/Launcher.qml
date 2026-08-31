@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Widgets
 import "../../services" as Services
 
 FloatingWindow {
@@ -53,7 +54,40 @@ FloatingWindow {
                 required property int index
                 width: list.width; height: 52
                 color: index === Services.LauncherService.selectedIndex ? Services.ThemeService.theme.tokens.surface_hover : "transparent"
-                Text { anchors.fill: parent; anchors.margins: 12; verticalAlignment: Text.AlignVCenter; text: modelData.name; color: Services.ThemeService.theme.tokens.on_surface_panel }
+                Item {
+                    id: iconSlot
+                    anchors.left: parent.left
+                    anchors.leftMargin: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 32
+                    height: 32
+
+                    IconImage {
+                        id: applicationIcon
+                        anchors.fill: parent
+                        source: modelData.icon ? Quickshell.iconPath(modelData.icon, true) : ""
+                    }
+
+                    Text {
+                        anchors.fill: parent
+                        visible: applicationIcon.source === ""
+                        text: "package_2"
+                        color: Services.ThemeService.theme.tokens.on_surface_disabled
+                        font.family: Services.ConfigService.config.appearance.iconFontFamily
+                        font.pixelSize: 26
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                }
+                Text {
+                    anchors.left: iconSlot.right
+                    anchors.leftMargin: 12
+                    anchors.right: parent.right
+                    anchors.rightMargin: 12
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: modelData.name
+                    color: Services.ThemeService.theme.tokens.on_surface_panel
+                }
                 MouseArea { anchors.fill: parent; onClicked: Services.LauncherService.selectedIndex = index; onDoubleClicked: Services.LauncherService.launch(index) }
             }
         }
