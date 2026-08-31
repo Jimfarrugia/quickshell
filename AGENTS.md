@@ -180,3 +180,17 @@ Do not silently deviate from an accepted decision. To propose a change:
 5. Update the appropriate authoritative documents and ADR.
 6. Obtain user approval when scope, behavior, security, or ownership materially
    changes.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live as markdown files under `.scratch/`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Use the five default labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This is a single-context repository using root `CONTEXT.md` and `docs/adr/`. See `docs/agents/domain.md`.
