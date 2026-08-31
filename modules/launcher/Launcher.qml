@@ -77,11 +77,12 @@ FloatingWindow {
                         id: applicationIcon
                         anchors.fill: parent
                         source: root.iconSource(modelData.icon)
+                        visible: status === Image.Ready
                     }
 
                     Text {
                         anchors.fill: parent
-                        visible: applicationIcon.status !== Image.Ready
+                        visible: !applicationIcon.visible
                         text: "package_2"
                         color: Services.ThemeService.theme.tokens.on_surface_disabled
                         font.family: Services.ConfigService.config.appearance.iconFontFamily
