@@ -17,6 +17,17 @@ FloatingWindow {
         return Quickshell.screens.find(item => item.name === name)
             || (Quickshell.screens.length > 0 ? Quickshell.screens[0] : null);
     }
+    function iconSource(value) {
+        let icon = String(value || "").trim();
+        if (icon.length > 1 && ((icon.startsWith("\"") && icon.endsWith("\""))
+                || (icon.startsWith("'") && icon.endsWith("'"))))
+            icon = icon.slice(1, -1);
+        if (icon.startsWith("~/"))
+            icon = `${Quickshell.env("HOME")}/${icon.slice(2)}`;
+        if (icon.startsWith("/") || icon.startsWith("file://"))
+            return icon.startsWith("/") ? `file://${icon}` : icon;
+        return icon ? Quickshell.iconPath(icon, true) : "";
+    }
     onVisibleChanged: if (visible) { Services.LauncherService.refresh(); query.forceActiveFocus(); }
     onClosed: Services.LauncherService.close()
 
@@ -65,12 +76,12 @@ FloatingWindow {
                     IconImage {
                         id: applicationIcon
                         anchors.fill: parent
-                        source: modelData.icon ? Quickshell.iconPath(modelData.icon, true) : ""
+                        source: root.iconSource(modelData.icon)
                     }
 
                     Text {
                         anchors.fill: parent
-                        visible: applicationIcon.source === ""
+                        visible: applicationIcon.status !== Image.Ready
                         text: "package_2"
                         color: Services.ThemeService.theme.tokens.on_surface_disabled
                         font.family: Services.ConfigService.config.appearance.iconFontFamily
