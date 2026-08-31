@@ -86,7 +86,8 @@ Scope {
 
     Process {
         id: ownerWatcher
-        command: [root.helperPath, "--qe-pid", String(Quickshell.processId)]
+        command: ["setpriv", "--pdeathsig", "TERM", root.helperPath,
+            "--qe-pid", String(Quickshell.processId)]
         running: root.active
         stdout: SplitParser {
             splitMarker: "\n"

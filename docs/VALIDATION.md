@@ -123,7 +123,10 @@ individual history removal, dismissal with history retention, and `lastGeneratio
 duplicate history or popups. The live notification helper additionally verifies
 that low and normal popups expire after five seconds while history remains. The
 owner helper must print `NOTIFICATION_OWNER_HELPER_TEST_PASSED` after
-validating the structured current-owner record. The live notification acceptance
+validating the structured current-owner record, wrapper signal handling, QE
+parent disappearance, and monitor-child cleanup. The reload helper must also
+prove repeated soft reload and full shell restart leave exactly one current
+owner-watcher tree and no stale descendants. The live notification acceptance
 helper must print `NOTIFICATIONS_TEST_PASSED`; it validates QE ownership, sends
 the representative notification matrix, and verifies QE releases the DBus name.
 Run it only in an isolated or explicitly approved test session because

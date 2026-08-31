@@ -640,6 +640,11 @@ wheel input changes the latest requested value in bounded five-percent steps.
 After cutover, one `NotificationServer` in the persistent process owns
 `org.freedesktop.Notifications`.
 
+The structured owner-watcher helper is bound to the persistent process lifetime
+and owns exactly one child DBus monitor. Soft reload, process replacement,
+normal exit, and signals must terminate the wrapper and monitor without leaving
+orphaned subscriptions.
+
 Responsibilities:
 
 - set supported capabilities deliberately

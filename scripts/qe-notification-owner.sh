@@ -54,23 +54,52 @@ current_owner() {
   emit_owner "$unique_name"
 }
 
-current_owner
+monitor_pid=""
+monitor_fd=""
 
+# shellcheck disable=SC2329 # invoked by the EXIT trap
 cleanup() {
-  if [[ -n "${monitor_pid:-}" ]]; then
-    kill "$monitor_pid" 2>/dev/null || true
+  trap - EXIT HUP INT TERM
+
+  if [[ -n "$monitor_pid" ]]; then
+    kill -TERM "$monitor_pid" 2>/dev/null || true
+    for _ in {1..50}; do
+      if ! kill -0 "$monitor_pid" 2>/dev/null; then
+        break
+      fi
+      sleep 0.02
+    done
+    kill -KILL "$monitor_pid" 2>/dev/null || true
     wait "$monitor_pid" 2>/dev/null || true
   fi
-}
-trap cleanup EXIT TERM INT
 
-gdbus monitor --session --dest org.freedesktop.DBus \
-  --object-path /org/freedesktop/DBus 2>/dev/null |
-while IFS= read -r line; do
+  if [[ -n "$monitor_fd" ]]; then
+    exec {monitor_fd}<&-
+  fi
+}
+trap cleanup EXIT
+trap 'exit 0' HUP INT TERM
+
+# The child also dies if this wrapper is SIGKILLed before its EXIT trap can run.
+coproc OWNER_MONITOR {
+  exec setpriv --pdeathsig KILL gdbus monitor --session \
+    --dest org.freedesktop.DBus --object-path /org/freedesktop/DBus 2>/dev/null
+}
+monitor_pid=$OWNER_MONITOR_PID
+monitor_fd=${OWNER_MONITOR[0]}
+
+# Subscribe before querying so an owner transition cannot be missed between the
+# initial record and monitor startup.
+current_owner
+
+while IFS= read -r -u "$monitor_fd" line; do
   name_owner_pattern="NameOwnerChanged[[:space:]]+\\('org\\.freedesktop\\.Notifications',[[:space:]]+'([^']*)',[[:space:]]+'([^']*)'\\)"
   if [[ "$line" =~ $name_owner_pattern ]]; then
     emit_owner "${BASH_REMATCH[2]}"
   fi
-done &
-monitor_pid=$!
-wait "$monitor_pid"
+done
+
+monitor_status=0
+wait "$monitor_pid" || monitor_status=$?
+monitor_pid=""
+exit "$monitor_status"
