@@ -387,6 +387,7 @@ contracts. UI modules invoke typed domain operations such as `openLauncher()` or
 | Displayed wallpaper         | Hyprpaper                                     | compositor wallpaper state                    | `WallpaperIntegration` if observable                | Hyprpaper/helper                       | IPC response/events where available                                                       | external live state; never inferred solely from cached image            |
 | Legacy theme/wallpaper data | existing switcher/picker                      | `~/.local/share/theme_data`                   | compatibility adapter only                          | legacy tools                           | file watch                                                                                | transitional external source, not QE state                              |
 | Application feature flags   | User                                          | `config/qe.json`                              | `ConfigService` consumers                           | User only                              | validated config publication                                                              | persistent                                                              |
+| Launcher usage counts      | `LauncherService`                            | `launcher-usage.json`, versioned QE state keyed by desktop-entry ID | `LauncherService`, launcher surface              | `LauncherService`                     | successful launch updates; atomic persistence                                             | persistent generated state; malformed or incompatible data starts empty with a diagnostic |
 | Hyprland workspaces/windows | Hyprland                                      | native IPC state                              | `CompositorService`                                 | Hyprland; QE dispatches requests       | socket events plus explicit refresh only where API requires                               | live external; mark stale/disconnected on IPC loss                      |
 | Audio graph/defaults        | PipeWire/WirePlumber                          | Quickshell PipeWire objects                   | `AudioService`                                      | subsystem; QE requests updates         | PipeWire events                                                                           | live external; pending operation reconciled to events                   |
 | Network state               | NetworkManager                                | Quickshell Networking objects                 | `NetworkService`                                    | NetworkManager; QE requests operations | DBus events                                                                               | live external; secrets remain with NetworkManager                       |
@@ -783,9 +784,21 @@ toggles it or the configuration/window/process lifecycle forces safe release.
 
 ### 7.14 LauncherService and HelpService
 
-`LauncherService` consumes Quickshell `DesktopEntries`, applies pure filtering
-and ranking, and launches the structured `DesktopEntry.command` with its working
+`LauncherService` consumes Quickshell `DesktopEntries`, excludes hidden,
+`NoDisplay`, terminal, and empty-command entries, applies pure filtering and
+ranking, and launches the structured `DesktopEntry.command` with its working
 directory. It does not execute raw desktop `Exec` strings through a shell.
+
+Successful launches increment a persisted, QE-owned usage count keyed by stable
+desktop-entry ID in `launcher-usage.json` under the XDG state directory. The
+versioned document has an `entries` object mapping each ID to a `launchCount`.
+The record set is bounded to 512 entries and pruned when IDs disappear.
+Empty-query results rank by count, normalized name, and stable ID;
+non-empty queries rank search relevance before count and those deterministic
+tie-breakers. Search covers normalized name, generic name, keywords, and
+comment, using Unicode case-folding, collapsed whitespace, and punctuation as
+separators. Persistence failures do not fail launches and are exposed as
+bounded diagnostics.
 
 `HelpService` reads a user-authored JSON reference catalog. Hyprland remains
 authoritative for actual keybindings unless a future verified parser derives
