@@ -112,7 +112,9 @@ Item {
                 Layout.preferredHeight: 6
                 Layout.minimumWidth: 0
                 radius: height / 2
-                color: Services.ThemeService.theme.tokens.surface_sidebar
+                color: Qt.rgba(Services.ThemeService.theme.tokens.surface_sidebar.r,
+                    Services.ThemeService.theme.tokens.surface_sidebar.g,
+                    Services.ThemeService.theme.tokens.surface_sidebar.b, 245 / 255)
 
                 Rectangle {
                     width: root.item ? parent.width * Math.max(0, Math.min(100, root.item.value)) / 100 : 0

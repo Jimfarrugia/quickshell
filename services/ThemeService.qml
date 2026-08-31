@@ -36,7 +36,7 @@ Singleton {
             surface_variant: "#242424",
             on_surface_variant: "#b0b0b0",
             surface_panel: "#f0000000",
-            surface_sidebar: "#f0000000",
+            surface_sidebar: "#000000",
             on_surface_panel: "#ffffff",
             surface_tooltip: "#101010",
             on_surface_tooltip: "#ffffff",

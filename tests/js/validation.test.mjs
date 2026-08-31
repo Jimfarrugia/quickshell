@@ -75,10 +75,11 @@ const poimandres = validateTheme(JSON.parse(await readFile(new URL("../../themes
 const poimandresSource = JSON.parse(await readFile(new URL("../../themes/poimandres.json", import.meta.url), "utf8"));
 assert.deepEqual(Object.keys(poimandres.value.palette), Object.keys(poimandresSource.palette));
 assert.equal(Object.keys(poimandres.value.tokens).at(-1), "charging");
-assert.equal(poimandres.value.tokens.surface_sidebar, "#f5171922");
+assert.equal(poimandres.value.tokens.surface_sidebar, "#171922");
 assert.equal(poimandres.value.tokens.surface_tooltip, "#171922");
 assert.equal(poimandres.value.tokens.on_surface_tooltip, "#8290a5");
-assert.equal(poimandres.value.tokens.surface, "#303340");
+assert.equal(poimandres.value.tokens.surface, "#1b1e28");
+assert.equal(poimandres.value.tokens.surface_variant, "#303340");
 assert.equal(poimandres.value.tokens.surface_hover, "#41434f");
 assert.equal(poimandres.value.tokens.outline_variant, "#506477");
 assert.equal(poimandres.value.tokens.outline, "#767c9d");
@@ -86,8 +87,10 @@ assert.equal(poimandres.value.tokens.on_primary, "#171922");
 const gruvbox = validateTheme(JSON.parse(await readFile(new URL("../../themes/gruvbox.json", import.meta.url), "utf8")));
 assert.equal(Object.keys(gruvbox.value.tokens).at(-1), "charging");
 assert.equal(gruvbox.value.palette.sidebar, "#1d2021");
-assert.equal(gruvbox.value.tokens.surface_sidebar, "#f51d2021");
+assert.equal(gruvbox.value.tokens.surface_sidebar, "#1d2021");
 assert.equal(gruvbox.value.tokens.surface_tooltip, "#3c3836");
+assert.equal(gruvbox.value.tokens.surface_hover, "#504945");
+assert.equal(gruvbox.value.tokens.surface_pressed, "#458588");
 assert.equal(gruvbox.value.tokens.outline, "#928374");
 assert.equal(gruvbox.value.tokens.on_primary_container, "#32302f");
 for (const theme of [poimandres.value, gruvbox.value]) {

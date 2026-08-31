@@ -4,6 +4,7 @@
     "on_background": { "dark": { "color": "#f4f7fb" }, "light": { "color": "#101820" } },
     "surface": { "dark": { "color": "#18232d" }, "light": { "color": "#f4f7fb" } },
     "on_surface": { "dark": { "color": "#f4f7fb" }, "light": { "color": "#101820" } },
+    "surface_container": { "dark": { "color": "#202b35" }, "light": { "color": "#e8eef5" } },
     "surface_variant": { "dark": { "color": "#3f4b56" }, "light": { "color": "#d1dae4" } },
     "on_surface_variant": { "dark": { "color": "#d1dae4" }, "light": { "color": "#3f4b56" } },
     "primary": { "dark": { "color": "#9ecaff" }, "light": { "color": "#315f90" } },

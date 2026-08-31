@@ -5,6 +5,7 @@
       "on_background": "#f4f7fb",
       "surface": "#18232d",
       "on_surface": "#f4f7fb",
+      "surface_container": "#202b35",
       "surface_variant": "#3f4b56",
       "on_surface_variant": "#d1dae4",
       "primary": "#9ecaff",

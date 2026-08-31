@@ -37,7 +37,7 @@ PanelWindow {
     Rectangle {
         id: sidebarSurface
         anchors.fill: parent
-        color: root.backgroundColor
+        color: Qt.rgba(root.backgroundColor.r, root.backgroundColor.g, root.backgroundColor.b, 245 / 255)
         radius: root.cornerRadius
         border.width: Services.ConfigService.config.appearance.borderWidth
         border.color: Services.ThemeService.theme.tokens.outline_variant

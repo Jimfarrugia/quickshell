@@ -3,7 +3,8 @@ import { alphaHex } from "./Opacity.mjs";
 
 const COLOR_PATTERN = /^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
 const REQUIRED_COLORS = [
-  "background", "on_background", "surface", "on_surface", "surface_variant",
+  "background", "on_background", "surface", "on_surface", "surface_container",
+  "surface_variant",
   "on_surface_variant", "primary", "on_primary", "primary_container",
   "on_primary_container", "secondary", "on_secondary", "secondary_container",
   "on_secondary_container", "outline", "outline_variant", "error"
@@ -102,10 +103,10 @@ export function mapMatugenTheme(document, variant = "dark", opacitySnapshot = nu
       on_background: color("on_background"),
       surface: color("surface"),
       on_surface: color("on_surface"),
-      surface_variant: color("surface_variant"),
+      surface_variant: color("surface_container"),
       on_surface_variant: color("on_surface_variant"),
       surface_panel: withAlpha(color("background"), alphaHex(opacitySnapshot)),
-      surface_sidebar: withAlpha(sidebarBackground, alphaHex(opacitySnapshot)),
+      surface_sidebar: sidebarBackground,
       on_surface_panel: color("on_surface"),
       surface_tooltip: color("surface_variant"),
       on_surface_tooltip: color("on_surface_variant"),
