@@ -46,6 +46,8 @@ FloatingWindow {
             Layout.fillWidth: true; Layout.fillHeight: true; clip: true
             model: Services.LauncherService.results
             currentIndex: Services.LauncherService.selectedIndex
+            highlightMoveDuration: 0
+            highlightResizeDuration: 0
             delegate: Rectangle {
                 required property var modelData
                 required property int index
