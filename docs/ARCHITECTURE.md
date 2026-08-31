@@ -785,9 +785,11 @@ toggles it or the configuration/window/process lifecycle forces safe release.
 ### 7.14 LauncherService and HelpService
 
 `LauncherService` consumes Quickshell `DesktopEntries`, excludes hidden,
-`NoDisplay`, terminal, and empty-command entries, applies pure filtering and
-ranking, and launches the structured `DesktopEntry.command` with its working
-directory. It does not execute raw desktop `Exec` strings through a shell.
+`NoDisplay`, and empty-command entries, applies pure filtering and ranking, and
+launches the structured `DesktopEntry.command` with its working directory. For
+entries marked `Terminal=true`, it prepends the configured `$TERMINAL` command
+and `--` as separate arguments. It does not execute raw desktop `Exec` strings
+through a shell.
 
 Successful launches increment a persisted, QE-owned usage count keyed by stable
 desktop-entry ID in `launcher-usage.json` under the XDG state directory. The

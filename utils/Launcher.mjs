@@ -9,7 +9,7 @@ export function normalize(value) {
 export function tokens(value) { return normalize(value).split(" ").filter(Boolean); }
 
 export function isEligible(entry) {
-    return entry && (!entry.isValid || entry.isValid()) && !entry.noDisplay && !entry.runInTerminal
+    return entry && (!entry.isValid || entry.isValid()) && !entry.noDisplay
         && text(entry.name).trim() && Array.from(entry.command || []).length > 0;
 }
 

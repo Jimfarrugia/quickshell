@@ -6,7 +6,7 @@ const entry = (id, name, extra = {}) => ({ id, name, command: [name.toLowerCase(
 assert.equal(normalize("  Café-App!  Reader  "), "café app reader");
 assert.equal(isEligible(entry("ok", "Visible")), true);
 assert.equal(isEligible(entry("hidden", "Hidden", { noDisplay: true })), false);
-assert.equal(isEligible(entry("terminal", "Terminal", { runInTerminal: true })), false);
+assert.equal(isEligible(entry("terminal", "Terminal", { runInTerminal: true })), true);
 assert.equal(isEligible(entry("empty", "Empty", { command: [] })), false);
 
 const apps = [

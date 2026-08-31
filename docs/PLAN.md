@@ -275,11 +275,11 @@ evidence, rollback history, or implementation rationale.
 Objective: replace primary Rofi application launch and provide a curated help
 surface while leaving specialized Rofi flows available.
 
-Design baseline (2026-08-31): launcher decisions are settled for valid
-non-terminal desktop entries, active-monitor placement, persistent successful
-launch counts, deterministic search ranking, modified vim-style navigation, and
-explicit launch-failure handling. The launcher remains unimplemented; see
-ADR-029 in `docs/DECISIONS.md`.
+Design baseline (2026-08-31): launcher decisions are settled for valid desktop
+entries, including terminal applications launched through `$TERMINAL`,
+active-monitor placement, persistent successful launch counts, deterministic
+search ranking, modified vim-style navigation, and explicit launch-failure
+handling. See ADR-029 and ADR-030 in `docs/DECISIONS.md`.
 
 Prerequisites:
 

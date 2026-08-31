@@ -43,4 +43,5 @@ generic name, keywords, or comment.
 
 **Terminal entry**:
 A desktop entry marked for execution inside a terminal rather than as a normal
-graphical application; terminal entries are not eligible for the v1 launcher.
+graphical application; the launcher starts these through the configured terminal
+emulator.

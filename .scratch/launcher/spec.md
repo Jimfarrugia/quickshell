@@ -25,7 +25,7 @@ launch failure, and preserves Rofi as the explicit rollback path until the
 2. As a QE user, I want the launcher to open on the active monitor, so that it appears where I am working.
 3. As a QE user, I want only valid graphical desktop applications listed, so that unusable entries do not clutter the launcher.
 4. As a QE user, I want hidden and `NoDisplay` entries excluded, so that the launcher reflects the visible application catalog.
-5. As a QE user, I want terminal entries excluded in v1, so that the launcher does not silently guess which terminal should execute them.
+5. As a QE user, I want terminal entries launched through `$TERMINAL`, so that TUI applications open in the configured terminal without shell parsing.
 6. As a QE user, I want desktop entries with empty parsed commands excluded, so that selecting an entry always represents a structured main-command launch attempt.
 7. As a QE user, I want the launcher to show all eligible applications when opened with an empty query, so that I can browse the complete catalog.
 8. As a QE user, I want empty-query results ordered by successful launch frequency, so that commonly used applications are easiest to reach.
@@ -109,7 +109,7 @@ launch failure, and preserves Rofi as the explicit rollback path until the
 - Replacing specialized Rofi script-mode tools.
 - File search, calculator results, arbitrary command execution, plugin frameworks, or shell command parsing.
 - Desktop actions such as “New Window” or “Private Window”.
-- Terminal application launching through a configured terminal emulator.
+- Terminal application launching through the `$TERMINAL` terminal emulator.
 - Usage decay, automatic reset, recency weighting, or cross-device synchronization.
 - Transliteration or accent removal.
 - Multi-column grid layout in v1.
