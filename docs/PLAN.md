@@ -53,15 +53,20 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
   audio-v1 boundaries are settled in the current handoff and ADR-033. Automated
   acceptance covers event reconciliation, service loss, hot-plug fixtures,
   multi-monitor routing, bounded geometry, dismissal, lazy recreation, and the
-  installed `pavucontrol` rollback path. A disruptive live WirePlumber restart
-  was intentionally not run on the primary session.
+  installed `pavucontrol` rollback path. Manual 3.5mm, Bluetooth, and approved
+  WirePlumber restart checks passed on the primary session. Multi-monitor manual
+  verification is not applicable while the bar is configured only on the primary
+  monitor; fixture coverage remains in place.
 - Phase 8 ticket 01 is complete. The production controller and
   `QS.LazyLoader` fixture verify geometry, replacement/toggle behavior,
   dismissal paths, focus request, and lazy destruction. The dedicated IPC
-  helper verifies `qe-dashboard` open/close/toggle/isOpen behavior while the
-  shell remains alive. Ticket 02, `02-audio-dashboard-from-bar.md`, is complete;
+  helper verifies `qe-dashboard` and `qe-audio` open/close/toggle/isOpen behavior
+  while the shell remains alive. Ticket 02, `02-audio-dashboard-from-bar.md`, is complete;
   ticket 03, `03-searchable-dashboard-launcher-action.md`, is complete; launcher
   discovery and activation route through the shared dashboard surface contract.
+- Phase 9 is next: Bluetooth dashboard discovery and common lifecycle actions,
+  beginning with the open question of whether native Bluetooth APIs support the
+  required interactive pairing prompts. Blueman remains the fallback.
 - Normal runtime is one guarded QE shell from `shell.qml`, reserving 26 pixels
   at the bottom with `trayHostEnabled` true. Waybar is absent from autostart and
   retired in the theme-switcher; QE owns `org.kde.StatusNotifierWatcher`.
@@ -289,6 +294,10 @@ Read the historical phase record only when a current task depends on its detaile
 evidence, rollback history, or implementation rationale.
 
 ### Phase 8: Audio dashboard and shared surface foundation
+
+Status: Complete; acceptance passed 2026-09-02. See
+`.scratch/dashboards/issues/04-phase-8-dashboard-acceptance.md` for the evidence
+record.
 
 Objective: establish the shared dashboard/window pattern and replace common
 `pavucontrol` use cases first because PipeWire has a strong native API. The
