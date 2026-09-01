@@ -41,9 +41,9 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 | Theme/Matugen integration | Complete | Manual selector and external machine integration complete; Matugen mapping, staged promotion, QE-localized wallpaper selector, and Hyprpaper XDG-path application complete; external generated Matugen artifacts now delivered as QE-generated `wallpaper` theme slots applied by the external switcher, including imv, mpv, and Yazi; runtime/default artifact separation and idempotent promotion added; `QE_THEME_SWITCHER` wired for production through the installed `qe-theme-switcher` wrapper. Phase 4 acceptance passed on 2026-08-26 |
 | Notifications/OSDs | Complete | QE owns notifications and OSDs; Dunst cutover, rollback, and post-cutover legacy cleanup passed 2026-08-31 |
 | Launcher/help | Complete | Launcher, curated help surface, `Super+R` cutover, `Super+/` help binding, rollback, and focused-output multi-monitor acceptance passed 2026-09-01 |
-| Dashboards/control center | Not started | Phases 8-10 |
-| Lock replacement | Not started | Phase 11 |
-| Production hardening | Not started | Phase 12; final deployment location remains undecided |
+| Dashboards/control center | Not started | Phases 8-11 |
+| Lock replacement | Not started | Phase 12 |
+| Production hardening | Not started | Phase 13; final deployment location remains undecided |
 
 ### 2.1 Current handoff
 
@@ -68,7 +68,7 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
   extended does not create a new Qt `QScreen`; reconnect the output or restart
   QE after that specific transition.
 - QE remains a development checkout rather than a production-managed install.
-  Phase 12 decides supervision and final deployment location.
+  Phase 13 decides supervision and final deployment location.
 
 ## 3. Current Working Context
 
@@ -84,8 +84,8 @@ starting environment but is not current-system authority.
 | Audio dashboard | `pavucontrol` remains installed and is the escape hatch for unsupported routing | Phase 8 |
 | Bluetooth dashboard | Blueman Manager remains available, especially for unsupported pairing interactions | Phase 9 |
 | Network dashboard | `nm-connection-editor` remains available for unsupported profiles and advanced configuration | Phase 10 |
-| Session lock | Hyprlock remains the rollback/current lock until the isolated QE lock passes secure-state, idle, suspend, and recovery acceptance | Phase 11 |
-| Production lifecycle | Explicit development launch and the current project checkout remain intentional until supervision and deployment are decided | Phase 12 |
+| Session lock | Hyprlock remains the rollback/current lock until the isolated QE lock passes secure-state, idle, suspend, and recovery acceptance | Phase 12 |
+| Production lifecycle | Explicit development launch and the current project checkout remain intentional until supervision and deployment are decided | Phase 13 |
 
 ### 3.2 Historical records
 
@@ -149,7 +149,7 @@ preserved in `docs/history/PHASES_00-06.md`.
 | --- | --- | --- |
 | Does native Bluetooth cover required interactive pairing prompts? | Phase 9 full dashboard | Test with new device and inspect API behavior |
 | Which NetworkManager features are required beyond PSK/known networks? | Phase 10 | Define dashboard v1 acceptance before profile editor work |
-| Which PAM service should QE use in production? | Phase 11 | Security review of `login`, `hyprlock`, or dedicated approved config |
+| Which PAM service should QE use in production? | Phase 12 | Security review of `login`, `hyprlock`, or dedicated approved config |
 
 The resolved Phase 4 Hyprpaper-confirmation question is retained in
 `docs/history/PHASES_00-06.md`, not in live working context.
@@ -198,14 +198,15 @@ Phase 1 Foundation
         |
         +--> Phase 7 Launcher + help
         |
-        +--> Phase 8 Control center + audio dashboard
-        |      +--> Phase 9 Bluetooth dashboard
-        |      `--> Phase 10 Network dashboard
+        +--> Phase 8 Audio dashboard + shared dashboard foundation
+        |      `--> Phase 9 Bluetooth dashboard
+        |             `--> Phase 10 Network dashboard
+        |                    `--> Phase 11 Control center composition
         |
-        `--> Phase 11 Secure lock replacement
+        `--> Phase 12 Secure lock replacement
 
-Phases 3-11 complete enough for daily use
-        `--> Phase 12 production supervision, deployment decision, and cleanup
+Phases 3-12 complete enough for daily use
+        `--> Phase 13 production supervision, deployment decision, and cleanup
 ```
 
 Interfaces that must be stable before parallel feature work:
@@ -237,7 +238,7 @@ contract without coordinating through an architecture decision.
 | Feature | Responsibilities | Explicit non-goals for first version | Dependencies/services | Degraded behavior | Deferrable? |
 | --- | --- | --- | --- | --- | --- |
 | Bar | Workspaces, clock, tray, selected system indicators, module launch points | Every current custom Waybar module before first slice | Theme, config, compositor, tray, power, audio, network, Bluetooth, metrics | Per-module unavailable state; bar remains usable | No, first slice |
-| Lock | Secure surfaces, PAM conversation, time/battery/background | Fingerprint, rich dashboards, notification handling | lock-safe config/theme, PAM, session lock, UPower optional | Fail closed; optional visuals omitted | Yes until Phase 11 |
+| Lock | Secure surfaces, PAM conversation, time/battery/background | Fingerprint, rich dashboards, notification handling | lock-safe config/theme, PAM, session lock, UPower optional | Fail closed; optional visuals omitted | Yes until Phase 12 |
 | Launcher | Discover, filter, rank, launch desktop entries | File search, arbitrary shell evaluation, plugins | DesktopEntries, theme, config | Explain launch failure; omit invalid entries | Yes |
 | Notification popups | Own DBus server, lifecycle, actions, urgency, DND policy | Disk history initially | NotificationService, theme, config | Ownership conflict prevents readiness; no silent loss claim | No before notification center |
 | Notification center | Current-process history, dismiss/actions, DND controls | Cross-restart history | NotificationService | Empty/unavailable state if server not owner | Yes until popups stable |
@@ -340,10 +341,12 @@ Out of scope:
 
 - replacing every Rofi script-mode tool, file search, plugin framework
 
-### Phase 8: Control center and audio dashboard
+### Phase 8: Audio dashboard and shared surface foundation
 
 Objective: establish the shared dashboard/window pattern and replace common
-`pavucontrol` use cases first because PipeWire has a strong native API.
+`pavucontrol` use cases first because PipeWire has a strong native API. The
+foundation must support later dashboards without fixing the eventual control
+center composition prematurely.
 
 Prerequisites:
 
@@ -356,21 +359,19 @@ in `docs/DECISIONS.md`.
 
 Scope:
 
-- control-center shell and quick-setting tile contract
-- DND, idle inhibition, connectivity, Bluetooth, audio, brightness, battery,
-  power profile, and diagnostics summaries
+- shared dashboard/window and quick-setting tile contracts
 - audio output/input lists, defaults, levels, mute, and common stream controls
 - explicit `pavucontrol` escape hatch for unsupported operations
 
 Likely affected files/subsystems:
 
-- `modules/controlcenter/`
+- shared dashboard surface and routing components
 - `modules/audio/`
 - audio/power/idle services
 
 Deliverables:
 
-- control-center sidebar
+- reusable dashboard surface pattern
 - audio dashboard v1
 
 Acceptance criteria:
@@ -401,7 +402,7 @@ behavior is verified.
 
 Prerequisites:
 
-- control-center dashboard pattern
+- shared dashboard/surface foundation
 - native Bluetooth pairing-agent capability investigation
 
 Relevant decision: ADR-011 (native integration before commands) in
@@ -453,7 +454,7 @@ without overclaiming full NetworkManager editor parity.
 
 Prerequisites:
 
-- control-center pattern
+- shared dashboard/surface foundation
 - agreed v1 boundary for connection types and secrets
 
 Relevant decision: ADR-011 (native integration before commands) in
@@ -500,7 +501,66 @@ Out of scope:
 - enterprise EAP, VPN, proxy, hidden-network creation, full profile editor unless
   separately approved after the v1 investigation
 
-### Phase 11: Secure lock replacement
+### Phase 11: Control center composition
+
+Objective: compose the completed dashboard and health capabilities into a control
+center after the audio, Bluetooth, and network dashboards establish their stable
+v1 contracts.
+
+Prerequisites:
+
+- Phase 8 shared dashboard/surface foundation
+- Phase 9 Bluetooth dashboard v1 and capability findings
+- Phase 10 Network dashboard v1 and agreed unsupported-profile boundary
+- concrete control-center requirements agreed from the completed dashboards
+
+Scope:
+
+- control-center shell and navigation
+- quick-settings composition over existing domain services and dashboards
+- health/system information summaries
+- consistent unavailable, stale, pending, and confirmed states across tiles
+
+Requirements, tile inventory, layout, and interaction details are intentionally
+deferred until Phases 8-10 provide evidence about the capabilities and failure
+states that the control center must represent.
+
+Likely affected files/subsystems:
+
+- `modules/controlcenter/`
+- module router and surface service
+- existing dashboard/domain service contracts only where composition exposes a
+  concrete gap
+
+Deliverables:
+
+- agreed control-center v1 specification
+- control-center composition surface
+- dashboard and health summaries with explicit degraded states
+
+Acceptance criteria:
+
+- to be defined from the agreed v1 specification after Phases 8-10
+- control center composes existing dashboard capabilities rather than duplicating
+  system integration logic
+- one unavailable dashboard or service does not block unrelated tiles
+
+Validation:
+
+- control-center fixture tests based on the finalized tile and state matrix
+- keyboard, pointer, dismissal, and multi-monitor surface tests
+- degraded and daemon-loss behavior for each represented service
+
+Rollback/recovery:
+
+- individual dashboard surfaces and their fallback tools remain launchable
+
+Out of scope:
+
+- new domain integrations introduced solely for control-center composition
+- changing the v1 scope of the audio, Bluetooth, or network dashboards
+
+### Phase 12: Secure lock replacement
 
 Objective: replace Hyprlock with an isolated, compositor-enforced QE lock after
 security and recovery behavior are validated.
@@ -571,7 +631,7 @@ Out of scope:
 
 - fingerprint, face authentication, remote unlock, lock-screen dashboards
 
-### Phase 12: Production hardening and deployment
+### Phase 13: Production hardening and deployment
 
 Objective: make QE suitable for daily startup, managed deployment, diagnostics,
 and clean retirement of replaced tools.
@@ -721,7 +781,7 @@ Polling budget for the bar milestone:
 | R14 | Broad dashboard scope delays reliable foundations | High | Medium | explicit v1 non-goals and phased fallbacks | phase planning changes |
 | R15 | External switcher target mutation partially corrupts config | Medium | High | target prevalidation, backups/staging where possible, per-target result | switcher refactor |
 | R16 | Wallpaper helper reports success before compositor display | Low | Low/medium | Hyprpaper IPC acceptance handshake implemented; confirmation labeled as IPC acceptance, not pixel display | Phase 4 |
-| R17 | Production restart loop destabilizes session | Low/medium | High | defer supervision, bounded restart policy based on evidence | Phase 12 decision |
+| R17 | Production restart loop destabilizes session | Low/medium | High | defer supervision, bounded restart policy based on evidence | Phase 13 decision |
 | R18 | Notification content loads unsafe resources/markup | Medium | High | sanitize/limit rendering and resources | Phase 5 security review |
 | R19 | External theme apply restarts a tool after QE has replaced it | Medium | High | target-retirement controls must precede each cutover and are included in rollback tests | Phases 3, 4, and 6 |
 

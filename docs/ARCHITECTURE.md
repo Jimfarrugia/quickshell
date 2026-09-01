@@ -57,7 +57,7 @@ requiring all replacements to ship together.
 - Isolate optional integrations so one failure does not disable unrelated QE
   features.
 - Support project-relative deployment without source changes; the final
-  production location remains a Phase 12 decision.
+  production location remains a Phase 13 decision.
 - Make external operations observable, bounded, and independently testable.
 - Preserve a safe rollback path while replacing existing desktop tools.
 
