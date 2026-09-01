@@ -14,9 +14,11 @@ reconciliation, service loss, stale state, hot-plug, geometry, routing,
 dismissal, and lazy recreation. Manual device checks confirmed that inserting
 3.5mm headphones produces a confirmed volume update, while connecting a
 Bluetooth headset discovers the device and changes both the default input and
-output in the dashboard. A live WirePlumber restart was not performed on the
-primary session because it is disruptive; the native PipeWire readiness and
-reconnection path remains covered by the fixture contract.
+output in the dashboard. The subsequent approved manual check restarted
+`wireplumber.service`, confirmed it returned to `active (running)`,
+and confirmed PipeWire repopulated the built-in and Bose audio nodes. The
+WirePlumber Lua-configuration migration and missing-libcamera messages were
+unrelated to audio-dashboard recovery.
 
 - [x] PipeWire event reconciliation keeps confirmed and pending audio state truthful.
 - [x] Device hot-plug and WirePlumber restart behavior completes without stale or misleading controls.
