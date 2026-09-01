@@ -841,6 +841,44 @@ settings unchanged. The single owner prevents opposite-direction timers from
 remaining active concurrently. Missing QE makes an action fail visibly without
 activating a retired desktop notification service.
 
+### 7.16 Dashboard surfaces
+
+Dashboards are transient QE surfaces hosted by a shared dashboard shell. The
+shell is a transparent, non-exclusive-zone `PanelWindow` on the overlay layer,
+with the same surface, border, shadow, opacity, and resolved corner-radius
+conventions as `Sidebar.qml`. It remains above normal windows and does not alter
+the application layout.
+
+The shell has one active dashboard slot. Opening a dashboard closes or replaces
+the current dashboard; clicking its source bar module toggles it closed. Audio
+and network source modules determine right and left anchoring through their
+resolved bar side, rather than through hardcoded dashboard placement. The shell
+follows the bar edge: it sits 20px above a bottom bar or 20px below a top bar,
+and stays 20px from the opposite screen edge. If no bar is active, the bar
+contribution is omitted. Module-triggered opens use the module's monitor; other
+triggers use the active monitor.
+
+The initial shell width is `1.5` times the Sidebar's total outer width, with
+20px horizontal content insets. It shrinks to fit narrow outputs. Height is
+content-driven up to the available screen bounds; excess content scrolls inside
+the shell. Open dashboards take exclusive keyboard focus and close on Escape,
+outside click, or source-module toggle. Surfaces are instantiated lazily and
+recreated from current service state when reopened.
+
+The shared header contains only the feature title and a clickable `settings`
+icon. The icon opens the feature's fallback application and exposes a
+feature-specific hover tooltip such as `Open pavucontrol`. Audio v1 owns native
+output/input selection, default-device state, levels, mute, and common stream
+volume/mute controls. Unsupported routing remains delegated to `pavucontrol`.
+
+Dashboard content depends on domain services only. Service loss, missing
+devices, stale state, and fallback-launch failures remain visible as local
+degraded states without closing the dashboard or blocking unrelated surfaces.
+Each implemented dashboard exposes the standard namespaced IPC target
+(`qe-audio`, `qe-network`, and so on) with `open`, `close`, `toggle`, and
+`isOpen`; launcher entries are built-in curated QE actions and the help catalog
+remains display-only.
+
 ## 8. Theme Architecture
 
 ### 8.1 Theme scopes

@@ -58,3 +58,23 @@ state.
 **Help entry**:
 A single labeled item in the reference catalog describing a keybinding or QE
 command.
+
+**Dashboard**:
+A transient QE surface for interacting with one system capability, such as
+audio, Bluetooth, or network state.
+_Avoid_: Popup, application window
+
+**Dashboard shell**:
+The shared presentation and placement boundary that hosts feature-specific
+dashboard content.
+_Avoid_: Dashboard window
+
+**Dashboard action**:
+A stable QE action identifier that requests a dashboard operation, such as
+opening or toggling a dashboard, through the shared surface-routing contract.
+_Avoid_: Dashboard command, shell command
+
+**Source module**:
+The bar module associated with a dashboard and used as its primary launch
+point; its bar position determines the dashboard's anchored side.
+_Avoid_: Trigger widget, dashboard button

@@ -1,6 +1,6 @@
 # QE Implementation Plan
 
-Status: Phases 1-7 complete
+Status: Phases 1-7 complete; Phase 8 active
 
 Last inventory: 2026-09-02
 
@@ -49,8 +49,8 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 
 - Phases 1-7 are complete. Phase 7 includes the accepted launcher, curated help
   surface, `Super+R` cutover, `Super+/` help binding, and Rofi rollback path.
-- Phase 8 is the next ready phase, but is intentionally deferred until the next
-  session at the user's request.
+- Phase 8 is active. Its dashboard geometry, routing, lifecycle, fallback, and
+  audio-v1 boundaries are settled in the current handoff and ADR-033.
 - Normal runtime is one guarded QE shell from `shell.qml`, reserving 26 pixels
   at the bottom with `trayHostEnabled` true. Waybar is absent from autostart and
   retired in the theme-switcher; QE owns `org.kde.StatusNotifierWatcher`.
@@ -290,12 +290,15 @@ Prerequisites:
 - AudioService proven in bar/OSD usage
 
 Relevant decisions: ADR-011 (native integration before commands), ADR-013
-(requested-only idle inhibition), and ADR-016 (namespaced transient-surface IPC)
-in `docs/DECISIONS.md`.
+(requested-only idle inhibition), ADR-016 (namespaced transient-surface IPC),
+ADR-026/027 (sidebar surface and styling), and ADR-033 (dashboard surface
+foundation) in `docs/DECISIONS.md`.
 
 Scope:
 
 - shared dashboard/window and quick-setting tile contracts
+- shared dashboard shell: overlay placement, single-surface exclusivity,
+  source-module routing, responsive width/height, and keyboard dismissal
 - audio output/input lists, defaults, levels, mute, and common stream controls
 - explicit `pavucontrol` escape hatch for unsupported operations
 
@@ -309,6 +312,7 @@ Deliverables:
 
 - reusable dashboard surface pattern
 - audio dashboard v1
+- first-class searchable launcher toggle action for the audio dashboard
 
 Acceptance criteria:
 
@@ -317,6 +321,9 @@ Acceptance criteria:
 - default device, volume, and mute changes reconcile from PipeWire events
 - hot-plug and WirePlumber restart behavior is safe
 - unsupported routing opens or points to pavucontrol rather than faking support
+- dashboard opens from the audio source module on the source module's monitor
+- the shell preserves 20px bar/opposite-edge gaps and 20px content insets
+- dashboard overflow scrolls within the bounded surface
 
 Validation:
 
