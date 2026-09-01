@@ -2,7 +2,7 @@
 
 Status: Phases 1-7 complete
 
-Last inventory: 2026-09-01
+Last inventory: 2026-09-02
 
 This document is the authoritative live roadmap, implementation sequence,
 project-status reference, active/future phase scope, risk register, and polling
@@ -80,7 +80,7 @@ starting environment but is not current-system authority.
 
 | Area | Current fallback / coexistence boundary | Planned phase |
 | --- | --- | --- |
-| Primary application launcher | Rofi remains available; Phase 7 migrates `Super+R` only after launcher acceptance, while specialized Rofi flows remain out of scope | Phase 7 |
+| Primary application launcher | Rofi remains available for specialized flows; the accepted QE launcher owns the primary launcher binding | Complete |
 | Audio dashboard | `pavucontrol` remains installed and is the escape hatch for unsupported routing | Phase 8 |
 | Bluetooth dashboard | Blueman Manager remains available, especially for unsupported pairing interactions | Phase 9 |
 | Network dashboard | `nm-connection-editor` remains available for unsupported profiles and advanced configuration | Phase 10 |
@@ -91,6 +91,8 @@ starting environment but is not current-system authority.
 
 - Completed Phase 0-6 implementation, acceptance, rollback, and archived handoff
   details: `docs/history/PHASES_00-06.md`
+- Completed Phase 7 implementation, acceptance, rollback, and handoff details:
+  `docs/history/PHASES_07-11.md`
 - Original discovery/current-system inventory captured before the completed
   migrations: `docs/history/INITIAL_SYSTEM_INVENTORY.md`
 
@@ -205,7 +207,7 @@ Phase 1 Foundation
         |
         `--> Phase 12 Secure lock replacement
 
-Phases 3-12 complete enough for daily use
+Phases 3-7 complete enough for daily use
         `--> Phase 13 production supervision, deployment decision, and cleanup
 ```
 
@@ -258,8 +260,8 @@ contract without coordinating through an architecture decision.
 ### Completed phases 0-7
 
 Detailed implementation, validation, cutover, and rollback records for phases
-0-6 have been moved losslessly to `docs/history/PHASES_00-06.md`; Phase 7 is
-captured in the current implementation and decision records above.
+0-7 have been moved losslessly to `docs/history/PHASES_00-06.md` and
+`docs/history/PHASES_07-11.md`.
 
 | Phase | Status | Result |
 | --- | --- | --- |
@@ -274,72 +276,6 @@ captured in the current implementation and decision records above.
 
 Read the historical phase record only when a current task depends on its detailed
 evidence, rollback history, or implementation rationale.
-
-### Phase 7: Launcher and help
-
-Objective: replace primary Rofi application launch and provide a curated help
-surface while leaving specialized Rofi flows available.
-
-Design baseline (2026-08-31): launcher decisions are settled for valid desktop
-entries, including terminal applications launched through `$TERMINAL`,
-active-monitor placement, a centered 35%-wide content-sized overlay panel with
-up to six visible result rows, persistent successful launch counts, deterministic
-search ranking, modified vim-style
-navigation, and explicit launch-failure handling. See ADR-029, ADR-030, and
-ADR-031 in `docs/DECISIONS.md`.
-
-Prerequisites:
-
-- Phase 1 platform and theme stable
-- stable surface-opening IPC convention
-
-Relevant decisions: ADR-011 (native integration before commands), ADR-016
-(namespaced transient-surface IPC), and ADR-021 (vim-style selectable-surface
-navigation) in `docs/DECISIONS.md`.
-
-Scope:
-
-- DesktopEntries-based app model
-- search/ranking pure utilities
-- keyboard and pointer navigation
-- structured launch and launch errors
-- help JSON schema and curated reference catalog
-- migrate Super+R after acceptance
-
-Likely affected files/subsystems:
-
-- launcher/help modules and services
-- `config/`
-- Hyprland keybindings at cutover
-
-Deliverables:
-
-- app launcher
-- help/reference window
-- Rofi fallback command retained
-
-Acceptance criteria:
-
-- hidden/invalid desktop entries are handled correctly
-- launch uses structured commands and working directories
-- search remains responsive with the installed application set
-- focus and dismissal work across configured monitors
-- help never claims duplicated reference data is live authoritative state
-- Super+R rollback to Rofi is documented and tested
-
-Validation:
-
-- desktop entry fixture matrix
-- keyboard-only and multi-monitor/manual focus tests
-- missing executable/launch failure tests
-
-Rollback/recovery:
-
-- restore Super+R to `rofi -show drun`; QE launcher can remain disabled
-
-Out of scope:
-
-- replacing every Rofi script-mode tool, file search, plugin framework
 
 ### Phase 8: Audio dashboard and shared surface foundation
 
@@ -724,8 +660,9 @@ work, but the fake and live adapter must satisfy the same reviewed interface.
 ## 10. Remaining Migration and Coexistence
 
 Detailed completed-cutover evidence is preserved in
-`docs/history/PHASES_00-06.md`. The live matrix contains only coexistence or
-fallback boundaries that still matter to Phases 7-12.
+`docs/history/PHASES_00-06.md` and `docs/history/PHASES_07-11.md`. The live
+matrix contains only coexistence or fallback boundaries that still matter to
+Phases 8-12.
 
 | Existing tool | Can coexist? | Conflict / boundary | Disable condition | Development method | Rollback |
 | --- | --- | --- | --- | --- | --- |
