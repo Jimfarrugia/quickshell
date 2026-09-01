@@ -293,8 +293,8 @@ state. Feature-local state remains in the module.
 ### 5.1 User-authored configuration
 
 `config/qe.json` is the user-authored QE behavior/configuration source. The
-separate `config/help.json` file is the user-authored reference catalog for the
-help surface. The initial `qe.json` schema contains:
+separate `config/help.json` file is the sole authoritative user-authored
+reference catalog for the help surface. The initial `qe.json` schema contains:
 
 - schema version
 - enabled modules and feature flags
@@ -379,7 +379,7 @@ contracts. UI modules invoke typed domain operations such as `openLauncher()` or
 | Concern                     | Authoritative owner/source                    | Representation                                | Readers                                             | Writer                                 | Propagation                                                                               | Lifetime and invalid handling                                           |
 | --------------------------- | --------------------------------------------- | --------------------------------------------- | --------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | QE user configuration       | User                                          | `config/qe.json`                              | `ConfigService`, modules through service properties | User only                              | watched, validate then publish                                                            | persistent; invalid file retains last-known-good or safe defaults       |
-| Help reference catalog      | Repository defaults plus User                | `defaults/help.json` merged with `config/help.json` | `HelpService`, help surface                    | User only for overrides                   | refresh on help-surface open, validate and merge                                          | reference data; defaults remain when user entries are missing or invalid |
+| Help reference catalog      | User                                          | `config/help.json`                              | `HelpService`, help surface                    | User only                              | refresh on help-surface open, validate then publish                                        | persistent reference data; invalid file produces an empty usable catalog and diagnostic |
 | QE authored themes          | User                                          | `themes/*.json`                               | `ThemeCatalogService`                               | User only                              | discovery/watch and validation                                                            | persistent input; invalid themes excluded with diagnostics              |
 | Generated `Wallpaper` theme | Matugen generation adapter                    | stable XDG data path, same theme schema        | `ThemeCatalogService`, lock reader                  | generation adapter only                | atomic replace then catalog notification                                                  | derived, regenerable; default snapshot seeds fresh installs and LKG is retained on failure |
 | Active QE theme             | `ThemeService`                                | versioned QE state JSON                       | all QE presentation, lock process                   | `ThemeService` only                    | singleton properties/signals                                                              | persistent; missing ID falls back to configured default                 |
@@ -811,12 +811,13 @@ comment, using Unicode case-folding, collapsed whitespace, and punctuation as
 separators. Persistence failures do not fail launches and are exposed as
 bounded diagnostics.
 
-`HelpService` reads the repository default JSON reference catalog and merges
-validated user overrides by stable entry ID. The catalog contains display-only
-entries in the `keybindings` and `commands` categories. Hyprland remains
-authoritative for actual keybindings; catalog values may become stale and are
-never presented as live compositor state. Invalid user entries are discarded
-individually while valid entries and repository defaults remain usable.
+`HelpService` reads the sole user-authored JSON reference catalog. The catalog
+contains display-only entries in the `keybindings` and `commands` categories.
+Hyprland remains authoritative for actual keybindings; catalog values may
+become stale and are never presented as live compositor state. Invalid user
+entries are discarded individually while valid entries remain usable. A
+malformed or unreadable catalog produces an empty usable catalog and a bounded
+diagnostic; there is no repository default merge path.
 
 ### 7.15 Hardware action IPC
 

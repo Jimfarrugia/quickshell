@@ -524,6 +524,5 @@ and `title`; `shortcut` and `command` are optional display text. Categories are
 }
 ```
 
-User entries with an existing ID override the repository default entry. Other
-repository defaults remain visible, and invalid entries are skipped with a
-warning.
+The catalog is authoritative: edit or remove entries directly to control what
+appears on the help page. Invalid entries are skipped with a warning.

@@ -6,7 +6,6 @@ Singleton {
     readonly property string shellDirectory: Quickshell.shellDir
     readonly property string configFile: Quickshell.shellPath("config/qe.json")
     readonly property string helpCatalog: Quickshell.shellPath("config/help.json")
-    readonly property string defaultHelpCatalog: Quickshell.shellPath("defaults/help.json")
     readonly property string defaultsManifest: Quickshell.shellPath("defaults/manifest.json")
     readonly property string defaultWallpaperImage: Quickshell.shellPath("defaults/wallpaper/images/current-wallpaper.png")
     readonly property string themeDirectory: Quickshell.shellPath("themes")

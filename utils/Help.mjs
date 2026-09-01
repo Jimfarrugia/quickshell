@@ -67,22 +67,6 @@ export function validateCatalog(document, boundary = "help") {
     return { entries, errors };
 }
 
-export function merge(defaults, userEntries) {
-    const merged = defaults.map(entry => Object.assign({}, entry));
-    const positions = new Map(merged.map((entry, index) => [entry.id, index]));
-    for (const entry of userEntries || []) {
-        const position = positions.get(entry.id);
-        if (position === undefined) {
-            positions.set(entry.id, merged.length);
-            merged.push(Object.assign({}, entry));
-        } else {
-            merged[position] = Object.assign({}, entry);
-        }
-    }
-    return CATEGORIES.reduce((ordered, category) => ordered.concat(
-        merged.filter(entry => entry.category === category)), []);
-}
-
 function normalize(value) {
     return String(value || "").toLocaleLowerCase()
         .replace(/[^\p{L}\p{N}]+/gu, " ").trim().replace(/\s+/g, " ");

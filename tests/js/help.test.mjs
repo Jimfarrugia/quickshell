@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { merge, search, validateCatalog } from "../../utils/Help.mjs";
+import { search, validateCatalog } from "../../utils/Help.mjs";
 
-const defaults = JSON.parse(await readFile(new URL("../../defaults/help.json", import.meta.url)));
-const catalog = validateCatalog(defaults);
+const catalog = validateCatalog(JSON.parse(await readFile(new URL("../../config/help.json", import.meta.url))));
 assert.deepEqual(catalog.errors, []);
 assert.equal(catalog.entries[0].id, "help.toggle");
 
@@ -23,11 +22,7 @@ assert.ok(validateCatalog({ schemaVersion: 1, entries: [
     { id: "valid", category: "commands", title: "Valid" }
 ]}).entries.some(entry => entry.id === "valid"));
 
-const merged = merge(catalog.entries, user.entries);
-assert.equal(merged[0].id, "help.toggle");
-assert.equal(merged.find(entry => entry.id === "launcher.toggle").title, "Custom launcher");
-assert.equal(merged.at(-1).id, "custom");
-assert.deepEqual(search(merged, "custom launcher"), [merged.find(entry => entry.id === "launcher.toggle")]);
-assert.deepEqual(search(merged, "qe custom"), [merged.find(entry => entry.id === "custom")]);
+assert.equal(catalog.entries.find(entry => entry.id === "launcher.toggle").title, "Toggle application launcher");
+assert.deepEqual(search(user.entries, "custom").map(entry => entry.id), ["launcher.toggle", "custom"]);
 
 console.log("HELP_TEST_PASSED");

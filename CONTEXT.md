@@ -51,8 +51,9 @@ A standalone transient QE surface for browsing and searching the curated help
 reference.
 
 **Reference catalog**:
-User-authored help data, supplemented by repository-provided defaults, that
-describes QE keybindings and common QE commands; it is not live system state.
+User-authored help data that describes QE keybindings and common QE commands;
+it is the sole authority for displayed help content and is not live system
+state.
 
 **Help entry**:
 A single labeled item in the reference catalog describing a keybinding or QE

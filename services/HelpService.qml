@@ -11,13 +11,10 @@ Singleton {
     property var entries: []
     property var results: []
     property string warning: ""
-    property bool defaultsLoaded: false
     property bool userLoaded: false
     property bool warningReported: false
-    property bool defaultAttempted: false
     property bool userAttempted: false
     property bool pendingOpen: false
-    property var defaultEntries: []
     property var userEntries: []
 
     function parseCatalog(file, boundary) {
@@ -29,22 +26,17 @@ Singleton {
     }
 
     function rebuild() {
-        if (defaultsLoaded) {
-            const defaults = parseCatalog(defaultFile, "defaults/help");
-            if (!defaults.errors.length) defaultEntries = defaults.entries;
-            else setWarning(defaults.errors.join("; "));
-        }
         if (userLoaded) {
             const user = parseCatalog(userFile, "config/help");
             userEntries = user.entries;
             if (user.errors.length) setWarning(user.errors.join("; "));
         }
-        entries = Help.merge(defaultEntries, userEntries);
+        entries = userEntries;
         results = Help.search(entries, query);
         maybeOpen();
     }
     function maybeOpen() {
-        if (pendingOpen && defaultAttempted && userAttempted) {
+        if (pendingOpen && userAttempted) {
             pendingOpen = false;
             SurfaceService.openHelp();
         }
@@ -61,10 +53,8 @@ Singleton {
         warning = "";
         warningReported = false;
         pendingOpen = true;
-        defaultAttempted = false;
         userAttempted = false;
         userLoaded = false;
-        defaultFile.reload();
         userFile.reload();
     }
     function setQuery(value) {
@@ -74,22 +64,13 @@ Singleton {
     function close() { SurfaceService.closeHelp(); }
 
     FileView {
-        id: defaultFile
-        path: PathsService.defaultHelpCatalog
-        blockLoading: true
-        watchChanges: false
-        printErrors: false
-        onLoaded: { root.defaultsLoaded = true; root.defaultAttempted = true; root.rebuild(); }
-        onLoadFailed: { root.defaultAttempted = true; root.setWarning("Repository help catalog is unavailable"); root.maybeOpen(); }
-    }
-    FileView {
         id: userFile
         path: PathsService.helpCatalog
         blockLoading: true
         watchChanges: false
         printErrors: false
         onLoaded: { root.userLoaded = true; root.userAttempted = true; root.rebuild(); }
-        onLoadFailed: { root.userLoaded = false; root.userAttempted = true; root.setWarning("User help catalog is unavailable; using repository defaults"); root.rebuild(); }
+        onLoadFailed: { root.userLoaded = false; root.userAttempted = true; root.setWarning("User help catalog is unavailable"); root.rebuild(); }
     }
-    Component.onCompleted: { defaultFile.reload(); userFile.reload(); }
+    Component.onCompleted: userFile.reload()
 }
