@@ -9,8 +9,9 @@ export function normalize(value) {
 export function tokens(value) { return normalize(value).split(" ").filter(Boolean); }
 
 export function isEligible(entry) {
-    return entry && (!entry.isValid || entry.isValid()) && !entry.noDisplay
-        && text(entry.name).trim() && Array.from(entry.command || []).length > 0;
+    if (!entry || entry.noDisplay || !text(entry.name).trim()) return false;
+    if (entry.actionId) return true;
+    return (!entry.isValid || entry.isValid()) && Array.from(entry.command || []).length > 0;
 }
 
 function fields(entry) {
@@ -73,3 +74,15 @@ export function boundedUsage(usage, ids) {
     for (const [id, record] of records.slice(0, 512)) bounded[id] = record;
     return bounded;
 }
+
+export const curatedDashboardActions = Object.freeze([
+    Object.freeze({
+        id: "qe-dashboard-audio",
+        name: "Audio Dashboard",
+        genericName: "QE audio controls",
+        comment: "Toggle the QE audio dashboard",
+        keywords: ["audio", "sound", "volume", "dashboard", "qe"],
+        icon: "equalizer",
+        actionId: "audio"
+    })
+]);

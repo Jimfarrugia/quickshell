@@ -56,7 +56,8 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
   dismissal paths, focus request, and lazy destruction. The dedicated IPC
   helper verifies `qe-dashboard` open/close/toggle/isOpen behavior while the
   shell remains alive. Ticket 02, `02-audio-dashboard-from-bar.md`, is complete;
-  ticket 03, `03-searchable-dashboard-launcher-action.md`, is next.
+  ticket 03, `03-searchable-dashboard-launcher-action.md`, is complete; launcher
+  discovery and activation route through the shared dashboard surface contract.
 - Normal runtime is one guarded QE shell from `shell.qml`, reserving 26 pixels
   at the bottom with `trayHostEnabled` true. Waybar is absent from autostart and
   retired in the theme-switcher; QE owns `org.kde.StatusNotifierWatcher`.

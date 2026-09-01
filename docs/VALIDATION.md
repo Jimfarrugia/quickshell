@@ -80,6 +80,7 @@ timeout 5 quickshell -p tests/qml/dashboard-shell-test.qml
 timeout 5 quickshell -p tests/qml/audio-dashboard-test.qml
 timeout 5 quickshell -p tests/qml/launcher-usage-test.qml
 timeout 5 quickshell -p tests/qml/launcher-selection-test.qml
+timeout 5 quickshell -p tests/qml/launcher-dashboard-action-test.qml
 timeout 5 quickshell -p tests/qml/external-theme-service-test.qml
 timeout 5 quickshell -p tests/qml/osd-service-test.qml
 timeout 5 quickshell -p tests/qml/phase6-action-test.qml
@@ -120,6 +121,9 @@ persisted usage with the QML JavaScript runtime used by the shell.
 The launcher selection test must print `LAUNCHER_SELECTION_TEST_PASSED` after
 provisional startup selection resets to the first result while explicit user
 selection survives a catalog refresh.
+The launcher dashboard action test must print `LAUNCHER_DASHBOARD_ACTION_TEST_PASSED`
+after discovering stable audio metadata and toggling the dashboard through the
+surface contract.
 The help test must print `HELP_TEST_PASSED` after validating catalog schemas,
 stable-ID merging, category ordering, invalid-entry rejection, and global search.
 The wallpaper selector test must print `WALLPAPER_SELECTOR_TEST_PASSED` after

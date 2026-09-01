@@ -20,7 +20,8 @@ Singleton {
 
     function refresh(preserveSelection = selectionExplicit) {
         const selectedId = preserveSelection ? results[selectedIndex]?.id || "" : "";
-        results = Launcher.rank(DesktopEntries.applications.values, query, usage);
+        results = Launcher.rank(Launcher.curatedDashboardActions.concat(
+            DesktopEntries.applications.values), query, usage);
         const retained = results.findIndex(entry => entry.id === selectedId);
         selectedIndex = retained >= 0 ? retained : 0;
         if (preserveSelection && retained < 0) selectionExplicit = false;
@@ -55,6 +56,11 @@ Singleton {
     function retry() { return launchEntry(failedLaunch); }
     function launchEntry(entry) {
         if (!entry || !Launcher.isEligible(entry)) return false;
+        if (entry.actionId) {
+            SurfaceService.closeLauncher();
+            SurfaceService.toggleDashboard(entry.actionId, SurfaceService.activeScreen(), "right");
+            return true;
+        }
         if (pendingLaunch !== null || launcherProcess.running) return false;
         lastFailure = "";
         try {

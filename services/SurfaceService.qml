@@ -9,6 +9,7 @@ Singleton {
     property bool notificationCenterVisible: false
     property bool launcherVisible: false
     property bool helpVisible: false
+    property var dashboardController: null
 
     function openThemeSelector() { themeSelectorVisible = true; }
     function closeThemeSelector() { themeSelectorVisible = false; }
@@ -28,4 +29,12 @@ Singleton {
     function openHelp() { helpVisible = true; }
     function closeHelp() { helpVisible = false; }
     function toggleHelp() { helpVisible ? closeHelp() : openHelp(); }
+    function activeScreen() {
+        const focusedName = CompositorService.focusedMonitorName;
+        return Quickshell.screens.find(screen => screen.name === focusedName)
+            || (Quickshell.screens.length > 0 ? Quickshell.screens[0] : null);
+    }
+    function toggleDashboard(id, screen, side) {
+        if (dashboardController) dashboardController.toggle(id, screen, side);
+    }
 }

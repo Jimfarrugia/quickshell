@@ -11,6 +11,12 @@ import "components"
 
 ShellRoot {
     DashboardController { id: dashboardController }
+    Binding {
+        target: Services.SurfaceService
+        property: "dashboardController"
+        value: dashboardController
+        restoreMode: Binding.RestoreBindingOrValue
+    }
     // Referencing the singletons here establishes deterministic startup ownership.
     readonly property string shellDirectory: Services.PathsService.shellDirectory
     readonly property string defaultTheme: Services.DefaultsService.defaultTheme
