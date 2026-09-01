@@ -20,6 +20,11 @@ and confirmed PipeWire repopulated the built-in and Bose audio nodes. The
 WirePlumber Lua-configuration migration and missing-libcamera messages were
 unrelated to audio-dashboard recovery.
 
+Multi-monitor manual verification is not applicable to the current deployment:
+the bar is configured only on the primary monitor. Existing fixture coverage
+retains source-monitor and active-monitor routing checks for a future
+multi-monitor bar configuration.
+
 - [x] PipeWire event reconciliation keeps confirmed and pending audio state truthful.
 - [x] Device hot-plug and WirePlumber restart behavior completes without stale or misleading controls.
 - [x] Missing integration dependencies, absent devices, stale state, service loss, and fallback launch failure remain local and visible.
