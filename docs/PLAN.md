@@ -47,23 +47,6 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 
 ### 2.1 Current handoff
 
-- Phases 1-7 are complete. Phase 7 includes the accepted launcher, curated help
-  surface, `Super+R` cutover, `Super+/` help binding, and Rofi rollback path.
-- Phase 8 is complete. Its dashboard geometry, routing, lifecycle, fallback, and
-  audio-v1 boundaries are settled in the current handoff and ADR-033. Automated
-  acceptance covers event reconciliation, service loss, hot-plug fixtures,
-  multi-monitor routing, bounded geometry, dismissal, lazy recreation, and the
-  installed `pavucontrol` rollback path. Manual 3.5mm, Bluetooth, and approved
-  WirePlumber restart checks passed on the primary session. Multi-monitor manual
-  verification is not applicable while the bar is configured only on the primary
-  monitor; fixture coverage remains in place.
-- Phase 8 ticket 01 is complete. The production controller and
-  `QS.LazyLoader` fixture verify geometry, replacement/toggle behavior,
-  dismissal paths, focus request, and lazy destruction. The dedicated IPC
-  helper verifies `qe-dashboard` and `qe-audio` open/close/toggle/isOpen behavior
-  while the shell remains alive. Ticket 02, `02-audio-dashboard-from-bar.md`, is complete;
-  ticket 03, `03-searchable-dashboard-launcher-action.md`, is complete; launcher
-  discovery and activation route through the shared dashboard surface contract.
 - Phase 9 is next: Bluetooth dashboard discovery and common lifecycle actions,
   beginning with the open question of whether native Bluetooth APIs support the
   required interactive pairing prompts. Blueman remains the fallback.
@@ -97,7 +80,7 @@ starting environment but is not current-system authority.
 | Area | Current fallback / coexistence boundary | Planned phase |
 | --- | --- | --- |
 | Primary application launcher | Rofi remains available for specialized flows; the accepted QE launcher owns the primary launcher binding | Complete |
-| Audio dashboard | `pavucontrol` remains installed and is the escape hatch for unsupported routing | Phase 8 |
+| Audio dashboard | `pavucontrol` remains installed and is the escape hatch for unsupported routing | Complete |
 | Bluetooth dashboard | Blueman Manager remains available, especially for unsupported pairing interactions | Phase 9 |
 | Network dashboard | `nm-connection-editor` remains available for unsupported profiles and advanced configuration | Phase 10 |
 | Session lock | Hyprlock remains the rollback/current lock until the isolated QE lock passes secure-state, idle, suspend, and recovery acceptance | Phase 12 |
@@ -108,6 +91,8 @@ starting environment but is not current-system authority.
 - Completed Phase 0-6 implementation, acceptance, rollback, and archived handoff
   details: `docs/history/PHASES_00-06.md`
 - Completed Phase 7 implementation, acceptance, rollback, and handoff details:
+  `docs/history/PHASES_07-11.md`
+- Completed Phase 8 implementation, acceptance, rollback, and handoff details:
   `docs/history/PHASES_07-11.md`
 - Original discovery/current-system inventory captured before the completed
   migrations: `docs/history/INITIAL_SYSTEM_INVENTORY.md`
@@ -223,7 +208,7 @@ Phase 1 Foundation
         |
         `--> Phase 12 Secure lock replacement
 
-Phases 3-7 complete enough for daily use
+Phases 3-8 complete enough for daily use
         `--> Phase 13 production supervision, deployment decision, and cleanup
 ```
 
@@ -273,10 +258,10 @@ contract without coordinating through an architecture decision.
 
 ## 8. Implementation Phases
 
-### Completed phases 0-7
+### Completed phases 0-8
 
 Detailed implementation, validation, cutover, and rollback records for phases
-0-7 have been moved losslessly to `docs/history/PHASES_00-06.md` and
+0-8 have been moved losslessly to `docs/history/PHASES_00-06.md` and
 `docs/history/PHASES_07-11.md`.
 
 | Phase | Status | Result |
@@ -293,70 +278,14 @@ Detailed implementation, validation, cutover, and rollback records for phases
 Read the historical phase record only when a current task depends on its detailed
 evidence, rollback history, or implementation rationale.
 
-### Phase 8: Audio dashboard and shared surface foundation
+### Completed Phase 8: Audio dashboard and shared surface foundation
 
-Status: Complete; acceptance passed 2026-09-02. See
-`.scratch/dashboards/issues/04-phase-8-dashboard-acceptance.md` for the evidence
-record.
-
-Objective: establish the shared dashboard/window pattern and replace common
-`pavucontrol` use cases first because PipeWire has a strong native API. The
-foundation must support later dashboards without fixing the eventual control
-center composition prematurely.
-
-Prerequisites:
-
-- bar module launch points and surface routing stable
-- AudioService proven in bar/OSD usage
-
-Relevant decisions: ADR-011 (native integration before commands), ADR-013
-(requested-only idle inhibition), ADR-016 (namespaced transient-surface IPC),
-ADR-026/027 (sidebar surface and styling), and ADR-033 (dashboard surface
-foundation) in `docs/DECISIONS.md`.
-
-Scope:
-
-- shared dashboard/window and quick-setting tile contracts
-- shared dashboard shell: overlay placement, single-surface exclusivity,
-  source-module routing, responsive width/height, and keyboard dismissal
-- audio output/input lists, defaults, levels, mute, and common stream controls
-- explicit `pavucontrol` escape hatch for unsupported operations
-
-Likely affected files/subsystems:
-
-- shared dashboard surface and routing components
-- `modules/audio/`
-- audio/power/idle services
-
-Deliverables:
-
-- reusable dashboard surface pattern
-- audio dashboard v1
-- first-class searchable launcher toggle action for the audio dashboard
-
-Acceptance criteria:
-
-- tiles reflect confirmed and pending state distinctly
-- unavailable integrations do not block the panel
-- default device, volume, and mute changes reconcile from PipeWire events
-- hot-plug and WirePlumber restart behavior is safe
-- unsupported routing opens or points to pavucontrol rather than faking support
-- dashboard opens from the audio source module on the source module's monitor
-- the shell preserves 20px bar/opposite-edge gaps and 20px content insets
-- dashboard overflow scrolls within the bounded surface
-
-Validation:
-
-- fake model tests and live device operations
-- daemon restart/hot-plug manual test
-
-Rollback/recovery:
-
-- pavucontrol remains installed and launchable
-
-Out of scope:
-
-- full PipeWire graph patchbay
+Status: Complete; acceptance passed 2026-09-02. The shared dashboard shell,
+audio dashboard v1, launcher action, resilience checks, and `pavucontrol`
+rollback path passed acceptance. Detailed implementation, validation, and
+rollback evidence is preserved in
+`docs/history/PHASES_07-11.md`; the acceptance record is
+`.scratch/dashboards/issues/04-phase-8-dashboard-acceptance.md`.
 
 ### Phase 9: Bluetooth dashboard
 
@@ -689,7 +618,7 @@ work, but the fake and live adapter must satisfy the same reviewed interface.
 Detailed completed-cutover evidence is preserved in
 `docs/history/PHASES_00-06.md` and `docs/history/PHASES_07-11.md`. The live
 matrix contains only coexistence or fallback boundaries that still matter to
-Phases 8-12.
+Phases 9-12.
 
 | Existing tool | Can coexist? | Conflict / boundary | Disable condition | Development method | Rollback |
 | --- | --- | --- | --- | --- | --- |

@@ -79,3 +79,68 @@ Rollback/recovery:
 Out of scope:
 
 - replacing every Rofi script-mode tool, file search, plugin framework
+
+## Archived Phase 8: Audio dashboard and shared surface foundation
+
+Status: Complete; acceptance passed 2026-09-02. See
+`.scratch/dashboards/issues/04-phase-8-dashboard-acceptance.md` for the evidence
+record.
+
+Objective: establish the shared dashboard/window pattern and replace common
+`pavucontrol` use cases first because PipeWire has a strong native API. The
+foundation must support later dashboards without fixing the eventual control
+center composition prematurely.
+
+Prerequisites:
+
+- bar module launch points and surface routing stable
+- AudioService proven in bar/OSD usage
+
+Relevant decisions: ADR-011 (native integration before commands), ADR-013
+(requested-only idle inhibition), ADR-016 (namespaced transient-surface IPC),
+ADR-026/027 (sidebar surface and styling), and ADR-033 (dashboard surface
+foundation) in `docs/DECISIONS.md`.
+
+Scope:
+
+- shared dashboard/window and quick-setting tile contracts
+- shared dashboard shell: overlay placement, single-surface exclusivity,
+  source-module routing, responsive width/height, and keyboard dismissal
+- audio output/input lists, defaults, levels, mute, and common stream controls
+- explicit `pavucontrol` escape hatch for unsupported operations
+
+Likely affected files/subsystems:
+
+- shared dashboard surface and routing components
+- `modules/audio/`
+- audio/power/idle services
+
+Deliverables:
+
+- reusable dashboard surface pattern
+- audio dashboard v1
+- first-class searchable launcher toggle action for the audio dashboard
+
+Acceptance criteria:
+
+- tiles reflect confirmed and pending state distinctly
+- unavailable integrations do not block the panel
+- default device, volume, and mute changes reconcile from PipeWire events
+- hot-plug and WirePlumber restart behavior is safe
+- unsupported routing opens or points to pavucontrol rather than faking support
+- dashboard opens from the audio source module on the source module's monitor
+- the shell preserves 20px bar/opposite-edge gaps and 20px content insets
+- dashboard overflow scrolls within the bounded surface
+
+Validation:
+
+- fake model tests and live device operations
+- daemon restart/hot-plug manual test
+
+Rollback/recovery:
+
+- pavucontrol remains installed and launchable
+
+Out of scope:
+
+- full PipeWire graph patchbay
