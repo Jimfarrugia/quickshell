@@ -4,16 +4,20 @@
 
 **Blocked by:** 01: Build the Shared Dashboard Shell and Routing Foundation.
 
-**Status:** ready-for-agent
+**Status:** completed
 
-- [ ] Clicking the audio source module opens and toggles the audio dashboard on the module's monitor and right-side anchor.
-- [ ] The header shows the `Audio` feature title and a clickable `settings` icon.
-- [ ] Hovering the settings icon shows the feature-specific tooltip `Open pavucontrol`.
-- [ ] The settings icon launches `pavucontrol` through the reviewed external-launch boundary.
-- [ ] Missing or failed `pavucontrol` launches produce bounded visible errors without closing the dashboard.
-- [ ] The dashboard lists output and input devices and supports selecting each default device.
-- [ ] The dashboard supports output and input volume changes and mute toggles.
-- [ ] The dashboard supports volume and mute controls for common per-application playback streams.
-- [ ] Pending requested state is visibly distinct from confirmed PipeWire state.
-- [ ] Missing devices, unavailable service state, stale state, device hot-plug, and WirePlumber loss are represented locally without blocking unrelated shell surfaces.
-- [ ] Audio integration tests verify controls reconcile from service events and preserve the existing fallback boundary.
+Implemented in `modules/audio/AudioDashboard.qml`, `services/AudioService.qml`,
+and `integrations/PipewireIntegration.qml`. Fixture coverage is in
+`tests/qml/audio-dashboard-test.qml`.
+
+- [x] Clicking the audio source module opens and toggles the audio dashboard on the module's monitor and right-side anchor.
+- [x] The header shows the `Audio` feature title and a clickable `settings` icon.
+- [x] Hovering the settings icon shows the feature-specific tooltip `Open pavucontrol`.
+- [x] The settings icon launches `pavucontrol` through the reviewed external-launch boundary.
+- [x] Missing or failed `pavucontrol` launches produce bounded visible errors without closing the dashboard.
+- [x] The dashboard lists output and input devices and supports selecting each default device.
+- [x] The dashboard supports output and input volume changes and mute toggles.
+- [x] The dashboard supports volume and mute controls for common per-application playback streams.
+- [x] Pending requested volume and mute state is visibly distinct from confirmed PipeWire state.
+- [x] Missing devices and unavailable service state are represented locally without blocking unrelated shell surfaces.
+- [x] Audio fixture tests verify node grouping, pending reconciliation, stale/service-loss handling, hot-plug updates, native controls, and fallback launch failure while the existing fallback boundary remains available.

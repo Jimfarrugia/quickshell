@@ -12,12 +12,17 @@ QtObject {
     property string microphoneAvailability: "available"
     property string microphoneDescription: "Fixture microphone"
     property string description: "Fixture sink"
+    property var sink: null
+    property var source: null
     property int setCallCount: 0
     property int lastSetPercent: -1
     property bool acceptSet: true
     property bool autoConfirmVolume: true
     property bool acceptMute: true
     property bool acceptMicrophoneMute: true
+    property var outputs: []
+    property var inputs: []
+    property var playbackStreams: []
 
     function setVolume(percent) {
         setCallCount++;
@@ -37,4 +42,7 @@ QtObject {
         microphoneMuted = value;
         return true;
     }
+
+    function setDefaultOutput(node) { return true; }
+    function setDefaultInput(node) { return true; }
 }

@@ -1,0 +1,2 @@
+module QE.Modules.Audio
+AudioDashboard 1.0 AudioDashboard.qml

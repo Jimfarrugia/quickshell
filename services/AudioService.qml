@@ -24,6 +24,13 @@ Singleton {
     readonly property var pendingMuted: __pendingMuted
     readonly property var pendingMicrophoneMuted: __pendingMicrophoneMuted
     readonly property string description: integration.description
+    readonly property var outputs: integration.outputs || []
+    readonly property var inputs: integration.inputs || []
+    readonly property var playbackStreams: integration.playbackStreams || []
+    readonly property var defaultOutput: integration.sink
+    readonly property var defaultInput: integration.source
+    property var fallbackIntegration: nativeFallbackIntegration
+    readonly property string fallbackError: fallbackIntegration.error
     property int __pendingVolumePercent: -1
     property var __pendingMuted: null
     property var __pendingMicrophoneMuted: null
@@ -74,6 +81,32 @@ Singleton {
 
     function toggleMicrophoneMuted() { return setMicrophoneMuted(!microphoneMuted); }
 
+    function setDefaultOutput(node) {
+        if (availability !== "available" || !integration.setDefaultOutput) return false;
+        return integration.setDefaultOutput(node);
+    }
+
+    function setDefaultInput(node) {
+        if (microphoneAvailability !== "available" || !integration.setDefaultInput) return false;
+        return integration.setDefaultInput(node);
+    }
+
+    function setNodeVolume(node, percent) {
+        if (!node || !node.audio) return false;
+        node.audio.volume = Math.max(0, Math.min(2, Math.round(percent) / 100));
+        return true;
+    }
+
+    function setNodeMuted(node, value) {
+        if (!node || !node.audio) return false;
+        node.audio.muted = value === true;
+        return true;
+    }
+
+    function launchFallback() {
+        return fallbackIntegration.launch();
+    }
+
     function wheelStep(angleDeltaY) {
         if (angleDeltaY > 0) return stepVolume(5);
         if (angleDeltaY < 0) return stepVolume(-5);
@@ -108,4 +141,5 @@ Singleton {
     }
 
     Integrations.PipewireIntegration { id: nativeIntegration }
+    Integrations.AudioFallbackIntegration { id: nativeFallbackIntegration }
 }

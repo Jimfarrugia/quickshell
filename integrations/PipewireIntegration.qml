@@ -6,6 +6,10 @@ QtObject {
 
     readonly property var sink: Pipewire.defaultAudioSink
     readonly property var source: Pipewire.defaultAudioSource
+    readonly property var nodes: Pipewire.nodes.values
+    readonly property var outputs: nodes.filter(node => node.audio && node.isSink && !node.isStream)
+    readonly property var inputs: nodes.filter(node => node.audio && !node.isSink && !node.isStream)
+    readonly property var playbackStreams: nodes.filter(node => node.audio && node.isSink && node.isStream)
     readonly property string availability: !Pipewire.ready ? "unknown" : (sink ? "available" : "unavailable")
     readonly property string microphoneAvailability: !Pipewire.ready ? "unknown" : (source ? "available" : "unavailable")
     readonly property string freshness: availability === "available" ? "current" : "unknown"
@@ -37,8 +41,20 @@ QtObject {
         return true;
     }
 
+    function setDefaultOutput(node) {
+        if (!node || !node.audio) return false;
+        Pipewire.preferredDefaultAudioSink = node;
+        return true;
+    }
+
+    function setDefaultInput(node) {
+        if (!node || !node.audio) return false;
+        Pipewire.preferredDefaultAudioSource = node;
+        return true;
+    }
+
     property PwObjectTracker tracker: PwObjectTracker {
-        objects: [root.sink, root.source]
+        objects: root.nodes
     }
 
     onVolumePercentChanged: lastUpdated = new Date()

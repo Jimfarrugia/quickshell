@@ -1,7 +1,8 @@
 import Quickshell
 
 Variants {
+    id: root
     property var dashboardController
     model: Quickshell.screens
-    Bar { dashboardController: dashboardController }
+    Bar { dashboardController: root.dashboardController }
 }

@@ -1,17 +1,21 @@
 import QtQuick
 import Quickshell
-import "../../services" as Services
+import Quickshell as QS
 
 ShellRoot {
-    QtObject {
-        id: controller
-        property bool visible: false
-        property string activeId: ""
-        property var sourceScreen: null
-        property string sourceSide: "right"
-        function open(id, screen, side) { activeId = id; sourceScreen = screen; sourceSide = side; visible = true; }
-        function close() { visible = false; }
-        function toggle(id, screen, side) { visible && activeId === id ? close() : open(id, screen, side); }
+    id: root
+
+    Loader {
+        id: controllerLoader
+        source: "components/DashboardController.qml"
+        onLoaded: root.begin(item)
+    }
+
+    QS.LazyLoader {
+        id: shellLoader
+        active: false
+        source: "components/DashboardShell.qml"
+        onItemChanged: if (item) Qt.callLater(() => root.checkShell(item))
     }
     function calculate(width, height, contentHeight, barEnabled, barEdge, barHeight, side) {
         const inset = 20;
@@ -28,7 +32,7 @@ ShellRoot {
         Qt.quit();
     }
 
-    function begin() {
+    function begin(controller) {
         const bottom = calculate(1200, 900, 580,
             true, "bottom", 26, "right");
         if (bottom.width !== 636 || bottom.contentInset !== 20
@@ -56,10 +60,64 @@ ShellRoot {
         if (controller.visible)
             return fail("source toggle did not close the active dashboard");
 
+        root.controller = controller;
+        controller.open("fixture", null, "right");
+        shellLoader.active = true;
+
+    }
+
+    property var controller
+
+    function checkShell(shell) {
+        shell.controller = controller;
+        if (!shell.focusable || !shell.keyboardTargetRequested)
+            return fail("dashboard shell did not request keyboard focus");
+        shell.viewportWidth = 1200;
+        shell.viewportHeight = 900;
+        shell.testBarEnabled = true;
+        shell.testBarEdge = "bottom";
+        shell.testBarHeight = 26;
+        shell.contentHeightOverride = 580;
+        controller.open("fixture", "monitor-1", "right");
+        shell.dismissFromEscape();
+        if (controller.visible)
+            return fail("Escape dismissal did not close the controller");
+        controller.open("fixture", "monitor-1", "right");
+        shell.dismissFromOutside();
+        if (controller.visible)
+            return fail("outside dismissal did not close the controller");
+        controller.open("fixture", "monitor-1", "right");
+        if (shell.surfaceWidth !== 636 || shell.surfaceHeight !== 620
+                || shell.surfaceX !== 544 || shell.surfaceY !== 234)
+            return fail("instantiated shell did not expose expected bottom geometry");
+
+        shell.testBarEdge = "top";
+        shell.testBarHeight = 30;
+        shell.contentHeightOverride = 100;
+        controller.sourceSide = "left";
+        if (shell.surfaceX !== 20 || shell.surfaceY !== 50
+                || shell.surfaceHeight !== 140)
+            return fail("instantiated shell did not follow top-bar geometry");
+
+        shell.testBarEnabled = false;
+        shell.viewportWidth = 300;
+        shell.viewportHeight = 500;
+        shell.testBarEdge = "bottom";
+        if (shell.surfaceWidth !== 260 || shell.surfaceX !== 20
+                || shell.surfaceY !== 340)
+            return fail("instantiated shell did not constrain narrow no-bar output");
+
+        controller.close();
+        if (controller.visible || controller.activeId !== "")
+            return fail("dashboard controller did not close the shell state");
+
+        shellLoader.active = false;
+        if (shellLoader.item !== null)
+            return fail("lazy loader did not destroy the dashboard shell");
+
         console.log("DASHBOARD_SHELL_TEST_PASSED");
         Qt.quit();
     }
 
     Timer { interval: 3000; running: true; onTriggered: fail("test timed out") }
-    Component.onCompleted: Qt.callLater(begin)
 }

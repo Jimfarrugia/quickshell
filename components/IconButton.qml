@@ -11,6 +11,8 @@ Rectangle {
     property color toggleColor: Services.ThemeService.theme.tokens.success
     property color foregroundColor: Services.ThemeService.theme.tokens.on_surface
     property color borderColor: Services.ThemeService.theme.tokens.outline
+    property string tooltipText: ""
+    readonly property bool hovered: hover.hovered
     signal clicked()
     signal toggled(bool checked)
 
@@ -42,4 +44,5 @@ Rectangle {
         id: tap
         onTapped: root.toggleable ? root.toggled(!root.checked) : root.clicked()
     }
+
 }

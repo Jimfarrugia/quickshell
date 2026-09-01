@@ -30,6 +30,7 @@ bash tests/helpers/brightness-helper.test.sh
 bash tests/helpers/single-instance.test.sh
 bash tests/helpers/theme-hot-reload.test.sh
 bash tests/helpers/theme-selector-ipc.test.sh
+bash tests/helpers/dashboard-ipc.test.sh
 bash tests/helpers/external-theme-adapter.test.sh
 bash tests/helpers/wallpaper-cache.test.sh
 bash tests/helpers/wallpaper-helper.test.sh
@@ -75,6 +76,8 @@ timeout 5 quickshell -p tests/qml/theme-selector-test.qml
 timeout 5 quickshell -p tests/qml/wallpaper-selector-test.qml
 timeout 5 quickshell -p tests/qml/segmented-toggle-test.qml
 timeout 5 quickshell -p tests/qml/palette-viewer-test.qml
+timeout 5 quickshell -p tests/qml/dashboard-shell-test.qml
+timeout 5 quickshell -p tests/qml/audio-dashboard-test.qml
 timeout 5 quickshell -p tests/qml/launcher-usage-test.qml
 timeout 5 quickshell -p tests/qml/launcher-selection-test.qml
 timeout 5 quickshell -p tests/qml/external-theme-service-test.qml
@@ -125,6 +128,11 @@ focused-filename publication.
 The external theme service test uses a fake adapter and must print
 `EXTERNAL_THEME_SERVICE_TEST_PASSED` after QE commits first and retains that
 theme through a truthful external partial-failure result.
+The dashboard shell fixture must print `DASHBOARD_SHELL_TEST_PASSED` after
+checking production-controller routing, geometry, dismissal, focus request,
+and lazy recreation. The dashboard IPC helper must print
+`DASHBOARD_IPC_TEST_PASSED` after checking the namespaced open, close, toggle,
+and isOpen contract while the shell remains alive.
 
 ### Notification tests
 
