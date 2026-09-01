@@ -7,6 +7,7 @@ PanelWindow {
     id: root
 
     property var modelData
+    property var dashboardController
     property bool idleWindowRegistered: false
 
     function updateIdleWindowRegistration() {
@@ -42,7 +43,7 @@ PanelWindow {
             anchors.verticalCenter: parent.verticalCenter
             spacing: Services.ConfigService.config.bar.moduleSpacing
 
-            NetworkModule {}
+            NetworkModule { sourceScreen: root.modelData; dashboardController: root.dashboardController }
             MetricsModule {}
         }
 
@@ -79,7 +80,7 @@ PanelWindow {
             IdleInhibitorModule {}
             DoNotDisturbModule {}
             BluetoothModule {}
-            AudioModule {}
+             AudioModule { sourceScreen: root.modelData; dashboardController: root.dashboardController }
             BrightnessModule {}
             BatteryModule {}
             ClockModule {}

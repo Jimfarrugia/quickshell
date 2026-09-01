@@ -2,6 +2,9 @@ import "../../components"
 import "../../services" as Services
 
 BarChip {
+    property var sourceScreen: null
+    property var dashboardController
+    property string sourceSide: "left"
     readonly property bool wifiConnected: Services.NetworkService.connectionType === "wifi"
     readonly property bool wiredConnected: Services.NetworkService.connectionType === "wired"
 
@@ -21,4 +24,5 @@ BarChip {
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
     configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily
     configuredFontSize: Services.ConfigService.config.appearance.fontSize
+    onClicked: dashboardController.toggle("network", sourceScreen, sourceSide)
 }

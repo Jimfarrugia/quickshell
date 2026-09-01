@@ -3,6 +3,9 @@ import "../../components"
 import "../../services" as Services
 
 BarChip {
+    property var sourceScreen: null
+    property var dashboardController
+    property string sourceSide: "right"
     function iconForVolume(volumePercent) {
         if (volumePercent <= 30) return "volume_mute";
         if (volumePercent <= 60) return "volume_down";
@@ -21,6 +24,7 @@ BarChip {
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
     configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily
     configuredFontSize: Services.ConfigService.config.appearance.fontSize
+    onClicked: dashboardController.toggle("audio", sourceScreen, sourceSide)
 
     WheelHandler {
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad

@@ -20,6 +20,7 @@ NotificationsIpc 1.0 NotificationsIpc.qml
 ActionsIpc 1.0 ActionsIpc.qml
 LauncherIpc 1.0 LauncherIpc.qml
 HelpIpc 1.0 HelpIpc.qml
+DashboardIpc 1.0 DashboardIpc.qml
 ExternalThemeAdapter 1.0 ExternalThemeAdapter.qml
 MatugenAdapter 1.0 MatugenAdapter.qml
 WallpaperAdapter 1.0 WallpaperAdapter.qml

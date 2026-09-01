@@ -7,21 +7,24 @@ import "services" as Services
 import "integrations"
 import "modules/test_surface"
 import "modules/bar"
+import "components"
 
 ShellRoot {
+    DashboardController { id: dashboardController }
     // Referencing the singletons here establishes deterministic startup ownership.
     readonly property string shellDirectory: Services.PathsService.shellDirectory
     readonly property string defaultTheme: Services.DefaultsService.defaultTheme
     readonly property string activeTheme: Services.ThemeService.activeThemeId
 
     TestSurface {}
-    BarHost {}
+    BarHost { dashboardController: dashboardController }
     ThemeSelectorIpc {}
     WallpaperSelectorIpc {}
     PaletteViewerIpc {}
     NotificationsIpc {}
     LauncherIpc {}
     HelpIpc {}
+    DashboardIpc { controller: dashboardController }
     ActionsIpc {}
     ExternalThemeAdapter {
         id: externalThemeAdapter
@@ -71,6 +74,12 @@ ShellRoot {
     QS.LazyLoader {
         active: Services.SurfaceService.notificationCenterVisible
         source: "modules/notifications/NotificationCenter.qml"
+    }
+
+    QS.LazyLoader {
+        active: dashboardController.visible
+        source: "components/DashboardShell.qml"
+        onItemChanged: if (item) item.controller = dashboardController
     }
 
     QS.LazyLoader {
