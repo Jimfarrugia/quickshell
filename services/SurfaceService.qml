@@ -8,6 +8,7 @@ Singleton {
     property bool paletteViewerVisible: false
     property bool notificationCenterVisible: false
     property bool launcherVisible: false
+    property bool helpVisible: false
 
     function openThemeSelector() { themeSelectorVisible = true; }
     function closeThemeSelector() { themeSelectorVisible = false; }
@@ -24,4 +25,7 @@ Singleton {
     function openLauncher() { launcherVisible = true; }
     function closeLauncher() { launcherVisible = false; }
     function toggleLauncher() { launcherVisible ? closeLauncher() : openLauncher(); }
+    function openHelp() { helpVisible = true; }
+    function closeHelp() { helpVisible = false; }
+    function toggleHelp() { helpVisible ? closeHelp() : openHelp(); }
 }

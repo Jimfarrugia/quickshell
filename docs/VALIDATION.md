@@ -24,6 +24,7 @@ node tests/js/external-theme.test.mjs
 node tests/js/matugen.test.mjs
 node tests/js/external-wallpaper-theme.test.mjs
 node tests/js/launcher.test.mjs
+node tests/js/help.test.mjs
 bash tests/helpers/system-metrics-helper.test.sh
 bash tests/helpers/brightness-helper.test.sh
 bash tests/helpers/single-instance.test.sh
@@ -116,6 +117,8 @@ persisted usage with the QML JavaScript runtime used by the shell.
 The launcher selection test must print `LAUNCHER_SELECTION_TEST_PASSED` after
 provisional startup selection resets to the first result while explicit user
 selection survives a catalog refresh.
+The help test must print `HELP_TEST_PASSED` after validating catalog schemas,
+stable-ID merging, category ordering, invalid-entry rejection, and global search.
 The wallpaper selector test must print `WALLPAPER_SELECTOR_TEST_PASSED` after
 verifying responsive breakpoints, exact 16:9 card sizing after grid gaps, and
 focused-filename publication.

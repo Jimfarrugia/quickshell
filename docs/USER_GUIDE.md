@@ -26,6 +26,7 @@
   - [Capture a New Default](#capture-a-new-default)
   - [Restore the Committed Default](#restore-the-committed-default)
 - [6. Notifications and OSDs](#6-notifications-and-osds)
+- [7. Help Entries](#7-help-entries)
 
 ## 1. What Is QE?
 
@@ -501,3 +502,28 @@ held to repeat.
 
 `Print` and `Super+S` capture a region through QE. The resulting notification
 includes actions to view the image and open the screenshot directory.
+
+## 7. Help Entries
+
+Add custom help entries to `config/help.json`. The file is refreshed whenever
+the help surface opens with `Super+/`. Each entry requires an `id`, `category`,
+and `title`; `shortcut` and `command` are optional display text. Categories are
+`keybindings` or `commands`, and commands shown here are never executed.
+
+```json
+{
+  "schemaVersion": 1,
+  "entries": [
+    {
+      "id": "my-shortcut",
+      "category": "keybindings",
+      "title": "Open my application",
+      "shortcut": "Super+M"
+    }
+  ]
+}
+```
+
+User entries with an existing ID override the repository default entry. Other
+repository defaults remain visible, and invalid entries are skipped with a
+warning.

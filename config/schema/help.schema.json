@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "entries"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "entries": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "category", "title"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "\\S" },
+          "category": { "enum": ["keybindings", "commands"] },
+          "title": { "type": "string", "minLength": 1, "maxLength": 512, "pattern": "\\S" },
+          "shortcut": { "type": "string", "minLength": 1, "maxLength": 512, "pattern": "\\S" },
+          "command": { "type": "string", "minLength": 1, "maxLength": 512, "pattern": "\\S" }
+        }
+      }
+    }
+  }
+}

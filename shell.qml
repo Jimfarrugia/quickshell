@@ -21,6 +21,7 @@ ShellRoot {
     PaletteViewerIpc {}
     NotificationsIpc {}
     LauncherIpc {}
+    HelpIpc {}
     ActionsIpc {}
     ExternalThemeAdapter {
         id: externalThemeAdapter
@@ -45,6 +46,11 @@ ShellRoot {
     QS.LazyLoader {
         active: Services.SurfaceService.launcherVisible
         source: "modules/launcher/Launcher.qml"
+    }
+
+    QS.LazyLoader {
+        active: Services.SurfaceService.helpVisible
+        source: "modules/help/Help.qml"
     }
 
     QS.LazyLoader {

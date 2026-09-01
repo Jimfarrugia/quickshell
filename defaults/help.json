@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "entries": [
+    { "id": "help.toggle", "category": "keybindings", "title": "Toggle help", "shortcut": "Super+/" },
+    { "id": "launcher.toggle", "category": "keybindings", "title": "Toggle application launcher", "shortcut": "Super+R" },
+    { "id": "terminal.open", "category": "keybindings", "title": "Open terminal", "shortcut": "Super+Q" },
+    { "id": "browser.open", "category": "keybindings", "title": "Open web browser", "shortcut": "Super+W" },
+    { "id": "files.open", "category": "keybindings", "title": "Open file manager", "shortcut": "Super+E" },
+    { "id": "notifications.toggle", "category": "keybindings", "title": "Toggle notification center", "shortcut": "Super+N" },
+    { "id": "lock.open", "category": "keybindings", "title": "Lock screen", "shortcut": "Super+Backspace" },
+    { "id": "power.open", "category": "keybindings", "title": "Open power menu", "shortcut": "Super+Escape" },
+    { "id": "launcher.command", "category": "commands", "title": "Open application launcher", "command": "qe-launch qe-launcher toggle" },
+    { "id": "help.command", "category": "commands", "title": "Open help", "command": "qe-launch qe-help toggle" },
+    { "id": "rofi.command", "category": "commands", "title": "Rofi application launcher", "command": "rofi -show drun" }
+  ]
+}

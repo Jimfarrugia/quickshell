@@ -50,6 +50,7 @@ const themeSchema = await load("../../themes/schema.json");
 const stateSchema = await load("../../config/schema/theme-state.schema.json");
 const notificationStateSchema = await load("../../config/schema/notification-state.schema.json");
 const defaultsSchema = await load("../../defaults/schema.json");
+const helpSchema = await load("../../config/schema/help.schema.json");
 
 for (const path of ["../../config/qe.json", "../fixtures/config/valid.json"])
   assert.deepEqual(validate(await load(path), configSchema), [], path);
@@ -58,6 +59,8 @@ for (const path of ["../../themes/poimandres.json", "../../themes/gruvbox.json",
 assert.deepEqual(validate(await load("../fixtures/state/valid.json"), stateSchema), []);
 assert.deepEqual(validate(await load("../fixtures/notification-state/valid.json"), notificationStateSchema), []);
 assert.deepEqual(validate(await load("../../defaults/manifest.json"), defaultsSchema), []);
+assert.deepEqual(validate(await load("../../defaults/help.json"), helpSchema), []);
+assert.deepEqual(validate(await load("../../config/help.json"), helpSchema), []);
 
 assert.ok(validate(await load("../fixtures/config/invalid-root.json"), configSchema).length > 0);
 assert.ok(validate(await load("../fixtures/config/invalid-field.json"), configSchema).length > 0);
