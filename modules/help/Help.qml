@@ -41,7 +41,7 @@ PanelWindow {
         anchors.centerIn: parent
         width: parent.width * 0.8
         height: parent.height * 0.8
-        color: Services.ThemeService.theme.tokens.surface_panel
+        color: Services.ThemeService.theme.tokens.background
         radius: Services.ConfigService.config.appearance.radius + 2
         border.width: Services.ConfigService.config.appearance.borderWidth
         border.color: Services.ThemeService.theme.tokens.outline_variant
@@ -55,16 +55,6 @@ PanelWindow {
             anchors.fill: parent
             anchors.margins: 20
             spacing: Services.ConfigService.config.appearance.spacing
-
-            Text {
-                Layout.fillWidth: true
-                text: "HELP"
-                color: Services.ThemeService.theme.tokens.secondary
-                font.family: Services.ConfigService.config.appearance.monospaceFontFamily
-                font.pixelSize: 11
-                font.weight: Font.DemiBold
-                font.letterSpacing: 1.5
-            }
 
             TextField {
                 id: query
@@ -130,6 +120,7 @@ PanelWindow {
                 id: scrollView
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                Layout.topMargin: Services.ConfigService.config.appearance.spacing
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
                 contentWidth: width
@@ -144,17 +135,17 @@ PanelWindow {
                         model: ["keybindings", "commands"]
                         delegate: ColumnLayout {
                             required property string modelData
+                            visible: root.categoryEntries(modelData).length > 0
                             Layout.fillWidth: true
                             spacing: 8
 
                             Text {
                                 Layout.fillWidth: true
-                                text: modelData
+                                text: modelData === "keybindings" ? "Keybindings" : "Commands"
                                 color: Services.ThemeService.theme.tokens.secondary
-                                font.family: Services.ConfigService.config.appearance.monospaceFontFamily
-                                font.pixelSize: 11
+                                font.family: Services.ConfigService.config.appearance.fontFamily
+                                font.pixelSize: 22
                                 font.weight: Font.DemiBold
-                                font.letterSpacing: 1
                             }
 
                             GridLayout {
@@ -203,7 +194,7 @@ PanelWindow {
                                                 font.family: modelData.command
                                                     ? Services.ConfigService.config.appearance.monospaceFontFamily
                                                     : Services.ConfigService.config.appearance.fontFamily
-                                                font.pixelSize: 11
+                                                font.pixelSize: 12
                                                 elide: Text.ElideRight
                                             }
                                         }
@@ -215,15 +206,17 @@ PanelWindow {
                 }
             }
 
-            Text {
-                Layout.fillWidth: true
-                visible: Services.HelpService.results.length === 0
-                text: Services.HelpService.query === "" ? "No help entries" : "No matches."
-                color: Services.ThemeService.theme.tokens.on_surface_variant
-                font.family: Services.ConfigService.config.appearance.fontFamily
-                font.pixelSize: 16
-                horizontalAlignment: Text.AlignHCenter
-            }
+        }
+
+        Text {
+            anchors.centerIn: parent
+            width: parent.width - 40
+            visible: Services.HelpService.results.length === 0
+            text: Services.HelpService.query === "" ? "No help entries" : "No matches."
+            color: Services.ThemeService.theme.tokens.on_surface_variant
+            font.family: Services.ConfigService.config.appearance.fontFamily
+            font.pixelSize: 16
+            horizontalAlignment: Text.AlignHCenter
         }
     }
 
