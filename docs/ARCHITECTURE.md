@@ -1,6 +1,6 @@
 # QE Architecture
 
-Status: Current architecture implemented through Phase 7; remaining planned
+Status: Current architecture implemented through Phase 8; remaining planned
 surfaces and deployment choices are tracked in `docs/PLAN.md`
 
 This document is the authoritative description of the Quickshell Environment

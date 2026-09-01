@@ -26,8 +26,9 @@ PanelWindow {
     readonly property bool keyboardTargetRequested: keyTarget.focus
     readonly property string featureTitle: controller && controller.activeId === "audio" ? "Audio" : title
 
-    function dismissFromOutside() { if (root.controller) root.controller.close(); }
-    function dismissFromEscape() { if (root.controller) root.controller.close(); }
+    function dismiss() { if (root.controller) root.controller.close(); }
+    function dismissFromOutside() { root.dismiss(); }
+    function dismissFromEscape() { root.dismiss(); }
     property Component contentComponent: null
     default property alias contentData: contentColumn.data
 
@@ -120,8 +121,10 @@ PanelWindow {
                     width: parent.width
                     spacing: Services.ConfigService.config.appearance.spacing
                     Loader {
-                        active: !!root.controller && root.controller.activeId === "audio"
-                        sourceComponent: audioDashboard
+                        active: !!root.controller && root.controller.visible
+                        sourceComponent: root.contentComponent
+                            || (root.controller && root.controller.activeId === "audio"
+                                ? audioDashboard : unavailableDashboard)
                     }
                 }
             }
@@ -129,7 +132,16 @@ PanelWindow {
     }
 
     Component { id: audioDashboard; AudioDashboard {} }
+    Component {
+        id: unavailableDashboard
+        Text {
+            text: `${root.featureTitle || "Dashboard"} is not available yet`
+            color: Services.ThemeService.theme.tokens.on_surface_variant
+            font.family: Services.ConfigService.config.appearance.fontFamily
+            font.pixelSize: Services.ConfigService.config.appearance.fontSize
+        }
+    }
 
     Component.onCompleted: keyTarget.forceActiveFocus()
-    onClosed: root.dismissFromOutside()
+    onClosed: root.dismiss()
 }

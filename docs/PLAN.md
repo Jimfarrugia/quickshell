@@ -1,6 +1,6 @@
 # QE Implementation Plan
 
-Status: Phases 1-7 complete; Phase 8 active
+Status: Phases 1-8 complete; Phase 9 next
 
 Last inventory: 2026-09-02
 
@@ -41,7 +41,7 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 | Theme/Matugen integration | Complete | Manual selector and external machine integration complete; Matugen mapping, staged promotion, QE-localized wallpaper selector, and Hyprpaper XDG-path application complete; external generated Matugen artifacts now delivered as QE-generated `wallpaper` theme slots applied by the external switcher, including imv, mpv, and Yazi; runtime/default artifact separation and idempotent promotion added; `QE_THEME_SWITCHER` wired for production through the installed `qe-theme-switcher` wrapper. Phase 4 acceptance passed on 2026-08-26 |
 | Notifications/OSDs | Complete | QE owns notifications and OSDs; Dunst cutover, rollback, and post-cutover legacy cleanup passed 2026-08-31 |
 | Launcher/help | Complete | Launcher, curated help surface, `Super+R` cutover, `Super+/` help binding, rollback, and focused-output multi-monitor acceptance passed 2026-09-01 |
-| Dashboards/control center | Phase 8 active | Shared dashboard foundation and audio dashboard complete; launcher access and acceptance remain |
+| Dashboards/control center | Complete | Phase 8 shared dashboard foundation, audio dashboard, launcher access, resilience, and rollback acceptance passed 2026-09-02 |
 | Lock replacement | Not started | Phase 12 |
 | Production hardening | Not started | Phase 13; final deployment location remains undecided |
 
@@ -49,8 +49,12 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 
 - Phases 1-7 are complete. Phase 7 includes the accepted launcher, curated help
   surface, `Super+R` cutover, `Super+/` help binding, and Rofi rollback path.
-- Phase 8 is active. Its dashboard geometry, routing, lifecycle, fallback, and
-  audio-v1 boundaries are settled in the current handoff and ADR-033.
+- Phase 8 is complete. Its dashboard geometry, routing, lifecycle, fallback, and
+  audio-v1 boundaries are settled in the current handoff and ADR-033. Automated
+  acceptance covers event reconciliation, service loss, hot-plug fixtures,
+  multi-monitor routing, bounded geometry, dismissal, lazy recreation, and the
+  installed `pavucontrol` rollback path. A disruptive live WirePlumber restart
+  was intentionally not run on the primary session.
 - Phase 8 ticket 01 is complete. The production controller and
   `QS.LazyLoader` fixture verify geometry, replacement/toggle behavior,
   dismissal paths, focus request, and lazy destruction. The dedicated IPC

@@ -17,6 +17,10 @@ ShellRoot {
         source: "components/DashboardShell.qml"
         onItemChanged: if (item) Qt.callLater(() => root.checkShell(item))
     }
+    Component {
+        id: fixtureDashboard
+        Text { text: "Fixture dashboard" }
+    }
     function calculate(width, height, contentHeight, barEnabled, barEdge, barHeight, side) {
         const inset = 20;
         const gap = barEnabled ? Number(barHeight) + inset : inset;
@@ -70,6 +74,7 @@ ShellRoot {
 
     function checkShell(shell) {
         shell.controller = controller;
+        shell.contentComponent = fixtureDashboard;
         if (!shell.focusable || !shell.keyboardTargetRequested)
             return fail("dashboard shell did not request keyboard focus");
         shell.viewportWidth = 1200;

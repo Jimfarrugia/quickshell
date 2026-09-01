@@ -26,10 +26,18 @@ done
 
 targets="$(qs ipc --pid "$shell_pid" show)"
 [[ "$targets" == *"target qe-dashboard"* ]]
+[[ "$targets" == *"target qe-audio"* ]]
 [[ "$(qs ipc --pid "$shell_pid" call qe-dashboard isOpen audio)" == "false" ]]
+[[ "$(qs ipc --pid "$shell_pid" call qe-audio isOpen)" == "false" ]]
 
 qs ipc --pid "$shell_pid" call qe-dashboard open audio
 [[ "$(qs ipc --pid "$shell_pid" call qe-dashboard isOpen audio)" == "true" ]]
+qs ipc --pid "$shell_pid" call qe-audio close
+[[ "$(qs ipc --pid "$shell_pid" call qe-audio isOpen)" == "false" ]]
+qs ipc --pid "$shell_pid" call qe-audio toggle
+[[ "$(qs ipc --pid "$shell_pid" call qe-audio isOpen)" == "true" ]]
+qs ipc --pid "$shell_pid" call qe-audio toggle
+[[ "$(qs ipc --pid "$shell_pid" call qe-audio isOpen)" == "false" ]]
 
 qs ipc --pid "$shell_pid" call qe-dashboard open network
 [[ "$(qs ipc --pid "$shell_pid" call qe-dashboard isOpen audio)" == "false" ]]

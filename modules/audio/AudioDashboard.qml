@@ -9,9 +9,7 @@ ColumnLayout {
 
     function labelFor(node) { return node.description || node.nickname || node.name || "Unknown device"; }
     function percentFor(node) {
-        if (node === Services.AudioService.defaultOutput)
-            return Services.AudioService.displayVolumePercent;
-        return Math.round((node.audio ? node.audio.volume : 0) * 100);
+        return Services.AudioService.displayNodeVolumePercent(node);
     }
 
     component StateLabel: Text {
@@ -24,16 +22,22 @@ ColumnLayout {
         required property var modelData
         readonly property var node: modelData
         required property bool input
+        property bool stream: false
         Layout.fillWidth: true
         spacing: 8
 
         StateLabel { text: root.labelFor(parent.node); Layout.fillWidth: true; elide: Text.ElideRight }
-        StateLabel { text: `${root.percentFor(parent.node)}%${parent.node.audio && parent.node.audio.muted ? " muted" : ""}` }
-        Button {
-            text: parent.node.audio && parent.node.audio.muted ? "Unmute" : "Mute"
-            onClicked: Services.AudioService.setNodeMuted(parent.node, !(parent.node.audio && parent.node.audio.muted))
+        StateLabel {
+            text: `${root.percentFor(parent.node)}%${Services.AudioService.displayNodeMuted(parent.node) ? " muted" : ""}`
+                + (parent.node === Services.AudioService.defaultOutput
+                    && Services.AudioService.pendingVolumePercent >= 0 ? " pending" : "")
         }
         Button {
+            text: Services.AudioService.displayNodeMuted(parent.node) ? "Unmute" : "Mute"
+            onClicked: Services.AudioService.setNodeMuted(parent.node, !Services.AudioService.displayNodeMuted(parent.node))
+        }
+        Button {
+            visible: !parent.stream
             text: parent.input ? "Use input" : "Use output"
             enabled: parent.input ? Services.AudioService.defaultInput !== parent.node
                                   : Services.AudioService.defaultOutput !== parent.node
@@ -74,7 +78,7 @@ ColumnLayout {
     StateLabel { text: "Applications" }
     Repeater {
         model: Services.AudioService.playbackStreams
-        delegate: DeviceRow { input: false }
+        delegate: DeviceRow { input: false; stream: true }
     }
     StateLabel { visible: Services.AudioService.playbackStreams.length === 0; text: "No active playback streams" }
 

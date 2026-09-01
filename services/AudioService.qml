@@ -34,6 +34,20 @@ Singleton {
     property int __pendingVolumePercent: -1
     property var __pendingMuted: null
     property var __pendingMicrophoneMuted: null
+    property var __pendingNode: null
+    property int __pendingNodeVolumePercent: -1
+    property var __pendingNodeMuted: null
+
+    function displayNodeVolumePercent(node) {
+        if (node === defaultOutput) return displayVolumePercent;
+        return node === __pendingNode && __pendingNodeVolumePercent >= 0
+            ? __pendingNodeVolumePercent : Math.round((node.audio ? node.audio.volume : 0) * 100);
+    }
+
+    function displayNodeMuted(node) {
+        return node === __pendingNode && __pendingNodeMuted !== null
+            ? __pendingNodeMuted : node.audio && node.audio.muted;
+    }
 
     function setVolume(percent) {
         if (availability !== "available") return false;
@@ -93,14 +107,37 @@ Singleton {
 
     function setNodeVolume(node, percent) {
         if (!node || !node.audio) return false;
-        node.audio.volume = Math.max(0, Math.min(2, Math.round(percent) / 100));
+        const clamped = Math.max(0, Math.min(200, Math.round(percent)));
+        __pendingNode = node;
+        __pendingNodeVolumePercent = clamped;
+        node.audio.volume = clamped / 100;
         return true;
     }
 
     function setNodeMuted(node, value) {
         if (!node || !node.audio) return false;
-        node.audio.muted = value === true;
+        __pendingNode = node;
+        __pendingNodeMuted = value === true;
+        node.audio.muted = __pendingNodeMuted;
         return true;
+    }
+
+    Connections {
+        target: root.__pendingNode && root.__pendingNode.audio
+        function onVolumeChanged() {
+            if (root.__pendingNodeVolumePercent >= 0
+                    && Math.abs(Math.round(target.volume * 100)
+                    - root.__pendingNodeVolumePercent) <= 1)
+                root.__pendingNodeVolumePercent = -1;
+            if (root.__pendingNodeVolumePercent < 0 && root.__pendingNodeMuted === null)
+                root.__pendingNode = null;
+        }
+        function onMutedChanged() {
+            if (root.__pendingNodeMuted !== null && target.muted === root.__pendingNodeMuted)
+                root.__pendingNodeMuted = null;
+            if (root.__pendingNodeVolumePercent < 0 && root.__pendingNodeMuted === null)
+                root.__pendingNode = null;
+        }
     }
 
     function launchFallback() {
