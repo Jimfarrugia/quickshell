@@ -11,8 +11,11 @@ IPC fixtures pass; full-repository `qmllint` passes; the persistent shell remain
 alive under the documented smoke timeout; and `/usr/sbin/pavucontrol` is
 installed and launched successfully. The fixture model covers PipeWire event
 reconciliation, service loss, stale state, hot-plug, geometry, routing,
-dismissal, and lazy recreation. A live WirePlumber restart was not performed on
-the primary session because it is disruptive; the native PipeWire readiness and
+dismissal, and lazy recreation. Manual device checks confirmed that inserting
+3.5mm headphones produces a confirmed volume update, while connecting a
+Bluetooth headset discovers the device and changes both the default input and
+output in the dashboard. A live WirePlumber restart was not performed on the
+primary session because it is disruptive; the native PipeWire readiness and
 reconnection path remains covered by the fixture contract.
 
 - [x] PipeWire event reconciliation keeps confirmed and pending audio state truthful.
