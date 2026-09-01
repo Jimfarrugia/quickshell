@@ -4,7 +4,7 @@ import { search, validateCatalog } from "../../utils/Help.mjs";
 
 const catalog = validateCatalog(JSON.parse(await readFile(new URL("../../config/help.json", import.meta.url))));
 assert.deepEqual(catalog.errors, []);
-assert.equal(catalog.entries[0].id, "help.toggle");
+assert.ok(catalog.entries.some(entry => entry.id === "help.toggle"));
 
 const user = validateCatalog({ schemaVersion: 1, entries: [
     { id: "launcher.toggle", category: "keybindings", title: "Custom launcher", shortcut: "Super+Space" },

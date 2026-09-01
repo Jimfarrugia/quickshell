@@ -15,11 +15,7 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
     anchors { top: true; bottom: true; left: true; right: true }
-    screen: {
-        const name = Services.CompositorService.focusedMonitorName;
-        return Quickshell.screens.find(item => item.name === name)
-            || (Quickshell.screens.length > 0 ? Quickshell.screens[0] : null);
-    }
+    screen: null
 
     function scrollBy(delta) {
         scrollView.contentY = Math.max(0, Math.min(scrollView.contentHeight - scrollView.height,

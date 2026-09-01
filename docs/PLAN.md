@@ -2,7 +2,7 @@
 
 Status: Phases 1-7 complete
 
-Last inventory: 2026-08-31
+Last inventory: 2026-09-01
 
 This document is the authoritative live roadmap, implementation sequence,
 project-status reference, active/future phase scope, risk register, and polling
@@ -40,7 +40,7 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 | Bar parity and Waybar cutover | Complete | Phase 3 acceptance passed 2026-08-25 |
 | Theme/Matugen integration | Complete | Manual selector and external machine integration complete; Matugen mapping, staged promotion, QE-localized wallpaper selector, and Hyprpaper XDG-path application complete; external generated Matugen artifacts now delivered as QE-generated `wallpaper` theme slots applied by the external switcher, including imv, mpv, and Yazi; runtime/default artifact separation and idempotent promotion added; `QE_THEME_SWITCHER` wired for production through the installed `qe-theme-switcher` wrapper. Phase 4 acceptance passed on 2026-08-26 |
 | Notifications/OSDs | Complete | QE owns notifications and OSDs; Dunst cutover, rollback, and post-cutover legacy cleanup passed 2026-08-31 |
-| Launcher/help | Complete | Launcher, curated help surface, `Super+R` cutover, `Super+/` help binding, and rollback acceptance passed 2026-09-01 |
+| Launcher/help | Complete | Launcher, curated help surface, `Super+R` cutover, `Super+/` help binding, rollback, and focused-output multi-monitor acceptance passed 2026-09-01 |
 | Dashboards/control center | Not started | Phases 8-10 |
 | Lock replacement | Not started | Phase 11 |
 | Production hardening | Not started | Phase 12; final deployment location remains undecided |
@@ -49,6 +49,8 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 
 - Phases 1-7 are complete. Phase 7 includes the accepted launcher, curated help
   surface, `Super+R` cutover, `Super+/` help binding, and Rofi rollback path.
+- Phase 8 is the next ready phase, but is intentionally deferred until the next
+  session at the user's request.
 - Normal runtime is one guarded QE shell from `shell.qml`, reserving 26 pixels
   at the bottom with `trayHostEnabled` true. Waybar is absent from autostart and
   retired in the theme-switcher; QE owns `org.kde.StatusNotifierWatcher`.
@@ -267,7 +269,7 @@ captured in the current implementation and decision records above.
 | 4 — Theme, Matugen, wallpaper platform | Complete (2026-08-26) | Theme/catalog/selectors, Matugen generation, external wallpaper slots, defaults, and wallpaper application accepted |
 | 5 — Notification prototype | Complete | Isolated QE notification ownership and service behavior validated |
 | 6 — Notification cutover / OSD migration | Complete (2026-08-31) | QE notification and OSD ownership, reversible cutover, rollback exercise, and post-cutover cleanup completed |
-| 7 — Launcher and help | Complete (2026-09-01) | Launcher acceptance, curated help surface, `Super+R` cutover, `Super+/` binding, and Rofi rollback passed |
+| 7 — Launcher and help | Complete (2026-09-01) | Launcher acceptance, curated help surface, focused-output multi-monitor placement, `Super+R` cutover, `Super+/` binding, and Rofi rollback passed |
 
 Read the historical phase record only when a current task depends on its detailed
 evidence, rollback history, or implementation rationale.

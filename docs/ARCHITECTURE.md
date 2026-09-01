@@ -797,6 +797,14 @@ is centered at 35% of the monitor width, sizes to one through six result rows
 (with one row as the minimum for empty results), and shrinks from the bottom
 while retaining the six-row centered position. It does not reserve screen
 space.
+
+Focused-monitor transient `PanelWindow` surfaces leave `screen` unset so
+Hyprland's layer-shell placement selects the currently focused output. Do not
+derive this placement from `Quickshell.screens`: under Wayland, Qt may expose
+fewer `QScreen` objects than Hyprland's IPC monitor list, and falling back to
+the first Qt screen can place a surface on the wrong monitor. This applies to
+the launcher and help surfaces.
+
 When a launch fails, `LauncherService` retains the failed desktop entry separately
 from the current selection, and Retry always invokes that retained entry.
 

@@ -26,11 +26,7 @@ PanelWindow {
         left: true
         right: true
     }
-    screen: {
-        const name = Services.CompositorService.focusedMonitorName;
-        return Quickshell.screens.find(item => item.name === name)
-            || (Quickshell.screens.length > 0 ? Quickshell.screens[0] : null);
-    }
+    screen: null
     function iconSource(value) {
         let icon = String(value || "").trim();
         if (icon.length > 1 && ((icon.startsWith("\"") && icon.endsWith("\""))
