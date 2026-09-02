@@ -256,7 +256,7 @@ ColumnLayout {
                     iconName: "check"
                     foregroundColor: rowTextColor
                     borderColor: rowTextColor
-                    tooltipText: "Confirm forget all saved profiles"
+                    tooltipText: "Confirm"
                     onClicked: {
                         Services.NetworkService.forget(root.selectedRow(row));
                         root.confirmForgetKey = "";
@@ -278,21 +278,6 @@ ColumnLayout {
                     tooltipText: "Disconnect"
                     enabled: !root.rowPending(row)
                     onClicked: Services.NetworkService.disconnect(root.selectedRow(row))
-                }
-                Components.IconButton {
-                    visible: !row.network.connected && root.securitySupported(row)
-                    Layout.preferredWidth: visible ? implicitWidth : 0
-                    Layout.maximumWidth: visible ? implicitWidth : 0
-                    iconName: "link"
-                    foregroundColor: rowTextColor
-                    borderColor: rowTextColor
-                    tooltipText: "Connect"
-                    enabled: !root.rowPending(row)
-                    onClicked: {
-                        if (row.network.known || row.network.security === WifiSecurityType.Open)
-                            Services.NetworkService.connect(root.selectedRow(row), "");
-                        else root.pskKey = row.key;
-                    }
                 }
                 Components.IconButton {
                     visible: !root.securitySupported(row)
@@ -317,15 +302,43 @@ ColumnLayout {
                         Layout.maximumWidth: visible ? implicitWidth : 0
                         TextField {
                             id: psk
-                            placeholderText: "Wi-Fi password"
+                            visible: root.pskKey === row.key
+                            placeholderText: "Password"
+                            placeholderTextColor: Services.ThemeService.theme.tokens.on_surface_placeholder
+                            color: Services.ThemeService.theme.tokens.on_surface
+                            selectionColor: Services.ThemeService.theme.tokens.primary
+                            selectedTextColor: Services.ThemeService.theme.tokens.on_primary
+                            font.family: Services.ConfigService.config.appearance.fontFamily
+                            font.pixelSize: Services.ConfigService.config.appearance.fontSize
+                            leftPadding: 16
+                            rightPadding: 16
+                            Layout.preferredHeight: 36
                             echoMode: TextInput.Password
-                            implicitWidth: 130
+                            implicitWidth: Math.ceil(passwordMetrics.width + leftPadding + rightPadding + 2)
+                            Component.onCompleted: Qt.callLater(forceActiveFocus)
+                            onVisibleChanged: if (visible) Qt.callLater(forceActiveFocus)
+                            Keys.onEscapePressed: event => {
+                                if (Services.SurfaceService.dashboardController)
+                                    Services.SurfaceService.dashboardController.close();
+                                event.accepted = true;
+                            }
+                            background: Rectangle {
+                                radius: 6
+                                color: Services.ThemeService.theme.tokens.surface
+                                border.width: 1
+                                border.color: Services.ThemeService.theme.tokens.outline
+                            }
+                            TextMetrics {
+                                id: passwordMetrics
+                                font: psk.font
+                                text: psk.placeholderText
+                            }
                         }
                         Components.IconButton {
                             iconName: "check"
                             foregroundColor: rowTextColor
                             borderColor: rowTextColor
-                            tooltipText: "Connect"
+                            tooltipText: "Confirm"
                             onClicked: {
                                 Services.NetworkService.connect(root.selectedRow(row), psk.text);
                                 psk.clear();
@@ -333,6 +346,21 @@ ColumnLayout {
                             }
                         }
                     }
+                Components.IconButton {
+                    visible: !row.network.connected && root.securitySupported(row)
+                    Layout.preferredWidth: visible ? implicitWidth : 0
+                    Layout.maximumWidth: visible ? implicitWidth : 0
+                    iconName: "link"
+                    foregroundColor: rowTextColor
+                    borderColor: rowTextColor
+                    tooltipText: "Connect"
+                    enabled: !root.rowPending(row)
+                    onClicked: {
+                        if (row.network.known || row.network.security === WifiSecurityType.Open)
+                            Services.NetworkService.connect(root.selectedRow(row), "");
+                        else root.pskKey = row.key;
+                    }
+                }
                 }
             }
             }

@@ -65,6 +65,15 @@ PanelWindow {
                 font.family: Services.ConfigService.config.appearance.fontFamily
                 font.pixelSize: 16
                 leftPadding: 16
+                rightPadding: 16
+                background: Rectangle {
+                    radius: Services.ConfigService.config.appearance.radius
+                    color: Services.ThemeService.theme.tokens.surface
+                    border.width: query.activeFocus ? 2 : 1
+                    border.color: query.activeFocus
+                        ? Services.ThemeService.theme.tokens.primary
+                        : Services.ThemeService.theme.tokens.outline
+                }
                 onTextChanged: if (text !== Services.HelpService.query)
                     Services.HelpService.setQuery(text)
                 Keys.onEscapePressed: Services.HelpService.close()
