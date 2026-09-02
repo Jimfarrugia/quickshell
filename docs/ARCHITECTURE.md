@@ -155,6 +155,7 @@ One long-lived Quickshell instance owns:
 - wallpaper and theme selectors
 - audio, Bluetooth, and network dashboards
 - shared domain services and integration subscriptions
+- guarded QE lifecycle actions requested by recovery surfaces
 - non-security-sensitive QE IPC
 
 There must be only one persistent QE instance per graphical session. This

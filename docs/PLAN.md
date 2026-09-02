@@ -59,6 +59,10 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
   and explicit `nm-connection-editor` fallback. Wired state is read-only;
   unsupported profile editing remains out of scope. The accepted boundary is
   recorded in `docs/adr/0004-network-dashboard-v1-boundary.md`.
+- The network dashboard exposes a temporary `Restart QE` recovery action for
+  `NETWORKMANAGER_UNAVAILABLE`, using the guarded `scripts/run-qe.sh --restart`
+  entry point. Remove this fallback once the upstream native device
+  re-enumeration issue is fixed and the live restart acceptance passes.
 - Normal runtime is one guarded QE shell from `shell.qml`, reserving 26 pixels
   at the bottom with `trayHostEnabled` true. Waybar is absent from autostart and
   retired in the theme-switcher; QE owns `org.kde.StatusNotifierWatcher`.

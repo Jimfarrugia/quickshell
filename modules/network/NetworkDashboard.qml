@@ -11,6 +11,8 @@ ColumnLayout {
     property string confirmForgetKey: ""
     property string pskKey: ""
     property string selectedProfileKey: ""
+    readonly property bool networkManagerUnavailable: Services.NetworkService.lastError
+        && Services.NetworkService.lastError.code === "NETWORKMANAGER_UNAVAILABLE"
 
     component LabelText: Text {
         color: Services.ThemeService.theme.tokens.on_surface_variant
@@ -52,13 +54,31 @@ ColumnLayout {
     Component.onDestruction: if (Services.NetworkService.scanning)
         Services.NetworkService.setScanning(false)
 
-    LabelText {
+    RowLayout {
         visible: Services.NetworkService.availability !== "available"
             || Services.NetworkService.freshness !== "current"
             || Services.NetworkService.lastError !== null
-        text: `Network service: ${Services.NetworkService.availability}`
-            + (Services.NetworkService.operationError ? ` — ${Services.NetworkService.operationError}` : "")
-        color: Services.ThemeService.theme.tokens.warning
+        Layout.fillWidth: true
+        LabelText {
+            text: `Network service: ${Services.NetworkService.availability}`
+                + (Services.NetworkService.operationError ? ` — ${Services.NetworkService.operationError}` : "")
+            color: Services.ThemeService.theme.tokens.warning
+            Layout.fillWidth: true
+        }
+        Components.IconButton {
+            visible: root.networkManagerUnavailable
+            iconName: "restart_alt"
+            foregroundColor: Services.ThemeService.theme.tokens.warning
+            borderColor: Services.ThemeService.theme.tokens.warning
+            tooltipText: Services.ShellLifecycleService.restartPending ? "Restarting QE" : "Restart QE"
+            enabled: !Services.ShellLifecycleService.restartPending
+            onClicked: Services.ShellLifecycleService.restart()
+        }
+    }
+    LabelText {
+        visible: Services.ShellLifecycleService.restartError.length > 0
+        text: Services.ShellLifecycleService.restartError
+        color: Services.ThemeService.theme.tokens.error
     }
     SectionTitle { text: "Active Connection" }
     RowLayout {
