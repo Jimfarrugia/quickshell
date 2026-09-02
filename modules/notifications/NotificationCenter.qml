@@ -9,6 +9,9 @@ import "../../services" as Services
 Components.Sidebar {
     id: root
 
+    dismissOnOutsideClick: true
+    onOutsideClicked: Services.SurfaceService.closeNotificationCenter()
+
     WlrLayershell.keyboardFocus: root.keyboardCaptured
         ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
@@ -88,7 +91,10 @@ Components.Sidebar {
 
     function activateFocusedControl() {
         if (root.focusRow < 0) {
-            if (root.focusColumn === 0) Services.NotificationService.clearHistory();
+            if (root.focusColumn === 0) {
+                Services.NotificationService.clearHistory();
+                Services.SurfaceService.closeNotificationCenter();
+            }
             else if (root.focusColumn === 1) root.criticalFirst = !root.criticalFirst;
             else Services.NotificationService.setDnd(!Services.NotificationService.dnd);
             return;
@@ -232,6 +238,7 @@ Components.Sidebar {
                     onClicked: {
                         root.focusHeader(0);
                         Services.NotificationService.clearHistory();
+                        Services.SurfaceService.closeNotificationCenter();
                     }
                     Rectangle {
                         anchors.fill: parent
