@@ -66,7 +66,8 @@ PanelWindow {
         width: Math.min(636, root.viewportWidth - 40)
         height: Math.min(root.availableHeight(),
             (root.contentHeightOverride >= 0 ? root.contentHeightOverride
-                                               : contentColumn.implicitHeight) + 40)
+                : headerRow.implicitHeight + headerRow.Layout.bottomMargin
+                    + contentColumn.height) + 40)
         color: Services.ThemeService.theme.tokens.surface_sidebar
         radius: Services.ConfigService.config.appearance.radius + 2
         border.width: Services.ConfigService.config.appearance.borderWidth
@@ -84,17 +85,19 @@ PanelWindow {
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 20
-            spacing: Services.ConfigService.config.appearance.spacing
+            spacing: 0
 
             RowLayout {
+                id: headerRow
                 Layout.fillWidth: true
+                Layout.bottomMargin: 20
                 Layout.preferredHeight: 32
                 Text {
                     Layout.fillWidth: true
                     text: root.featureTitle
                     color: Services.ThemeService.theme.tokens.on_surface
                     font.family: Services.ConfigService.config.appearance.fontFamily
-                    font.pixelSize: 18
+                    font.pixelSize: 22
                     font.weight: Font.DemiBold
                 }
                 Components.IconButton {
@@ -114,13 +117,17 @@ PanelWindow {
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
                 contentWidth: width
-                contentHeight: contentColumn.implicitHeight
+                contentHeight: contentColumn.height
 
                 ColumnLayout {
                     id: contentColumn
                     width: parent.width
+                    height: loader.item ? loader.item.implicitHeight : 0
                     spacing: Services.ConfigService.config.appearance.spacing
                     Loader {
+                        id: loader
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: item ? item.implicitHeight : 0
                         active: !!root.controller && root.controller.visible
                         sourceComponent: root.contentComponent
                             || (root.controller && root.controller.activeId === "audio"
