@@ -70,7 +70,7 @@ ColumnLayout {
     }
     RowLayout {
         Layout.fillWidth: true
-        LabelText { text: "Wi-Fi"; Layout.fillWidth: true }
+        SectionTitle { text: "Wi-Fi"; Layout.fillWidth: true }
         Switch {
             checked: Services.NetworkService.wifiTogglePending
                 ? Services.NetworkService.pendingWifiEnabled : Services.NetworkService.wifiEnabled
@@ -170,7 +170,15 @@ ColumnLayout {
             }
         }
     }
-    LabelText { visible: Services.NetworkService.connectionType === "wired"; text: "Wired networking is read-only here." }
+    SectionTitle {
+        visible: Services.NetworkService.connectionType === "wired"
+        text: "Wired networking"
+        Layout.topMargin: 12
+    }
+    LabelText {
+        visible: Services.NetworkService.connectionType === "wired"
+        text: "Read-only here. Use NetworkManager editor for wired changes."
+    }
     LabelText { visible: Services.NetworkService.fallbackError.length > 0; text: Services.NetworkService.fallbackError
         color: Services.ThemeService.theme.tokens.error }
 }
