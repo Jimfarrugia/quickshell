@@ -157,7 +157,8 @@ Singleton {
             pendingOperation = "";
             return false;
         }
-        if (integration.wifiEnabled === pendingWifiEnabled) {
+        if (integration.wifiEnabled === pendingWifiEnabled
+                && (!pendingWifiEnabled || connectionType === "wifi")) {
             finishOperation("");
             return true;
         }
@@ -226,7 +227,10 @@ Singleton {
         return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
     }
 
-    onConnectionTypeChanged: refreshAddress()
+    onConnectionTypeChanged: {
+        refreshAddress();
+        if (pendingWifiEnabled === true && connectionType === "wifi") finishOperation("");
+    }
     onIntegrationChanged: refreshNetworks()
     onWifiDeviceChanged: refreshNetworks()
     onInterfaceNameChanged: refreshAddress()
@@ -247,8 +251,10 @@ Singleton {
     Connections {
         target: integration
         function onWifiEnabledChanged() {
-            if (pendingWifiEnabled !== null && pendingWifiEnabled === root.wifiEnabled)
+            if (pendingWifiEnabled === false && pendingWifiEnabled === root.wifiEnabled)
                 root.finishOperation("");
+            else if (pendingWifiEnabled === true && root.wifiEnabled
+                    && root.connectionType === "wifi") root.finishOperation("");
         }
     }
     Connections {

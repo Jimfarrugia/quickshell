@@ -62,20 +62,31 @@ ColumnLayout {
     }
     RowLayout {
         Layout.fillWidth: true
-        SectionTitle { text: Services.NetworkService.summary; Layout.fillWidth: true }
-         LabelText { text: Services.NetworkService.connectionType === "wired"
-                 ? `Wired (${Services.NetworkService.interfaceName})`
-                 : (Services.NetworkService.ssid || (Services.NetworkService.selectedDeviceConnected
-                     ? "No active connection" : `Disconnected · ${Services.NetworkService.selectedDeviceLabel}`)) }
+         SectionTitle { text: Services.NetworkService.summary; Layout.fillWidth: true }
+          LabelText { text: Services.NetworkService.connectionType === "wired"
+                  ? `Wired (${Services.NetworkService.interfaceName})`
+                  : (Services.NetworkService.ssid || (Services.NetworkService.selectedDeviceConnected
+                      ? "No active connection" : `Disconnected · ${Services.NetworkService.selectedDeviceLabel}`))
+              Layout.fillWidth: true
+              elide: Text.ElideRight }
     }
     RowLayout {
         Layout.fillWidth: true
         SectionTitle { text: "Wi-Fi"; Layout.fillWidth: true }
-        Switch {
+        Components.IconButton {
+            iconName: "wifi"
+            toggleable: true
+            toggleColor: Services.NetworkService.wifiTogglePending
+                ? Services.ThemeService.theme.tokens.warning : Services.ThemeService.theme.tokens.success
+            foregroundColor: Services.NetworkService.wifiTogglePending
+                ? Services.ThemeService.theme.tokens.warning : Services.ThemeService.theme.tokens.on_surface
+            borderColor: Services.NetworkService.wifiTogglePending
+                ? Services.ThemeService.theme.tokens.warning : Services.ThemeService.theme.tokens.outline
             checked: Services.NetworkService.wifiTogglePending
                 ? Services.NetworkService.pendingWifiEnabled : Services.NetworkService.wifiEnabled
             enabled: Services.NetworkService.availability === "available"
                 && Services.NetworkService.wifiHardwareEnabled
+            tooltipText: Services.NetworkService.wifiEnabled ? "Turn Wi-Fi off" : "Turn Wi-Fi on"
             onToggled: Services.NetworkService.setWifiEnabled(checked)
         }
         Components.IconButton {
@@ -152,13 +163,20 @@ ColumnLayout {
                 Layout.maximumWidth: 58
                 implicitHeight: signalLabel.implicitHeight
                 Layout.alignment: Qt.AlignVCenter
-                LabelText {
-                    id: signalLabel
+                RowLayout {
                     anchors.left: parent.left
-                    anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
-                    text: `${Math.round((row.network.signalStrength || 0) * 100)}%`
-                    horizontalAlignment: Text.AlignLeft
+                    spacing: 4
+                    LabelText {
+                        id: signalLabel
+                        text: `${Math.round((row.network.signalStrength || 0) * 100)}%`
+                    }
+                    Text {
+                        text: "signal_cellular_alt"
+                        color: Services.ThemeService.theme.tokens.on_surface_variant
+                        font.family: Services.ConfigService.config.appearance.iconFontFamily
+                        font.pixelSize: Services.ConfigService.config.appearance.fontSize + 2
+                    }
                 }
             }
             Item {
