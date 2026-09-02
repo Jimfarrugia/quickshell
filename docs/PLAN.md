@@ -1,6 +1,6 @@
 # QE Implementation Plan
 
-Status: Phases 1-8 complete; Phase 9 next
+Status: Phases 1-9 complete; Phase 10 not started
 
 Last inventory: 2026-09-02
 
@@ -42,14 +42,22 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 | Notifications/OSDs | Complete | QE owns notifications and OSDs; Dunst cutover, rollback, and post-cutover legacy cleanup passed 2026-08-31 |
 | Launcher/help | Complete | Launcher, curated help surface, `Super+R` cutover, `Super+/` help binding, rollback, and focused-output multi-monitor acceptance passed 2026-09-01 |
 | Dashboards/control center | Complete | Phase 8 shared dashboard foundation, audio dashboard, launcher access, resilience, and rollback acceptance passed 2026-09-02 |
+| Bluetooth dashboard | Complete | Phase 9 dashboard, native lifecycle, disposable-device acceptance, fallback, and BlueZ restart validation passed 2026-09-02 |
 | Lock replacement | Not started | Phase 12 |
 | Production hardening | Not started | Phase 13; final deployment location remains undecided |
 
 ### 2.1 Current handoff
 
-- Phase 9 is next: Bluetooth dashboard discovery and common lifecycle actions,
-  beginning with the open question of whether native Bluetooth APIs support the
-  required interactive pairing prompts. Blueman remains the fallback.
+- Phase 9 is complete: native BlueZ adapter/device lifecycle, bounded discovery,
+  dashboard routing, and Blueman fallback are implemented. Quickshell 0.3.1 has
+  no pairing-agent API, so interactive PIN/passkey/confirmation flows remain a
+  documented Blueman fallback. Disposable-device lifecycle validation passed on
+  2026-09-02 with JBL Go Essential 2: discovery, pair, disconnect, reconnect, and
+  removal all succeeded; controller state was restored afterward. Focused dashboard
+  acceptance passed on 2026-09-02: adapter power, discovery listing and shutdown,
+  device grouping/actions, and the Blueman fallback were verified in the live shell.
+  The approved BlueZ restart check also passed: the service recovered, known devices
+  repopulated, the shell remained alive, and no stale connected state was shown.
 - Normal runtime is one guarded QE shell from `shell.qml`, reserving 26 pixels
   at the bottom with `trayHostEnabled` true. Waybar is absent from autostart and
   retired in the theme-switcher; QE owns `org.kde.StatusNotifierWatcher`.
@@ -288,6 +296,10 @@ rollback evidence is preserved in
 `.scratch/dashboards/issues/04-phase-8-dashboard-acceptance.md`.
 
 ### Phase 9: Bluetooth dashboard
+
+Status: Complete on 2026-09-02. Native pairing-agent capability is verified
+unavailable in Quickshell 0.3.1; dashboard v1 and fallback implementation passed
+focused live acceptance.
 
 Objective: replace common Blueman Manager use cases after native pairing
 behavior is verified.

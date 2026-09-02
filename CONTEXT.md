@@ -78,3 +78,15 @@ _Avoid_: Dashboard command, shell command
 The bar module associated with a dashboard and used as its primary launch
 point; its bar position determines the dashboard's anchored side.
 _Avoid_: Trigger widget, dashboard button
+
+**Known Bluetooth device**:
+A Bluetooth device whose confirmed BlueZ state is paired or bonded.
+
+**Discovered Bluetooth device**:
+A currently observed Bluetooth device that is not confirmed paired or bonded;
+it is not persisted by QE.
+
+**Interactive Bluetooth pairing**:
+A pairing flow requiring a PIN, passkey, numeric confirmation, or authorization
+prompt that QE cannot handle through the installed native API and therefore
+keeps available through Blueman.

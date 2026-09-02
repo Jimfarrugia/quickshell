@@ -556,8 +556,10 @@ QE-facing model:
 - connection, pairing, trust, block, and battery state where available
 
 Operations use native Quickshell Bluetooth methods for connect, disconnect,
-pair, cancel, and forget. Pairing-agent capabilities and interactive PIN/passkey
-flows must be verified before claiming full Blueman replacement.
+pair, cancel, and forget. Quickshell 0.3.1 exposes no pairing agent or
+interactive PIN/passkey/confirmation API, so those flows remain available
+through the Blueman fallback. Pairing success is confirmed only by BlueZ's
+paired/bonded state; a confirmed pair is followed by a connection request.
 
 The Phase 3 bar summary uses the installed `Quickshell.Bluetooth` module and is
 read-only. It normalizes the default adapter, powered/transition state, known
@@ -566,8 +568,9 @@ events; it adds no poller and treats controller/daemon loss as unavailable. The
 configured bar chip remains visible for that unavailable state and presents the
 same disabled/error visual as a powered-off controller, without claiming that
 an adapter still exists.
-Interactive connect, pair, and manager-launch behavior remains deferred until
-the pairing-agent and application-launch boundaries are established.
+Discovery is user-triggered, stops when its dashboard closes, and is bounded to
+30 seconds. Discovered devices are not persisted. The dashboard's Blueman
+header action is the explicit fallback for unsupported interactive pairing.
 
 ### 7.8 PowerService and SystemMetricsService
 

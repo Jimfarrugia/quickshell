@@ -79,7 +79,7 @@ PanelWindow {
             HealthModule {}
             IdleInhibitorModule {}
             DoNotDisturbModule {}
-            BluetoothModule {}
+            BluetoothModule { sourceScreen: root.modelData; dashboardController: root.dashboardController }
             AudioModule { sourceScreen: root.modelData; dashboardController: root.dashboardController }
             BrightnessModule {}
             BatteryModule {}

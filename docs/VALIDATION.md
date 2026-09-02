@@ -70,6 +70,7 @@ timeout 5 quickshell -p tests/qml/brightness-adapter-test.qml
 timeout 5 quickshell -p tests/qml/bluetooth-service-test.qml
 timeout 5 quickshell -p tests/qml/bluetooth-integration-test.qml
 timeout 5 quickshell -p tests/qml/bluetooth-adapter-test.qml
+timeout 5 quickshell -p tests/qml/bluetooth-dashboard-test.qml
 timeout 5 quickshell -p tests/qml/idle-service-test.qml
 timeout 5 quickshell -p tests/qml/tray-tint-test.qml
 timeout 5 quickshell -p tests/qml/theme-selector-test.qml

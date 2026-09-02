@@ -2,6 +2,9 @@ import "../../components"
 import "../../services" as Services
 
 BarChip {
+    property var sourceScreen: null
+    property var dashboardController
+    property string sourceSide: "right"
     readonly property bool shouldShow: Services.ConfigService.config.bar.enabled
         && Services.ConfigService.config.bar.bluetoothEnabled
     visible: shouldShow
@@ -18,4 +21,6 @@ BarChip {
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
     configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily
     configuredFontSize: Services.ConfigService.config.appearance.fontSize
+    onClicked: if (dashboardController)
+        dashboardController.toggle("bluetooth", sourceScreen, sourceSide)
 }

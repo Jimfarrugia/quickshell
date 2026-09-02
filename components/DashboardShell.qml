@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Wayland
 import "../services" as Services
 import "../modules/audio"
+import "../modules/bluetooth"
 import "../components" as Components
 
 PanelWindow {
@@ -24,9 +25,17 @@ PanelWindow {
     readonly property real surfaceHeight: surface.height
     readonly property bool keyboardTargetFocused: keyTarget.activeFocus
     readonly property bool keyboardTargetRequested: keyTarget.focus
-    readonly property string featureTitle: controller && controller.activeId === "audio" ? "Audio" : title
+    readonly property string featureTitle: controller && controller.activeId === "audio" ? "Audio"
+        : (controller && controller.activeId === "bluetooth" ? "Bluetooth" : title)
 
-    function dismiss() { if (root.controller) root.controller.close(); }
+    function dismiss() {
+        if (root.controller && root.controller.activeId === "bluetooth"
+                && Services.BluetoothService.discovering)
+            Services.BluetoothService.setDiscovering(false);
+        if (root.controller && root.controller.activeId === "bluetooth")
+            Services.BluetoothService.operationError = "";
+        if (root.controller) root.controller.close();
+    }
     function dismissFromOutside() { root.dismiss(); }
     function dismissFromEscape() { root.dismiss(); }
     property Component contentComponent: null
@@ -102,12 +111,14 @@ PanelWindow {
                 }
                 Components.IconButton {
                     id: settingsButton
-                    visible: !!root.controller && root.controller.activeId === "audio"
-                    iconName: "settings"
+                    visible: !!root.controller && ["audio", "bluetooth"].indexOf(root.controller.activeId) >= 0
+                    iconName: root.controller && root.controller.activeId === "bluetooth" ? "bluetooth" : "settings"
                     foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
-                    tooltipText: "Open pavucontrol"
-                    onClicked: Services.AudioService.launchFallback()
+                    tooltipText: root.controller && root.controller.activeId === "bluetooth"
+                        ? "Open Blueman" : "Open pavucontrol"
+                    onClicked: root.controller && root.controller.activeId === "bluetooth"
+                        ? Services.BluetoothService.launchFallback() : Services.AudioService.launchFallback()
                     ToolTip.visible: hovered
                     ToolTip.text: tooltipText
                 }
@@ -133,7 +144,8 @@ PanelWindow {
                         active: !!root.controller && root.controller.visible
                         sourceComponent: root.contentComponent
                             || (root.controller && root.controller.activeId === "audio"
-                                ? audioDashboard : unavailableDashboard)
+                             ? audioDashboard : (root.controller && root.controller.activeId === "bluetooth"
+                                 ? bluetoothDashboard : unavailableDashboard))
                     }
                 }
             }
@@ -141,6 +153,7 @@ PanelWindow {
     }
 
     Component { id: audioDashboard; AudioDashboard {} }
+    Component { id: bluetoothDashboard; BluetoothDashboard {} }
     Component {
         id: unavailableDashboard
         Text {
