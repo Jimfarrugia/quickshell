@@ -82,9 +82,8 @@ Out of scope:
 
 ## Archived Phase 8: Audio dashboard and shared surface foundation
 
-Status: Complete; acceptance passed 2026-09-02. See
-`.scratch/dashboards/issues/04-phase-8-dashboard-acceptance.md` for the evidence
-record.
+Status: Complete; acceptance passed 2026-09-02. The implementation, validation,
+and rollback evidence is preserved in this historical record.
 
 Objective: establish the shared dashboard/window pattern and replace common
 `pavucontrol` use cases first because PipeWire has a strong native API. The
@@ -144,3 +143,64 @@ Rollback/recovery:
 Out of scope:
 
 - full PipeWire graph patchbay
+
+## Archived Phase 9: Bluetooth dashboard
+
+Status: Complete on 2026-09-02. Native pairing-agent capability was verified
+unavailable in Quickshell 0.3.1; dashboard v1 and fallback implementation passed
+focused live acceptance. Disposable-device validation with JBL Go Essential 2
+passed discovery, pair, disconnect, reconnect, and removal, with controller state
+restored afterward. Focused dashboard acceptance covered adapter power,
+discovery listing and shutdown, device grouping/actions, and the Blueman fallback.
+The approved BlueZ restart check passed: the service recovered, known devices
+repopulated, the shell remained alive, and no stale connected state was shown.
+
+Objective: replace common Blueman Manager use cases after native pairing
+behavior is verified.
+
+Prerequisites:
+
+- shared dashboard/surface foundation
+- native Bluetooth pairing-agent capability investigation
+
+Relevant decision: ADR-011 (native integration before commands) in
+`docs/DECISIONS.md`.
+
+Scope:
+
+- adapter power/discovery controls
+- known/discovered device grouping
+- connect, disconnect, pair, cancel, forget
+- battery and operation status
+- explicit fallback for unsupported pairing interactions
+
+Likely affected files/subsystems:
+
+- Bluetooth module/service/integration and fixtures
+
+Deliverables:
+
+- Bluetooth dashboard v1
+- capability gap report
+
+Acceptance criteria:
+
+- adapter missing/off/on states are distinct
+- discovery has bounded lifecycle and stops on close/configured timeout
+- operations reconcile from BlueZ state
+- BlueZ restart removes stale objects and repopulates safely
+- unsupported pairing flow leaves Blueman available
+
+Validation:
+
+- model fixtures
+- pair/connect/disconnect a disposable device
+- BlueZ restart test only with explicit approval
+
+Rollback/recovery:
+
+- Blueman Manager remains installed and accessible
+
+Out of scope:
+
+- OBEX transfer and unverified advanced profile management

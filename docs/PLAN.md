@@ -51,13 +51,8 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 - Phase 9 is complete: native BlueZ adapter/device lifecycle, bounded discovery,
   dashboard routing, and Blueman fallback are implemented. Quickshell 0.3.1 has
   no pairing-agent API, so interactive PIN/passkey/confirmation flows remain a
-  documented Blueman fallback. Disposable-device lifecycle validation passed on
-  2026-09-02 with JBL Go Essential 2: discovery, pair, disconnect, reconnect, and
-  removal all succeeded; controller state was restored afterward. Focused dashboard
-  acceptance passed on 2026-09-02: adapter power, discovery listing and shutdown,
-  device grouping/actions, and the Blueman fallback were verified in the live shell.
-  The approved BlueZ restart check also passed: the service recovered, known devices
-  repopulated, the shell remained alive, and no stale connected state was shown.
+  documented Blueman fallback. Detailed acceptance and rollback evidence is in
+  `docs/history/PHASES_07-11.md`.
 - Normal runtime is one guarded QE shell from `shell.qml`, reserving 26 pixels
   at the bottom with `trayHostEnabled` true. Waybar is absent from autostart and
   retired in the theme-switcher; QE owns `org.kde.StatusNotifierWatcher`.
@@ -89,7 +84,7 @@ starting environment but is not current-system authority.
 | --- | --- | --- |
 | Primary application launcher | Rofi remains available for specialized flows; the accepted QE launcher owns the primary launcher binding | Complete |
 | Audio dashboard | `pavucontrol` remains installed and is the escape hatch for unsupported routing | Complete |
-| Bluetooth dashboard | Blueman Manager remains available, especially for unsupported pairing interactions | Phase 9 |
+| Bluetooth dashboard | Blueman Manager remains available, especially for unsupported pairing interactions | Complete |
 | Network dashboard | `nm-connection-editor` remains available for unsupported profiles and advanced configuration | Phase 10 |
 | Session lock | Hyprlock remains the rollback/current lock until the isolated QE lock passes secure-state, idle, suspend, and recovery acceptance | Phase 12 |
 | Production lifecycle | Explicit development launch and the current project checkout remain intentional until supervision and deployment are decided | Phase 13 |
@@ -101,6 +96,8 @@ starting environment but is not current-system authority.
 - Completed Phase 7 implementation, acceptance, rollback, and handoff details:
   `docs/history/PHASES_07-11.md`
 - Completed Phase 8 implementation, acceptance, rollback, and handoff details:
+  `docs/history/PHASES_07-11.md`
+- Completed Phase 9 implementation, acceptance, rollback, and handoff details:
   `docs/history/PHASES_07-11.md`
 - Original discovery/current-system inventory captured before the completed
   migrations: `docs/history/INITIAL_SYSTEM_INVENTORY.md`
@@ -158,7 +155,6 @@ preserved in `docs/history/PHASES_00-06.md`.
 
 | Question | Blocking phase | Resolution point |
 | --- | --- | --- |
-| Does native Bluetooth cover required interactive pairing prompts? | Phase 9 full dashboard | Test with new device and inspect API behavior |
 | Which NetworkManager features are required beyond PSK/known networks? | Phase 10 | Define dashboard v1 acceptance before profile editor work |
 | Which PAM service should QE use in production? | Phase 12 | Security review of `login`, `hyprlock`, or dedicated approved config |
 
@@ -216,7 +212,7 @@ Phase 1 Foundation
         |
         `--> Phase 12 Secure lock replacement
 
-Phases 3-8 complete enough for daily use
+Phases 3-9 complete enough for daily use
         `--> Phase 13 production supervision, deployment decision, and cleanup
 ```
 
@@ -266,10 +262,10 @@ contract without coordinating through an architecture decision.
 
 ## 8. Implementation Phases
 
-### Completed phases 0-8
+### Completed phases 0-9
 
 Detailed implementation, validation, cutover, and rollback records for phases
-0-8 have been moved losslessly to `docs/history/PHASES_00-06.md` and
+0-9 have been moved losslessly to `docs/history/PHASES_00-06.md` and
 `docs/history/PHASES_07-11.md`.
 
 | Phase | Status | Result |
@@ -291,65 +287,14 @@ evidence, rollback history, or implementation rationale.
 Status: Complete; acceptance passed 2026-09-02. The shared dashboard shell,
 audio dashboard v1, launcher action, resilience checks, and `pavucontrol`
 rollback path passed acceptance. Detailed implementation, validation, and
-rollback evidence is preserved in
-`docs/history/PHASES_07-11.md`; the acceptance record is
-`.scratch/dashboards/issues/04-phase-8-dashboard-acceptance.md`.
+rollback evidence is preserved in `docs/history/PHASES_07-11.md`.
 
-### Phase 9: Bluetooth dashboard
+### Completed Phase 9: Bluetooth dashboard
 
-Status: Complete on 2026-09-02. Native pairing-agent capability is verified
-unavailable in Quickshell 0.3.1; dashboard v1 and fallback implementation passed
-focused live acceptance.
-
-Objective: replace common Blueman Manager use cases after native pairing
-behavior is verified.
-
-Prerequisites:
-
-- shared dashboard/surface foundation
-- native Bluetooth pairing-agent capability investigation
-
-Relevant decision: ADR-011 (native integration before commands) in
-`docs/DECISIONS.md`.
-
-Scope:
-
-- adapter power/discovery controls
-- known/discovered device grouping
-- connect, disconnect, pair, cancel, forget
-- battery and operation status
-- explicit fallback for unsupported pairing interactions
-
-Likely affected files/subsystems:
-
-- Bluetooth module/service/integration and fixtures
-
-Deliverables:
-
-- Bluetooth dashboard v1
-- capability gap report
-
-Acceptance criteria:
-
-- adapter missing/off/on states are distinct
-- discovery has bounded lifecycle and stops on close/configured timeout
-- operations reconcile from BlueZ state
-- BlueZ restart removes stale objects and repopulates safely
-- unsupported pairing flow leaves Blueman available
-
-Validation:
-
-- model fixtures
-- pair/connect/disconnect a disposable device
-- BlueZ restart test only with explicit approval
-
-Rollback/recovery:
-
-- Blueman Manager remains installed and accessible
-
-Out of scope:
-
-- OBEX transfer and unverified advanced profile management
+Status: Complete on 2026-09-02. Native BlueZ lifecycle, bounded discovery,
+dashboard routing, Blueman fallback, disposable-device validation, and approved
+BlueZ restart validation passed. Detailed implementation and acceptance context is
+preserved in `docs/history/PHASES_07-11.md`.
 
 ### Phase 10: Network dashboard
 
@@ -679,7 +624,6 @@ Polling budget for the bar milestone:
 | R7 | Direct command parsing leaks into QML UI | Medium | Medium | adapter rule, structured contracts, code review search | every process integration |
 | R8 | Hidden polling causes battery/CPU cost | Medium | Medium | poller registry, consumer-aware polling, measured intervals | bar/system metric milestones |
 | R9 | Network secrets leak through arguments/logs/state | Low/medium | High | native APIs, redaction, no persistence, security tests | network operation implementation |
-| R10 | Bluetooth API cannot handle required pairing prompts | Medium | Medium | capability investigation and Blueman fallback | Phase 9 prerequisite |
 | R11 | Multiple QE instances duplicate ownership/subscriptions | Medium | High | shell identity/single-instance guard and diagnostics | Phase 3 cutover |
 | R12 | Soft reload duplicates notifications or subscriptions | Medium | Medium | reload tests, `lastGeneration`, centralized ownership | every singleton service |
 | R13 | Hard-coded hardware/path assumptions return | Medium | Medium | PathsService, sensor discovery, path lint | every filesystem integration |

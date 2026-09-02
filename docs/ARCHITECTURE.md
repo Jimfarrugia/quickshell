@@ -1,6 +1,6 @@
 # QE Architecture
 
-Status: Current architecture implemented through Phase 8; remaining planned
+Status: Current architecture implemented through Phase 9; remaining planned
 surfaces and deployment choices are tracked in `docs/PLAN.md`
 
 This document is the authoritative description of the Quickshell Environment
@@ -1384,7 +1384,6 @@ them against installed Quickshell 0.3.1:
 
 - Hyprland IPC reconnection behavior after compositor restart
 - NetworkManager behavior for hidden and enterprise networks
-- Bluetooth interactive pairing-agent coverage
 - reliable external brightness change detection through sysfs watching
 - Hyprpaper's best available confirmation/IPC contract
 - practical automated testing of `WlSessionLock` in a nested compositor
