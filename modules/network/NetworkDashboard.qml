@@ -161,9 +161,16 @@ ColumnLayout {
                     horizontalAlignment: Text.AlignLeft
                 }
             }
-            RowLayout {
-                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-                spacing: 6
+            Item {
+                Layout.fillWidth: true
+                Layout.preferredWidth: 0
+                implicitHeight: actionContent.implicitHeight
+                Layout.alignment: Qt.AlignVCenter
+                RowLayout {
+                    id: actionContent
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 6
                 LabelText {
                     text: row.network.stateChanging ? "Connecting..."
                         : (row.network.connected ? "Connected" : "")
@@ -214,21 +221,22 @@ ColumnLayout {
                         root.confirmForgetKey = "";
                     }
                 }
-                RowLayout {
-                    visible: root.pskKey === row.key
-                    TextField {
-                        id: psk
-                        placeholderText: "Wi-Fi password"
-                        echoMode: TextInput.Password
-                        implicitWidth: 130
-                    }
-                    Components.IconButton {
-                        iconName: "check"
-                        tooltipText: "Connect"
-                        onClicked: {
-                            Services.NetworkService.connect(root.selectedRow(row), psk.text);
-                            psk.clear();
-                            root.pskKey = "";
+                    RowLayout {
+                        visible: root.pskKey === row.key
+                        TextField {
+                            id: psk
+                            placeholderText: "Wi-Fi password"
+                            echoMode: TextInput.Password
+                            implicitWidth: 130
+                        }
+                        Components.IconButton {
+                            iconName: "check"
+                            tooltipText: "Connect"
+                            onClicked: {
+                                Services.NetworkService.connect(root.selectedRow(row), psk.text);
+                                psk.clear();
+                                root.pskKey = "";
+                            }
                         }
                     }
                 }
