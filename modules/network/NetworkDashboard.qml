@@ -144,6 +144,7 @@ ColumnLayout {
                     anchors.verticalCenter: parent.verticalCenter
                     text: root.securityText(row.network)
                     elide: Text.ElideRight
+                    horizontalAlignment: Text.AlignLeft
                 }
             }
             Item {
@@ -157,7 +158,7 @@ ColumnLayout {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
                     text: `${Math.round((row.network.signalStrength || 0) * 100)}%`
-                    horizontalAlignment: Text.AlignRight
+                    horizontalAlignment: Text.AlignLeft
                 }
             }
             RowLayout {
