@@ -97,11 +97,18 @@ ColumnLayout {
         }
     }
 
-     SectionTitle { text: `Visible Wi-Fi networks · ${Services.NetworkService.selectedDeviceLabel}`; Layout.topMargin: 12 }
-    LabelText { visible: Services.NetworkService.networks.length === 0; text: "No networks visible" }
-    Repeater {
-        model: Services.NetworkService.networks
-        delegate: RowLayout {
+    ColumnLayout {
+        visible: Services.NetworkService.wifiEnabled
+        Layout.fillWidth: true
+        spacing: root.spacing
+        SectionTitle {
+            text: `Visible Wi-Fi networks · ${Services.NetworkService.selectedDeviceLabel}`
+            Layout.topMargin: 12
+        }
+        LabelText { visible: Services.NetworkService.networks.length === 0; text: "No networks visible" }
+        Repeater {
+            model: Services.NetworkService.networks
+            delegate: RowLayout {
             required property var modelData
             readonly property var row: modelData
             Layout.fillWidth: true
@@ -258,6 +265,7 @@ ColumnLayout {
                         }
                     }
                 }
+            }
             }
         }
     }
