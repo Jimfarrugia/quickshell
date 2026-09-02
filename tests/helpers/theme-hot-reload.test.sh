@@ -18,4 +18,5 @@ env \
   XDG_STATE_HOME="$temporary_root/state" \
   XDG_CACHE_HOME="$temporary_root/cache" \
   XDG_DATA_HOME="$temporary_root/data" \
+  QE_TEST_ISOLATED=1 \
   timeout 20 quickshell -p "$temporary_root/project/tests/qml/theme-hot-reload-test.qml"

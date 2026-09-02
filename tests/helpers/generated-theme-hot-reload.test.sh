@@ -10,6 +10,7 @@ output=$(
     XDG_STATE_HOME="$test_root/state" \
     XDG_DATA_HOME="$test_root/data" \
     XDG_CACHE_HOME="$test_root/cache" \
+    QE_TEST_ISOLATED=1 \
         timeout 15 quickshell -p "$project_root/tests/qml/generated-theme-hot-reload-test.qml" 2>&1
 )
 grep -q 'GENERATED_THEME_HOT_RELOAD_TEST_PASSED' <<<"$output"

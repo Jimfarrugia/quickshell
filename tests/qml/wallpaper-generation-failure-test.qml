@@ -9,6 +9,7 @@ ShellRoot {
 
     readonly property string imagePath: `${Services.WallpaperService.wallpaperRoot}/themes/poimandres/sample.png`
     readonly property string sentinelId: "last_known_good"
+    readonly property bool isolatedTest: Quickshell.env("QE_TEST_ISOLATED") === "1"
     property bool requested: false
     property bool seeded: false
 
@@ -54,6 +55,7 @@ ShellRoot {
         printErrors: false
 
         function seed() {
+            if (!root.isolatedTest) return;
             if (root.seeded) return;
             if (loaded && text() === root.sentinelText()) {
                 root.seeded = true;
@@ -119,5 +121,9 @@ ShellRoot {
         onTriggered: root.fail("wallpaper generation failure test timed out")
     }
 
-    Component.onCompleted: existingTheme.seed()
+    Component.onCompleted: {
+        if (!isolatedTest)
+            return fail("must be run through its isolating helper");
+        existingTheme.seed();
+    }
 }

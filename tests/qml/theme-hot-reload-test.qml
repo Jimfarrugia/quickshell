@@ -11,6 +11,7 @@ ShellRoot {
     property string modifiedText: ""
     property string originalPrimary: ""
     readonly property string modifiedPrimary: "#a8ffea"
+    readonly property bool isolatedTest: Quickshell.env("QE_TEST_ISOLATED") === "1"
     readonly property string addedPath: Services.PathsService.shellPath("themes/added_test.json")
     readonly property string invalidPath: Services.PathsService.shellPath("themes/invalid_test.json")
     readonly property string duplicatePath: Services.PathsService.shellPath("themes/duplicate_test.json")
@@ -26,6 +27,7 @@ ShellRoot {
     }
 
     function begin() {
+        if (!isolatedTest) return;
         if (stage !== 0 || !themeEditor.loaded || !Services.ThemeService.initialized) return;
         if (Services.ThemeService.activeThemeId !== "poimandres")
             return fail(`expected poimandres, got ${Services.ThemeService.activeThemeId}`);
@@ -176,5 +178,9 @@ ShellRoot {
         onTriggered: root.fail(`timed out at stage ${root.stage}`)
     }
 
-    Component.onCompleted: begin()
+    Component.onCompleted: {
+        if (!isolatedTest)
+            return fail("must be run through its isolating helper");
+        begin();
+    }
 }

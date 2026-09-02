@@ -16,6 +16,7 @@ XDG_CACHE_HOME="$test_root/cache" \
 QE_MATUGEN="$project_root/tests/fixtures/matugen/fake-matugen.sh" \
 QE_FAKE_MATUGEN_MODE=malformed \
 QE_WALLPAPER_ROOT="$wallpaper_root" \
+QE_TEST_ISOLATED=1 \
     timeout 12 quickshell -p "$project_root/tests/qml/wallpaper-generation-failure-test.qml"
 
 printf '%s\n' 'WALLPAPER_GENERATION_FAILURE_HELPER_TEST_PASSED'

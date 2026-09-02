@@ -11,6 +11,7 @@ ShellRoot {
     readonly property string firstPrimary: "#123456"
     readonly property string secondPrimary: "#654321"
     readonly property string sourcePath: Services.PathsService.shellPath("themes/poimandres.json")
+    readonly property bool isolatedTest: Quickshell.env("QE_TEST_ISOLATED") === "1"
 
     function fail(message) {
         console.error(`GENERATED_THEME_HOT_RELOAD_TEST_FAILED: ${message}`);
@@ -45,6 +46,7 @@ ShellRoot {
         blockLoading: true
         printErrors: false
         onLoaded: {
+            if (!root.isolatedTest) return;
             root.sourceText = text();
             if (Services.ThemeCatalogService.initialized && root.stage === 0) {
                 root.stage = 1;
@@ -65,18 +67,23 @@ ShellRoot {
     Connections {
         target: Services.ThemeCatalogService
         function onInitializedChanged() {
+            if (!root.isolatedTest) return;
             if (Services.ThemeCatalogService.initialized && sourceFile.loaded
                     && root.stage === 0) {
                 root.stage = 1;
                 generatedWriter.setText(root.wallpaperDocument(root.firstPrimary));
             }
         }
-        function onCatalogChanged() { Qt.callLater(root.evaluate); }
+        function onCatalogChanged() {
+            if (root.isolatedTest) Qt.callLater(root.evaluate);
+        }
     }
 
     Connections {
         target: Services.ThemeService
-        function onCatalogChanged() { Qt.callLater(root.evaluate); }
+        function onCatalogChanged() {
+            if (root.isolatedTest) Qt.callLater(root.evaluate);
+        }
     }
 
     Timer {
@@ -86,6 +93,8 @@ ShellRoot {
     }
 
     Component.onCompleted: {
+        if (!isolatedTest)
+            return fail("must be run through its isolating helper");
         if (Services.ThemeCatalogService.initialized && sourceFile.loaded) {
             stage = 1;
             generatedWriter.setText(wallpaperDocument(firstPrimary));
