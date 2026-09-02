@@ -144,6 +144,9 @@ ColumnLayout {
             delegate: RowLayout {
             required property var modelData
             readonly property var row: modelData
+            readonly property color rowTextColor: row.network.connected
+                ? Services.ThemeService.theme.tokens.primary
+                : Services.ThemeService.theme.tokens.on_surface_variant
             Layout.fillWidth: true
             spacing: 6
             Item {
@@ -229,20 +232,60 @@ ColumnLayout {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 6
+                Components.IconButton {
+                    visible: row.network.known
+                    Layout.preferredWidth: visible ? implicitWidth : 0
+                    Layout.maximumWidth: visible ? implicitWidth : 0
+                    iconName: "delete"
+                    foregroundColor: Services.ThemeService.theme.tokens.error
+                    borderColor: Services.ThemeService.theme.tokens.error
+                    tooltipText: "Forget"
+                    enabled: !root.rowPending(row)
+                    onClicked: root.confirmForgetKey = root.confirmForgetKey === row.key ? "" : row.key
+                }
                 LabelText {
-                    text: row.network.stateChanging ? "Connecting..."
-                        : (row.network.connected ? "Connected" : "")
+                    visible: root.confirmForgetKey === row.key
+                    Layout.preferredWidth: visible ? implicitWidth : 0
+                    Layout.maximumWidth: visible ? implicitWidth : 0
+                    text: "Confirm?"
+                }
+                Components.IconButton {
+                    visible: root.confirmForgetKey === row.key
+                    Layout.preferredWidth: visible ? implicitWidth : 0
+                    Layout.maximumWidth: visible ? implicitWidth : 0
+                    iconName: "check"
+                    foregroundColor: rowTextColor
+                    borderColor: rowTextColor
+                    tooltipText: "Confirm forget all saved profiles"
+                    onClicked: {
+                        Services.NetworkService.forget(root.selectedRow(row));
+                        root.confirmForgetKey = "";
+                    }
+                }
+                LabelText {
+                    visible: row.network.stateChanging
+                    Layout.preferredWidth: text.length > 0 ? implicitWidth : 0
+                    Layout.maximumWidth: visible ? implicitWidth : 0
+                    text: row.network.stateChanging ? "Connecting..." : ""
                 }
                 Components.IconButton {
                     visible: row.network.connected && root.securitySupported(row)
+                    Layout.preferredWidth: visible ? implicitWidth : 0
+                    Layout.maximumWidth: visible ? implicitWidth : 0
                     iconName: "link"
+                    foregroundColor: Services.ThemeService.theme.tokens.success
+                    borderColor: Services.ThemeService.theme.tokens.success
                     tooltipText: "Disconnect"
                     enabled: !root.rowPending(row)
                     onClicked: Services.NetworkService.disconnect(root.selectedRow(row))
                 }
                 Components.IconButton {
                     visible: !row.network.connected && root.securitySupported(row)
+                    Layout.preferredWidth: visible ? implicitWidth : 0
+                    Layout.maximumWidth: visible ? implicitWidth : 0
                     iconName: "link"
+                    foregroundColor: rowTextColor
+                    borderColor: rowTextColor
                     tooltipText: "Connect"
                     enabled: !root.rowPending(row)
                     onClicked: {
@@ -253,34 +296,25 @@ ColumnLayout {
                 }
                 Components.IconButton {
                     visible: !root.securitySupported(row)
+                    Layout.preferredWidth: visible ? implicitWidth : 0
+                    Layout.maximumWidth: visible ? implicitWidth : 0
                     iconName: "settings"
+                    foregroundColor: rowTextColor
+                    borderColor: rowTextColor
                     tooltipText: "Unsupported security — open NetworkManager editor"
                     onClicked: Services.NetworkService.openNetworkFallback(row)
                 }
                 LabelText {
                     visible: !root.securitySupported(row)
+                    Layout.preferredWidth: visible ? implicitWidth : 0
+                    Layout.maximumWidth: visible ? implicitWidth : 0
                     text: "Unsupported here — use nm-connection-editor"
                     color: Services.ThemeService.theme.tokens.warning
                 }
-                Components.IconButton {
-                    visible: row.network.known
-                    iconName: "delete"
-                    tooltipText: "Forget saved profiles"
-                    enabled: !root.rowPending(row)
-                    onClicked: root.confirmForgetKey = root.confirmForgetKey === row.key ? "" : row.key
-                }
-                LabelText { visible: root.confirmForgetKey === row.key; text: "Confirm?" }
-                Components.IconButton {
-                    visible: root.confirmForgetKey === row.key
-                    iconName: "check"
-                    tooltipText: "Confirm forget all saved profiles"
-                    onClicked: {
-                        Services.NetworkService.forget(root.selectedRow(row));
-                        root.confirmForgetKey = "";
-                    }
-                }
                     RowLayout {
                         visible: root.pskKey === row.key
+                        Layout.preferredWidth: visible ? implicitWidth : 0
+                        Layout.maximumWidth: visible ? implicitWidth : 0
                         TextField {
                             id: psk
                             placeholderText: "Wi-Fi password"
@@ -289,6 +323,8 @@ ColumnLayout {
                         }
                         Components.IconButton {
                             iconName: "check"
+                            foregroundColor: rowTextColor
+                            borderColor: rowTextColor
                             tooltipText: "Connect"
                             onClicked: {
                                 Services.NetworkService.connect(root.selectedRow(row), psk.text);

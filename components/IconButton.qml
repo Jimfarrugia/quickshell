@@ -1,5 +1,6 @@
 import QtQuick
 import "../services" as Services
+import "." as Components
 
 Rectangle {
     id: root
@@ -12,6 +13,7 @@ Rectangle {
     property color foregroundColor: Services.ThemeService.theme.tokens.on_surface
     property color borderColor: Services.ThemeService.theme.tokens.outline
     property string tooltipText: ""
+    property bool tooltipBelow: false
     readonly property bool hovered: hover.hovered
     signal clicked()
     signal toggled(bool checked)
@@ -38,6 +40,13 @@ Rectangle {
     HoverHandler {
         id: hover
         cursorShape: Qt.PointingHandCursor
+    }
+
+    Components.BarTooltip {
+        anchorItem: root
+        text: root.tooltipText
+        below: root.tooltipBelow
+        show: hover.hovered && root.tooltipText.length > 0
     }
 
     TapHandler {

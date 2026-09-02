@@ -132,7 +132,8 @@ PanelWindow {
                     enabled: Services.NetworkService.availability === "available"
                         && Services.NetworkService.wifiHardwareEnabled
                     tooltipText: Services.NetworkService.wifiEnabled
-                        ? "Turn Wi-Fi off" : "Turn Wi-Fi on"
+                        ? "Disable Wi-Fi" : "Enable Wi-Fi"
+                    tooltipBelow: true
                     onToggled: Services.NetworkService.setWifiEnabled(checked)
                 }
                 Components.IconButton {
@@ -140,7 +141,8 @@ PanelWindow {
                     foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     enabled: Services.NetworkService.availability === "available"
-                    tooltipText: "Refresh Wi-Fi networks"
+                    tooltipText: "Scan for networks"
+                    tooltipBelow: true
                     onClicked: Services.NetworkService.refreshScan()
                 }
             }
@@ -153,11 +155,10 @@ PanelWindow {
                     tooltipText: root.controller && root.controller.activeId === "bluetooth"
                     ? "Open Blueman" : (root.controller && root.controller.activeId === "network"
                         ? "Open NetworkManager editor" : "Open pavucontrol")
+                    tooltipBelow: true
                     onClicked: root.controller && root.controller.activeId === "bluetooth"
                     ? Services.BluetoothService.launchFallback() : (root.controller && root.controller.activeId === "network"
                         ? Services.NetworkService.openFallback() : Services.AudioService.launchFallback())
-                    ToolTip.visible: hovered
-                    ToolTip.text: tooltipText
                 }
             }
 

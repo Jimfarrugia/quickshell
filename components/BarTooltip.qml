@@ -10,6 +10,7 @@ PopupWindow {
     required property string text
     property bool show: false
     property bool delayedShow: false
+    property bool below: false
 
     anchor {
         window: root.anchorItem.QsWindow.window
@@ -19,7 +20,7 @@ PopupWindow {
         onAnchoring: {
             const contentItem = root.anchorItem.QsWindow.contentItem;
             if (!contentItem) return;
-            const verticalPosition = Services.ConfigService.config.bar.edge === "top"
+            const verticalPosition = root.below || Services.ConfigService.config.bar.edge === "top"
                 ? root.anchorItem.height + 5
                 : -root.height - 5;
             const position = contentItem.mapFromItem(
