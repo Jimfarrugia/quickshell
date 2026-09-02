@@ -10,10 +10,11 @@ BarChip {
 
     text: wifiConnected ? Services.NetworkService.ssid
                         : (wiredConnected ? (Services.NetworkService.ipv4Address || "Connecting...") : "Disconnected")
-    trailingText: wifiConnected ? `${Services.NetworkService.signalStrength}%` : ""
+    trailingText: wifiConnected ? `${Services.NetworkService.signalStrength}%`
+        : (wiredConnected ? `${Services.NetworkService.linkSpeed} Mbps` : "")
     icon: wifiConnected ? "wifi" : (wiredConnected ? "lan" : "signal_wifi_bad")
-    textColor: wifiConnected ? Services.ThemeService.theme.tokens.primary
-                             : Services.ThemeService.theme.tokens.on_surface_disabled
+    textColor: wifiConnected || wiredConnected ? Services.ThemeService.theme.tokens.primary
+                                                : Services.ThemeService.theme.tokens.on_surface_disabled
     trailingTextColor: Services.ThemeService.theme.tokens.on_surface_disabled
     iconColor: wifiConnected || wiredConnected ? Services.ThemeService.theme.tokens.secondary
                                                : Services.ThemeService.theme.tokens.error
