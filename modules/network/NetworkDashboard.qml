@@ -60,64 +60,73 @@ ColumnLayout {
             + (Services.NetworkService.operationError ? ` — ${Services.NetworkService.operationError}` : "")
         color: Services.ThemeService.theme.tokens.warning
     }
-    RowLayout {
-        Layout.fillWidth: true
-        SectionTitle { text: "Wi-Fi"; Layout.fillWidth: true }
-        Components.IconButton {
-            iconName: "wifi"
-            toggleable: true
-            toggleColor: Services.NetworkService.wifiTogglePending
-                ? Services.ThemeService.theme.tokens.warning : Services.ThemeService.theme.tokens.success
-            foregroundColor: Services.NetworkService.wifiTogglePending
-                ? Services.ThemeService.theme.tokens.warning : Services.ThemeService.theme.tokens.on_surface
-            borderColor: Services.NetworkService.wifiTogglePending
-                ? Services.ThemeService.theme.tokens.warning : Services.ThemeService.theme.tokens.outline
-            checked: Services.NetworkService.wifiTogglePending
-                ? Services.NetworkService.pendingWifiEnabled : Services.NetworkService.wifiEnabled
-            enabled: Services.NetworkService.availability === "available"
-                && Services.NetworkService.wifiHardwareEnabled
-            tooltipText: Services.NetworkService.wifiEnabled ? "Turn Wi-Fi off" : "Turn Wi-Fi on"
-            onToggled: Services.NetworkService.setWifiEnabled(checked)
-        }
-        Components.IconButton {
-            iconName: "refresh"
-            enabled: Services.NetworkService.availability === "available"
-            tooltipText: "Refresh Wi-Fi networks"
-            onClicked: Services.NetworkService.refreshScan()
-        }
-    }
-
-    SectionTitle { text: "Active Connection"; Layout.topMargin: 12 }
+    SectionTitle { text: "Active Connection" }
     RowLayout {
         Layout.fillWidth: true
         LabelText {
-            text: Services.NetworkService.selectedDeviceLabel
-            Layout.fillWidth: true
-            Layout.preferredWidth: 0
-            elide: Text.ElideRight
-        }
-        SectionTitle {
-            text: Services.NetworkService.summary
-            Layout.fillWidth: true
-            Layout.preferredWidth: 0
-        }
-        LabelText {
-            text: Services.NetworkService.connectionType === "wired"
-                ? (Services.NetworkService.linkSpeed > 0
-                    ? `${Services.NetworkService.linkSpeed} Mbps` : "Unknown speed")
-                : `${Services.NetworkService.signalStrength}%`
-            Layout.fillWidth: true
-            Layout.preferredWidth: 0
-            elide: Text.ElideRight
-        }
-        LabelText {
+            id: activeAddress
             text: Services.NetworkService.connectionType === "wired"
                 ? (Services.NetworkService.ipv4Address || "No LAN IP")
                 : (Services.NetworkService.ssid || "No active connection")
             Layout.fillWidth: true
             Layout.preferredWidth: 0
-            horizontalAlignment: Text.AlignRight
+            horizontalAlignment: Text.AlignLeft
             elide: Text.ElideRight
+        }
+        Item {
+            Layout.preferredWidth: 92
+            Layout.maximumWidth: 92
+            implicitHeight: activeStatus.implicitHeight
+            Layout.alignment: Qt.AlignVCenter
+            LabelText {
+                id: activeStatus
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                text: Services.NetworkService.summary
+            }
+        }
+        Item {
+            Layout.preferredWidth: 58
+            Layout.maximumWidth: 58
+            implicitHeight: activeMetricContent.implicitHeight
+            Layout.alignment: Qt.AlignVCenter
+            RowLayout {
+                id: activeMetricContent
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: 4
+                LabelText {
+                    id: activeMetric
+                    text: Services.NetworkService.connectionType === "wired"
+                        ? (Services.NetworkService.linkSpeed > 0
+                            ? `${Services.NetworkService.linkSpeed} Mbps` : "Unknown speed")
+                        : `${Services.NetworkService.signalStrength}%`
+                    elide: Text.ElideRight
+                }
+                Text {
+                    visible: Services.NetworkService.connectionType !== "wired"
+                    text: "signal_cellular_alt"
+                    color: Services.ThemeService.theme.tokens.on_surface_variant
+                    font.family: Services.ConfigService.config.appearance.iconFontFamily
+                    font.pixelSize: Services.ConfigService.config.appearance.fontSize + 2
+                }
+            }
+        }
+        Item {
+            Layout.fillWidth: true
+            Layout.preferredWidth: 0
+            implicitHeight: activeDevice.implicitHeight
+            Layout.alignment: Qt.AlignVCenter
+            LabelText {
+                id: activeDevice
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                text: Services.NetworkService.selectedDeviceLabel
+                horizontalAlignment: Text.AlignRight
+                elide: Text.ElideRight
+            }
         }
     }
 

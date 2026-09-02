@@ -108,10 +108,43 @@ PanelWindow {
                     text: root.featureTitle
                     color: Services.ThemeService.theme.tokens.on_surface_disabled
                     font.family: Services.ConfigService.config.appearance.fontFamily
-                    font.pixelSize: 22
-                    font.weight: Font.DemiBold
+                font.pixelSize: 22
+                font.weight: Font.DemiBold
+            }
+            RowLayout {
+                visible: !!root.controller && root.controller.activeId === "network"
+                spacing: 6
+                Components.IconButton {
+                    iconName: "wifi"
+                    toggleable: true
+                    toggleColor: Services.NetworkService.wifiTogglePending
+                        ? Services.ThemeService.theme.tokens.warning
+                        : Services.ThemeService.theme.tokens.success
+                    foregroundColor: Services.NetworkService.wifiTogglePending
+                        ? Services.ThemeService.theme.tokens.warning
+                        : Services.ThemeService.theme.tokens.on_surface_disabled
+                    borderColor: Services.NetworkService.wifiTogglePending
+                        ? Services.ThemeService.theme.tokens.warning
+                        : Services.ThemeService.theme.tokens.on_surface_disabled
+                    checked: Services.NetworkService.wifiTogglePending
+                        ? Services.NetworkService.pendingWifiEnabled
+                        : Services.NetworkService.wifiEnabled
+                    enabled: Services.NetworkService.availability === "available"
+                        && Services.NetworkService.wifiHardwareEnabled
+                    tooltipText: Services.NetworkService.wifiEnabled
+                        ? "Turn Wi-Fi off" : "Turn Wi-Fi on"
+                    onToggled: Services.NetworkService.setWifiEnabled(checked)
                 }
                 Components.IconButton {
+                    iconName: "refresh"
+                    foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
+                    borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
+                    enabled: Services.NetworkService.availability === "available"
+                    tooltipText: "Refresh Wi-Fi networks"
+                    onClicked: Services.NetworkService.refreshScan()
+                }
+            }
+            Components.IconButton {
                     id: settingsButton
                 visible: !!root.controller && ["audio", "bluetooth", "network"].indexOf(root.controller.activeId) >= 0
                     iconName: root.controller && root.controller.activeId === "bluetooth" ? "bluetooth" : "settings"
