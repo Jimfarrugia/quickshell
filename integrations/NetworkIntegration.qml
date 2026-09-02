@@ -23,7 +23,8 @@ QtObject {
     readonly property bool selectedDeviceConnected: selectedDevice ? selectedDevice.connected : false
     readonly property string selectedDeviceLabel: selectedDevice
         ? String(selectedDevice.name || selectedDevice.address || "unknown") : "No network device"
-    readonly property var wifiDevice: selectedDevice && selectedDevice.type === DeviceType.Wifi ? selectedDevice : null
+    readonly property var wifiDevice: selectedDevice && selectedDevice.type === DeviceType.Wifi
+        ? selectedDevice : deviceOfType(DeviceType.Wifi)
     readonly property var activeWifiDevice: selectedDevice && selectedDevice.type === DeviceType.Wifi
         && selectedDevice.connected ? selectedDevice : null
     readonly property var wifiNetwork: connectedNetwork(activeWifiDevice)

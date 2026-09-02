@@ -186,7 +186,7 @@ Singleton {
     function refreshNetworks() { networks = normalizedNetworks(); }
     function connect(row, psk) {
         if (!row || availability !== "available" || needsFallback(row)
-                || (selectedDevice && selectedDevice.type !== DeviceType.Wifi)) return false;
+                || !wifiDevice) return false;
         operationErrorText = "";
         if (psk && !isValidPsk(String(psk))) {
             operationErrorText = "Wi-Fi password must be 8–63 characters";
@@ -206,7 +206,7 @@ Singleton {
     function forget(row) { return mutate(row, "forget"); }
     function mutate(row, operation) {
         if (!row || availability !== "available" || needsFallback(row)
-                || (selectedDevice && selectedDevice.type !== DeviceType.Wifi)) return false;
+                || !wifiDevice) return false;
         operationErrorText = "";
         if (operationBusy()) {
             if (pendingTargetKey === row.key) return queueMutation(row, operation, "");

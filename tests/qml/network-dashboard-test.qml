@@ -100,11 +100,9 @@ ShellRoot {
             Services.NetworkService.setScanning(true);
             Services.NetworkService.setScanning(false);
             fake.selectedDevice = {type: DeviceType.Wired};
-            fake.wifiDevice = null;
             fake.connectionType = "wired";
-            if (Services.NetworkService.networks.length !== 0
-                    || Services.NetworkService.connect({network: {}}, "xxxxxxxx"))
-                return fail("wired dashboard exposed Wi-Fi mutation");
+            if (Services.NetworkService.networks.length === 0)
+                return fail("wired status removed the visible Wi-Fi list");
             fake.selectedDevice = fake.fixtureWifiDevice;
             fake.wifiDevice = fake.fixtureWifiDevice;
             fake.connectionType = "wifi";
