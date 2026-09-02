@@ -22,6 +22,30 @@ ColumnLayout {
         font.weight: Font.DemiBold
     }
 
+    component DashboardSwitch: Switch {
+        id: control
+
+        indicator: Rectangle {
+            implicitWidth: 36
+            implicitHeight: 20
+            radius: height / 2
+            color: control.checked
+                ? Services.ThemeService.theme.tokens.success
+                : Services.ThemeService.theme.tokens.surface_variant
+
+            Rectangle {
+                x: control.checked ? parent.width - width - 2 : 2
+                anchors.verticalCenter: parent.verticalCenter
+                width: 16
+                height: 16
+                radius: width / 2
+                color: Services.ThemeService.theme.palette.foreground
+                border.width: 1
+                border.color: Services.ThemeService.theme.tokens.outline
+            }
+        }
+    }
+
     function deviceName(device) { return device.name || device.address; }
     function deviceStatus(device) {
         if (device.pairing) return "Pairing...";
@@ -46,6 +70,7 @@ ColumnLayout {
         color: Services.ThemeService.theme.tokens.warning
     }
 
+    SectionTitle { text: "Adapters"; Layout.bottomMargin: 12 }
     RowLayout {
         Layout.fillWidth: true
         spacing: 6
@@ -56,17 +81,20 @@ ColumnLayout {
                 adapter => adapter.id === Services.BluetoothService.adapterId))
             onActivated: Services.BluetoothService.selectAdapter(
                 Services.BluetoothService.adapters[index].id)
+            Layout.alignment: Qt.AlignVCenter
             Layout.fillWidth: true
         }
         LabelText {
             visible: Services.BluetoothService.adapters.length <= 1
             text: Services.BluetoothService.adapterName || "No adapter"
+            Layout.alignment: Qt.AlignVCenter
             Layout.fillWidth: true
         }
-        LabelText { text: Services.BluetoothService.adapterState }
+        LabelText { text: Services.BluetoothService.adapterState; Layout.alignment: Qt.AlignVCenter }
         RowLayout {
             spacing: 6
             Layout.leftMargin: 6
+            Layout.alignment: Qt.AlignVCenter
             Components.IconButton {
                 iconName: Services.BluetoothService.enabled ? "power" : "power_off"
                 toggleable: true
@@ -91,26 +119,42 @@ ColumnLayout {
         RowLayout {
             Layout.fillWidth: true
             spacing: 6
-            LabelText { text: "Discoverable" }
-            Switch {
+            Layout.alignment: Qt.AlignVCenter
+            LabelText {
+                text: "Discoverable"
+                topPadding: 2
+                Layout.alignment: Qt.AlignTop
+            }
+            DashboardSwitch {
                 checked: Services.BluetoothService.discoverable
                 enabled: Services.BluetoothService.enabled
+                Layout.alignment: Qt.AlignVCenter
                 onToggled: Services.BluetoothService.setDiscoverable(checked)
             }
         }
         RowLayout {
             Layout.fillWidth: true
             spacing: 6
-            LabelText { text: "Pairable" }
-            Switch {
+            Layout.alignment: Qt.AlignVCenter
+            LabelText {
+                text: "Pairable"
+                topPadding: 2
+                Layout.alignment: Qt.AlignTop
+            }
+            DashboardSwitch {
                 checked: Services.BluetoothService.pairable
                 enabled: Services.BluetoothService.enabled
+                Layout.alignment: Qt.AlignVCenter
                 onToggled: Services.BluetoothService.setPairable(checked)
             }
         }
     }
 
-    SectionTitle { text: "Known devices"; Layout.topMargin: 8 }
+    SectionTitle {
+        text: "Known devices"
+        Layout.topMargin: 20
+        Layout.bottomMargin: 12
+    }
     Repeater {
         model: Services.BluetoothService.devices.filter(device => device.paired || device.bonded)
         delegate: deviceRow
@@ -118,7 +162,8 @@ ColumnLayout {
     SectionTitle {
         visible: Services.BluetoothService.devices.some(device => !(device.paired || device.bonded))
         text: "Discovered devices"
-        Layout.topMargin: 8
+        Layout.topMargin: 20
+        Layout.bottomMargin: 12
     }
     Repeater {
         model: Services.BluetoothService.devices.filter(device => !(device.paired || device.bonded))
@@ -141,10 +186,12 @@ ColumnLayout {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 0
                 implicitHeight: deviceNameLabel.implicitHeight
+                Layout.alignment: Qt.AlignVCenter
                 LabelText {
                     id: deviceNameLabel
                     anchors.left: parent.left
                     anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
                     text: root.deviceName(deviceRowLayout.device)
                     elide: Text.ElideRight
                 }
@@ -153,6 +200,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 0
                 implicitHeight: batteryContent.implicitHeight
+                Layout.alignment: Qt.AlignVCenter
                 RowLayout {
                     id: batteryContent
                     anchors.left: parent.left
@@ -172,6 +220,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 0
                 implicitHeight: stateAndActions.implicitHeight
+                Layout.alignment: Qt.AlignVCenter
                 RowLayout {
                     id: stateAndActions
                     anchors.right: parent.right
