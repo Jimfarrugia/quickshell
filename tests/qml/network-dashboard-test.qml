@@ -39,6 +39,11 @@ ShellRoot {
                 return fail("duplicate SSID identities were not stable and distinct");
             if (Services.NetworkService.networks[0].profiles[0].key === Services.NetworkService.networks[0].profiles[1].key)
                 return fail("saved profile identities were conflated");
+            for (let index = 1; index < Services.NetworkService.networks.length; index++) {
+                if (Services.NetworkService.networks[index - 1].network.signalStrength
+                        < Services.NetworkService.networks[index].network.signalStrength)
+                    return fail("visible networks were not sorted by signal strength");
+            }
             if (Services.NetworkService.selectedDeviceLabel !== "wlan0"
                     || Services.NetworkService.interfaceName !== "wlan0")
                 return fail(`status and visible networks did not use the selected device (${Services.NetworkService.selectedDeviceLabel}/${Services.NetworkService.interfaceName})`);

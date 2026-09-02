@@ -98,7 +98,13 @@ Singleton {
                     name: network.name});
             }
         });
-        return result;
+        return result.sort((left, right) => {
+            const signalDelta = Number(right.network.signalStrength || 0)
+                - Number(left.network.signalStrength || 0);
+            if (signalDelta !== 0) return signalDelta;
+            const nameDelta = String(left.name).localeCompare(String(right.name));
+            return nameDelta !== 0 ? nameDelta : String(left.key).localeCompare(String(right.key));
+        });
     }
 
     function nativeIdentity(object) {
