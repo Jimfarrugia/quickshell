@@ -95,77 +95,141 @@ ColumnLayout {
             readonly property var row: modelData
             Layout.fillWidth: true
             spacing: 6
-            ColumnLayout {
+            Item {
                 Layout.fillWidth: true
-                LabelText { text: row.name; color: row.network.connected
-                        ? Services.ThemeService.theme.tokens.primary
-                        : Services.ThemeService.theme.tokens.on_surface_variant }
-                LabelText { text: `${root.securityText(row.network)} · ${Math.round((row.network.signalStrength || 0) * 100)}%`
-                    font.pixelSize: Services.ConfigService.config.appearance.fontSize - 1 }
-                  LabelText { visible: row.profiles.length === 1
-                      text: row.profiles.length === 1 ? `Saved profile: ${row.profiles[0].name}` : ""; font.pixelSize: 11 }
-                  ComboBox {
-                      visible: row.profiles.length > 1
-                      Layout.fillWidth: true
-                      model: row.profiles.map(profile => profile.name)
-                      currentIndex: {
-                          const selected = root.selectedProfile(row);
-                          return selected ? row.profiles.indexOf(selected) : 0;
-                      }
-                      onActivated: root.selectProfile(row, currentIndex)
-                  }
-             }
-            LabelText { text: row.network.stateChanging ? "Connecting..."
-                    : (row.network.connected ? "Connected" : "") }
-            Components.IconButton {
-                visible: row.network.connected && root.securitySupported(row)
-                iconName: "link"
-                tooltipText: "Disconnect"
-                enabled: !root.rowPending(row)
-                 onClicked: Services.NetworkService.disconnect(root.selectedRow(row))
-            }
-            Components.IconButton {
-                visible: !row.network.connected && root.securitySupported(row)
-                iconName: "link"
-                tooltipText: row.network.known ? "Connect" : "Connect"
-                enabled: !root.rowPending(row)
-                onClicked: {
-                    if (row.network.known || row.network.security === WifiSecurityType.Open)
-                         Services.NetworkService.connect(root.selectedRow(row), "");
-                    else root.pskKey = row.key;
+                Layout.preferredWidth: 0
+                implicitHeight: identityContent.implicitHeight
+                Layout.alignment: Qt.AlignVCenter
+                ColumnLayout {
+                    id: identityContent
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 2
+                    LabelText {
+                        text: row.name
+                        color: row.network.connected
+                            ? Services.ThemeService.theme.tokens.primary
+                            : Services.ThemeService.theme.tokens.on_surface_variant
+                        elide: Text.ElideRight
+                    }
+                    LabelText {
+                        visible: row.profiles.length === 1
+                        text: row.profiles.length === 1
+                            ? `Saved profile: ${row.profiles[0].name}` : ""
+                        font.pixelSize: Services.ConfigService.config.appearance.fontSize - 1
+                        elide: Text.ElideRight
+                    }
+                    ComboBox {
+                        visible: row.profiles.length > 1
+                        Layout.fillWidth: true
+                        model: row.profiles.map(profile => profile.name)
+                        currentIndex: {
+                            const selected = root.selectedProfile(row);
+                            return selected ? row.profiles.indexOf(selected) : 0;
+                        }
+                        onActivated: root.selectProfile(row, currentIndex)
+                    }
                 }
             }
-            Components.IconButton {
-                visible: !root.securitySupported(row)
-                iconName: "settings"
-                tooltipText: "Unsupported security — open NetworkManager editor"
-                onClicked: Services.NetworkService.openNetworkFallback(row)
+            Item {
+                Layout.preferredWidth: 92
+                Layout.maximumWidth: 92
+                implicitHeight: securityLabel.implicitHeight
+                Layout.alignment: Qt.AlignVCenter
+                LabelText {
+                    id: securityLabel
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.securityText(row.network)
+                    elide: Text.ElideRight
+                }
             }
-            LabelText {
-                visible: !root.securitySupported(row)
-                text: "Unsupported here — use nm-connection-editor"
-                color: Services.ThemeService.theme.tokens.warning
-            }
-            Components.IconButton {
-                visible: row.network.known
-                iconName: "delete"
-                tooltipText: "Forget saved profiles"
-                enabled: !root.rowPending(row)
-                 onClicked: root.confirmForgetKey = root.confirmForgetKey === row.key ? "" : row.key
-            }
-            LabelText { visible: root.confirmForgetKey === row.key; text: "Confirm?" }
-            Components.IconButton {
-                visible: root.confirmForgetKey === row.key
-                iconName: "check"
-                tooltipText: "Confirm forget all saved profiles"
-                 onClicked: { Services.NetworkService.forget(root.selectedRow(row)); root.confirmForgetKey = ""; }
+            Item {
+                Layout.preferredWidth: 58
+                Layout.maximumWidth: 58
+                implicitHeight: signalLabel.implicitHeight
+                Layout.alignment: Qt.AlignVCenter
+                LabelText {
+                    id: signalLabel
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: `${Math.round((row.network.signalStrength || 0) * 100)}%`
+                    horizontalAlignment: Text.AlignRight
+                }
             }
             RowLayout {
-                visible: root.pskKey === row.key
-                TextField { id: psk; placeholderText: "Wi-Fi password"; echoMode: TextInput.Password; implicitWidth: 130 }
+                Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+                spacing: 6
+                LabelText {
+                    text: row.network.stateChanging ? "Connecting..."
+                        : (row.network.connected ? "Connected" : "")
+                }
                 Components.IconButton {
-                    iconName: "check"; tooltipText: "Connect"
-                     onClicked: { Services.NetworkService.connect(root.selectedRow(row), psk.text); psk.clear(); root.pskKey = ""; }
+                    visible: row.network.connected && root.securitySupported(row)
+                    iconName: "link"
+                    tooltipText: "Disconnect"
+                    enabled: !root.rowPending(row)
+                    onClicked: Services.NetworkService.disconnect(root.selectedRow(row))
+                }
+                Components.IconButton {
+                    visible: !row.network.connected && root.securitySupported(row)
+                    iconName: "link"
+                    tooltipText: "Connect"
+                    enabled: !root.rowPending(row)
+                    onClicked: {
+                        if (row.network.known || row.network.security === WifiSecurityType.Open)
+                            Services.NetworkService.connect(root.selectedRow(row), "");
+                        else root.pskKey = row.key;
+                    }
+                }
+                Components.IconButton {
+                    visible: !root.securitySupported(row)
+                    iconName: "settings"
+                    tooltipText: "Unsupported security — open NetworkManager editor"
+                    onClicked: Services.NetworkService.openNetworkFallback(row)
+                }
+                LabelText {
+                    visible: !root.securitySupported(row)
+                    text: "Unsupported here — use nm-connection-editor"
+                    color: Services.ThemeService.theme.tokens.warning
+                }
+                Components.IconButton {
+                    visible: row.network.known
+                    iconName: "delete"
+                    tooltipText: "Forget saved profiles"
+                    enabled: !root.rowPending(row)
+                    onClicked: root.confirmForgetKey = root.confirmForgetKey === row.key ? "" : row.key
+                }
+                LabelText { visible: root.confirmForgetKey === row.key; text: "Confirm?" }
+                Components.IconButton {
+                    visible: root.confirmForgetKey === row.key
+                    iconName: "check"
+                    tooltipText: "Confirm forget all saved profiles"
+                    onClicked: {
+                        Services.NetworkService.forget(root.selectedRow(row));
+                        root.confirmForgetKey = "";
+                    }
+                }
+                RowLayout {
+                    visible: root.pskKey === row.key
+                    TextField {
+                        id: psk
+                        placeholderText: "Wi-Fi password"
+                        echoMode: TextInput.Password
+                        implicitWidth: 130
+                    }
+                    Components.IconButton {
+                        iconName: "check"
+                        tooltipText: "Connect"
+                        onClicked: {
+                            Services.NetworkService.connect(root.selectedRow(row), psk.text);
+                            psk.clear();
+                            root.pskKey = "";
+                        }
+                    }
                 }
             }
         }
