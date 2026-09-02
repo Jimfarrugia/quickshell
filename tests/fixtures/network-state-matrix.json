@@ -1,0 +1,13 @@
+{
+  "security": ["Open", "WpaPsk", "Wpa2Psk", "Sae", "Wpa2Eap", "WpaEap", "StaticWep", "DynamicWep", "Owe", "Unknown"],
+  "states": ["Unknown", "Connecting", "Connected", "Disconnecting", "Disconnected"],
+  "failures": ["NoSecrets", "WifiClientDisconnected", "WifiClientFailed", "WifiAuthTimeout", "WifiNetworkLost", "Unknown"],
+  "invariants": [
+    "authentication failure never implies connected",
+    "duplicate SSIDs retain distinct profile identity",
+    "secrets are not logged or persisted",
+    "daemon loss clears pending state and recovery republishes current state",
+    "unrelated mutations are rejected while same-target newer intent supersedes",
+    "malformed profile data does not escape the native boundary"
+  ]
+}

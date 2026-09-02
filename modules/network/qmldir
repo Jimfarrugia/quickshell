@@ -1,0 +1,2 @@
+module QE.Modules.Network
+NetworkDashboard 1.0 NetworkDashboard.qml

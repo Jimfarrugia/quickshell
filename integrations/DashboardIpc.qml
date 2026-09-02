@@ -32,4 +32,12 @@ Scope {
         function toggle(): void { root.toggleDashboard("audio"); }
         function isOpen(): bool { return controller.isOpen("audio"); }
     }
+
+    IpcHandler {
+        target: "qe-network"
+        function open(): void { root.openDashboard("network"); }
+        function close(): void { if (controller.isOpen("network")) controller.close(); }
+        function toggle(): void { root.toggleDashboard("network"); }
+        function isOpen(): bool { return controller.isOpen("network"); }
+    }
 }

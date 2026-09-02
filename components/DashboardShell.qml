@@ -6,6 +6,7 @@ import Quickshell.Wayland
 import "../services" as Services
 import "../modules/audio"
 import "../modules/bluetooth"
+import "../modules/network"
 import "../components" as Components
 
 PanelWindow {
@@ -26,7 +27,8 @@ PanelWindow {
     readonly property bool keyboardTargetFocused: keyTarget.activeFocus
     readonly property bool keyboardTargetRequested: keyTarget.focus
     readonly property string featureTitle: controller && controller.activeId === "audio" ? "Audio"
-        : (controller && controller.activeId === "bluetooth" ? "Bluetooth" : title)
+        : (controller && controller.activeId === "bluetooth" ? "Bluetooth"
+            : (controller && controller.activeId === "network" ? "Network" : title))
 
     function dismiss() {
         if (root.controller && root.controller.activeId === "bluetooth"
@@ -111,14 +113,16 @@ PanelWindow {
                 }
                 Components.IconButton {
                     id: settingsButton
-                    visible: !!root.controller && ["audio", "bluetooth"].indexOf(root.controller.activeId) >= 0
+                visible: !!root.controller && ["audio", "bluetooth", "network"].indexOf(root.controller.activeId) >= 0
                     iconName: root.controller && root.controller.activeId === "bluetooth" ? "bluetooth" : "settings"
                     foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     tooltipText: root.controller && root.controller.activeId === "bluetooth"
-                        ? "Open Blueman" : "Open pavucontrol"
+                    ? "Open Blueman" : (root.controller && root.controller.activeId === "network"
+                        ? "Open NetworkManager editor" : "Open pavucontrol")
                     onClicked: root.controller && root.controller.activeId === "bluetooth"
-                        ? Services.BluetoothService.launchFallback() : Services.AudioService.launchFallback()
+                    ? Services.BluetoothService.launchFallback() : (root.controller && root.controller.activeId === "network"
+                        ? Services.NetworkService.openFallback() : Services.AudioService.launchFallback())
                     ToolTip.visible: hovered
                     ToolTip.text: tooltipText
                 }
@@ -145,7 +149,8 @@ PanelWindow {
                         sourceComponent: root.contentComponent
                             || (root.controller && root.controller.activeId === "audio"
                              ? audioDashboard : (root.controller && root.controller.activeId === "bluetooth"
-                                 ? bluetoothDashboard : unavailableDashboard))
+                             ? bluetoothDashboard : (root.controller && root.controller.activeId === "network"
+                                 ? networkDashboard : unavailableDashboard)))
                     }
                 }
             }
@@ -154,6 +159,7 @@ PanelWindow {
 
     Component { id: audioDashboard; AudioDashboard {} }
     Component { id: bluetoothDashboard; BluetoothDashboard {} }
+    Component { id: networkDashboard; NetworkDashboard {} }
     Component {
         id: unavailableDashboard
         Text {

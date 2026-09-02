@@ -1,6 +1,6 @@
 # QE Implementation Plan
 
-Status: Phases 1-9 complete; Phase 10 not started
+Status: Phases 1-9 complete; Phase 10 active
 
 Last inventory: 2026-09-02
 
@@ -41,8 +41,9 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 | Theme/Matugen integration | Complete | Manual selector and external machine integration complete; Matugen mapping, staged promotion, QE-localized wallpaper selector, and Hyprpaper XDG-path application complete; external generated Matugen artifacts now delivered as QE-generated `wallpaper` theme slots applied by the external switcher, including imv, mpv, and Yazi; runtime/default artifact separation and idempotent promotion added; `QE_THEME_SWITCHER` wired for production through the installed `qe-theme-switcher` wrapper. Phase 4 acceptance passed on 2026-08-26 |
 | Notifications/OSDs | Complete | QE owns notifications and OSDs; Dunst cutover, rollback, and post-cutover legacy cleanup passed 2026-08-31 |
 | Launcher/help | Complete | Launcher, curated help surface, `Super+R` cutover, `Super+/` help binding, rollback, and focused-output multi-monitor acceptance passed 2026-09-01 |
-| Dashboards/control center | Complete | Phase 8 shared dashboard foundation, audio dashboard, launcher access, resilience, and rollback acceptance passed 2026-09-02 |
+| Dashboards/control center | Phase 8 complete | Shared dashboard foundation, audio dashboard, launcher access, resilience, and rollback acceptance passed 2026-09-02 |
 | Bluetooth dashboard | Complete | Phase 9 dashboard, native lifecycle, disposable-device acceptance, fallback, and BlueZ restart validation passed 2026-09-02 |
+| Network dashboard | In progress | Phase 10 v1 implementation is present and reviewed findings are corrected; live NetworkManager restart acceptance remains outstanding |
 | Lock replacement | Not started | Phase 12 |
 | Production hardening | Not started | Phase 13; final deployment location remains undecided |
 
@@ -53,6 +54,11 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
   no pairing-agent API, so interactive PIN/passkey/confirmation flows remain a
   documented Blueman fallback. Detailed acceptance and rollback evidence is in
   `docs/history/PHASES_07-11.md`.
+- Phase 10 is active: personal Wi-Fi management and network inspection are
+  bounded to native open/PSK operations, one deterministic active-device view,
+  and explicit `nm-connection-editor` fallback. Wired state is read-only;
+  unsupported profile editing remains out of scope. The accepted boundary is
+  recorded in `docs/adr/0004-network-dashboard-v1-boundary.md`.
 - Normal runtime is one guarded QE shell from `shell.qml`, reserving 26 pixels
   at the bottom with `trayHostEnabled` true. Waybar is absent from autostart and
   retired in the theme-switcher; QE owns `org.kde.StatusNotifierWatcher`.
@@ -155,7 +161,6 @@ preserved in `docs/history/PHASES_00-06.md`.
 
 | Question | Blocking phase | Resolution point |
 | --- | --- | --- |
-| Which NetworkManager features are required beyond PSK/known networks? | Phase 10 | Define dashboard v1 acceptance before profile editor work |
 | Which PAM service should QE use in production? | Phase 12 | Security review of `login`, `hyprlock`, or dedicated approved config |
 
 The resolved Phase 4 Hyprpaper-confirmation question is retained in
@@ -306,8 +311,8 @@ Prerequisites:
 - shared dashboard/surface foundation
 - agreed v1 boundary for connection types and secrets
 
-Relevant decision: ADR-011 (native integration before commands) in
-`docs/DECISIONS.md`.
+Relevant decisions: ADR-011 (native integration before commands) and ADR-034
+(network dashboard v1 boundary) in `docs/DECISIONS.md`.
 
 Scope:
 

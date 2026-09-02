@@ -1,0 +1,2 @@
+module QE.Modules.Bluetooth
+BluetoothDashboard 1.0 BluetoothDashboard.qml

@@ -79,6 +79,8 @@ timeout 5 quickshell -p tests/qml/segmented-toggle-test.qml
 timeout 5 quickshell -p tests/qml/palette-viewer-test.qml
 timeout 5 quickshell -p tests/qml/dashboard-shell-test.qml
 timeout 5 quickshell -p tests/qml/audio-dashboard-test.qml
+timeout 7 quickshell -p tests/qml/network-dashboard-test.qml
+timeout 5 quickshell -p tests/qml/network-address-test.qml
 timeout 5 quickshell -p tests/qml/launcher-usage-test.qml
 timeout 5 quickshell -p tests/qml/launcher-selection-test.qml
 timeout 5 quickshell -p tests/qml/launcher-dashboard-action-test.qml
@@ -294,3 +296,33 @@ timeout 5 quickshell -p tests/qml/network-address-test.qml
 ```
 
 It must print `NETWORK_ADDRESS_TEST_PASSED`.
+
+### Phase 10 network dashboard
+
+The fixture dashboard test exercises native-shaped Wi-Fi state, active-device
+selection, stable duplicate saved/unprofiled identities, security gating and
+fallback, serialized operations, scan lifecycle, daemon loss/recovery,
+authentication failure, timeout/error paths, wired read-only behavior, and
+dashboard rendering without touching a real connection or exposing a credential:
+
+```sh
+timeout 7 quickshell -p tests/qml/network-dashboard-test.qml
+```
+
+It must print `NETWORK_DASHBOARD_TEST_PASSED`. Also run the existing dashboard
+and service tests after network changes:
+
+```sh
+timeout 7 quickshell -p tests/qml/dashboard-shell-test.qml
+timeout 7 quickshell -p tests/qml/phase2-service-test.qml
+```
+
+The fixture must also prove that unrelated mutations are rejected while one is
+pending, same-target newer intent is queued as the only successor, each
+operation has an independent timeout, NetworkManager loss clears pending state
+and recovered native models become current again, and unsupported EAP/WEP/OWE or
+unknown security opens the editor without calling `connectWithSettings`.
+
+The NetworkManager editor fallback is launched only through the native
+`Process` adapter with the argument array `["nm-connection-editor"]`; no PSK is
+included in that command, logs, or QE persistence.

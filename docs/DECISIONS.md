@@ -60,6 +60,7 @@ accepted ADR merely to tidy the sequence.
 | ADR-027 | Dedicated sidebar surface token | Accepted by user on 2026-08-30 |
 | ADR-032 | Add low surface semantic token | Accepted by user on 2026-09-01 |
 | ADR-033 | Shared dashboard shell and source-module routing | Accepted by user on 2026-09-02 |
+| ADR-034 | Network dashboard v1 boundary | Accepted by user on 2026-09-03 |
 
 ## ADR-032: Add low surface semantic token
 

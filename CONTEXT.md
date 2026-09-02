@@ -90,3 +90,69 @@ it is not persisted by QE.
 A pairing flow requiring a PIN, passkey, numeric confirmation, or authorization
 prompt that QE cannot handle through the installed native API and therefore
 keeps available through Blueman.
+
+**Personal Wi-Fi management**:
+QE-owned inspection and operation of ordinary Wi-Fi connections, including
+enable/disable, connect, disconnect, and forget; wired networking is inspection-
+only in the initial network dashboard.
+
+**Visible SSID row**:
+A dashboard representation of one currently observed Wi-Fi network identity;
+distinct saved profiles behind that identity remain separate and selectable.
+
+**Ephemeral PSK prompt**:
+A local dashboard prompt whose password is passed directly to the native
+connection API for one operation and is neither persisted nor logged by QE.
+
+**Unsupported network profile**:
+A network configuration or authentication flow outside the initial native
+personal Wi-Fi boundary, such as enterprise/EAP, VPN, proxy, hidden-network
+creation, or arbitrary profile editing; it remains available through
+`nm-connection-editor`.
+
+**Active network device**:
+The default or currently relevant NetworkManager device selected for the
+dashboard's primary controls; other devices are not independently managed in
+the initial dashboard.
+
+**Saved network profile**:
+A NetworkManager connection setting associated with a visible SSID. Multiple
+saved profiles may belong to one visible SSID and remain distinct choices.
+
+**Default active device**:
+The NetworkManager-selected device QE uses for primary dashboard controls when
+multiple devices are present; the dashboard does not add user device selection
+in the initial version.
+
+**Inline authentication retry**:
+A failed Wi-Fi authentication remains represented as disconnected with a
+redacted failure reason and offers another ephemeral PSK prompt in the same
+dashboard row.
+
+**Personal Wi-Fi profile**:
+An ordinary open or PSK NetworkManager profile that QE may connect to or create
+through the native API; it excludes enterprise, VPN, proxy, hidden-network, and
+arbitrary edited profiles.
+
+**Supersedable network intent**:
+A newer request for the same network target or radio control that invalidates an
+older pending request; only the newest request may be treated as confirmed.
+
+**Normalized network security**:
+QE's display categories for native Wi-Fi security details: Open, Personal,
+Enterprise, WEP/Legacy, or Unknown. Only Open and Personal are connectable in
+the initial dashboard.
+
+**NetworkManager unavailable state**:
+The dashboard state in which NetworkManager has disappeared or has not supplied
+current data; actionable network controls are disabled and no stale network list
+is presented as current.
+
+**Connection attempt**:
+A single native request to connect to a personal Wi-Fi profile or SSID. Its PSK,
+when needed, exists only for that attempt and is not a profile edit.
+
+**NetworkManager-owned credential update**:
+When a saved personal Wi-Fi profile is retried with a new PSK, NetworkManager
+may update that profile through its native API; QE does not retain ownership of,
+persist, or log the credential.

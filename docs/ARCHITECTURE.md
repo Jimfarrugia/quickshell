@@ -542,6 +542,13 @@ known network, connect with PSK, disconnect, and forget where supported.
 Enterprise/EAP, hidden networks, VPN, proxy, and arbitrary profile editing are
 deferred until their secret handling and NetworkManager contracts are designed.
 
+Phase 10 presents one active device, selected deterministically as connected
+Wi-Fi first, then connected wired, then the first suitable device, because
+Quickshell 0.3.1 does not expose NetworkManager's default-route device. Wired
+controls are read-only. Open and personal PSK profiles may be created or
+activated through the native API; retrying a saved PSK may update the
+NetworkManager-owned profile, but QE never persists or logs the secret.
+
 Passwords are passed as direct arguments only if the verified native API keeps
 them in-process. They must not be interpolated into a shell command, logged, or
 persisted by QE.
