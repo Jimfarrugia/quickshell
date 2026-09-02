@@ -95,7 +95,7 @@ PanelWindow {
                 Text {
                     Layout.fillWidth: true
                     text: root.featureTitle
-                    color: Services.ThemeService.theme.tokens.on_surface
+                    color: Services.ThemeService.theme.tokens.on_surface_disabled
                     font.family: Services.ConfigService.config.appearance.fontFamily
                     font.pixelSize: 22
                     font.weight: Font.DemiBold
@@ -104,6 +104,8 @@ PanelWindow {
                     id: settingsButton
                     visible: !!root.controller && root.controller.activeId === "audio"
                     iconName: "settings"
+                    foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
+                    borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     tooltipText: "Open pavucontrol"
                     onClicked: Services.AudioService.launchFallback()
                     ToolTip.visible: hovered

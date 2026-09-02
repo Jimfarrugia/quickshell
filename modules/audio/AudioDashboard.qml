@@ -29,6 +29,7 @@ ColumnLayout {
     }
 
     component DeviceRow: RowLayout {
+        id: deviceRow
         required property var modelData
         required property int index
         readonly property var node: modelData
@@ -49,27 +50,43 @@ ColumnLayout {
             Layout.maximumWidth: Math.max(0, root.width / 2 - 4)
             elide: Text.ElideRight
         }
-        Components.IconButton {
-            iconName: parent.input ? "mic_off" : "volume_off"
-            toggleable: true
-            checked: parent.node ? Services.AudioService.displayNodeMuted(parent.node) : false
-            toggleColor: Services.ThemeService.theme.tokens.error
-            foregroundColor: Services.ThemeService.theme.palette.foreground
-            borderColor: Services.ThemeService.theme.tokens.outline
-            tooltipText: parent.node && Services.AudioService.displayNodeMuted(parent.node)
-                ? "Unmute" : "Mute"
-            onToggled: function(nextChecked) {
-                Services.AudioService.setNodeMuted(parent.node, nextChecked);
-            }
-        }
-        Slider {
-            id: volumeSlider
-            from: 0
-            to: 200
-            value: root.percentFor(parent.node)
+        RowLayout {
+            id: volumeControls
             Layout.fillWidth: true
-            Layout.preferredWidth: 110
-            onMoved: Services.AudioService.setNodeVolume(parent.node, value)
+            spacing: 8
+
+            WheelHandler {
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                onWheel: event => {
+                    const node = deviceRow.node;
+                    if (node)
+                        Services.AudioService.setNodeVolume(node,
+                            root.percentFor(node) + (event.angleDelta.y > 0 ? 5 : -5));
+                    event.accepted = true;
+                }
+            }
+
+            Components.IconButton {
+                iconName: deviceRow.input ? "mic_off" : "volume_off"
+                toggleable: true
+                checked: deviceRow.node ? Services.AudioService.displayNodeMuted(deviceRow.node) : false
+                toggleColor: Services.ThemeService.theme.tokens.error
+                foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
+                borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
+                tooltipText: deviceRow.node && Services.AudioService.displayNodeMuted(deviceRow.node)
+                    ? "Unmute" : "Mute"
+                onToggled: function(nextChecked) {
+                    Services.AudioService.setNodeMuted(deviceRow.node, nextChecked);
+                }
+            }
+            Slider {
+                id: volumeSlider
+                from: 0
+                to: 200
+                value: root.percentFor(deviceRow.node)
+                Layout.fillWidth: true
+                Layout.preferredWidth: 110
+                onMoved: Services.AudioService.setNodeVolume(deviceRow.node, value)
 
             background: Rectangle {
                 x: volumeSlider.leftPadding
@@ -100,12 +117,13 @@ ColumnLayout {
                 border.width: 1
                 border.color: Services.ThemeService.theme.tokens.outline
             }
-        }
-        StateLabel {
-            text: `${root.percentFor(parent.node)}%`
-                + (parent.node === Services.AudioService.defaultOutput
-                    && Services.AudioService.pendingVolumePercent >= 0 ? " pending" : "")
-            Layout.alignment: Qt.AlignVCenter
+            }
+            StateLabel {
+                text: `${root.percentFor(deviceRow.node)}%`
+                    + (deviceRow.node === Services.AudioService.defaultOutput
+                        && Services.AudioService.pendingVolumePercent >= 0 ? " pending" : "")
+                Layout.alignment: Qt.AlignVCenter
+            }
         }
     }
 
@@ -122,9 +140,9 @@ ColumnLayout {
             Layout.bottomMargin: 12
             text: parent.input
                 ? (Services.AudioService.microphoneAvailability === "available"
-                    ? "Inputs" : `Inputs unavailable (${Services.AudioService.microphoneAvailability})`)
+                    ? "Input" : `Input unavailable (${Services.AudioService.microphoneAvailability})`)
                 : (Services.AudioService.availability === "available"
-                    ? "Outputs" : `Outputs unavailable (${Services.AudioService.availability})`)
+                    ? "Output" : `Output unavailable (${Services.AudioService.availability})`)
         }
 
         RowLayout {
@@ -148,15 +166,38 @@ ColumnLayout {
                     else Services.AudioService.setDefaultOutput(parent.parent.devices[index]);
                 }
 
-                contentItem: Text {
-                    leftPadding: 12
-                    rightPadding: 12
-                    text: selector.currentIndex >= 0 ? selector.currentText : "No devices"
-                    color: Services.ThemeService.theme.tokens.on_surface
-                    font.family: Services.ConfigService.config.appearance.fontFamily
-                    font.pixelSize: Services.ConfigService.config.appearance.fontSize
-                    verticalAlignment: Text.AlignVCenter
-                    elide: Text.ElideRight
+                contentItem: Item {
+                    Text {
+                        anchors.left: parent.left
+                        anchors.leftMargin: 12
+                        anchors.right: dropdownIcon.left
+                        anchors.rightMargin: 4
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: selector.currentIndex >= 0 ? selector.currentText : "No devices"
+                        color: Services.ThemeService.theme.tokens.on_surface
+                        font.family: Services.ConfigService.config.appearance.fontFamily
+                        font.pixelSize: Services.ConfigService.config.appearance.fontSize
+                        elide: Text.ElideRight
+                    }
+
+                    Text {
+                        id: dropdownIcon
+                        anchors.right: parent.right
+                        anchors.rightMargin: 8
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "arrow_drop_down"
+                        color: Services.ThemeService.theme.tokens.on_surface_disabled
+                        font.family: Services.ConfigService.config.appearance.iconFontFamily
+                        font.pixelSize: 24
+                    }
+                }
+
+                indicator: Item {
+                    implicitWidth: 0
+                    implicitHeight: 0
+                    width: 0
+                    height: 0
+                    visible: false
                 }
 
                 background: Rectangle {
@@ -164,7 +205,7 @@ ColumnLayout {
                     radius: Services.ConfigService.config.appearance.radius
                     color: Services.ThemeService.theme.tokens.background
                     border.width: Services.ConfigService.config.appearance.borderWidth
-                    border.color: Services.ThemeService.theme.tokens.outline
+                    border.color: Services.ThemeService.theme.tokens.on_surface_disabled
                 }
             }
 
