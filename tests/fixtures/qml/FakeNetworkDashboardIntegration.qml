@@ -13,7 +13,6 @@ Item {
     property string connectionType: "wifi"
     property string ssid: "Office"
     property int signalStrength: 82
-    property int linkSpeed: 1000
     property string wiredInterface: ""
     property string interfaceName: "wlan0"
     property bool wifiEnabled: true
@@ -31,13 +30,7 @@ Item {
     property bool connectShouldAccept: true
     property bool daemonLost: false
     function setWifiEnabled(value) { wifiEnabled = value; return true; }
-    function setScanning(value) {
-        if (!wifiDevice) return false;
-        scanning = value;
-        scanCalls = scanCalls.concat([value ? "start" : "stop"]);
-        wifiDevice.scannerEnabled = value;
-        return true;
-    }
+    function setScanning(value) { scanning = value; scanCalls = scanCalls.concat([value ? "start" : "stop"]); wifiDevice.scannerEnabled = value; return true; }
     function connect(network, settings) { calls = calls.concat(["connect"]); return connectShouldAccept; }
     function connectWithPsk(network, psk) { calls = calls.concat(["psk"]); return connectShouldAccept; }
     function disconnect(network) { calls = calls.concat(["disconnect"]); return true; }

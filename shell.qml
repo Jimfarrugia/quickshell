@@ -9,26 +9,8 @@ import "integrations"
 import "modules/test_surface"
 import "modules/bar"
 import "components"
-import "tests/fixtures/qml" as Fixtures
 
 ShellRoot {
-    readonly property bool ethernetPreview: Quickshell.env("QE_NETWORK_ETHERNET_PREVIEW") === "1"
-
-    Fixtures.FakeNetworkDashboardIntegration {
-        id: ethernetNetworkFixture
-        availability: "available"
-        connectionType: "wired"
-        interfaceName: "fixture0"
-        wiredInterface: "fixture0"
-        selectedDevice: ({type: DeviceType.Wired})
-        selectedDeviceConnected: true
-        selectedDeviceLabel: "fixture0"
-        linkSpeed: 1000
-        wifiDevice: null
-        wifiEnabled: false
-    }
-    Fixtures.FakeNetworkAddressIntegration { id: ethernetAddressFixture }
-
     DashboardController { id: dashboardController }
     Binding {
         target: Services.SurfaceService
@@ -171,9 +153,4 @@ ShellRoot {
         restoreMode: Binding.RestoreBindingOrValue
     }
 
-    Component.onCompleted: {
-        if (!ethernetPreview) return;
-        Services.NetworkService.integration = ethernetNetworkFixture;
-        Services.NetworkService.addressIntegration = ethernetAddressFixture;
-    }
 }

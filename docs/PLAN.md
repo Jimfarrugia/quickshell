@@ -59,10 +59,6 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
   and explicit `nm-connection-editor` fallback. Wired state is read-only;
   unsupported profile editing remains out of scope. The accepted boundary is
   recorded in `docs/adr/0004-network-dashboard-v1-boundary.md`.
-- A temporary Ethernet UI preview is available in the regular shell when
-  launched with `QE_NETWORK_ETHERNET_PREVIEW=1`; it injects `fixture0` and
-  `192.0.2.10` without touching NetworkManager. Remove the preview hook before
-  Phase 10 closes.
 - Normal runtime is one guarded QE shell from `shell.qml`, reserving 26 pixels
   at the bottom with `trayHostEnabled` true. Waybar is absent from autostart and
   retired in the theme-switcher; QE owns `org.kde.StatusNotifierWatcher`.
