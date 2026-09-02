@@ -26,6 +26,7 @@ Singleton {
     readonly property string connectionType: integration.connectionType
     readonly property string ssid: integration.ssid
     readonly property int signalStrength: integration.signalStrength
+    readonly property int linkSpeed: integration.linkSpeed || 0
     readonly property string wiredInterface: integration.wiredInterface
     readonly property string interfaceName: integration.interfaceName
     readonly property bool wifiEnabled: integration.wifiEnabled === true

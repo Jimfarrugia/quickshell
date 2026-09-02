@@ -62,16 +62,6 @@ ColumnLayout {
     }
     RowLayout {
         Layout.fillWidth: true
-         SectionTitle { text: Services.NetworkService.summary; Layout.fillWidth: true }
-          LabelText { text: Services.NetworkService.connectionType === "wired"
-                  ? `Wired (${Services.NetworkService.interfaceName})`
-                  : (Services.NetworkService.ssid || (Services.NetworkService.selectedDeviceConnected
-                      ? "No active connection" : `Disconnected · ${Services.NetworkService.selectedDeviceLabel}`))
-              Layout.fillWidth: true
-              elide: Text.ElideRight }
-    }
-    RowLayout {
-        Layout.fillWidth: true
         SectionTitle { text: "Wi-Fi"; Layout.fillWidth: true }
         Components.IconButton {
             iconName: "wifi"
@@ -97,12 +87,46 @@ ColumnLayout {
         }
     }
 
+    SectionTitle { text: "Active Connection"; Layout.topMargin: 12 }
+    RowLayout {
+        Layout.fillWidth: true
+        LabelText {
+            text: Services.NetworkService.selectedDeviceLabel
+            Layout.fillWidth: true
+            Layout.preferredWidth: 0
+            elide: Text.ElideRight
+        }
+        SectionTitle {
+            text: Services.NetworkService.summary
+            Layout.fillWidth: true
+            Layout.preferredWidth: 0
+        }
+        LabelText {
+            text: Services.NetworkService.connectionType === "wired"
+                ? (Services.NetworkService.linkSpeed > 0
+                    ? `${Services.NetworkService.linkSpeed} Mbps` : "Unknown speed")
+                : `${Services.NetworkService.signalStrength}%`
+            Layout.fillWidth: true
+            Layout.preferredWidth: 0
+            elide: Text.ElideRight
+        }
+        LabelText {
+            text: Services.NetworkService.connectionType === "wired"
+                ? (Services.NetworkService.ipv4Address || "No LAN IP")
+                : (Services.NetworkService.ssid || "No active connection")
+            Layout.fillWidth: true
+            Layout.preferredWidth: 0
+            horizontalAlignment: Text.AlignRight
+            elide: Text.ElideRight
+        }
+    }
+
     ColumnLayout {
         visible: Services.NetworkService.wifiEnabled
         Layout.fillWidth: true
         spacing: root.spacing
         SectionTitle {
-            text: `Visible Wi-Fi networks · ${Services.NetworkService.selectedDeviceLabel}`
+            text: "Visible Wi-Fi networks"
             Layout.topMargin: 12
         }
         LabelText { visible: Services.NetworkService.networks.length === 0; text: "No networks visible" }
@@ -268,15 +292,6 @@ ColumnLayout {
             }
             }
         }
-    }
-    SectionTitle {
-        visible: Services.NetworkService.connectionType === "wired"
-        text: "Wired networking"
-        Layout.topMargin: 12
-    }
-    LabelText {
-        visible: Services.NetworkService.connectionType === "wired"
-        text: "Read-only here. Use NetworkManager editor for wired changes."
     }
     LabelText { visible: Services.NetworkService.fallbackError.length > 0; text: Services.NetworkService.fallbackError
         color: Services.ThemeService.theme.tokens.error }

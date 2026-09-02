@@ -33,6 +33,8 @@ QtObject {
     readonly property string connectionType: wifiNetwork ? "wifi" : (wiredDevice ? "wired" : "disconnected")
     readonly property string ssid: wifiNetwork ? wifiNetwork.name : ""
     readonly property int signalStrength: wifiNetwork ? Math.round(wifiNetwork.signalStrength * 100) : 0
+    readonly property int linkSpeed: selectedDevice && selectedDevice.type === DeviceType.Wired
+        ? selectedDevice.linkSpeed : 0
     readonly property string wiredInterface: wiredDevice ? wiredDevice.name : ""
     readonly property string interfaceName: wifiNetwork && activeWifiDevice ? activeWifiDevice.name : wiredInterface
     readonly property string connectivity: {
