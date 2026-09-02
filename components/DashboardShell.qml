@@ -137,7 +137,7 @@ PanelWindow {
                     onToggled: Services.NetworkService.setWifiEnabled(checked)
                 }
                 Components.IconButton {
-                    iconName: "refresh"
+                    iconName: "wifi_find"
                     foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     enabled: Services.NetworkService.availability === "available"

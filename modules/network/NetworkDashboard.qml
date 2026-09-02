@@ -170,7 +170,8 @@ ColumnLayout {
                     LabelText {
                         visible: row.profiles.length === 1
                         text: row.profiles.length === 1
-                            ? `Saved profile: ${row.profiles[0].name}` : ""
+                            ? `Profile: ${row.profiles[0].name}` : ""
+                        color: Services.ThemeService.theme.tokens.on_surface_disabled
                         font.pixelSize: Services.ConfigService.config.appearance.fontSize - 1
                         elide: Text.ElideRight
                     }
