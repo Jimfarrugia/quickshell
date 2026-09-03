@@ -21,6 +21,12 @@ ShellRoot {
         property int state: BluetoothDeviceState.Disconnected
         property bool batteryAvailable: true
         property real battery: 0.731
+        property bool forgot: false
+        function forget() {
+            forgot = true;
+            paired = false;
+            bonded = false;
+        }
     }
 
     QtObject {
@@ -63,6 +69,9 @@ ShellRoot {
                 || integration.devices[0].name !== "Fixture Mouse"
                 || integration.devices[0].batteryPercent !== 73)
             return fail("real integration normalizer did not map fixture device fields");
+        integration.forget(fakeDevice.address);
+        if (!fakeDevice.forgot)
+            return fail("forget did not invoke the native device operation");
         fakeDevice.connected = true;
         fakeDevice.state = BluetoothDeviceState.Connected;
         fakeDevice.battery = 0.42;

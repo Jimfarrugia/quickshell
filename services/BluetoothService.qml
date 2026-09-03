@@ -71,11 +71,18 @@ Singleton {
 
     function reconcile() {
         const current = device(pendingDeviceAddress);
-        if (!current) return;
+        if (!current) {
+            if (pendingOperation === "forget") clearPending();
+            return;
+        }
         if (pendingOperation === "pair" && (current.paired || current.bonded)) {
             pendingOperation = "connect";
             integration.connect(current.address);
             operationTimer.restart();
+        } else if (pendingOperation === "pair" && !current.pairing
+                && !current.paired && !current.bonded) {
+            operationError = `Could not pair with ${current.name || "Bluetooth device"}`;
+            clearPending();
         } else if (pendingOperation === "connect" && current.connected) {
             clearPending();
         } else if (pendingOperation === "disconnect" && !current.connected) {
@@ -108,7 +115,7 @@ Singleton {
 
     Connections {
         target: root.integration
-        function onDevicesChanged() { root.reconcile(); }
+        function onDevicesChanged() { Qt.callLater(root.reconcile); }
         function onDiscoveringChanged() {
             if (target.discovering) discoveryTimer.restart();
             else discoveryTimer.stop();

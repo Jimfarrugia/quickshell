@@ -146,10 +146,70 @@ PanelWindow {
                     onClicked: Services.NetworkService.refreshScan()
                 }
             }
+            RowLayout {
+                visible: !!root.controller && root.controller.activeId === "bluetooth"
+                spacing: 6
+                Components.IconButton {
+                    iconName: "power_settings_new"
+                    toggleable: true
+                    checked: Services.BluetoothService.enabled
+                    toggleColor: Services.ThemeService.theme.tokens.success
+                    foregroundColor: Services.BluetoothService.enabled
+                        ? Services.ThemeService.theme.tokens.success
+                        : Services.ThemeService.theme.tokens.error
+                    borderColor: Services.BluetoothService.enabled
+                        ? Services.ThemeService.theme.tokens.success
+                        : Services.ThemeService.theme.tokens.error
+                    enabled: Services.BluetoothService.availability === "available"
+                    tooltipText: Services.BluetoothService.enabled
+                        ? "Disable Bluetooth" : "Enable Bluetooth"
+                    tooltipBelow: true
+                    onToggled: Services.BluetoothService.setEnabled(checked)
+                }
+                Components.IconButton {
+                    iconName: "explore"
+                    toggleable: true
+                    checked: Services.BluetoothService.discoverable
+                    toggleColor: Services.ThemeService.theme.tokens.success
+                    foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
+                    borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
+                    enabled: Services.BluetoothService.enabled
+                    tooltipText: Services.BluetoothService.discoverable
+                        ? "Disable Discoverable Mode" : "Enable Discoverable Mode"
+                    tooltipBelow: true
+                    onToggled: Services.BluetoothService.setDiscoverable(checked)
+                }
+                Components.IconButton {
+                    iconName: "join_right"
+                    toggleable: true
+                    checked: Services.BluetoothService.pairable
+                    toggleColor: Services.ThemeService.theme.tokens.success
+                    foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
+                    borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
+                    enabled: Services.BluetoothService.enabled
+                    tooltipText: Services.BluetoothService.pairable
+                        ? "Disable Pairable Mode" : "Enable Pairable Mode"
+                    tooltipBelow: true
+                    onToggled: Services.BluetoothService.setPairable(checked)
+                }
+                Components.IconButton {
+                    iconName: Services.BluetoothService.discovering ? "stop" : "search"
+                    toggleable: true
+                    checked: Services.BluetoothService.discovering
+                    toggleColor: Services.ThemeService.theme.tokens.warning
+                    foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
+                    borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
+                    enabled: Services.BluetoothService.enabled
+                    tooltipText: Services.BluetoothService.discovering
+                        ? "Stop Searching" : "Search for Devices"
+                    tooltipBelow: true
+                    onToggled: Services.BluetoothService.setDiscovering(checked)
+                }
+            }
             Components.IconButton {
                     id: settingsButton
                 visible: !!root.controller && ["audio", "bluetooth", "network"].indexOf(root.controller.activeId) >= 0
-                    iconName: root.controller && root.controller.activeId === "bluetooth" ? "bluetooth" : "settings"
+                    iconName: "settings"
                     foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     tooltipText: root.controller && root.controller.activeId === "bluetooth"

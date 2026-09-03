@@ -22,30 +22,6 @@ ColumnLayout {
         font.weight: Font.DemiBold
     }
 
-    component DashboardSwitch: Switch {
-        id: control
-
-        indicator: Rectangle {
-            implicitWidth: 36
-            implicitHeight: 20
-            radius: height / 2
-            color: control.checked
-                ? Services.ThemeService.theme.tokens.success
-                : Services.ThemeService.theme.tokens.surface_variant
-
-            Rectangle {
-                x: control.checked ? parent.width - width - 2 : 2
-                anchors.verticalCenter: parent.verticalCenter
-                width: 16
-                height: 16
-                radius: width / 2
-                color: Services.ThemeService.theme.palette.foreground
-                border.width: 1
-                border.color: Services.ThemeService.theme.tokens.outline
-            }
-        }
-    }
-
     function deviceName(device) { return device.name || device.address; }
     function deviceStatus(device) {
         if (device.pairing) return "Pairing...";
@@ -70,93 +46,57 @@ ColumnLayout {
         color: Services.ThemeService.theme.tokens.warning
     }
 
-    SectionTitle { text: "Adapters"; Layout.bottomMargin: 12 }
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: 6
-        ComboBox {
-            visible: Services.BluetoothService.adapters.length > 1
-            model: Services.BluetoothService.adapters.map(adapter => adapter.name)
-            currentIndex: Math.max(0, Services.BluetoothService.adapters.findIndex(
-                adapter => adapter.id === Services.BluetoothService.adapterId))
-            onActivated: Services.BluetoothService.selectAdapter(
-                Services.BluetoothService.adapters[index].id)
-            Layout.alignment: Qt.AlignVCenter
-            Layout.fillWidth: true
-        }
-        LabelText {
-            visible: Services.BluetoothService.adapters.length <= 1
-            text: Services.BluetoothService.adapterName || "No adapter"
-            Layout.alignment: Qt.AlignVCenter
-            Layout.fillWidth: true
-        }
-        LabelText { text: Services.BluetoothService.adapterState; Layout.alignment: Qt.AlignVCenter }
-        RowLayout {
-            spacing: 6
-            Layout.leftMargin: 6
-            Layout.alignment: Qt.AlignVCenter
-            Components.IconButton {
-                iconName: Services.BluetoothService.enabled ? "power" : "power_off"
-                toggleable: true
-                checked: Services.BluetoothService.enabled
-                enabled: Services.BluetoothService.availability === "available"
-                tooltipText: Services.BluetoothService.enabled ? "Turn Bluetooth off" : "Turn Bluetooth on"
-                onToggled: Services.BluetoothService.setEnabled(checked)
-            }
-            Components.IconButton {
-                iconName: Services.BluetoothService.discovering ? "stop" : "search"
-                toggleable: true
-                checked: Services.BluetoothService.discovering
-                enabled: Services.BluetoothService.enabled
-                tooltipText: Services.BluetoothService.discovering ? "Stop discovery" : "Start discovery"
-                onToggled: Services.BluetoothService.setDiscovering(checked)
-            }
-        }
+    SectionTitle {
+        visible: Services.BluetoothService.adapters.length > 1
+        text: "Adapters"
+        Layout.topMargin: 20
+        Layout.bottomMargin: 12
     }
-
-    RowLayout {
+    ComboBox {
+        id: adapterSelector
+        visible: Services.BluetoothService.adapters.length > 1
         Layout.fillWidth: true
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 6
-            Layout.alignment: Qt.AlignVCenter
-            LabelText {
-                text: "Discoverable"
-                topPadding: 2
-                Layout.alignment: Qt.AlignTop
-            }
-            DashboardSwitch {
-                checked: Services.BluetoothService.discoverable
-                enabled: Services.BluetoothService.enabled
-                Layout.alignment: Qt.AlignVCenter
-                onToggled: Services.BluetoothService.setDiscoverable(checked)
-            }
-        }
-        RowLayout {
-            Layout.fillWidth: true
-            spacing: 6
-            Layout.alignment: Qt.AlignVCenter
-            LabelText {
-                text: "Pairable"
-                topPadding: 2
-                Layout.alignment: Qt.AlignTop
-            }
-            DashboardSwitch {
-                checked: Services.BluetoothService.pairable
-                enabled: Services.BluetoothService.enabled
-                Layout.alignment: Qt.AlignVCenter
-                onToggled: Services.BluetoothService.setPairable(checked)
+        model: Services.BluetoothService.adapters
+        textRole: "name"
+        currentIndex: Math.max(0, Services.BluetoothService.adapters.findIndex(
+            adapter => adapter.id === Services.BluetoothService.adapterId))
+        onActivated: Services.BluetoothService.selectAdapter(
+            Services.BluetoothService.adapters[index].id)
+        delegate: ItemDelegate {
+            id: adapterDelegate
+            required property var modelData
+            required property int index
+            width: adapterSelector.width
+            highlighted: adapterSelector.highlightedIndex === index
+            contentItem: RowLayout {
+                spacing: 8
+                Text {
+                    text: adapterDelegate.index === adapterSelector.currentIndex ? "check" : ""
+                    color: Services.ThemeService.theme.tokens.on_surface
+                    font.family: Services.ConfigService.config.appearance.iconFontFamily
+                    font.pixelSize: Services.ConfigService.config.appearance.fontSize
+                    Layout.preferredWidth: 20
+                }
+                Text {
+                    text: adapterDelegate.modelData.name || adapterDelegate.modelData.id
+                    color: Services.ThemeService.theme.tokens.on_surface
+                    font.family: Services.ConfigService.config.appearance.fontFamily
+                    font.pixelSize: Services.ConfigService.config.appearance.fontSize
+                    elide: Text.ElideRight
+                    Layout.fillWidth: true
+                }
             }
         }
     }
 
     SectionTitle {
         text: "Known devices"
-        Layout.topMargin: 20
+        Layout.topMargin: Services.BluetoothService.adapters.length > 1 ? 20 : 0
         Layout.bottomMargin: 12
     }
     Repeater {
         model: Services.BluetoothService.devices.filter(device => device.paired || device.bonded)
+            .sort((left, right) => Number(right.connected) - Number(left.connected))
         delegate: deviceRow
     }
     SectionTitle {
@@ -252,15 +192,19 @@ ColumnLayout {
                         Components.IconButton {
                             visible: !actionGroup.rowDevice.paired && !actionGroup.rowDevice.bonded
                             iconName: actionGroup.rowDevice.pairing ? "cancel" : "add_link"
-                            tooltipText: actionGroup.rowDevice.pairing ? "Cancel pairing" : "Pair"
-                            enabled: Services.BluetoothService.pendingDeviceAddress === ""
-                                || Services.BluetoothService.pendingDeviceAddress === actionGroup.rowDevice.address
-                            onClicked: Services.BluetoothService.begin(actionGroup.rowDevice.address,
-                                actionGroup.rowDevice.pairing ? "cancel" : "pair")
+                            tooltipText: actionGroup.rowDevice.pairing ? "Cancel pairing" : "Open Blueman"
+                            enabled: actionGroup.rowDevice.pairing
+                                ? Services.BluetoothService.pendingDeviceAddress === actionGroup.rowDevice.address
+                                : Services.BluetoothService.availability === "available"
+                            onClicked: actionGroup.rowDevice.pairing
+                                ? Services.BluetoothService.begin(actionGroup.rowDevice.address, "cancel")
+                                : Services.BluetoothService.launchFallback()
                         }
                         Components.IconButton {
                             visible: actionGroup.rowDevice.paired || actionGroup.rowDevice.bonded
                             iconName: "delete"
+                            foregroundColor: Services.ThemeService.theme.tokens.error
+                            borderColor: Services.ThemeService.theme.tokens.error
                             tooltipText: "Forget"
                             enabled: Services.BluetoothService.pendingDeviceAddress === ""
                                 && !root.forgetting(actionGroup.rowDevice.address)

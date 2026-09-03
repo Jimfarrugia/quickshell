@@ -104,40 +104,41 @@ QtObject {
         return true;
     }
 
-    function deviceFor(address) {
-        return devices.find(device => device.address === address) || null;
+    function nativeDeviceFor(address) {
+        const source = adapter && adapter.devices ? adapter.devices.values : [];
+        return source.find(device => device.address === address) || null;
     }
 
     function connect(address) {
-        const device = deviceFor(address);
+        const device = nativeDeviceFor(address);
         if (!device) return false;
         device.connect();
         return true;
     }
 
     function disconnect(address) {
-        const device = deviceFor(address);
+        const device = nativeDeviceFor(address);
         if (!device) return false;
         device.disconnect();
         return true;
     }
 
     function pair(address) {
-        const device = deviceFor(address);
+        const device = nativeDeviceFor(address);
         if (!device) return false;
         device.pair();
         return true;
     }
 
     function cancelPair(address) {
-        const device = deviceFor(address);
+        const device = nativeDeviceFor(address);
         if (!device) return false;
         device.cancelPair();
         return true;
     }
 
     function forget(address) {
-        const device = deviceFor(address);
+        const device = nativeDeviceFor(address);
         if (!device) return false;
         device.forget();
         return true;

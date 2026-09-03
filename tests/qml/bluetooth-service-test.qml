@@ -51,12 +51,49 @@ ShellRoot {
             return fail("connected device did not use the success color");
         if (bluetoothModule.hoverText !== "Fixture Mouse: 73%")
             return fail(`single-device Bluetooth hover was '${bluetoothModule.hoverText}'`);
-        fakeBluetooth.devices = fakeBluetooth.devices.concat([{
+        const pairingDevice = {
+            address: "11:22:33:44:55:66", name: "Pairing Mouse", connected: false,
+            paired: false, bonded: false, pairing: true, state: "connecting",
+            batteryAvailable: false, batteryPercent: -1
+        };
+        fakeBluetooth.devices = [pairingDevice];
+        if (!Services.BluetoothService.begin(pairingDevice.address, "pair"))
+            return fail("pair did not enter the pending state");
+        pairingDevice.pairing = false;
+        pairingDevice.connected = true;
+        pairingDevice.state = "connected";
+        Services.BluetoothService.reconcile();
+        if (Services.BluetoothService.pendingOperation !== ""
+                || Services.BluetoothService.operationError !== "Could not pair with Pairing Mouse")
+            return fail("transient pairing connection did not fail cleanly");
+        fakeBluetooth.devices = [{
+            address: "00:11:22:33:44:55", name: "Fixture Mouse", deviceName: "Mouse",
+            icon: "input-mouse", connected: true, paired: true, bonded: true,
+            trusted: true, blocked: false, pairing: false, state: "connected",
+            batteryAvailable: true, batteryPercent: 73
+        }];
+        if (!Services.BluetoothService.forget("00:11:22:33:44:55")
+                || Services.BluetoothService.pendingOperation !== "forget")
+            return fail("forget did not enter the pending state");
+        fakeBluetooth.devices = [];
+        Qt.callLater(checkForgetCleared);
+    }
+
+    function checkForgetCleared() {
+        if (Services.BluetoothService.pendingOperation !== ""
+                || Services.BluetoothService.pendingDeviceAddress !== "")
+            return fail("forget remained pending after the device disappeared");
+        fakeBluetooth.devices = [{
+            address: "00:11:22:33:44:55", name: "Fixture Mouse", deviceName: "Mouse",
+            icon: "input-mouse", connected: true, paired: true, bonded: true,
+            trusted: true, blocked: false, pairing: false, state: "connected",
+            batteryAvailable: true, batteryPercent: 73
+        }, {
             address: "AA:BB:CC:DD:EE:FF", name: "Fixture Headphones", deviceName: "Headphones",
             icon: "audio-headphones", connected: true, paired: true, bonded: true,
             trusted: true, blocked: false, pairing: false, state: "connected",
             batteryAvailable: false, batteryPercent: -1
-        }]);
+        }];
         if (Services.BluetoothService.connectedCount !== 2
                 || Services.BluetoothService.connectedSummary !== "Fixture Mouse +1")
             return fail("multiple connected devices were not summarized deterministically");
