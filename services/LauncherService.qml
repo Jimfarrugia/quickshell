@@ -67,7 +67,7 @@ Singleton {
             const applicationCommand = Array.from(entry.command || []).map(argument => String(argument));
             const terminal = String(Quickshell.env("TERMINAL") || "kitty").trim();
             const command = entry.runInTerminal
-                ? [terminal, "--", ...applicationCommand]
+                ? [terminal, ...applicationCommand]
                 : applicationCommand;
             launcherProcess.command = command;
             launcherProcess.workingDirectory = String(entry.workingDirectory || "");
