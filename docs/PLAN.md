@@ -1,8 +1,8 @@
 # QE Implementation Plan
 
-Status: Phases 1-9 complete; Phase 10 active
+Status: Phases 1-10 complete; Phase 11 not started
 
-Last inventory: 2026-09-02
+Last inventory: 2026-09-03
 
 This document is the authoritative live roadmap, implementation sequence,
 project-status reference, active/future phase scope, risk register, and polling
@@ -43,7 +43,7 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 | Launcher/help | Complete | Launcher, curated help surface, `Super+R` cutover, `Super+/` help binding, rollback, and focused-output multi-monitor acceptance passed 2026-09-01 |
 | Dashboards/control center | Phase 8 complete | Shared dashboard foundation, audio dashboard, launcher access, resilience, and rollback acceptance passed 2026-09-02 |
 | Bluetooth dashboard | Complete | Phase 9 dashboard, native lifecycle, disposable-device acceptance, fallback, and BlueZ restart validation passed 2026-09-02 |
-| Network dashboard | In progress | Phase 10 v1 implementation is present and reviewed findings are corrected; live NetworkManager restart acceptance remains outstanding |
+| Network dashboard | Complete with upstream limitation | Phase 10 v1 implementation and approved-network validation passed; Quickshell 0.3.1 does not repopulate native devices after a NetworkManager restart, so the dashboard provides a temporary guarded `Restart QE` recovery action |
 | Lock replacement | Not started | Phase 12 |
 | Production hardening | Not started | Phase 13; final deployment location remains undecided |
 
@@ -54,15 +54,17 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
   no pairing-agent API, so interactive PIN/passkey/confirmation flows remain a
   documented Blueman fallback. Detailed acceptance and rollback evidence is in
   `docs/history/PHASES_07-11.md`.
-- Phase 10 is active: personal Wi-Fi management and network inspection are
-  bounded to native open/PSK operations, one deterministic active-device view,
-  and explicit `nm-connection-editor` fallback. Wired state is read-only;
-  unsupported profile editing remains out of scope. The accepted boundary is
-  recorded in `docs/adr/0004-network-dashboard-v1-boundary.md`.
-- The network dashboard exposes a temporary `Restart QE` recovery action for
-  `NETWORKMANAGER_UNAVAILABLE`, using the guarded `scripts/run-qe.sh --restart`
-  entry point. Remove this fallback once the upstream native device
-  re-enumeration issue is fixed and the live restart acceptance passes.
+- Phase 10 is complete with a documented upstream limitation: personal Wi-Fi
+  management and network inspection are bounded to native open/PSK operations,
+  one deterministic active-device view, and explicit `nm-connection-editor`
+  fallback. Wired state is read-only; unsupported profile editing remains out
+  of scope. The accepted boundary is recorded in
+  `docs/adr/0004-network-dashboard-v1-boundary.md`.
+- Quickshell 0.3.1 does not repopulate all native devices after a NetworkManager
+  restart. The dashboard therefore exposes a temporary `Restart QE` recovery
+  action for `NETWORKMANAGER_UNAVAILABLE`, using the guarded
+  `scripts/run-qe.sh --restart` entry point. Remove it after an upstream fix is
+  deployed and live restart recovery passes.
 - Normal runtime is one guarded QE shell from `shell.qml`, reserving 26 pixels
   at the bottom with `trayHostEnabled` true. Waybar is absent from autostart and
   retired in the theme-switcher; QE owns `org.kde.StatusNotifierWatcher`.
@@ -305,59 +307,12 @@ dashboard routing, Blueman fallback, disposable-device validation, and approved
 BlueZ restart validation passed. Detailed implementation and acceptance context is
 preserved in `docs/history/PHASES_07-11.md`.
 
-### Phase 10: Network dashboard
+### Completed Phase 10: Network dashboard
 
-Objective: replace common network inspection and personal Wi-Fi management
-without overclaiming full NetworkManager editor parity.
-
-Prerequisites:
-
-- shared dashboard/surface foundation
-- agreed v1 boundary for connection types and secrets
-
-Relevant decisions: ADR-011 (native integration before commands) and ADR-034
-(network dashboard v1 boundary) in `docs/DECISIONS.md`.
-
-Scope:
-
-- device/connectivity state
-- Wi-Fi enable/disable
-- known network connect/disconnect/forget
-- PSK network connection through native API
-- signal/security metadata and operation errors
-- fallback launch for unsupported profiles
-
-Likely affected files/subsystems:
-
-- network module/service/integration and fixtures
-
-Deliverables:
-
-- network dashboard v1
-- explicit unsupported-profile UX
-
-Acceptance criteria:
-
-- network secrets never enter logs or QE persistence
-- duplicate SSIDs are represented without conflating distinct networks
-- NetworkManager restart produces unavailable then fresh state
-- failed authentication is not shown as connected
-- unsupported enterprise/VPN/profile cases retain `nm-connection-editor` fallback
-
-Validation:
-
-- fixture matrix for security/state/failure reasons
-- connect/disconnect test on an approved network
-- missing NetworkManager test through fixtures or isolated environment
-
-Rollback/recovery:
-
-- NetworkManager editor remains installed and accessible
-
-Out of scope:
-
-- enterprise EAP, VPN, proxy, hidden-network creation, full profile editor unless
-  separately approved after the v1 investigation
+Status: Complete with upstream limitation on 2026-09-03. Detailed implementation,
+validation, and the NetworkManager restart evidence are preserved in
+`docs/history/PHASES_07-11.md`. The temporary `Restart QE` action remains until
+the upstream native device re-enumeration issue is fixed.
 
 ### Phase 11: Control center composition
 

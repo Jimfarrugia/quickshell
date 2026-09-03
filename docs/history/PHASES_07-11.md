@@ -204,3 +204,77 @@ Rollback/recovery:
 Out of scope:
 
 - OBEX transfer and unverified advanced profile management
+
+## Archived Phase 10: Network dashboard
+
+Status: Complete with an upstream limitation on 2026-09-03. The dashboard v1,
+native personal Wi-Fi operations, wired inspection, duplicate-profile handling,
+security gating, unsupported-profile fallback, and approved-network
+connect/disconnect validation passed. The live NetworkManager restart test
+correctly observed the unavailable state, but Quickshell 0.3.1 failed to
+re-enumerate the Wi-Fi device after NetworkManager returned. A temporary
+`Restart QE` action uses the guarded `scripts/run-qe.sh --restart` entry point
+until an upstream fix is available.
+
+Objective: replace common network inspection and personal Wi-Fi management
+without overclaiming full NetworkManager editor parity.
+
+Prerequisites:
+
+- shared dashboard/surface foundation
+- agreed v1 boundary for connection types and secrets
+
+Relevant decisions: ADR-011 (native integration before commands) and ADR-034
+(network dashboard v1 boundary) in `docs/DECISIONS.md`.
+
+Scope:
+
+- device/connectivity state
+- Wi-Fi enable/disable
+- known network connect/disconnect/forget
+- PSK network connection through native API
+- signal/security metadata and operation errors
+- fallback launch for unsupported profiles
+
+Likely affected files/subsystems:
+
+- network module/service/integration and fixtures
+
+Deliverables:
+
+- network dashboard v1
+- explicit unsupported-profile UX
+
+Acceptance criteria:
+
+- network secrets never enter logs or QE persistence
+- duplicate SSIDs are represented without conflating distinct networks
+- NetworkManager restart produces unavailable then fresh state; the fresh-state
+  portion is blocked by the Quickshell 0.3.1 native backend limitation described
+  above
+- failed authentication is not shown as connected
+- unsupported enterprise/VPN/profile cases retain `nm-connection-editor`
+  fallback
+
+Validation:
+
+- fixture matrix passed through `NETWORK_DASHBOARD_TEST_PASSED`
+- approved-network connect/disconnect passed against the current saved Wi-Fi
+  profile; no credential was handled or logged
+- missing NetworkManager behavior is exercised through fixtures
+- `network-address-test.qml` passed with `NETWORK_ADDRESS_TEST_PASSED`
+- `dashboard-shell-test.qml` and `phase2-service-test.qml` passed
+- live restart evidence captured the sequence
+  `available/current/wifi` -> `unavailable/unknown/disconnected`; NetworkManager
+  itself returned to `active` and `connected/full`, but QE did not recover its
+  native device model
+
+Rollback/recovery:
+
+- NetworkManager editor remains installed and accessible
+- QE provides a temporary dashboard restart action through the guarded launcher
+
+Out of scope:
+
+- enterprise EAP, VPN, proxy, hidden-network creation, full profile editor unless
+  separately approved after the v1 investigation

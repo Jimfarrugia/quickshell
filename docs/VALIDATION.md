@@ -326,3 +326,10 @@ unknown security opens the editor without calling `connectWithSettings`.
 The NetworkManager editor fallback is launched only through the native
 `Process` adapter with the argument array `["nm-connection-editor"]`; no PSK is
 included in that command, logs, or QE persistence.
+
+The approved-network live check was performed against the currently connected
+saved Wi-Fi profile: QE requested disconnect, observed the native disconnected
+state, requested reconnect without a credential, and observed the connection
+return. A live NetworkManager restart also produced the expected unavailable
+transition, but Quickshell 0.3.1 did not repopulate the Wi-Fi device afterward;
+the temporary dashboard `Restart QE` recovery action was verified separately.
