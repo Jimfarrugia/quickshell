@@ -94,11 +94,6 @@ PanelWindow {
                         event.accepted = true;
                     }
                 }
-                background: Rectangle {
-                    radius: Services.ConfigService.config.appearance.radius
-                    color: Services.ThemeService.theme.tokens.surface_low
-                    border.width: 0
-                }
             }
 
             Rectangle {

@@ -44,22 +44,19 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 | Dashboards/control center | Phase 8 complete | Shared dashboard foundation, audio dashboard, launcher access, resilience, and rollback acceptance passed 2026-09-02 |
 | Bluetooth dashboard | Complete | Phase 9 dashboard, native lifecycle, disposable-device acceptance, fallback, and BlueZ restart validation passed 2026-09-02 |
 | Network dashboard | Complete with upstream limitation | Phase 10 v1 implementation and approved-network validation passed; Quickshell 0.3.1 does not repopulate native devices after a NetworkManager restart, so the dashboard provides a temporary guarded `Restart QE` recovery action |
+| Control center composition | Not started | Phase 11; requirements and tile inventory remain to be agreed from completed dashboard evidence |
 | Lock replacement | Not started | Phase 12 |
 | Production hardening | Not started | Phase 13; final deployment location remains undecided |
 
 ### 2.1 Current handoff
 
-- Phase 9 is complete: native BlueZ adapter/device lifecycle, bounded discovery,
-  dashboard routing, and Blueman fallback are implemented. Quickshell 0.3.1 has
-  no pairing-agent API, so interactive PIN/passkey/confirmation flows remain a
-  documented Blueman fallback. Detailed acceptance and rollback evidence is in
-  `docs/history/PHASES_07-11.md`.
-- Phase 10 is complete with a documented upstream limitation: personal Wi-Fi
-  management and network inspection are bounded to native open/PSK operations,
-  one deterministic active-device view, and explicit `nm-connection-editor`
-  fallback. Wired state is read-only; unsupported profile editing remains out
-  of scope. The accepted boundary is recorded in
-  `docs/adr/0004-network-dashboard-v1-boundary.md`.
+- Phases 9 and 10 are complete. Bluetooth uses native adapter/device lifecycle
+  handling with Blueman fallback for interactive pairing because Quickshell 0.3.1
+  has no pairing-agent API. Network management is bounded to native open/PSK
+  operations, one deterministic active-device view, and explicit
+  `nm-connection-editor` fallback; wired state is read-only. Detailed acceptance
+  and rollback evidence is in `docs/history/PHASES_07-11.md`, and the network
+  boundary is recorded in `docs/adr/0004-network-dashboard-v1-boundary.md`.
 - Quickshell 0.3.1 does not repopulate all native devices after a NetworkManager
   restart. The dashboard therefore exposes a temporary `Restart QE` recovery
   action for `NETWORKMANAGER_UNAVAILABLE`, using the guarded
@@ -97,7 +94,7 @@ starting environment but is not current-system authority.
 | Primary application launcher | Rofi remains available for specialized flows; the accepted QE launcher owns the primary launcher binding | Complete |
 | Audio dashboard | `pavucontrol` remains installed and is the escape hatch for unsupported routing | Complete |
 | Bluetooth dashboard | Blueman Manager remains available, especially for unsupported pairing interactions | Complete |
-| Network dashboard | `nm-connection-editor` remains available for unsupported profiles and advanced configuration | Phase 10 |
+| Network dashboard | `nm-connection-editor` remains available for unsupported profiles and advanced configuration | Complete |
 | Session lock | Hyprlock remains the rollback/current lock until the isolated QE lock passes secure-state, idle, suspend, and recovery acceptance | Phase 12 |
 | Production lifecycle | Explicit development launch and the current project checkout remain intentional until supervision and deployment are decided | Phase 13 |
 
@@ -105,11 +102,7 @@ starting environment but is not current-system authority.
 
 - Completed Phase 0-6 implementation, acceptance, rollback, and archived handoff
   details: `docs/history/PHASES_00-06.md`
-- Completed Phase 7 implementation, acceptance, rollback, and handoff details:
-  `docs/history/PHASES_07-11.md`
-- Completed Phase 8 implementation, acceptance, rollback, and handoff details:
-  `docs/history/PHASES_07-11.md`
-- Completed Phase 9 implementation, acceptance, rollback, and handoff details:
+- Completed Phase 7-10 implementation, acceptance, rollback, and handoff details:
   `docs/history/PHASES_07-11.md`
 - Original discovery/current-system inventory captured before the completed
   migrations: `docs/history/INITIAL_SYSTEM_INVENTORY.md`
@@ -273,10 +266,10 @@ contract without coordinating through an architecture decision.
 
 ## 8. Implementation Phases
 
-### Completed phases 0-9
+### Completed phases 0-10
 
 Detailed implementation, validation, cutover, and rollback records for phases
-0-9 have been moved losslessly to `docs/history/PHASES_00-06.md` and
+0-10 have been moved losslessly to `docs/history/PHASES_00-06.md` and
 `docs/history/PHASES_07-11.md`.
 
 | Phase | Status | Result |
@@ -289,30 +282,12 @@ Detailed implementation, validation, cutover, and rollback records for phases
 | 5 — Notification prototype | Complete | Isolated QE notification ownership and service behavior validated |
 | 6 — Notification cutover / OSD migration | Complete (2026-08-31) | QE notification and OSD ownership, reversible cutover, rollback exercise, and post-cutover cleanup completed |
 | 7 — Launcher and help | Complete (2026-09-01) | Launcher acceptance, curated help surface, focused-output multi-monitor placement, `Super+R` cutover, `Super+/` binding, and Rofi rollback passed |
+| 8 — Audio dashboard and shared surface foundation | Complete (2026-09-02) | Shared dashboard shell, audio dashboard v1, launcher action, resilience, and `pavucontrol` rollback passed |
+| 9 — Bluetooth dashboard | Complete (2026-09-02) | Native lifecycle, bounded discovery, fallback, disposable-device, and BlueZ restart acceptance passed |
+| 10 — Network dashboard | Complete with upstream limitation (2026-09-03) | Native personal Wi-Fi v1 and approved-network acceptance passed; temporary `Restart QE` recovery remains |
 
 Read the historical phase record only when a current task depends on its detailed
 evidence, rollback history, or implementation rationale.
-
-### Completed Phase 8: Audio dashboard and shared surface foundation
-
-Status: Complete; acceptance passed 2026-09-02. The shared dashboard shell,
-audio dashboard v1, launcher action, resilience checks, and `pavucontrol`
-rollback path passed acceptance. Detailed implementation, validation, and
-rollback evidence is preserved in `docs/history/PHASES_07-11.md`.
-
-### Completed Phase 9: Bluetooth dashboard
-
-Status: Complete on 2026-09-02. Native BlueZ lifecycle, bounded discovery,
-dashboard routing, Blueman fallback, disposable-device validation, and approved
-BlueZ restart validation passed. Detailed implementation and acceptance context is
-preserved in `docs/history/PHASES_07-11.md`.
-
-### Completed Phase 10: Network dashboard
-
-Status: Complete with upstream limitation on 2026-09-03. Detailed implementation,
-validation, and the NetworkManager restart evidence are preserved in
-`docs/history/PHASES_07-11.md`. The temporary `Restart QE` action remains until
-the upstream native device re-enumeration issue is fixed.
 
 ### Phase 11: Control center composition
 
@@ -539,7 +514,7 @@ work, but the fake and live adapter must satisfy the same reviewed interface.
 Detailed completed-cutover evidence is preserved in
 `docs/history/PHASES_00-06.md` and `docs/history/PHASES_07-11.md`. The live
 matrix contains only coexistence or fallback boundaries that still matter to
-Phases 9-12.
+Phases 11-12.
 
 | Existing tool | Can coexist? | Conflict / boundary | Disable condition | Development method | Rollback |
 | --- | --- | --- | --- | --- | --- |
