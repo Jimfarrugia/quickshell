@@ -119,6 +119,10 @@ export QE_TEST_THUNAR_ARGS="$thunar_args_file"
 PATH="$stub_dir:$PATH" "$project_root/scripts/qe-hyprshot-notification.py" \
   "$project_root/shell.qml" "$project_root" >/dev/null 2>&1 &
 client_pid=$!
+PATH="$stub_dir:$PATH" "$project_root/scripts/qe-hyprshot-notification.py" \
+  "$project_root/shell.qml" "$project_root" >/dev/null 2>&1 &
+second_client_pid=$!
+wait "$second_client_pid"
 for _ in {1..50}; do
   if [[ "$(qs ipc --pid "$shell_pid" call qe-notification-test actionReady)" == true ]]; then break; fi
   sleep 0.1
@@ -183,6 +187,16 @@ fi
 qs kill --pid "$shell_pid"
 wait "$shell_pid" 2>/dev/null || true
 shell_pid=""
+for _ in {1..50}; do
+  if ! kill -0 "$client_pid" 2>/dev/null; then break; fi
+  sleep 0.1
+done
+if kill -0 "$client_pid" 2>/dev/null; then
+  printf 'screenshot notification helper survived notification-owner loss\n' >&2
+  exit 1
+fi
+wait "$client_pid" 2>/dev/null || true
+client_pid=""
 if busctl --user status org.freedesktop.Notifications >/dev/null 2>&1; then
   printf 'QE notification owner did not release the DBus name\n' >&2
   exit 1

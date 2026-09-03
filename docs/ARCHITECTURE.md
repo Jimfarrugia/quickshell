@@ -751,11 +751,11 @@ theme `outline_variant` color, matching the inactive border treatment used by
 Hyprland floating windows.
 
 Screenshot capture remains owned by `hyprshot`; the QE wrapper suppresses its
-fixed notification and starts a persistent D-Bus notification sender with
-actions to open the captured image or its containing directory in Thunar with
-the image selected. The notification body contains the captured filename, and
-the sender publishes the image through the standard `image-path` hint for
-notification thumbnails.
+fixed notification and submits each saved image to one per-session persistent
+D-Bus notification sender. The sender provides actions to open the captured
+image or its containing directory in Thunar with the image selected. The
+notification body contains the captured filename, and the sender publishes the
+image through the standard `image-path` hint for notification thumbnails.
 Action handling remains owned by that sender and does not add
 screenshot-specific command parsing to the presentation layer. The sender keeps
 the notification resident and keeps its action endpoint alive until the
