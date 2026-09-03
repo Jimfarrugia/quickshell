@@ -200,7 +200,10 @@ Singleton {
         pendingGenerationId = "";
         const queuedPath = generationQueuedPath;
         generationQueuedPath = "";
-        if (queuedPath) requestGeneration(queuedPath);
+        if (queuedPath && requestGeneration(queuedPath)) return;
+        if (ThemeService.activeThemeId === "wallpaper"
+                && externalThemeStatus !== "pending")
+            ThemeService.applyExternalTheme("wallpaper", `wallpaper-fallback-${nextOperationId++}`, true);
     }
 
     function completeGeneration() {
@@ -469,7 +472,12 @@ Singleton {
             root.syncCache();
             if (ThemeService.activeThemeId !== "wallpaper") return;
             if (root.selectedPath) {
-                root.requestGeneration(root.selectedPath);
+                // Regeneration refreshes the generated external slots. If it
+                // cannot start, still select the last promoted wallpaper slots.
+                if (!root.requestGeneration(root.selectedPath)
+                        && root.generationStatus !== "pending"
+                        && root.externalThemeStatus !== "pending")
+                    ThemeService.applyExternalTheme("wallpaper", `wallpaper-restored-${root.nextOperationId++}`, true);
             } else if (root.generationStatus !== "pending" && root.externalThemeStatus !== "pending") {
                 ThemeService.applyExternalTheme("wallpaper", `wallpaper-restored-${root.nextOperationId++}`, true);
             }

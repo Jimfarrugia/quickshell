@@ -8,6 +8,34 @@ ShellRoot {
     property bool started: false
 
     Scope {
+        id: failingMatugen
+        property string availability: "available"
+        readonly property bool running: false
+        signal finished(var result)
+
+        function generate(imagePath, variant, operationId) {
+            Qt.callLater(() => finished({
+                operationId,
+                success: false,
+                theme: null,
+                colors: null,
+                error: "wallpaper source is unavailable",
+                stderr: "",
+                timedOut: false
+            }));
+            return true;
+        }
+    }
+
+    Scope {
+        id: fakePromotion
+        property string availability: "available"
+        readonly property bool running: false
+        signal finished(var result)
+        function promote(stagePath, destinationPath, operationId) { return true; }
+    }
+
+    Scope {
         id: fakeExternal
         property string availability: "available"
         readonly property bool running: false
@@ -41,6 +69,20 @@ ShellRoot {
         restoreMode: Binding.RestoreBindingOrValue
     }
 
+    Binding {
+        target: Services.WallpaperService
+        property: "matugenAdapter"
+        value: failingMatugen
+        restoreMode: Binding.RestoreBindingOrValue
+    }
+
+    Binding {
+        target: Services.WallpaperService
+        property: "promotionAdapter"
+        value: fakePromotion
+        restoreMode: Binding.RestoreBindingOrValue
+    }
+
     function fail(message) {
         console.error(`RESTORED_WALLPAPER_THEME_TEST_FAILED: ${message}`);
         Qt.quit();
@@ -54,6 +96,9 @@ ShellRoot {
         if (restored === null)
             return fail("restored wallpaper theme was not catalogued");
         started = true;
+        // Exercise selection with an existing wallpaper source that fails
+        // asynchronously; the last promoted external slots must still apply.
+        Services.WallpaperService.selectedPath = Services.PathsService.defaultWallpaperImage;
         if (!Services.ThemeService.requestTheme("wallpaper"))
             fail("restored wallpaper theme was not selectable");
     }
