@@ -17,7 +17,7 @@ Rectangle {
     property real horizontalPadding: 8
     property real contentSpacing: 5
     property real iconSpacing: 5
-    property real contentVerticalOffset: -1
+    property real contentVerticalOffset: 0
     property color iconColor: active ? Services.ThemeService.theme.tokens.on_primary_container
                                      : Services.ThemeService.theme.tokens.secondary
     property color textColor: active ? Services.ThemeService.theme.tokens.on_primary_container
