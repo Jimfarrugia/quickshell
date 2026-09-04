@@ -416,6 +416,19 @@ export function validateNotificationState(document) {
   return { ok: true, value: { schemaVersion: 1, dnd: document.dnd }, errors: [] };
 }
 
+export function validateIdleInhibitorState(document) {
+  if (!isObject(document)) return { ok: false, value: { schemaVersion: 1, requested: false }, errors: ["idle inhibitor state: root must be an object"] };
+  if (document.schemaVersion !== 1)
+    return { ok: false, value: { schemaVersion: 1, requested: false }, errors: ["idle inhibitor state.schemaVersion: expected 1"] };
+  if (typeof document.requested !== "boolean")
+    return { ok: false, value: { schemaVersion: 1, requested: false }, errors: ["idle inhibitor state.requested: expected a boolean"] };
+  for (const key of Object.keys(document)) {
+    if (key !== "schemaVersion" && key !== "requested")
+      return { ok: false, value: { schemaVersion: 1, requested: false }, errors: [`idle inhibitor state.${key}: unsupported property`] };
+  }
+  return { ok: true, value: { schemaVersion: 1, requested: document.requested }, errors: [] };
+}
+
 export function themeTokenNames() {
   return THEME_TOKENS.slice();
 }

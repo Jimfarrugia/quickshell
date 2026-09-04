@@ -1,13 +1,16 @@
 pragma Singleton
 
 import Quickshell
+import Quickshell.Io
 import "../integrations" as Integrations
+import "../utils/Validation.mjs" as Validation
 
 Singleton {
     id: root
 
     property var integration: nativeIntegration
     property bool requested: false
+    property bool stateReady: false
     property var __windows: []
     readonly property bool configured: ConfigService.config.bar.enabled
         && ConfigService.config.bar.idleInhibitorEnabled
@@ -36,6 +39,8 @@ Singleton {
         if (value && (!configured || availability !== "available")) return false;
         requested = value;
         updateIntegration();
+        if (stateReady)
+            stateFile.setText(JSON.stringify({ schemaVersion: 1, requested: requested }, null, 2) + "\n");
         return true;
     }
 
@@ -48,8 +53,37 @@ Singleton {
         integration.requested = requested && ownerWindow !== null;
     }
 
+    function loadState() {
+        if (!stateFile.loaded) return;
+        const parsed = Validation.parseJson(stateFile.text(), "idle inhibitor state");
+        if (!parsed.ok) {
+            stateReady = true;
+            DiagnosticsService.report("IDLE_INHIBITOR_STATE_REJECTED", "idle-inhibitor-state", "Invalid idle inhibitor state ignored", parsed.errors.join("; "), true, null);
+            return;
+        }
+        const state = Validation.validateIdleInhibitorState(parsed.value);
+        if (!state.ok) {
+            stateReady = true;
+            DiagnosticsService.report("IDLE_INHIBITOR_STATE_REJECTED", "idle-inhibitor-state", "Invalid idle inhibitor state ignored", state.errors.join("; "), true, null);
+            return;
+        }
+        requested = state.value.requested;
+        stateReady = true;
+        updateIntegration();
+    }
+
     onIntegrationChanged: updateIntegration()
     onConfiguredChanged: if (!configured && requested) setRequested(false)
 
     Integrations.IdleInhibitorIntegration { id: nativeIntegration }
+
+    FileView {
+        id: stateFile
+        path: PathsService.idleInhibitorState
+        blockLoading: true
+        atomicWrites: true
+        printErrors: false
+        onLoaded: root.loadState()
+        onLoadFailed: root.stateReady = true
+    }
 }

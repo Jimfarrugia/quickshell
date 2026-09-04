@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { themeTokenNames, validateConfig, validateDefaultsManifest, validateTheme, validateThemeState, validateNotificationState, truncateUtf8 } from "../../utils/Validation.mjs";
+import { themeTokenNames, validateConfig, validateDefaultsManifest, validateTheme, validateThemeState, validateNotificationState, validateIdleInhibitorState, truncateUtf8 } from "../../utils/Validation.mjs";
 import { normalizeNotification, sanitizeMarkup, shouldKeepHistory, shouldShowPopup } from "../../utils/Notifications.mjs";
 
 const fixture = async path => JSON.parse(await readFile(new URL(`../fixtures/${path}`, import.meta.url), "utf8"));
@@ -127,6 +127,12 @@ assert.deepEqual(validateNotificationState({ schemaVersion: 1, dnd: true }), {
   ok: true, value: { schemaVersion: 1, dnd: true }, errors: []
 });
 assert.equal(validateNotificationState({ schemaVersion: 1, dnd: "yes" }).ok, false);
+assert.deepEqual(validateIdleInhibitorState({ schemaVersion: 1, requested: true }), {
+  ok: true,
+  value: { schemaVersion: 1, requested: true },
+  errors: []
+});
+assert.equal(validateIdleInhibitorState({ schemaVersion: 1, requested: "yes" }).ok, false);
 assert.deepEqual(truncateUtf8("abcd", 3), { text: "abc", truncated: true });
 
 assert.equal(sanitizeMarkup("<b>safe</b><script>bad</script><a href='x'>link</a>"), "<b>safe</b>badlink");

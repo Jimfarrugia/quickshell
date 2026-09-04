@@ -61,6 +61,30 @@ accepted ADR merely to tidy the sequence.
 | ADR-032 | Add low surface semantic token | Accepted by user on 2026-09-01 |
 | ADR-033 | Shared dashboard shell and source-module routing | Accepted by user on 2026-09-02 |
 | ADR-034 | Network dashboard v1 boundary | Accepted by user on 2026-09-03 |
+| ADR-035 | Persist idle inhibitor requested state | Accepted by user on 2026-09-04 |
+
+## ADR-035: Persist idle inhibitor requested state
+
+Status: Accepted by user on 2026-09-04
+
+Decision: persist the idle inhibitor's requested boolean in versioned QE state
+and restore it after a QE restart. Persisting the request does not claim that
+the compositor has an active inhibitor; the native Wayland inhibitor remains
+bound to the current visible QE bar window and is recreated by the integration
+when that surface is available.
+
+Context: users expect an explicitly enabled bar preference to survive restarting
+the persistent shell, while Quickshell 0.3.1 exposes no compositor-confirmed
+active state.
+
+Rationale: this preserves the requested-versus-confirmed distinction while
+avoiding a surprising reset after a routine shell restart. Missing, malformed,
+or incompatible state safely defaults to disabled.
+
+Consequences: `IdleService` owns a versioned `idle-inhibitor.json` state file
+and writes it on user requests. Configuration disablement and loss of the last
+bar window still release the active compositor request; no automatic reclaim or
+active-state claim is added.
 
 ## ADR-032: Add low surface semantic token
 
@@ -414,14 +438,16 @@ Alternatives considered: defer the module entirely; add a C++ native extension
 in Phase 3; present `enabled` as confirmed active.
 
 Consequences: the bar indicates that inhibition is requested, not guaranteed;
-confirmed-active reporting remains deferred. The request is not persisted and
+confirmed-active reporting remains deferred. The requested boolean is persisted
+by the later ADR-035 decision, but the compositor request remains ephemeral and
 does not replace Hypridle, manual locking, or suspend policy.
 
 Affected areas: `IdleService`, bar idle-inhibitor presentation, Phase 3
 acceptance language, later control-center idle state.
 
 Revisit if: Quickshell exposes reliable inhibitor status or QE adopts a reviewed
-native extension that can distinguish protocol creation/revocation.
+native extension that can distinguish protocol creation/revocation. Persistence
+of the requested boolean is defined by ADR-035.
 
 ## ADR-014: Add tooltip semantic token before release
 

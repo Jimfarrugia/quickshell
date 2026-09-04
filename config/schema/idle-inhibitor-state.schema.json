@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qe.local/schema/idle-inhibitor-state-v1.json",
+  "title": "QE idle inhibitor state v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "requested"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "requested": { "type": "boolean" }
+  }
+}

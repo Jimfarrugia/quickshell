@@ -400,7 +400,7 @@ contracts. UI modules invoke typed domain operations such as `openLauncher()` or
 | Brightness                  | kernel backlight device                       | sysfs, mediated by helper                     | `BrightnessService`                                 | helper/kernel                          | initial read, operation confirmation, justified low-rate refresh if watcher is unreliable | live external; stale marked explicitly                                  |
 | Notifications               | sending applications plus QE server lifecycle | Quickshell notification objects               | notification modules                                | senders; QE tracks/dismisses           | DBus events                                                                               | process-session only; cleared on process exit                           |
 | Do-not-disturb              | `NotificationService`                         | QE state JSON                                 | notification/control-center modules                 | `NotificationService`                  | service property                                                                          | persistent user preference; does not discard history by default         |
-| Idle inhibition             | compositor protocol                           | `IdleInhibitor` state                         | control center/bar                                  | `IdleService`                          | Wayland state                                                                             | ephemeral; loss of bound surface invalidates inhibition                 |
+| Idle inhibition             | compositor protocol                           | `IdleInhibitor` state                         | control center/bar                                  | `IdleService`                          | Wayland state                                                                             | requested state is persistent; active inhibition remains ephemeral and loss of bound surface invalidates it |
 | View-local state            | owning QML view                               | QML properties                                | owning view                                         | owning view                            | local bindings                                                                            | ephemeral; not promoted without cross-view need                         |
 | Generated thumbnails        | wallpaper cache adapter                       | QE cache directory                            | wallpaper selector                                  | cache adapter                          | manifest completion signal                                                                | cache only; malformed cache is deleted/regenerated                      |
 
@@ -787,9 +787,11 @@ brightness adapter with the `leds` class and keyboard-device selection.
 window. Quickshell 0.3.1 exposes only the local `enabled` request and bound
 window; it provides no compositor-confirmed active state or failure signal.
 `IdleService` therefore exposes requested state only and never presents it as
-confirmed external state. The request is process-session local, defaults off,
-is not persisted, and is released when disabled, when the owner window is lost,
-or when QE exits. Confirmed-active reporting is deferred until Quickshell
+confirmed external state. The request defaults off when no state exists and is
+persisted in versioned QE state. It is released from the compositor when
+disabled, when the owner window is lost, or when QE exits; a subsequent QE
+process restores the requested state once a bar window is available.
+Confirmed-active reporting is deferred until Quickshell
 exposes it or QE gains a reviewed native extension. Idle inhibition does not
 replace Hypridle's timeout, manual lock, or suspend policy. QE applies no
 automatic inhibitor timeout: requested state remains unchanged until the user

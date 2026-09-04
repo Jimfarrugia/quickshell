@@ -13,6 +13,7 @@ Singleton {
     readonly property string wallpaperState: Quickshell.statePath("wallpaper.json")
     readonly property string notificationState: Quickshell.statePath("notifications.json")
     readonly property string launcherUsageState: Quickshell.statePath("launcher-usage.json")
+    readonly property string idleInhibitorState: Quickshell.statePath("idle-inhibitor.json")
     readonly property string dataHome: Quickshell.env("XDG_DATA_HOME")
         || `${Quickshell.env("HOME")}/.local/share`
     readonly property string generatedThemePath: `${dataHome}/qe/wallpaper/Wallpaper.json`

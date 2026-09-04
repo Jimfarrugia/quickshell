@@ -65,6 +65,9 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 - Normal runtime is one guarded QE shell from `shell.qml`, reserving 26 pixels
   at the bottom with `trayHostEnabled` true. Waybar is absent from autostart and
   retired in the theme-switcher; QE owns `org.kde.StatusNotifierWatcher`.
+- Idle inhibition persists its requested state in versioned QE state across
+  persistent-shell restarts; compositor-active state remains unconfirmed and
+  surface loss still releases the native inhibitor safely.
 - QE owns desktop notifications and hardware-feedback OSDs. The Phase 6 Dunst
   cutover, rollback exercise, closed rollback window, and legacy cleanup are
   complete.
