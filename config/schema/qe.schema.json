@@ -22,6 +22,7 @@
         "height": { "type": "integer", "minimum": 16, "maximum": 128, "default": 26 },
         "trayHostEnabled": { "type": "boolean", "default": false },
         "moduleSpacing": { "type": "integer", "minimum": 0, "maximum": 64, "default": 8 },
+        "aiQuotaEnabled": { "type": "boolean", "default": true },
         "brightnessEnabled": { "type": "boolean", "default": true },
         "bluetoothEnabled": { "type": "boolean", "default": true },
         "idleInhibitorEnabled": { "type": "boolean", "default": true },

@@ -29,3 +29,4 @@ WallpaperAdapter 1.0 WallpaperAdapter.qml
 WallpaperCacheAdapter 1.0 WallpaperCacheAdapter.qml
 WallpaperPromotionAdapter 1.0 WallpaperPromotionAdapter.qml
 WallpaperExternalThemeAdapter 1.0 WallpaperExternalThemeAdapter.qml
+AiQuotaAdapter 1.0 AiQuotaAdapter.qml

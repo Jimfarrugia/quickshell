@@ -24,3 +24,4 @@ singleton OSDService 1.0 OSDService.qml
 singleton LauncherService 1.0 LauncherService.qml
 singleton HelpService 1.0 HelpService.qml
 singleton ShellLifecycleService 1.0 ShellLifecycleService.qml
+singleton AiQuotaService 1.0 AiQuotaService.qml

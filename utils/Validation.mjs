@@ -48,6 +48,7 @@ export const defaultConfig = Object.freeze({
     height: 26,
     trayHostEnabled: false,
     moduleSpacing: 8,
+    aiQuotaEnabled: true,
     brightnessEnabled: true,
     bluetoothEnabled: true,
     idleInhibitorEnabled: true,
@@ -154,6 +155,8 @@ export function validateConfig(document) {
     else if (document.bar.trayHostEnabled !== undefined) errors.push("config.bar.trayHostEnabled: expected a boolean");
     if (integerIn(document.bar.moduleSpacing, 0, 64)) value.bar.moduleSpacing = document.bar.moduleSpacing;
     else if (document.bar.moduleSpacing !== undefined) errors.push("config.bar.moduleSpacing: expected an integer from 0 to 64");
+    if (typeof document.bar.aiQuotaEnabled === "boolean") value.bar.aiQuotaEnabled = document.bar.aiQuotaEnabled;
+    else if (document.bar.aiQuotaEnabled !== undefined) errors.push("config.bar.aiQuotaEnabled: expected a boolean");
     if (typeof document.bar.brightnessEnabled === "boolean") value.bar.brightnessEnabled = document.bar.brightnessEnabled;
     else if (document.bar.brightnessEnabled !== undefined) errors.push("config.bar.brightnessEnabled: expected a boolean");
     if (typeof document.bar.bluetoothEnabled === "boolean") value.bar.bluetoothEnabled = document.bar.bluetoothEnabled;

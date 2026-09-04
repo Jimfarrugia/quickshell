@@ -10,6 +10,7 @@
     "height": 26,
     "trayHostEnabled": true,
     "moduleSpacing": 8,
+    "aiQuotaEnabled": true,
     "brightnessEnabled": true,
     "bluetoothEnabled": true,
     "idleInhibitorEnabled": true,

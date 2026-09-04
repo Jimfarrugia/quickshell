@@ -45,6 +45,7 @@ PanelWindow {
 
             NetworkModule { sourceScreen: root.modelData; dashboardController: root.dashboardController }
             MetricsModule {}
+            AiQuotaModule { sourceScreen: root.modelData; dashboardController: root.dashboardController }
         }
 
         WorkspacesModule {

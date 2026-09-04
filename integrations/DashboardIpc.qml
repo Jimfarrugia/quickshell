@@ -34,6 +34,14 @@ Scope {
     }
 
     IpcHandler {
+        target: "qe-ai-quota"
+        function open(): void { root.openDashboard("ai-quota"); }
+        function close(): void { if (controller.isOpen("ai-quota")) controller.close(); }
+        function toggle(): void { root.toggleDashboard("ai-quota"); }
+        function isOpen(): bool { return controller.isOpen("ai-quota"); }
+    }
+
+    IpcHandler {
         target: "qe-network"
         function open(): void { root.openDashboard("network"); }
         function close(): void { if (controller.isOpen("network")) controller.close(); }

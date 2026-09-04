@@ -25,12 +25,15 @@ node tests/js/matugen.test.mjs
 node tests/js/external-wallpaper-theme.test.mjs
 node tests/js/launcher.test.mjs
 node tests/js/help.test.mjs
+node tests/js/ai-quota.test.mjs
+python3 -m unittest tests/python/test_ai_quota.py
 bash tests/helpers/system-metrics-helper.test.sh
 bash tests/helpers/brightness-helper.test.sh
 bash tests/helpers/single-instance.test.sh
 bash tests/helpers/theme-hot-reload.test.sh
 bash tests/helpers/theme-selector-ipc.test.sh
 bash tests/helpers/dashboard-ipc.test.sh
+bash tests/helpers/ai-quota-persistence.test.sh
 bash tests/helpers/external-theme-adapter.test.sh
 bash tests/helpers/wallpaper-cache.test.sh
 bash tests/helpers/wallpaper-helper.test.sh
@@ -81,6 +84,11 @@ timeout 5 quickshell -p tests/qml/dashboard-shell-test.qml
 timeout 5 quickshell -p tests/qml/audio-dashboard-test.qml
 timeout 7 quickshell -p tests/qml/network-dashboard-test.qml
 timeout 5 quickshell -p tests/qml/network-address-test.qml
+timeout 5 quickshell -p tests/qml/ai-quota-service-test.qml
+timeout 5 quickshell -p tests/qml/ai-quota-adapter-test.qml
+timeout 5 quickshell -p tests/qml/ai-quota-bar-test.qml
+timeout 5 quickshell -p tests/qml/ai-quota-dashboard-test.qml
+timeout 5 quickshell -p tests/qml/ai-quota-multi-consumer-test.qml
 timeout 5 quickshell -p tests/qml/launcher-usage-test.qml
 timeout 5 quickshell -p tests/qml/launcher-selection-test.qml
 timeout 5 quickshell -p tests/qml/launcher-dashboard-action-test.qml
@@ -94,6 +102,14 @@ timeout 5 quickshell -p shell.qml
 ## Expected markers and special conditions
 
 ### Core, foundation, bar, and theme-selection tests
+
+The AI quota JavaScript test must print `AI_QUOTA_TEST_PASSED`. The quota QML
+tests use a fake adapter and must prove shared provider selection, consumer
+registration, independent weekly/five-hour/monthly rendering, dashboard routing, and
+stale/unavailable states without accessing live credentials. The adapter test
+also verifies that the pending indicator remains active across sequential
+provider requests. The dashboard shell test verifies the AI quota header
+refresh control and its service request.
 
 Of the timeout-wrapped commands, exit code `124` is acceptable when a headless
 QML test has already printed its success marker; the `shell.qml` smoke test

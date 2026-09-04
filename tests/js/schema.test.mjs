@@ -50,6 +50,7 @@ const themeSchema = await load("../../themes/schema.json");
 const stateSchema = await load("../../config/schema/theme-state.schema.json");
 const notificationStateSchema = await load("../../config/schema/notification-state.schema.json");
 const idleInhibitorStateSchema = await load("../../config/schema/idle-inhibitor-state.schema.json");
+const aiQuotaStateSchema = await load("../../config/schema/ai-quota-state.schema.json");
 const helpSchema = await load("../../config/schema/help.schema.json");
 
 for (const path of ["../../config/qe.json", "../fixtures/config/valid.json"])
@@ -59,6 +60,7 @@ for (const path of ["../../themes/poimandres.json", "../../themes/gruvbox.json",
 assert.deepEqual(validate(await load("../fixtures/state/valid.json"), stateSchema), []);
 assert.deepEqual(validate(await load("../fixtures/notification-state/valid.json"), notificationStateSchema), []);
 assert.deepEqual(validate(await load("../fixtures/idle-inhibitor-state/valid.json"), idleInhibitorStateSchema), []);
+assert.deepEqual(validate({ schemaVersion: 1, selectedProvider: "openai" }, aiQuotaStateSchema), []);
 assert.deepEqual(validate(await load("../../defaults/manifest.json"), await load("../../defaults/schema.json")), []);
 assert.deepEqual(validate(await load("../../config/help.json"), helpSchema), []);
 
@@ -68,5 +70,6 @@ assert.ok(validate(await load("../fixtures/themes/missing-token.json"), themeSch
 assert.ok(validate(await load("../fixtures/state/invalid.json"), stateSchema).length > 0);
 assert.ok(validate(await load("../fixtures/notification-state/invalid.json"), notificationStateSchema).length > 0);
 assert.ok(validate(await load("../fixtures/idle-inhibitor-state/invalid.json"), idleInhibitorStateSchema).length > 0);
+assert.ok(validate({ schemaVersion: 1, selectedProvider: "unknown" }, aiQuotaStateSchema).length > 0);
 
 console.log("JSON schema fixtures passed");

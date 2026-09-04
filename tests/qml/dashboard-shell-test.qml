@@ -1,9 +1,18 @@
 import QtQuick
 import Quickshell
 import Quickshell as QS
+import "services" as Services
+import "fixtures/qml" as Fixtures
 
 ShellRoot {
     id: root
+    Fixtures.FakeAiQuotaAdapter { id: fakeQuotaAdapter }
+    Binding {
+        target: Services.AiQuotaService
+        property: "adapter"
+        value: fakeQuotaAdapter
+        restoreMode: Binding.RestoreBindingOrValue
+    }
 
     Loader {
         id: controllerLoader
@@ -111,6 +120,18 @@ ShellRoot {
         if (shell.surfaceWidth !== 260 || shell.surfaceX !== 20
                 || shell.surfaceY !== 340)
             return fail("instantiated shell did not constrain narrow no-bar output");
+
+        controller.open("ai-quota", "monitor-1", "right");
+        if (shell.featureTitle !== "AI Usage") return fail("AI quota dashboard title was not updated");
+        const refreshButton = shell.aiQuotaRefreshControl;
+        if (!refreshButton || !refreshButton.visible || refreshButton.iconName !== "refresh"
+                || String(refreshButton.foregroundColor) !== String(Services.ThemeService.theme.tokens.on_surface_disabled)
+                || String(refreshButton.borderColor) !== String(Services.ThemeService.theme.tokens.on_surface_disabled))
+            return fail("AI quota refresh button was missing or incorrectly styled");
+        const refreshCalls = fakeQuotaAdapter.refreshCalls;
+        refreshButton.clicked();
+        if (fakeQuotaAdapter.refreshCalls !== refreshCalls + 1)
+            return fail("AI quota refresh button did not request a refresh");
 
         controller.close();
         if (controller.visible || controller.activeId !== "")

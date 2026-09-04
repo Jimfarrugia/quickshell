@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qe.local/schema/ai-quota-state-v1.json",
+  "title": "QE AI quota selection state v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "selectedProvider"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "selectedProvider": { "enum": ["openai", "opencode"] }
+  }
+}

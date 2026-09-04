@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-09-04T00:00:00Z",
+  "providers": {
+    "openai": {
+      "status": "ok",
+      "lastUpdated": "2026-09-04T00:00:00Z",
+      "fiveHour": { "status": "ok", "usedPercent": 25, "remainingPercent": 75, "resetsAt": "2026-09-04T05:00:00Z", "error": null },
+      "weekly": { "status": "ok", "usedPercent": 40, "remainingPercent": 60, "resetsAt": "2026-09-11T00:00:00Z", "error": null },
+      "error": null
+    },
+    "opencode": {
+      "status": "ok",
+      "lastUpdated": "2026-09-04T00:00:00Z",
+      "fiveHour": { "status": "ok", "usedPercent": 10, "remainingPercent": 90, "resetsAt": "2026-09-04T05:00:00Z", "error": null },
+      "weekly": { "status": "ok", "usedPercent": 20, "remainingPercent": 80, "resetsAt": "2026-09-11T00:00:00Z", "error": null },
+      "error": null
+    }
+  }
+}

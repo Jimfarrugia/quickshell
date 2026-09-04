@@ -7,6 +7,7 @@ import "../services" as Services
 import "../modules/audio"
 import "../modules/bluetooth"
 import "../modules/network"
+import "../modules/aiquota"
 import "../components" as Components
 
 PanelWindow {
@@ -24,11 +25,13 @@ PanelWindow {
     readonly property real surfaceY: surface.y
     readonly property real surfaceWidth: surface.width
     readonly property real surfaceHeight: surface.height
+    readonly property alias aiQuotaRefreshControl: aiQuotaRefreshButton
     readonly property bool keyboardTargetFocused: keyTarget.activeFocus
     readonly property bool keyboardTargetRequested: keyTarget.focus
     readonly property string featureTitle: controller && controller.activeId === "audio" ? "Audio"
-        : (controller && controller.activeId === "bluetooth" ? "Bluetooth"
-            : (controller && controller.activeId === "network" ? "Network" : title))
+            : (controller && controller.activeId === "bluetooth" ? "Bluetooth"
+            : (controller && controller.activeId === "network" ? "Network"
+                : (controller && controller.activeId === "ai-quota" ? "AI Usage" : title)))
 
     function dismiss() {
         if (root.controller && root.controller.activeId === "bluetooth"
@@ -207,6 +210,18 @@ PanelWindow {
                 }
             }
             Components.IconButton {
+                id: aiQuotaRefreshButton
+                objectName: "ai-quota-refresh"
+                visible: !!root.controller && root.controller.activeId === "ai-quota"
+                iconName: "refresh"
+                foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
+                borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
+                enabled: Services.AiQuotaService.operation !== "pending"
+                tooltipText: "Refresh usage"
+                tooltipBelow: true
+                onClicked: Services.AiQuotaService.refresh()
+            }
+            Components.IconButton {
                     id: settingsButton
                 visible: !!root.controller && ["audio", "bluetooth", "network"].indexOf(root.controller.activeId) >= 0
                     iconName: "settings"
@@ -244,7 +259,8 @@ PanelWindow {
                             || (root.controller && root.controller.activeId === "audio"
                              ? audioDashboard : (root.controller && root.controller.activeId === "bluetooth"
                              ? bluetoothDashboard : (root.controller && root.controller.activeId === "network"
-                                 ? networkDashboard : unavailableDashboard)))
+                             ? networkDashboard : (root.controller && root.controller.activeId === "ai-quota"
+                                 ? aiQuotaDashboard : unavailableDashboard))))
                     }
                 }
             }
@@ -254,6 +270,7 @@ PanelWindow {
     Component { id: audioDashboard; AudioDashboard {} }
     Component { id: bluetoothDashboard; BluetoothDashboard {} }
     Component { id: networkDashboard; NetworkDashboard {} }
+    Component { id: aiQuotaDashboard; AiQuotaDashboard {} }
     Component {
         id: unavailableDashboard
         Text {

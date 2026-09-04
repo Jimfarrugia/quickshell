@@ -1,6 +1,6 @@
 # QE Implementation Plan
 
-Status: Phases 1-10 complete; Phase 11 not started
+Status: Phases 1-10 complete; AI quota milestone complete; Phase 11 not started
 
 Last inventory: 2026-09-03
 
@@ -45,6 +45,7 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 | Bluetooth dashboard | Complete | Phase 9 dashboard, native lifecycle, disposable-device acceptance, fallback, and BlueZ restart validation passed 2026-09-02 |
 | Network dashboard | Complete with upstream limitation | Phase 10 v1 implementation and approved-network validation passed; Quickshell 0.3.1 does not repopulate native devices after a NetworkManager restart, so the dashboard provides a temporary guarded `Restart QE` recovery action |
 | Control center composition | Not started | Phase 11; requirements and tile inventory remain to be agreed from completed dashboard evidence |
+| AI quota bar/dashboard | Complete | Shared bar chip and dashboard for OpenAI and OpenCode Go weekly and five-hour windows; provider endpoints remain external/unstable |
 | Lock replacement | Not started | Phase 12 |
 | Production hardening | Not started | Phase 13; final deployment location remains undecided |
 
@@ -83,6 +84,11 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
   QE after that specific transition.
 - QE remains a development checkout rather than a production-managed install.
   Phase 13 decides supervision and final deployment location.
+- The AI quota milestone adds a read-only helper for OpenAI Codex/ChatGPT and
+  OpenCode Go weekly and five-hour windows. Its bar chip is after metrics on the
+  left: left click toggles the shared dashboard and right click cycles the
+  persisted weekly provider selection. Credentials remain owned by OpenCode;
+  expired OpenAI access stays stale until OpenCode refreshes its auth file.
 
 ## 3. Current Working Context
 
@@ -262,6 +268,7 @@ contract without coordinating through an architecture decision.
 | Network dashboard | Connectivity, Wi-Fi, known/PSK connections | Enterprise/VPN/full editor initially | NetworkService | Existing NM editor remains fallback | Yes |
 | Audio dashboard | Input/output defaults, levels, mute, common streams | Full patchbay initially | AudioService | Existing pavucontrol remains fallback | Yes |
 | Help | Curated keybindings/commands/reference | Claim live keybind authority from duplicated data | HelpService, config | Show source age/error | Yes |
+| AI quota | Weekly and five-hour provider quota summaries in bar and dashboard | Credential management, token refresh, arbitrary providers before an adapter contract exists | AiQuotaService, read-only OpenCode auth adapter, provider APIs | Provider/window-local unavailable or stale state; shell remains usable | Yes |
 | Wallpaper selector | Discovery, previews, apply, generated cache | Own image editing suite | WallpaperService, theme, helper | Prior wallpaper remains; cache regenerates | Yes |
 | Theme selector | QE theme discovery/apply and external result status | Force external scope to match QE permanently | ThemeService, external switcher | QE can succeed with external warning | No for theme phase |
 | Clipboard history | Open/search/decode clipboard history without duplicating clipboard storage ownership | Replace `cliphist` storage daemon initially | Clipboard adapter, launcher-style surface | Existing Rofi flow remains available | Yes |
@@ -291,6 +298,35 @@ Detailed implementation, validation, cutover, and rollback records for phases
 
 Read the historical phase record only when a current task depends on its detailed
 evidence, rollback history, or implementation rationale.
+
+### AI quota milestone: bar and dashboard
+
+Status: Complete.
+
+This standalone milestone is intentionally separate from Phase 11 because it adds
+new external provider integrations. It provides a weekly quota bar chip and a
+shared dashboard with weekly and five-hour windows for OpenAI Codex/ChatGPT and
+weekly, five-hour, and monthly windows for OpenCode Go.
+
+The helper reads OpenCode's auth store read-only. QE never refreshes, writes,
+removes, or persists provider credentials. Expired OpenAI access tokens retain
+the last-known value as stale until OpenCode refreshes its own auth file.
+
+Acceptance criteria:
+
+- the bar chip uses the existing `BarChip` styling, `robot_2`, and weekly remaining percentage;
+- left click toggles the `ai-quota` dashboard and right click cycles the globally selected provider;
+- the AI quota dashboard header provides a `refresh` control that starts one manual refresh cycle;
+- the tooltip lists both providers' weekly remaining percentages;
+- the dashboard displays weekly and five-hour windows independently for both providers and the OpenCode Go monthly window;
+- missing credentials, endpoint failures, malformed data, and stale values remain local to this feature;
+- no credentials enter QML state, command arguments, logs, diagnostics, fixtures, or QE state;
+- dashboard and bar consumers share one poller and one helper operation;
+- the selected provider persists as versioned state and defaults to OpenAI.
+
+Out of scope: credential provisioning or refresh ownership, billing/API spend
+budgets, arbitrary provider configuration, and guaranteed stability of the
+undocumented upstream usage endpoints.
 
 ### Phase 11: Control center composition
 
@@ -543,6 +579,7 @@ until measured in the named phase.
 | Disk capacity | filesystem capacity has no suitable change signal | 30 seconds | enabled while a disk metric consumer is configured | query configured mount points only | stale after three failed reads; retain last value | Phase 3 |
 | MPRIS position | Quickshell MPRIS position does not advance continuously | 1 second | only while a position consumer is visible and selected player is playing | stop immediately when paused, player vanishes, or view hides | reset from next player event; hide progress if player state is unavailable | media/OSD milestone using it |
 | Brightness fallback | no native Quickshell API; sysfs watcher reliability is unverified | 2 seconds with dashboard/OSD visible; 10 seconds for a configured persistent bar value | only if watcher/operation events cannot satisfy active consumers | one device read; no poll when brightness is not displayed | stale after three failed reads; requested operations still force immediate confirmation read | Phase 3 and Phase 6 |
+| AI provider quota | usage endpoints do not provide a local event source | 5 minutes while a bar or dashboard consumer exists | one singleton adapter/poller shared by all monitors; stop at zero consumers | sequential provider requests remain one logical pending cycle, bounded response/auth reads, per-provider backoff, `Retry-After` respected | retain last-known values and mark stale after 15 minutes; one-minute local age refresh does not contact providers | AI quota milestone |
 
 Polling budget for the bar milestone:
 
@@ -575,6 +612,7 @@ Polling budget for the bar milestone:
 | R17 | Production restart loop destabilizes session | Low/medium | High | defer supervision, bounded restart policy based on evidence | Phase 13 decision |
 | R18 | Notification content loads unsafe resources/markup | Medium | High | sanitize/limit rendering and resources | Phase 5 security review |
 | R19 | External theme apply restarts a tool after QE has replaced it | Medium | High | target-retirement controls must precede each cutover and are included in rollback tests | Phases 3, 4, and 6 |
+| R20 | Provider quota endpoints or OpenCode auth storage change without notice | Medium | Medium/high | strict normalized validation, provider-local degradation, read-only credential ownership, and no guessed windows | AI quota milestone |
 
 ## 13. Planning Change Procedure
 

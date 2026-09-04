@@ -390,6 +390,7 @@ contracts. UI modules invoke typed domain operations such as `openLauncher()` or
 | Displayed wallpaper         | Hyprpaper                                     | compositor wallpaper state                    | `WallpaperIntegration` if observable                | Hyprpaper/helper                       | IPC response/events where available                                                       | external live state; never inferred solely from cached image            |
 | Legacy theme/wallpaper data | existing switcher/picker                      | `~/.local/share/theme_data`                   | compatibility adapter only                          | legacy tools                           | file watch                                                                                | transitional external source, not QE state                              |
 | Application feature flags   | User                                          | `config/qe.json`                              | `ConfigService` consumers                           | User only                              | validated config publication                                                              | persistent                                                              |
+| AI provider quota           | OpenAI/OpenCode provider services             | normalized in-memory provider/window records | `AiQuotaService`, bar, AI quota dashboard           | provider API; QE reads only                         | bounded helper request while consumers exist                                          | live derived data; retain and explicitly mark last-known values stale; never persist credentials or quota snapshots |
 | Launcher usage counts      | `LauncherService`                            | `launcher-usage.json`, versioned QE state keyed by desktop-entry ID | `LauncherService`, launcher surface              | `LauncherService`                     | successful launch updates; atomic persistence                                             | persistent generated state; malformed or incompatible data starts empty with a diagnostic |
 | Hyprland workspaces/windows | Hyprland                                      | native IPC state                              | `CompositorService`                                 | Hyprland; QE dispatches requests       | socket events plus explicit refresh only where API requires                               | live external; mark stale/disconnected on IPC loss                      |
 | Audio graph/defaults        | PipeWire/WirePlumber                          | Quickshell PipeWire objects                   | `AudioService`                                      | subsystem; QE requests updates         | PipeWire events                                                                           | live external; pending operation reconciled to events                   |
@@ -878,9 +879,11 @@ the shell. Open dashboards take exclusive keyboard focus and close on Escape,
 outside click, or source-module toggle. Surfaces are instantiated lazily and
 recreated from current service state when reopened.
 
-The shared header contains only the feature title and a clickable `settings`
-icon. The icon opens the feature's fallback application and exposes a
-feature-specific hover tooltip such as `Open pavucontrol`. Audio v1 owns native
+The shared header contains the feature title and feature controls. The
+clickable `settings` icon opens the feature's fallback application and exposes a
+feature-specific hover tooltip such as `Open pavucontrol`. The AI quota header
+also exposes a `refresh` control that requests one quota refresh cycle and is
+disabled while that cycle is pending. Audio v1 owns native
 output/input selection, default-device state, levels, mute, and common stream
 volume/mute controls. Unsupported routing remains delegated to `pavucontrol`.
 
@@ -891,6 +894,31 @@ Each implemented dashboard exposes the standard namespaced IPC target
 (`qe-audio`, `qe-network`, and so on) with `open`, `close`, `toggle`, and
 `isOpen`; launcher entries are built-in curated QE actions and the help catalog
 remains display-only.
+
+### 7.17 AI quota service
+
+`AiQuotaService` owns the normalized quota projection for OpenAI Codex/ChatGPT
+and OpenCode Go. `AiQuotaAdapter` owns the bounded helper process, sequential
+provider eligibility, and per-provider retry/backoff state. The helper owns the
+HTTPS requests, provider response parsing, and read-only credential lookup. The
+service exposes independent `fiveHour` and `weekly` windows for each
+provider and an additional `monthly` window for OpenCode Go. Each exposed
+window has remaining/used percentages, reset time, availability, freshness,
+and a safe error record.
+
+The helper reads OpenCode's `${XDG_DATA_HOME:-$HOME/.local/share}/opencode/auth.json`
+as the unprivileged desktop user and maps the `opencode-go` record to the
+OpenCode Go provider. QE never writes, refreshes, removes, or
+migrates that file. Expired OpenAI OAuth access is unavailable until OpenCode
+refreshes its own credential. Tokens, account identifiers, headers, raw upstream
+responses, and refresh tokens never enter QML state, process arguments,
+diagnostics, logs, fixtures, or QE state.
+
+Quota data is consumer-scoped polling because the provider endpoints have no
+usable event source. One singleton adapter operation serves all bars and the
+dashboard; a sequential provider refresh cycle remains one logical pending
+operation between helper processes; polling stops when no consumer remains. Provider or window failure
+does not block shell startup or hide unrelated confirmed data.
 
 ## 8. Theme Architecture
 
@@ -1313,6 +1341,9 @@ blindly retried unless idempotence is proven. Backoff state is adapter-owned.
 - QE IPC is not an authentication boundary and never exposes unlock or raw PAM
   response methods.
 - Network secrets are not persisted or logged by QE.
+- AI provider credentials are read-only external data. They are never passed as
+  command arguments, persisted, logged, returned by the helper, or exposed to
+  QML; quota snapshots are non-persistent derived state.
 - Notification markup, images, links, and actions are untrusted application
   input and require constrained rendering.
 - Theme IDs, paths, desktop entries, notification actions, and helper output are
