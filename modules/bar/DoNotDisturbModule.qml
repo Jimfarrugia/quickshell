@@ -11,8 +11,8 @@ BarChip {
         ? Services.ThemeService.theme.tokens.warning
         : Services.ThemeService.theme.tokens.secondary
     hoverText: Services.NotificationService.dnd
-        ? "Do not disturb enabled"
-        : "Do not disturb disabled"
+        ? "Disable DND"
+        : "Enable DND"
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
     configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily
     configuredFontSize: Services.ConfigService.config.appearance.fontSize
