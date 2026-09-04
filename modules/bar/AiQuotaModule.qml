@@ -33,7 +33,13 @@ BarChip {
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
     configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily
     configuredFontSize: Services.ConfigService.config.appearance.fontSize
-    onClicked: if (dashboardController) dashboardController.toggle("ai-quota", sourceScreen, sourceSide)
+    onClicked: if (dashboardController) {
+        if (dashboardController.isOpen("ai-quota")) dashboardController.close();
+        else {
+            Services.SurfaceService.closeControlCenter();
+            dashboardController.open("ai-quota", sourceScreen, sourceSide);
+        }
+    }
     onSecondaryClicked: Services.AiQuotaService.cycleProvider()
     onVisibleChanged: updateConsumer()
     Component.onCompleted: updateConsumer()

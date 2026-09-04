@@ -19,6 +19,8 @@ QtObject {
     readonly property int volumePercent: sink && sink.audio ? Math.round(sink.audio.volume * 100) : 0
     readonly property bool muted: sink && sink.audio ? sink.audio.muted : false
     readonly property bool microphoneMuted: source && source.audio ? source.audio.muted : false
+    readonly property int microphoneVolumePercent: source && source.audio
+        ? Math.round(source.audio.volume * 100) : 0
     readonly property string description: sink ? (sink.description || sink.name) : "No audio output"
     readonly property string microphoneDescription: source ? (source.description || source.name) : "No microphone"
 
@@ -41,6 +43,13 @@ QtObject {
         return true;
     }
 
+    function setMicrophoneVolume(percent) {
+        if (microphoneAvailability !== "available" || !source || !source.audio) return false;
+        const clamped = Math.max(0, Math.min(200, Math.round(percent)));
+        source.audio.volume = clamped / 100;
+        return true;
+    }
+
     function setDefaultOutput(node) {
         if (!node || !node.audio) return false;
         Pipewire.preferredDefaultAudioSink = node;
@@ -60,4 +69,5 @@ QtObject {
     onVolumePercentChanged: lastUpdated = new Date()
     onMutedChanged: lastUpdated = new Date()
     onMicrophoneMutedChanged: lastUpdated = new Date()
+    onMicrophoneVolumePercentChanged: lastUpdated = new Date()
 }

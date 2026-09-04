@@ -13,6 +13,7 @@ Scope {
     function generationStatus(): string { return Services.WallpaperService.generationStatus; }
     function externalThemeStatus(): string { return Services.WallpaperService.externalThemeStatus; }
     function applyDefault(): bool { return Services.WallpaperService.requestDefaultWallpaper(); }
+    function applyRandom(): bool { return Services.WallpaperService.requestRandomWallpaper(); }
 
     IpcHandler {
         target: "qe-wallpaper"
@@ -25,5 +26,6 @@ Scope {
         function generationStatus(): string { return root.generationStatus(); }
         function externalThemeStatus(): string { return root.externalThemeStatus(); }
         function applyDefault(): bool { return root.applyDefault(); }
+        function applyRandom(): bool { return root.applyRandom(); }
     }
 }

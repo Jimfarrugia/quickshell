@@ -5,7 +5,7 @@ import "../services" as Services
 Scope {
     id: root
     property var controller
-    function openDashboard(id) { controller.open(id, null, "right"); }
+    function openDashboard(id) { Services.SurfaceService.openDashboard(id, null, "right"); }
     function toggleDashboard(id) {
         if (controller.isOpen(id)) controller.close();
         else openDashboard(id);

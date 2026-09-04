@@ -12,6 +12,9 @@ Rectangle {
     property color toggleColor: Services.ThemeService.theme.tokens.success
     property color foregroundColor: Services.ThemeService.theme.tokens.on_surface
     property color borderColor: Services.ThemeService.theme.tokens.outline
+    property color baseBackgroundColor: Services.ThemeService.theme.tokens.background
+    property color hoverBackgroundColor: Services.ThemeService.theme.tokens.surface
+    property color pressedBackgroundColor: Services.ThemeService.theme.tokens.surface_pressed
     property string tooltipText: ""
     property bool tooltipBelow: false
     readonly property bool hovered: hover.hovered
@@ -24,9 +27,8 @@ Rectangle {
     border.width: 1
     border.color: root.toggleable && root.checked ? root.toggleColor : root.borderColor
     color: tap.pressed
-        ? Services.ThemeService.theme.tokens.surface_pressed
-        : (hover.hovered ? Services.ThemeService.theme.tokens.surface
-            : Services.ThemeService.theme.tokens.background)
+        ? root.pressedBackgroundColor
+        : (hover.hovered ? root.hoverBackgroundColor : root.baseBackgroundColor)
 
     Text {
         anchors.centerIn: parent

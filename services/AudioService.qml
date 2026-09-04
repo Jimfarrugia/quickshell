@@ -13,12 +13,17 @@ Singleton {
     readonly property var lastUpdated: integration.lastUpdated
     readonly property var lastError: integration.lastError
     readonly property string operation: pendingVolumePercent >= 0 || pendingMuted !== null
-        || pendingMicrophoneMuted !== null ? "pending" : integration.operation
+        || pendingMicrophoneMuted !== null || pendingMicrophoneVolumePercent >= 0
+        ? "pending" : integration.operation
     readonly property int volumePercent: integration.volumePercent
     readonly property int pendingVolumePercent: __pendingVolumePercent
     readonly property int displayVolumePercent: pendingVolumePercent >= 0 ? pendingVolumePercent : volumePercent
     readonly property bool muted: integration.muted
     readonly property bool microphoneMuted: integration.microphoneMuted === true
+    readonly property int microphoneVolumePercent: integration.microphoneVolumePercent || 0
+    readonly property int pendingMicrophoneVolumePercent: __pendingMicrophoneVolumePercent
+    readonly property int displayMicrophoneVolumePercent: pendingMicrophoneVolumePercent >= 0
+        ? pendingMicrophoneVolumePercent : microphoneVolumePercent
     readonly property string microphoneAvailability: integration.microphoneAvailability || "unavailable"
     readonly property string microphoneDescription: integration.microphoneDescription || "No microphone"
     readonly property var pendingMuted: __pendingMuted
@@ -34,6 +39,7 @@ Singleton {
     property int __pendingVolumePercent: -1
     property var __pendingMuted: null
     property var __pendingMicrophoneMuted: null
+    property int __pendingMicrophoneVolumePercent: -1
     property var __pendingNode: null
     property int __pendingNodeVolumePercent: -1
     property var __pendingNodeMuted: null
@@ -94,6 +100,35 @@ Singleton {
     }
 
     function toggleMicrophoneMuted() { return setMicrophoneMuted(!microphoneMuted); }
+
+    function setMicrophoneVolume(percent) {
+        if (microphoneAvailability !== "available" || !integration.setMicrophoneVolume) return false;
+        const clamped = Math.max(0, Math.min(200, Math.round(percent)));
+        __pendingMicrophoneVolumePercent = clamped;
+        if (!integration.setMicrophoneVolume(clamped)) {
+            __pendingMicrophoneVolumePercent = -1;
+            return false;
+        }
+        return true;
+    }
+
+    function stepMicrophoneVolume(delta) {
+        const base = pendingMicrophoneVolumePercent >= 0
+            ? pendingMicrophoneVolumePercent : microphoneVolumePercent;
+        if (microphoneMuted && !setMicrophoneMuted(false)) return false;
+        const target = Math.max(0, Math.min(200, base + delta));
+        if (target === base) {
+            __pendingMicrophoneVolumePercent = -1;
+            return true;
+        }
+        return setMicrophoneVolume(target);
+    }
+
+    function microphoneWheelStep(angleDeltaY) {
+        if (angleDeltaY > 0) return stepMicrophoneVolume(5);
+        if (angleDeltaY < 0) return stepMicrophoneVolume(-5);
+        return false;
+    }
 
     function setDefaultOutput(node) {
         if (availability !== "available" || !integration.setDefaultOutput) return false;
@@ -166,6 +201,12 @@ Singleton {
                     && root.integration.microphoneMuted === root.__pendingMicrophoneMuted)
                 root.__pendingMicrophoneMuted = null;
         }
+        function onMicrophoneVolumePercentChanged() {
+            if (root.__pendingMicrophoneVolumePercent >= 0
+                    && Math.abs(root.integration.microphoneVolumePercent
+                    - root.__pendingMicrophoneVolumePercent) <= 1)
+                root.__pendingMicrophoneVolumePercent = -1;
+        }
         function onAvailabilityChanged() {
             if (root.integration.availability !== "available")
                 root.__pendingVolumePercent = -1;
@@ -174,6 +215,8 @@ Singleton {
         function onMicrophoneAvailabilityChanged() {
             if (root.integration.microphoneAvailability !== "available")
                 root.__pendingMicrophoneMuted = null;
+            if (root.integration.microphoneAvailability !== "available")
+                root.__pendingMicrophoneVolumePercent = -1;
         }
     }
 

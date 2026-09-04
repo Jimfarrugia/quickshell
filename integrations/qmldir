@@ -1,5 +1,7 @@
 module QE.Integrations
 CommandRunner 1.0 CommandRunner.qml
+PowerMenuAdapter 1.0 PowerMenuAdapter.qml
+DefaultsCommandAdapter 1.0 DefaultsCommandAdapter.qml
 HyprlandIntegration 1.0 HyprlandIntegration.qml
 PipewireIntegration 1.0 PipewireIntegration.qml
 AudioFallbackIntegration 1.0 AudioFallbackIntegration.qml
@@ -23,6 +25,7 @@ ActionsIpc 1.0 ActionsIpc.qml
 LauncherIpc 1.0 LauncherIpc.qml
 HelpIpc 1.0 HelpIpc.qml
 DashboardIpc 1.0 DashboardIpc.qml
+ControlCenterIpc 1.0 ControlCenterIpc.qml
 ExternalThemeAdapter 1.0 ExternalThemeAdapter.qml
 MatugenAdapter 1.0 MatugenAdapter.qml
 WallpaperAdapter 1.0 WallpaperAdapter.qml

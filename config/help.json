@@ -32,6 +32,12 @@
       "shortcut": "Super+N"
     },
     {
+      "id": "control-center.toggle",
+      "category": "keybindings",
+      "title": "Toggle control center",
+      "shortcut": "Super+Tab"
+    },
+    {
       "id": "lock.open",
       "category": "keybindings",
       "title": "Lock screen",

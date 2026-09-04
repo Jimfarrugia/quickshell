@@ -1,6 +1,6 @@
 # QE Implementation Plan
 
-Status: Phases 1-10 complete; AI quota milestone complete; Phase 11 not started
+Status: Phases 1-10 complete; AI quota milestone complete; Phase 11 in progress
 
 Last inventory: 2026-09-03
 
@@ -44,7 +44,7 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 | Dashboards/control center | Phase 8 complete | Shared dashboard foundation, audio dashboard, launcher access, resilience, and rollback acceptance passed 2026-09-02 |
 | Bluetooth dashboard | Complete | Phase 9 dashboard, native lifecycle, disposable-device acceptance, fallback, and BlueZ restart validation passed 2026-09-02 |
 | Network dashboard | Complete with upstream limitation | Phase 10 v1 implementation and approved-network validation passed; Quickshell 0.3.1 does not repopulate native devices after a NetworkManager restart, so the dashboard provides a temporary guarded `Restart QE` recovery action |
-| Control center composition | Not started | Phase 11; requirements and tile inventory remain to be agreed from completed dashboard evidence |
+| Control center composition | In progress | Phase 11; centered quick-settings overlay, theme controls, and approved command actions are being composed |
 | AI quota bar/dashboard | Complete | Shared bar chip and dashboard for OpenAI and OpenCode Go weekly and five-hour windows; provider endpoints remain external/unstable |
 | Lock replacement | Not started | Phase 12 |
 | Production hardening | Not started | Phase 13; final deployment location remains undecided |
@@ -89,6 +89,11 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
   left: left click toggles the shared dashboard and right click cycles the
   persisted weekly provider selection. Credentials remain owned by OpenCode;
   expired OpenAI access stays stale until OpenCode refreshes its auth file.
+- Phase 11 is in progress. The control center composes the established network,
+  Bluetooth, audio, notification, theme, and wallpaper surfaces. Its approved
+  Rofi power-menu and `qe-defaults` actions are narrow typed adapters with
+  confirmation for defaults capture and restore. `Super+Tab` is the new shortcut;
+  `Super+Escape` remains the existing power-menu binding.
 
 ## 3. Current Working Context
 
@@ -348,9 +353,29 @@ Scope:
 - health/system information summaries
 - consistent unavailable, stale, pending, and confirmed states across tiles
 
-Requirements, tile inventory, layout, and interaction details are intentionally
-deferred until Phases 8-10 provide evidence about the capabilities and failure
-states that the control center must represent.
+Agreed v1 specification:
+
+- A centered focused-output overlay with 40px inner spacing, 40px header/content
+  spacing, and `appearance.radius + 2` corner rounding.
+- A left-aligned time and long localized date header, with notification and Rofi
+  power-menu actions on the right.
+- A two-column body with Wi-Fi, Bluetooth, DND, idle-inhibitor, output-volume,
+  and microphone-volume quick-setting tiles. Volume and microphone tiles toggle
+  mute on click and change their level by 5% per wheel step, unmuting on scroll.
+- Right-clicking Wi-Fi or Bluetooth opens its existing dashboard. Existing
+  dashboards and selector surfaces remain the detailed views.
+- A Theme section with semantic palette previews, the established themed dropdown,
+  palette viewer, wallpaper selector, capture-defaults, and restore-defaults
+  actions. Capture and restore require confirmation.
+- The control center is opened through `qe-control-center` and `Super+Tab`.
+  `Super+Escape` remains the existing Rofi power-menu shortcut.
+- Opening another major interactive surface replaces the control center. Service
+  failures, stale state, and pending operations remain local to their tile or
+  section.
+
+Phase 11 explicitly approves narrow adapters for the existing `rofi_power_menu`
+and `scripts/qe-defaults capture|restore` commands. This exception does not
+authorize arbitrary command execution or direct power actions.
 
 Likely affected files/subsystems:
 
@@ -367,7 +392,11 @@ Deliverables:
 
 Acceptance criteria:
 
-- to be defined from the agreed v1 specification after Phases 8-10
+- the agreed v1 layout and interactions are available on the focused output;
+  `Super+Tab` opens it and `Super+Escape` remains Rofi
+- all six tiles render confirmed, pending, unavailable, and stale states locally
+- theme selection, existing surface navigation, and both confirmed defaults
+  actions work without duplicating their service or script logic
 - control center composes existing dashboard capabilities rather than duplicating
   system integration logic
 - one unavailable dashboard or service does not block unrelated tiles

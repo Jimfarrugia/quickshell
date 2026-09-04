@@ -21,6 +21,8 @@ Singleton {
     property string availability: "unknown"
     property string freshness: "unknown"
     property string operation: "idle"
+    readonly property bool wallpaperDirectoryReady: wallpaperFiles.status === FolderListModel.Ready
+    readonly property int wallpaperDirectoryCount: wallpaperFiles.count
     property string generationStatus: "idle"
     property string cacheStatus: "idle"
     property string lastError: ""
@@ -59,6 +61,16 @@ Singleton {
 
     function requestDefaultWallpaper() {
         return requestWallpaper(PathsService.defaultWallpaperImage);
+    }
+
+    function requestRandomWallpaper() {
+        if (wallpaperFiles.status !== FolderListModel.Ready || wallpaperFiles.count === 0) {
+            lastError = "no wallpapers are available for the active theme";
+            operation = "failed";
+            return false;
+        }
+        const index = Math.floor(Math.random() * wallpaperFiles.count);
+        return requestWallpaper(wallpaperFiles.get(index, "filePath"));
     }
 
     function requestWallpaper(path) {

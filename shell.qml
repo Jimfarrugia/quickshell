@@ -32,6 +32,7 @@ ShellRoot {
     LauncherIpc {}
     HelpIpc {}
     DashboardIpc { controller: dashboardController }
+    ControlCenterIpc {}
     ActionsIpc {}
     ExternalThemeAdapter {
         id: externalThemeAdapter
@@ -81,6 +82,11 @@ ShellRoot {
     QS.LazyLoader {
         active: Services.SurfaceService.notificationCenterVisible
         source: "modules/notifications/NotificationCenter.qml"
+    }
+
+    QS.LazyLoader {
+        active: Services.SurfaceService.controlCenterVisible
+        source: "modules/controlcenter/ControlCenter.qml"
     }
 
     QS.LazyLoader {

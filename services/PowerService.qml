@@ -4,7 +4,9 @@ import Quickshell
 import "../integrations" as Integrations
 
 Singleton {
+    id: root
     property var integration: nativeIntegration
+    property var menuAdapter: nativeMenuAdapter
     readonly property string availability: integration.availability
     readonly property string freshness: integration.freshness
     readonly property var lastUpdated: integration.lastUpdated
@@ -24,6 +26,10 @@ Singleton {
             ? `Time to full: ${formatDuration(timeToFullSeconds)}`
             : `Time to empty: ${formatDuration(timeToEmptySeconds)}`)
     readonly property string iconName: integration.iconName
+    readonly property string powerMenuAvailability: menuAdapter.availability
+    readonly property string powerMenuOperation: menuAdapter.running ? "pending"
+        : (menuAdapter.lastError.length > 0 ? "failed" : "idle")
+    readonly property string powerMenuError: menuAdapter.lastError
 
     function formatDuration(seconds) {
         if (!Number.isFinite(seconds) || seconds <= 0) return "unavailable";
@@ -35,5 +41,8 @@ Singleton {
         return `${hours}h ${minutes}m`;
     }
 
+    function openPowerMenu() { return menuAdapter.launch(); }
+
     Integrations.UPowerIntegration { id: nativeIntegration }
+    Integrations.PowerMenuAdapter { id: nativeMenuAdapter }
 }

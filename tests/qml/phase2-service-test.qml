@@ -75,6 +75,11 @@ ShellRoot {
                 || Services.AudioService.pendingVolumePercent !== -1)
             return fail("rejected volume request remained pending");
         fakeAudio.acceptSet = true;
+        fakeAudio.microphoneMuted = true;
+        Services.AudioService.microphoneWheelStep(120);
+        if (fakeAudio.lastMicrophoneSetPercent !== 40 || fakeAudio.microphoneMuted
+                || Services.AudioService.pendingMicrophoneVolumePercent !== -1)
+            return fail("microphone wheel did not raise, confirm, and unmute");
         if (Services.NetworkService.connectivity !== "full" || Services.NetworkService.summary !== "Online")
             return fail("network normalization failed");
         if (Services.NetworkService.connectionType !== "wifi" || Services.NetworkService.ssid !== "Fixture WiFi"

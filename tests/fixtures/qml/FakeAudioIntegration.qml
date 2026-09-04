@@ -9,6 +9,7 @@ QtObject {
     property int volumePercent: 42
     property bool muted: false
     property bool microphoneMuted: false
+    property int microphoneVolumePercent: 35
     property string microphoneAvailability: "available"
     property string microphoneDescription: "Fixture microphone"
     property string description: "Fixture sink"
@@ -16,8 +17,10 @@ QtObject {
     property var source: null
     property int setCallCount: 0
     property int lastSetPercent: -1
+    property int lastMicrophoneSetPercent: -1
     property bool acceptSet: true
     property bool autoConfirmVolume: true
+    property bool autoConfirmMicrophoneVolume: true
     property bool acceptMute: true
     property bool acceptMicrophoneMute: true
     property var outputs: []
@@ -40,6 +43,12 @@ QtObject {
     function setMicrophoneMuted(value) {
         if (!acceptMicrophoneMute) return false;
         microphoneMuted = value;
+        return true;
+    }
+
+    function setMicrophoneVolume(percent) {
+        lastMicrophoneSetPercent = percent;
+        if (autoConfirmMicrophoneVolume) microphoneVolumePercent = percent;
         return true;
     }
 

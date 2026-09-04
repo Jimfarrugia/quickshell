@@ -33,6 +33,7 @@ bash tests/helpers/single-instance.test.sh
 bash tests/helpers/theme-hot-reload.test.sh
 bash tests/helpers/theme-selector-ipc.test.sh
 bash tests/helpers/dashboard-ipc.test.sh
+bash tests/helpers/control-center-ipc.test.sh
 bash tests/helpers/ai-quota-persistence.test.sh
 bash tests/helpers/external-theme-adapter.test.sh
 bash tests/helpers/wallpaper-cache.test.sh
@@ -81,6 +82,7 @@ timeout 5 quickshell -p tests/qml/wallpaper-selector-test.qml
 timeout 5 quickshell -p tests/qml/segmented-toggle-test.qml
 timeout 5 quickshell -p tests/qml/palette-viewer-test.qml
 timeout 5 quickshell -p tests/qml/dashboard-shell-test.qml
+timeout 5 quickshell -p tests/qml/control-center-test.qml
 timeout 5 quickshell -p tests/qml/audio-dashboard-test.qml
 timeout 7 quickshell -p tests/qml/network-dashboard-test.qml
 timeout 5 quickshell -p tests/qml/network-address-test.qml
@@ -349,3 +351,19 @@ state, requested reconnect without a credential, and observed the connection
 return. A live NetworkManager restart also produced the expected unavailable
 transition, but Quickshell 0.3.1 did not repopulate the Wi-Fi device afterward;
 the temporary dashboard `Restart QE` recovery action was verified separately.
+
+### Phase 11 control center
+
+The control-center fixture exercises centered geometry, focused-screen binding,
+40px panel spacing, clock and theme bindings, degraded-state projection,
+defaults confirmation, and lazy lifecycle behavior:
+
+```sh
+timeout 5 quickshell -p tests/qml/control-center-test.qml
+```
+
+It must print `CONTROL_CENTER_TEST_PASSED`. The focused-output and production
+shortcut checks are manual compositor checks: `Super+Tab` must toggle
+`qe-control-center`, while `Super+Escape` must continue to launch
+`rofi_power_menu`. Existing dashboard, audio, notification, theme, defaults, and
+shell smoke tests remain required after control-center changes.

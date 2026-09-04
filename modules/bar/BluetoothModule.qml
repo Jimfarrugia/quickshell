@@ -21,6 +21,11 @@ BarChip {
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
     configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily
     configuredFontSize: Services.ConfigService.config.appearance.fontSize
-    onClicked: if (dashboardController)
-        dashboardController.toggle("bluetooth", sourceScreen, sourceSide)
+    onClicked: if (dashboardController) {
+        if (dashboardController.isOpen("bluetooth")) dashboardController.close();
+        else {
+            Services.SurfaceService.closeControlCenter();
+            dashboardController.open("bluetooth", sourceScreen, sourceSide);
+        }
+    }
 }

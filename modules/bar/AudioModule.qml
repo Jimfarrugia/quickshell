@@ -24,8 +24,13 @@ BarChip {
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
     configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily
     configuredFontSize: Services.ConfigService.config.appearance.fontSize
-    onClicked: if (dashboardController)
-        dashboardController.toggle("audio", sourceScreen, sourceSide)
+    onClicked: if (dashboardController) {
+        if (dashboardController.isOpen("audio")) dashboardController.close();
+        else {
+            Services.SurfaceService.closeControlCenter();
+            dashboardController.open("audio", sourceScreen, sourceSide);
+        }
+    }
 
     WheelHandler {
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad

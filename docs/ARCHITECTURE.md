@@ -895,7 +895,29 @@ Each implemented dashboard exposes the standard namespaced IPC target
 `isOpen`; launcher entries are built-in curated QE actions and the help catalog
 remains display-only.
 
-### 7.17 AI quota service
+### 7.17 Control center
+
+The control center is a separate transient composition surface, not a dashboard
+slot. It is hosted by a full-output overlay `PanelWindow` with a centered panel,
+exclusive keyboard focus, and no exclusive zone. `SurfaceService` owns its
+visibility and `qe-control-center` owns its typed IPC endpoint. Opening the
+control center closes other major interactive surfaces; selecting a dashboard,
+notification center, selector, or power menu closes the control center before
+the destination opens.
+
+The surface binds to existing domain services for Wi-Fi, Bluetooth, DND, idle
+inhibition, audio, themes, wallpaper, and notifications. It does not construct
+commands, parse output, or write shared state. Wi-Fi and Bluetooth tiles expose
+the existing network and Bluetooth dashboards as their detailed views. Volume
+and microphone wheel changes use the audio service's confirmed/pending model.
+
+Phase 11 adds two explicitly scoped command boundaries: a power-menu adapter that
+launches the existing `rofi_power_menu` interactive program, and a defaults
+adapter that launches the project-owned `qe-defaults capture|restore` helper.
+The former does not expose direct session power actions. The latter is serialized,
+bounded, confirmation-gated, and reports timeout outcomes as potentially partial.
+
+### 7.18 AI quota service
 
 `AiQuotaService` owns the normalized quota projection for OpenAI Codex/ChatGPT
 and OpenCode Go. `AiQuotaAdapter` owns the bounded helper process, sequential
@@ -1304,6 +1326,12 @@ lifecycle and failure boundaries and avoid a growing central handler. The theme
 selector uses `qe-theme`. These endpoints route intent through `SurfaceService`;
 they do not mutate domain state directly. Lock and authentication operations are
 never part of this convention.
+
+The control center uses the same convention through the `qe-control-center`
+target. Its centered overlay is placed on the compositor's focused output when
+opened without a source module. Destination actions close the control center
+before opening another major interactive surface, preventing competing exclusive
+keyboard-focus surfaces.
 
 ## 11. Failure and Degraded Behavior
 

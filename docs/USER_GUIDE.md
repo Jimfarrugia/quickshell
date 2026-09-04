@@ -26,6 +26,7 @@
   - [Capture a New Default](#capture-a-new-default)
   - [Restore the Committed Default](#restore-the-committed-default)
 - [6. Notifications and OSDs](#6-notifications-and-osds)
+  - [Control Center](#control-center)
 - [7. Help Entries](#7-help-entries)
 
 ## 1. What Is QE?
@@ -47,6 +48,8 @@ The current implementation provides:
   selectors.
 - Native desktop notifications with popup and current-session history.
 - A notification center with dismiss controls and Do Not Disturb (DND).
+- A centered control center opened with `Super+Tab`, with quick toggles for
+  network, Bluetooth, audio, DND, and idle inhibition.
 - Native hardware feedback OSDs for audio, brightness, media, network, and
   battery state.
 - Screenshot notifications with actions to view the image or open its folder.
@@ -474,11 +477,27 @@ process. History is cleared when QE restarts.
 | Shortcut | Action |
 | --- | --- |
 | `Super+N` | Open or close the notification center. |
+| `Super+Tab` | Open or close the control center. |
 | `Super+Shift+N` | Dismiss active notification popups. |
 | Notification-center DND button | Toggle Do Not Disturb. |
 
 DND suppresses ordinary popups. Critical notifications remain eligible for
 popup presentation.
+
+### Control Center
+
+The control center is a centered overlay with the current time and date, quick
+settings, and theme actions. Left-click a Wi-Fi or Bluetooth tile to toggle its
+radio; right-click it to open the detailed dashboard. Left-click Volume or Mic
+to toggle mute, or scroll over it to adjust the level by 5%. Scrolling also
+unmutes that channel.
+
+The header opens the notification center and the existing Rofi power menu.
+Theme actions open the existing palette and wallpaper surfaces. The
+`wallpaper_slideshow` action applies a random readable wallpaper from the active
+theme's wallpaper directory. Capture and restore defaults ask for confirmation
+because they change authored or live default files. `Super+Escape` continues to
+open the Rofi power menu directly.
 
 ### Hardware OSDs
 
