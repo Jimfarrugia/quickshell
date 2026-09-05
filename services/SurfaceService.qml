@@ -10,7 +10,6 @@ Singleton {
     property bool launcherVisible: false
     property bool helpVisible: false
     property bool controlCenterVisible: false
-    property var controlCenterScreen: null
     property var dashboardController: null
 
     function openThemeSelector() { closeControlCenter(); themeSelectorVisible = true; }
@@ -33,12 +32,10 @@ Singleton {
     function toggleHelp() { helpVisible ? closeHelp() : openHelp(); }
     function openControlCenter() {
         closeTransientSurfaces();
-        controlCenterScreen = activeScreen();
         controlCenterVisible = true;
     }
     function closeControlCenter() {
         controlCenterVisible = false;
-        controlCenterScreen = null;
     }
     function toggleControlCenter() {
         controlCenterVisible ? closeControlCenter() : openControlCenter();

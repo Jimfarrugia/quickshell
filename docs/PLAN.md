@@ -1,8 +1,8 @@
 # QE Implementation Plan
 
-Status: Phases 1-10 complete; AI quota milestone complete; Phase 11 in progress
+Status: Phases 1-11 complete; AI quota milestone complete; Phase 12 not started
 
-Last inventory: 2026-09-03
+Last inventory: 2026-09-05
 
 This document is the authoritative live roadmap, implementation sequence,
 project-status reference, active/future phase scope, risk register, and polling
@@ -44,7 +44,7 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 | Dashboards/control center | Phase 8 complete | Shared dashboard foundation, audio dashboard, launcher access, resilience, and rollback acceptance passed 2026-09-02 |
 | Bluetooth dashboard | Complete | Phase 9 dashboard, native lifecycle, disposable-device acceptance, fallback, and BlueZ restart validation passed 2026-09-02 |
 | Network dashboard | Complete with upstream limitation | Phase 10 v1 implementation and approved-network validation passed; Quickshell 0.3.1 does not repopulate native devices after a NetworkManager restart, so the dashboard provides a temporary guarded `Restart QE` recovery action |
-| Control center composition | In progress | Phase 11; centered quick-settings overlay, theme controls, and approved command actions are being composed |
+| Control center composition | Complete | Phase 11 implementation, automated validation, shortcut/dismissal checks, destination replacement, and focused-output multi-monitor acceptance passed 2026-09-05 |
 | AI quota bar/dashboard | Complete | Shared bar chip and dashboard for OpenAI and OpenCode Go weekly and five-hour windows; provider endpoints remain external/unstable |
 | Lock replacement | Not started | Phase 12 |
 | Production hardening | Not started | Phase 13; final deployment location remains undecided |
@@ -89,11 +89,14 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
   left: left click toggles the shared dashboard and right click cycles the
   persisted weekly provider selection. Credentials remain owned by OpenCode;
   expired OpenAI access stays stale until OpenCode refreshes its auth file.
-- Phase 11 is in progress. The control center composes the established network,
+- Phase 11 is complete. The control center composes the established network,
   Bluetooth, audio, notification, theme, and wallpaper surfaces. Its approved
   Rofi power-menu and `qe-defaults` actions are narrow typed adapters with
   confirmation for defaults capture and restore. `Super+Tab` is the new shortcut;
-  `Super+Escape` remains the existing power-menu binding.
+  `Super+Escape` remains the existing power-menu binding. Automated Phase 11
+  validation now passes, and live shortcut, dismissal, and destination-surface
+  replacement checks are verified. Focused-output placement was verified with an
+  external monitor on 2026-09-05.
 
 ## 3. Current Working Context
 
@@ -267,7 +270,7 @@ contract without coordinating through an architecture decision.
 | Launcher | Discover, filter, rank, launch desktop entries | File search, arbitrary shell evaluation, plugins | DesktopEntries, theme, config | Explain launch failure; omit invalid entries | Yes |
 | Notification popups | Own DBus server, lifecycle, actions, urgency, DND policy | Disk history initially | NotificationService, theme, config | Ownership conflict prevents readiness; no silent loss claim | No before notification center |
 | Notification center | Current-process history, dismiss/actions, DND controls | Cross-restart history | NotificationService | Empty/unavailable state if server not owner | Yes until popups stable |
-| Control center | Compose quick settings and health/system information | Reimplement every dashboard inline | Domain services, module router | Individual tile unavailable | Yes |
+| Control center | Compose quick settings and dashboard access | Reimplement every dashboard inline | Domain services, module router | Individual tile unavailable | Yes |
 | OSDs | Coalesced feedback for confirmed/pending operations | Use desktop notifications as OSD transport | OSD plus domain services | Show failure or suppress if source unknown | No before keybind migration |
 | Bluetooth dashboard | Adapter/device discovery and common lifecycle actions | OBEX, guaranteed every pairing-agent mode | BluetoothService | Existing Blueman remains fallback | Yes |
 | Network dashboard | Connectivity, Wi-Fi, known/PSK connections | Enterprise/VPN/full editor initially | NetworkService | Existing NM editor remains fallback | Yes |
@@ -335,9 +338,8 @@ undocumented upstream usage endpoints.
 
 ### Phase 11: Control center composition
 
-Objective: compose the completed dashboard and health capabilities into a control
-center after the audio, Bluetooth, and network dashboards establish their stable
-v1 contracts.
+Objective: compose the completed dashboard capabilities into a control center after
+the audio, Bluetooth, and network dashboards establish their stable v1 contracts.
 
 Prerequisites:
 
@@ -350,7 +352,6 @@ Scope:
 
 - control-center shell and navigation
 - quick-settings composition over existing domain services and dashboards
-- health/system information summaries
 - consistent unavailable, stale, pending, and confirmed states across tiles
 
 Agreed v1 specification:
@@ -388,7 +389,7 @@ Deliverables:
 
 - agreed control-center v1 specification
 - control-center composition surface
-- dashboard and health summaries with explicit degraded states
+- quick-setting state summaries with explicit degraded states
 
 Acceptance criteria:
 

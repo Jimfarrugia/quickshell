@@ -10,7 +10,7 @@ PanelWindow {
     id: root
 
     visible: true
-    screen: Services.SurfaceService.controlCenterScreen
+    screen: null
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
     aboveWindows: true
@@ -26,6 +26,8 @@ PanelWindow {
     readonly property real contentImplicitHeight: panelContent.implicitHeight
     readonly property real contentImplicitWidth: panelContent.implicitWidth
     readonly property real themeColumnWidth: themeColumn.width
+    readonly property var quickSettingTiles: [wifiTile, bluetoothTile, dndTile,
+        idleTile, volumeTile, micTile]
     readonly property real surfaceRadius: panel.radius
     readonly property real contentSpacing: 40
     readonly property real contentMargin: 40
@@ -45,6 +47,14 @@ PanelWindow {
         dndTile.width, idleTile.width, volumeTile.width, micTile.width]
 
     function close() { Services.SurfaceService.closeControlCenter(); }
+
+    function dismissFromOutside() { root.close(); }
+
+    function dismissFromEscape() {
+        if (root.confirmationAction.length > 0) root.confirmationAction = "";
+        else if (themeMenu.popup.visible) themeMenu.popup.close();
+        else root.close();
+    }
 
     function openDestination(action) {
         root.close();
@@ -81,7 +91,7 @@ PanelWindow {
 
     MouseArea {
         anchors.fill: parent
-        onClicked: root.close()
+        onClicked: root.dismissFromOutside()
     }
 
     Rectangle {
@@ -101,9 +111,7 @@ PanelWindow {
         MouseArea { anchors.fill: parent; onClicked: event => event.accepted = true }
 
         Keys.onEscapePressed: {
-            if (root.confirmationAction.length > 0) root.confirmationAction = "";
-            else if (themeMenu.popup.visible) themeMenu.popup.close();
-            else root.close();
+            root.dismissFromEscape();
         }
         Keys.onPressed: function(event) {
             if (event.modifiers === Qt.NoModifier && event.key === Qt.Key_Q) {

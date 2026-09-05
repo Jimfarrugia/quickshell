@@ -36,9 +36,6 @@ ShellRoot {
             return fail("quick-setting buttons do not share one fixed width");
         if (control.themeColumnWidth + 0.1 < widths[0])
             return fail("theme section is narrower than the toggle-button width");
-        if (Services.SurfaceService.controlCenterScreen !== null
-                && control.screen !== Services.SurfaceService.controlCenterScreen)
-            return fail("control center did not use the captured focused screen");
         if (Services.ThemeService.catalog.length === 0
                 || control.themeDropdown.currentText.length === 0)
             return;
@@ -51,8 +48,10 @@ ShellRoot {
         control.requestDefaults("capture");
         if (!control.confirmationVisible)
             return fail("capture confirmation did not open");
-        control.confirmationAction = "";
-        Services.SurfaceService.closeControlCenter();
+        control.dismissFromEscape();
+        if (control.confirmationVisible)
+            return fail("Escape did not dismiss the confirmation overlay");
+        control.dismissFromOutside();
         if (controlLoader.item !== null)
             return fail("control center did not unload after close");
 

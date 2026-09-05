@@ -817,7 +817,7 @@ Hyprland's layer-shell placement selects the currently focused output. Do not
 derive this placement from `Quickshell.screens`: under Wayland, Qt may expose
 fewer `QScreen` objects than Hyprland's IPC monitor list, and falling back to
 the first Qt screen can place a surface on the wrong monitor. This applies to
-the launcher and help surfaces.
+the launcher, help, and control-center surfaces.
 
 When a launch fails, `LauncherService` retains the failed desktop entry separately
 from the current selection, and Retry always invokes that retained entry.

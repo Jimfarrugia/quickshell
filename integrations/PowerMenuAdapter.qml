@@ -8,6 +8,7 @@ Scope {
     readonly property string availability: "available"
     readonly property string freshness: "current"
     readonly property var lastUpdated: null
+    property string executable: "rofi_power_menu"
     property string lastError: ""
     readonly property bool running: process.running
 
@@ -17,7 +18,7 @@ Scope {
         if (process.running) return false;
         lastError = "";
         launchRequested = true;
-        process.command = ["rofi_power_menu"];
+        process.command = [root.executable];
         process.running = true;
         return true;
     }

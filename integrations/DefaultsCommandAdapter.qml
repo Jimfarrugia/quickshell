@@ -5,7 +5,7 @@ import "../services" as Services
 Scope {
     id: root
 
-    readonly property string executable: Quickshell.shellPath("scripts/qe-defaults")
+    property string executable: Quickshell.shellPath("scripts/qe-defaults")
     readonly property bool running: runner.running
     property string action: ""
 
