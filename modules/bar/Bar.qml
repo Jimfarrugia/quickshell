@@ -6,7 +6,7 @@ import "../../services" as Services
 PanelWindow {
     id: root
 
-    property var modelData
+    required property var modelData
     property var dashboardController
     property bool idleWindowRegistered: false
 

@@ -1,8 +1,13 @@
+import QtQml
 import Quickshell
 
 Variants {
     id: root
     property var dashboardController
     model: Quickshell.screens
-    Bar { dashboardController: root.dashboardController }
+    delegate: Component {
+        Bar {
+            dashboardController: root.dashboardController
+        }
+    }
 }
