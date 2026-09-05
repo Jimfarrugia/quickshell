@@ -9,5 +9,11 @@
       "model": "openai/gpt-5.6-luna",
       "reasoningEffort": "medium"
     }
+  },
+  "references": {
+    "quickshell": {
+      "repository": "quickshell-mirror/quickshell",
+      "description": "Quickshell source reference for QE. Use matching source/type definitions to verify uncertain Quickshell APIs."
+    }
   }
 }
