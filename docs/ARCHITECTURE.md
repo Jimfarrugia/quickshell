@@ -960,7 +960,11 @@ In mirrored mode, `eDP-1` is the source logical layout. The HDMI scale remains
 persisted for the next extended layout but its slider is hidden because changing
 that field does not visibly rescale mirrored content. Unequal logical output
 sizes remain top-aligned; pointer crossing exists only along their shared virtual
-edge.
+edge. The service re-queries after `monitoradded`/`monitorremoved` Hyprland events
+(debounced through the `CompositorService` topology signal) so the control center
+reflects secondary-output connect/disconnect without being reopened; this is
+event-driven and is not polling. When the secondary output is absent, only the
+primary scale may be changed.
 
 ### 7.18 AI quota service
 

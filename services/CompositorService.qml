@@ -11,6 +11,7 @@ Singleton {
     readonly property var lastUpdated: integration.lastUpdated
     readonly property var lastError: integration.lastError
     readonly property string operation: integration.operation
+    signal monitorTopologyChanged()
     readonly property var workspaceModel: integration.workspaceModel
     readonly property var focusedWorkspace: integration.focusedWorkspace
     readonly property string focusedMonitorName: integration.focusedWorkspace && integration.focusedWorkspace.monitor
@@ -34,5 +35,8 @@ Singleton {
     }
     function refresh() { integration.refresh(); }
 
-    Integrations.HyprlandIntegration { id: nativeIntegration }
+    Integrations.HyprlandIntegration {
+        id: nativeIntegration
+        onMonitorTopologyChanged: root.monitorTopologyChanged()
+    }
 }

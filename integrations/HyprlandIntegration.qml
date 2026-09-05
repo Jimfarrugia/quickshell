@@ -10,6 +10,7 @@ QtObject {
     readonly property var lastError: null
     property var lastUpdated: new Date()
     readonly property string operation: "idle"
+    signal monitorTopologyChanged()
     readonly property var monitorModel: Hyprland.monitors
     readonly property var workspaceModel: Hyprland.workspaces
     readonly property var focusedWorkspace: Hyprland.focusedWorkspace
@@ -32,6 +33,10 @@ QtObject {
 
     property Connections eventConnection: Connections {
         target: Hyprland
-        function onRawEvent() { root.lastUpdated = new Date(); }
+        function onRawEvent(event) {
+            root.lastUpdated = new Date();
+            if (event.name === "monitoradded" || event.name === "monitorremoved")
+                root.monitorTopologyChanged();
+        }
     }
 }

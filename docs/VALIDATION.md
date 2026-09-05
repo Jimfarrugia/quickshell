@@ -412,7 +412,9 @@ the indicator previewed the current step while dragging before applying on
 release. Extended layouts remained top-aligned; with unequal logical heights,
 pointer crossing occurred only along the expected shared virtual edge. Mirrored
 mode hid the ineffective HDMI slider immediately on a fresh surface and restored
-its saved value in Extended mode.
+its saved value in Extended mode. With the control center left open, connecting
+and disconnecting `HDMI-A-1` refreshed the section: the layout dropdowns appeared
+and disappeared and `eDP-1` scaling remained editable without reopening the panel.
 Layout acceptance requires connecting only
 `HDMI-A-1`, applying mirrored mode and each extended direction, confirming the
 built-in-only topology is unchanged after disconnect, and confirming QE restarts

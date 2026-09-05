@@ -117,6 +117,9 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
   both outputs. Mirrored mode now hides HDMI's visually ineffective slider while
   retaining its saved value for Extended mode; initial-open behavior was also
   verified from a fresh surface.
+  The service re-queries on `monitoradded`/`monitorremoved` Hyprland events so the
+  Monitors section updates on secondary-output connect/disconnect without reopening
+  the panel; when the secondary is absent only the primary scale is changeable.
 
 ## 3. Current Working Context
 

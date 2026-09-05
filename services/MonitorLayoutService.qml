@@ -152,4 +152,17 @@ Singleton {
         }
     }
 
+    Connections {
+        target: CompositorService
+        function onMonitorTopologyChanged() {
+            topologyRefreshTimer.restart();
+        }
+    }
+
+    Timer {
+        id: topologyRefreshTimer
+        interval: 150
+        onTriggered: refresh()
+    }
+
 }
