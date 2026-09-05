@@ -18,6 +18,20 @@ Singleton {
     readonly property string focusedWindowTitle: integration.focusedWindowTitle
 
     function activateWorkspace(workspace) { return integration.activateWorkspace(workspace); }
+    function monitorNameForScreen(screen) {
+        if (!screen) return "";
+        var monitorModel = integration.monitorModel;
+        if (!monitorModel || !monitorModel.values || monitorModel.values.length === 0) return "";
+        var monitor = integration.monitorForScreen(screen);
+        return monitor ? monitor.name : "";
+    }
+    function workspaceVisibleOnScreen(workspace, screen) {
+        if (!workspace || workspace.id <= 0) return false;
+        var monitorName = monitorNameForScreen(screen);
+        if (!monitorName || !workspace.monitor || workspace.monitor.name !== monitorName) return false;
+        var values = workspace.toplevels && workspace.toplevels.values ? workspace.toplevels.values : [];
+        return workspace.active || values.length > 0;
+    }
     function refresh() { integration.refresh(); }
 
     Integrations.HyprlandIntegration { id: nativeIntegration }

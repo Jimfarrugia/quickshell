@@ -50,6 +50,7 @@ PanelWindow {
 
         WorkspacesModule {
             id: workspaces
+            sourceScreen: root.modelData
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
         }

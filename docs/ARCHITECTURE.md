@@ -392,7 +392,7 @@ contracts. UI modules invoke typed domain operations such as `openLauncher()` or
 | Application feature flags   | User                                          | `config/qe.json`                              | `ConfigService` consumers                           | User only                              | validated config publication                                                              | persistent                                                              |
 | AI provider quota           | OpenAI/OpenCode provider services             | normalized in-memory provider/window records | `AiQuotaService`, bar, AI quota dashboard           | provider API; QE reads only                         | bounded helper request while consumers exist                                          | live derived data; retain and explicitly mark last-known values stale; never persist credentials or quota snapshots |
 | Launcher usage counts      | `LauncherService`                            | `launcher-usage.json`, versioned QE state keyed by desktop-entry ID | `LauncherService`, launcher surface              | `LauncherService`                     | successful launch updates; atomic persistence                                             | persistent generated state; malformed or incompatible data starts empty with a diagnostic |
-| Hyprland workspaces/windows | Hyprland                                      | native IPC state                              | `CompositorService`                                 | Hyprland; QE dispatches requests       | socket events plus explicit refresh only where API requires                               | live external; mark stale/disconnected on IPC loss                      |
+| Hyprland workspaces/windows | Hyprland                                      | adapter-backed reactive native model plus service-owned monitor-scoped policy | `CompositorService`                     | Hyprland; QE dispatches requests       | socket events plus explicit refresh only where API requires                               | live external; mark stale/disconnected on IPC loss                      |
 | Audio graph/defaults        | PipeWire/WirePlumber                          | Quickshell PipeWire objects                   | `AudioService`                                      | subsystem; QE requests updates         | PipeWire events                                                                           | live external; pending operation reconciled to events                   |
 | Network state               | NetworkManager                                | Quickshell Networking objects                 | `NetworkService`                                    | NetworkManager; QE requests operations | DBus events                                                                               | live external; secrets remain with NetworkManager                       |
 | Bluetooth state             | BlueZ                                         | Quickshell Bluetooth objects                  | `BluetoothService`                                  | BlueZ; QE requests operations          | DBus ObjectManager events                                                                 | live external                                                           |
@@ -507,10 +507,28 @@ When `Wallpaper` is active and a wallpaper change succeeds:
 
 Responsibilities:
 
-- normalize Hyprland monitors, workspaces, focused workspace, and toplevels
+- expose the adapter-backed reactive Hyprland workspace model while preserving
+  native object lifetime and event updates
+- expose the adapter-backed reactive monitor model so topology changes
+  reevaluate screen-to-monitor mapping
+- resolve a Qt screen to its compositor monitor through the integration adapter
+- own monitor-scoped workspace presentation policy, including positive-ID,
+  active-or-occupied visibility for the bar
 - expose typed operations for workspace focus and window actions
 - own Hyprland event subscriptions
 - detect disconnection/staleness and refresh only when Quickshell's API requires
+
+`workspaceVisibleOnScreen(workspace, screen)` is the service boundary for the bar's
+monitor and visibility decision. Presentation may render scalar workspace state
+and pass the adapter-backed workspace object back to `activateWorkspace`, but it
+must not traverse nested compositor state to reconstruct monitor ownership or
+occupancy policy. Empty workspaces are intentionally omitted from the bar while
+remaining reachable through compositor-owned keybindings.
+
+The current Quickshell 0.3.1 workspace model remains adapter-backed rather than a
+copied JavaScript record model. This preserves native reactivity and avoids stale
+object references across workspace or monitor replacement. A future normalized
+model requires a separate decision and stable name-based activation contract.
 
 Raw `Hyprland.dispatch()` strings are confined to the integration adapter.
 
@@ -1346,6 +1364,7 @@ keyboard-focus surfaces.
 | Missing/invalid active theme         | fall back through configured default to emergency palette; do not rewrite authored theme                                          |
 | Event subscription disconnect        | mark state stale immediately; reconnect through native mechanism or bounded exponential backoff with jitter                       |
 | External subsystem restart           | discard invalid object references and repopulate from fresh discovery                                                             |
+| Missing screen-to-monitor mapping    | omit monitor-scoped workspace entries while keeping the bar and other modules usable                                             |
 | Partial theme apply                  | QE remains successful if its phase committed; external status is partial and retryable per target                                 |
 | Wallpaper generation failure         | keep previous generated `Wallpaper`; retain newly selected wallpaper if wallpaper apply itself succeeded; show generation failure |
 | Requested change unconfirmed         | clear pending on timeout, report failure/unknown, refresh authority; never silently commit intent                                 |

@@ -10,6 +10,7 @@ QtObject {
     readonly property var lastError: null
     property var lastUpdated: new Date()
     readonly property string operation: "idle"
+    readonly property var monitorModel: Hyprland.monitors
     readonly property var workspaceModel: Hyprland.workspaces
     readonly property var focusedWorkspace: Hyprland.focusedWorkspace
     readonly property string focusedWindowTitle: Hyprland.activeToplevel ? Hyprland.activeToplevel.title : "Desktop"
@@ -19,6 +20,8 @@ QtObject {
         workspace.activate();
         return true;
     }
+
+    function monitorForScreen(screen) { return screen ? Hyprland.monitorFor(screen) : null; }
 
     function refresh() {
         Hyprland.refreshMonitors();

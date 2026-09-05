@@ -68,6 +68,7 @@ timeout 5 quickshell -p tests/qml/foundation-service-test.qml
 timeout 5 quickshell -p tests/qml/foundation-service-test.qml
 timeout 5 quickshell -p tests/qml/phase2-service-test.qml
 timeout 5 quickshell -p tests/qml/phase3-service-test.qml
+timeout 5 quickshell -p tests/qml/workspaces-test.qml
 timeout 5 quickshell -p tests/qml/system-metrics-adapter-test.qml
 timeout 5 quickshell -p tests/qml/system-metrics-helper-adapter-test.qml
 timeout 5 quickshell -p tests/qml/brightness-service-test.qml
@@ -128,6 +129,12 @@ The live brightness adapter test must print `BRIGHTNESS_ADAPTER_TEST_PASSED` and
 does not perform a brightness write.
 The live Bluetooth adapter test must print `BLUETOOTH_ADAPTER_TEST_PASSED` and
 does not change controller or device state.
+The workspace test must print `WORKSPACES_TEST_PASSED` after checking
+screen-to-monitor resolution, active and occupied workspace visibility,
+intentional empty-workspace hiding, special and other-monitor filtering,
+missing-screen behavior, and native workspace activation forwarding through
+`CompositorService`. It uses only the fake compositor fixture and does not
+require a workspace plugin.
 The single-instance helper test starts an isolated fixture configuration and
 must prove that `--no-duplicate` leaves exactly one process running.
 The theme hot-reload helper copies the project to a temporary directory and must

@@ -3,13 +3,16 @@ import "../../components"
 import "../../services" as Services
 
 Row {
+    id: root
     spacing: 0
+
+    property var sourceScreen: null
 
     Repeater {
         model: Services.CompositorService.workspaceModel
         delegate: BarChip {
             required property var modelData
-            visible: modelData.id > 0
+            visible: Services.CompositorService.workspaceVisibleOnScreen(modelData, root.sourceScreen)
             icon: modelData.focused ? "adjust" : "circle"
             warning: modelData.urgent
             iconColor: modelData.focused ? Services.ThemeService.theme.tokens.secondary

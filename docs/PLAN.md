@@ -45,6 +45,7 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 | Bluetooth dashboard | Complete | Phase 9 dashboard, native lifecycle, disposable-device acceptance, fallback, and BlueZ restart validation passed 2026-09-02 |
 | Network dashboard | Complete with upstream limitation | Phase 10 v1 implementation and approved-network validation passed; Quickshell 0.3.1 does not repopulate native devices after a NetworkManager restart, so the dashboard provides a temporary guarded `Restart QE` recovery action |
 | Control center composition | Complete | Phase 11 implementation, automated validation, shortcut/dismissal checks, destination replacement, and focused-output multi-monitor acceptance passed 2026-09-05 |
+| Workspace bar monitor scoping | Implemented (automated validation 2026-09-05) | Native monitor matching and active/occupied workspace filtering are service-owned and plugin-independent; physical multi-monitor acceptance remains pending |
 | AI quota bar/dashboard | Complete | Shared bar chip and dashboard for OpenAI and OpenCode Go weekly and five-hour windows; provider endpoints remain external/unstable |
 | Lock replacement | Not started | Phase 12 |
 | Production hardening | Not started | Phase 13; final deployment location remains undecided |
@@ -97,6 +98,11 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
   validation now passes, and live shortcut, dismissal, and destination-surface
   replacement checks are verified. Focused-output placement was verified with an
   external monitor on 2026-09-05.
+- Workspace bar monitor scoping is implemented. Each per-screen bar shows only
+  positive-ID, active or occupied workspaces whose confirmed Hyprland monitor
+  matches that screen. Empty workspaces remain intentionally hidden. Automated
+  coverage passes; physical multi-monitor acceptance remains pending until a
+  second active output is available.
 
 ## 3. Current Working Context
 
@@ -192,7 +198,6 @@ The resolved Phase 4 Hyprpaper-confirmation question is retained in
 - advanced PipeWire graph/routing editor
 - automatic external-to-QE theme synchronization
 - cross-compositor portability
-- exact multi-monitor bar policy beyond supporting safe per-screen construction
 - startup self-heal for the generated `wallpaper` theme: on QE start, regenerate
   only when the active wallpaper theme was not produced from the currently
   selected source image (identity-checked via a QE-owned fingerprint; skips the
@@ -335,6 +340,52 @@ Acceptance criteria:
 Out of scope: credential provisioning or refresh ownership, billing/API spend
 budgets, arbitrary provider configuration, and guaranteed stability of the
 undocumented upstream usage endpoints.
+
+### Workspace bar monitor scoping
+
+Status: Implemented; physical multi-monitor acceptance pending.
+
+The bar remains instantiated once per Qt screen. Its workspace module scopes the
+native Hyprland workspace model to the corresponding compositor monitor through
+`CompositorService`; the service owns monitor identity matching and the policy of
+showing only positive-ID active or occupied workspaces. Empty workspaces remain
+available through Hyprland keybindings but are intentionally omitted from the bar.
+
+This milestone is independent of any Hyprland workspace-range or monitor-splitting
+plugin. Removing such a plugin leaves the native monitor mapping and bar behavior
+valid, but removes any plugin-specific workspace placement or persistence rules.
+
+Acceptance criteria:
+
+- each bar resolves its Qt screen to the corresponding Hyprland monitor;
+- active and occupied positive-ID workspaces appear only on their associated bar;
+- empty, special, and other-monitor workspaces are hidden;
+- a monitor lookup loss clears the affected workspace projection and a later
+  topology update restores it;
+- workspace activation forwards the native workspace operation through
+  `CompositorService`;
+- missing screen-to-monitor mapping produces no workspace entries;
+- the injected compositor fixture covers the service contract;
+- the policy is validated without requiring a live workspace plugin.
+
+Validation:
+
+- `timeout 5 quickshell -p tests/qml/workspaces-test.qml` prints
+  `WORKSPACES_TEST_PASSED`;
+- full QML lint and the existing phase 2/3 service tests pass;
+- the persistent shell remains alive under the standard smoke test;
+- live multi-monitor validation remains required to confirm independent bar
+  contents and no change to bar reservations when a second output is available.
+
+Rollback/recovery:
+
+- remove the external workspace plugin and its Hyprland config imports/bindings;
+- retain the QE changes, which continue to use native Hyprland monitor and
+  workspace state without plugin-specific assumptions.
+
+Out of scope: replacing the native reactive workspace model with a separate
+normalized snapshot model, changing empty-workspace visibility, or defining
+workspace numbering and placement rules for Hyprland.
 
 ### Phase 11: Control center composition
 
@@ -643,6 +694,7 @@ Polling budget for the bar milestone:
 | R18 | Notification content loads unsafe resources/markup | Medium | High | sanitize/limit rendering and resources | Phase 5 security review |
 | R19 | External theme apply restarts a tool after QE has replaced it | Medium | High | target-retirement controls must precede each cutover and are included in rollback tests | Phases 3, 4, and 6 |
 | R20 | Provider quota endpoints or OpenCode auth storage change without notice | Medium | Medium/high | strict normalized validation, provider-local degradation, read-only credential ownership, and no guessed windows | AI quota milestone |
+| R21 | Workspace monitor identity or native object replacement leaves bar scoping stale | Low/medium | Medium | resolve monitor names through the native API, retain the reactive native model, omit entries when mapping is unavailable, and test monitor changes | workspace bar monitor scoping |
 
 ## 13. Planning Change Procedure
 
