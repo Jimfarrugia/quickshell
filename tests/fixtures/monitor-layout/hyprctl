@@ -19,6 +19,16 @@ case "${1:-}" in
             [[ -z "$candidate_secondary_scale" ]] || secondary_scale=$candidate_secondary_scale
         fi
 
+        if [[ "${FAKE_PRIMARY_CONNECTED:-1}" == "0" ]]; then
+            if [[ "${FAKE_SECONDARY_CONNECTED:-1}" == "0" ]]; then
+                jq -cn '[]'
+                exit 0
+            fi
+            jq -cn --argjson scale "$secondary_scale" \
+                '[{id:1, name:"HDMI-A-1", x:0, y:0, width:1920, height:1080, scale:$scale, mirrorOf:"none"}]'
+            exit 0
+        fi
+
         if [[ "${FAKE_SECONDARY_CONNECTED:-1}" == "0" ]]; then
             jq -cn --argjson scale "$primary_scale" \
                 '[{id:0, name:"eDP-1", x:0, y:0, width:1920, height:1080, scale:$scale, mirrorOf:"none"}]'

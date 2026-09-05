@@ -963,7 +963,8 @@ sizes remain top-aligned; pointer crossing exists only along their shared virtua
 edge. The service re-queries after `monitoradded`/`monitorremoved` Hyprland events
 (debounced through the `CompositorService` topology signal) so the control center
 reflects secondary-output connect/disconnect without being reopened; this is
-event-driven and is not polling. When the secondary output is absent, only the
+event-driven and is not polling. When the primary output is absent, monitor
+layout is unavailable. When only the secondary output is absent, only the
 primary scale may be changed.
 
 ### 7.18 AI quota service

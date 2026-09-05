@@ -154,6 +154,10 @@ query() {
     monitors=$(hyprctl monitors all -j)
     inspect_live "$monitors"
     if [[ "$secondary_connected" != "true" ]]; then
+        if [[ "$primary_connected" != "true" ]]; then
+            emit_state false "Connect eDP-1 to inspect the monitor layout"
+            return
+        fi
         if [[ "$primary_connected" == "true" && "$live_primary_scale" != "unknown" ]] \
             && scale_equals "$live_primary_scale" "$selected_primary_scale"; then
             state_matches_live=true

@@ -390,10 +390,11 @@ defaults, and shell smoke tests remain required after control-center changes.
 
 The monitor-layout helper fixture validates live mirrored-state discovery,
 directional extended application, versioned state persistence, mirror-to-extended
-restart signaling, disconnected-secondary rejection, unsupported-host behavior,
-malformed-state fallback, all four extension directions, selector preservation
-after a failed Hyprland reload, confirmed rollback after a topology mismatch, and
-Hyprland's numeric monitor-ID `mirrorOf` representation. The config fixture loads
+restart signaling, disconnected-primary and disconnected-secondary handling,
+unsupported-host behavior, malformed-state fallback, all four extension
+directions, selector preservation after a failed Hyprland reload, confirmed
+rollback after a topology mismatch, and Hyprland's numeric monitor-ID `mirrorOf`
+representation. The config fixture loads
 the actual `~/.config/hypr/monitors.lua` through a mocked Lua provider and checks
 schema-v1 scale defaults, schema-v2 independent scales, all scale-adjusted edge
 positions, mirrored scales, and rejection of invalid scale state:

@@ -56,8 +56,12 @@ query_result=$(FAKE_SECONDARY_CONNECTED=0 FAKE_PRIMARY_SCALE=1.2 \
     "$project_root/scripts/qe-monitor-layout" query)
 jq -e '.available and (.secondaryConnected | not) and (.primaryScale == 1.2)' <<<"$query_result" >/dev/null
 
+query_result=$(FAKE_PRIMARY_CONNECTED=0 FAKE_SECONDARY_CONNECTED=0 \
+    "$project_root/scripts/qe-monitor-layout" query)
+jq -e '(.available | not) and (.message | contains("eDP-1"))' <<<"$query_result" >/dev/null
+
 apply_result=$(FAKE_SECONDARY_CONNECTED=0 "$project_root/scripts/qe-monitor-layout" apply extended down 1.5 1.6)
-jq -e '.available and .primaryScale == 1.5 and .secondaryScale == 1.6' <<<"$apply_result" >/dev/null
+jq -e '.available and .primaryScale == 1.5 and .secondaryScale == null' <<<"$apply_result" >/dev/null
 jq -e '.mode == "extended" and .direction == "down"
     and .scales["eDP-1"] == 1.5 and .scales["HDMI-A-1"] == 1.6' "$XDG_STATE_HOME/qe/monitor-layout.json" >/dev/null
 
