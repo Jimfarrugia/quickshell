@@ -402,6 +402,7 @@ contracts. UI modules invoke typed domain operations such as `openLauncher()` or
 | Notifications               | sending applications plus QE server lifecycle | Quickshell notification objects               | notification modules                                | senders; QE tracks/dismisses           | DBus events                                                                               | process-session only; cleared on process exit                           |
 | Do-not-disturb              | `NotificationService`                         | QE state JSON                                 | notification/control-center modules                 | `NotificationService`                  | service property                                                                          | persistent user preference; does not discard history by default         |
 | Idle inhibition             | compositor protocol                           | `IdleInhibitor` state                         | control center/bar                                  | `IdleService`                          | Wayland state                                                                             | requested state is persistent; active inhibition remains ephemeral and loss of bound surface invalidates it |
+| Selected monitor layout     | `MonitorLayoutService`                        | `monitor-layout.json`, versioned QE state     | Hyprland Lua config, control center                  | `MonitorLayoutService` via helper      | atomic write, Hyprland reload, then live-topology verification                            | persistent requested profile; live Hyprland topology remains separately confirmed         |
 | View-local state            | owning QML view                               | QML properties                                | owning view                                         | owning view                            | local bindings                                                                            | ephemeral; not promoted without cross-view need                         |
 | Generated thumbnails        | wallpaper cache adapter                       | QE cache directory                            | wallpaper selector                                  | cache adapter                          | manifest completion signal                                                                | cache only; malformed cache is deleted/regenerated                      |
 
@@ -929,11 +930,37 @@ commands, parse output, or write shared state. Wi-Fi and Bluetooth tiles expose
 the existing network and Bluetooth dashboards as their detailed views. Volume
 and microphone wheel changes use the audio service's confirmed/pending model.
 
-Phase 11 adds two explicitly scoped command boundaries: a power-menu adapter that
-launches the existing `rofi_power_menu` interactive program, and a defaults
-adapter that launches the project-owned `qe-defaults capture|restore` helper.
+The original Phase 11 scope adds two explicitly scoped command boundaries: a
+power-menu adapter that launches the existing `rofi_power_menu` interactive
+program, and a defaults adapter that launches the project-owned
+`qe-defaults capture|restore` helper.
 The former does not expose direct session power actions. The latter is serialized,
 bounded, confirmation-gated, and reports timeout outcomes as potentially partial.
+
+`MonitorLayoutService` owns the control center's X1 Carbon monitor-layout state.
+The authored `jim-x1c` profiles remain in Hyprland's `monitors.lua`; the service's
+narrow helper persists only a versioned `mirror|extended` selector and the last
+`left|up|right|down` extension direction plus independent per-output scales under
+the XDG state directory. For the configured 1920x1080 modes, scale selection is
+limited to `1.00`, `1.20`, `1.25`, `1.50`, `1.60`, and `2.00`; each divides both
+dimensions into whole logical pixels. Directional positions are derived from the
+scaled logical dimensions so adjacent output edges remain aligned. Applying a
+profile requires both `eDP-1` and `HDMI-A-1`, reloads Hyprland, and publishes
+success only after `hyprctl monitors all -j` confirms topology and both scales.
+Invalid input, unsupported hosts, a disconnected secondary output, reload failure,
+and unconfirmed topology fail locally. Other host branches and the X1 Carbon's
+built-in monitor rule are unchanged. Mirror-to-extended transitions restart QE
+after confirmation because Qt may not otherwise discover the newly independent
+screen. Mirror confirmation accepts Hyprland's numeric monitor-ID `mirrorOf`
+representation and the output-name representation used by older fixtures.
+Version-1 selector documents remain readable with `1.00` scale defaults and are
+written as version 2 on the next accepted change. Malformed version-2 scale data
+falls back to the complete default profile rather than partially applying state.
+In mirrored mode, `eDP-1` is the source logical layout. The HDMI scale remains
+persisted for the next extended layout but its slider is hidden because changing
+that field does not visibly rescale mirrored content. Unequal logical output
+sizes remain top-aligned; pointer crossing exists only along their shared virtual
+edge.
 
 ### 7.18 AI quota service
 
@@ -1244,7 +1271,7 @@ reverted atomically and rollback can also fail.
 
 | Integration       | Live authority                   | Initial discovery                 | Ongoing updates                   | QE operations                      | Reconnect/failure policy                                                                                                       | Independent test boundary                                     |
 | ----------------- | -------------------------------- | --------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
-| Hyprland          | Hyprland IPC                     | native singleton models           | socket events                     | typed dispatch adapter             | mark stale on disconnect; explicit refresh only for known API gaps                                                             | recorded events/models and live opt-in test                   |
+| Hyprland          | Hyprland IPC                     | native singleton models; bounded monitor-layout helper query | socket events; explicit monitor-layout query on control-center load | typed dispatch adapter; validated monitor-profile apply | mark stale on disconnect; explicit refresh only for known API gaps; monitor profiles succeed only after live-topology confirmation | recorded events/models, helper fixtures, and live opt-in test |
 | PipeWire          | PipeWire/WirePlumber             | `Pipewire.ready`, nodes/defaults  | libpipewire events                | defaults, volume, mute             | native adapter reconnects; clear stale object references                                                                       | mock node model and live audio test                           |
 | NetworkManager    | NetworkManager                   | native Networking models; bounded `nmcli` IPv4 enrichment because 0.3.1 exposes only hardware addresses | DBus signals trigger native updates and active-interface address refresh; no polling | toggle/connect/disconnect/forget   | unavailable/degraded while daemon absent; cancel or supersede stale IPv4 lookups; the 0.3.1 native model may not re-enumerate devices after restart, so the dashboard exposes guarded QE restart recovery | fixture model plus isolated live test network and loopback IPv4 lookup |
 | BlueZ             | BlueZ                            | DBus ObjectManager via native API | DBus object/property signals      | power/discover/pair/connect/forget | preserve no false connected state; repopulate on service return                                                                | mock devices and manual hardware test                         |

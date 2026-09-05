@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+[[ "${1:-}" == "--static" ]] || exit 2
+printf '%s\n' "${FAKE_HOSTNAME:-jim-x1c}"

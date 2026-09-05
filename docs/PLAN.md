@@ -45,6 +45,7 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 | Bluetooth dashboard | Complete | Phase 9 dashboard, native lifecycle, disposable-device acceptance, fallback, and BlueZ restart validation passed 2026-09-02 |
 | Network dashboard | Complete with upstream limitation | Phase 10 v1 implementation and approved-network validation passed; Quickshell 0.3.1 does not repopulate native devices after a NetworkManager restart, so the dashboard provides a temporary guarded `Restart QE` recovery action |
 | Control center composition | Complete | Phase 11 implementation, automated validation, shortcut/dismissal checks, destination replacement, and focused-output multi-monitor acceptance passed 2026-09-05 |
+| Control-center monitor layouts | Complete | Mirror/four-direction layouts and validated per-monitor stepped scaling passed automated and live acceptance 2026-09-05 |
 | Workspace bar monitor scoping | Implemented (automated validation 2026-09-05) | Native monitor matching and active/occupied workspace filtering are service-owned and plugin-independent; physical multi-monitor acceptance remains pending |
 | AI quota bar/dashboard | Complete | Shared bar chip and dashboard for OpenAI and OpenCode Go weekly and five-hour windows; provider endpoints remain external/unstable |
 | Lock replacement | Not started | Phase 12 |
@@ -103,6 +104,19 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
   matches that screen. Empty workspaces remain intentionally hidden. Automated
   coverage passes; physical multi-monitor acceptance remains pending until a
   second active output is available.
+- The post-v1 control-center monitor-layout extension is implemented for
+  `jim-x1c`. Automated helper, adapter, service, control-center, lint, schema, and
+  shell smoke validation passes. Mirrored mode, all four extended directions,
+  automatic QE restart from mirror to extended, and post-disconnect built-in-only
+  behavior passed live acceptance on 2026-09-05. Hyprland 0.56 reports a mirror
+  target through numeric `mirrorOf` monitor ID; the helper accepts that confirmed
+  representation and retains output-name compatibility.
+  Per-monitor scaling exposes the six cleanly dividing 1920x1080 presets from
+  `1.00` through `2.00`, previews values while dragging, applies on release, and
+  preserves top-aligned logical geometry. Every step passed live validation on
+  both outputs. Mirrored mode now hides HDMI's visually ineffective slider while
+  retaining its saved value for Extended mode; initial-open behavior was also
+  verified from a fresh surface.
 
 ## 3. Current Working Context
 
@@ -419,15 +433,24 @@ Agreed v1 specification:
 - A Theme section with semantic palette previews, the established themed dropdown,
   palette viewer, wallpaper selector, capture-defaults, and restore-defaults
   actions. Capture and restore require confirmation.
+- A post-v1 Monitors section selects mirrored or extended output layout. Extended
+  mode offers left, up, right, and down placement for the one configured secondary
+  output. Profiles remain authored in `monitors.lua`; QE persists only their
+  selector and does not alter single-monitor or other-host rules.
+- Independent stepped scale sliders for `eDP-1` and `HDMI-A-1` expose only
+  `1.00`, `1.20`, `1.25`, `1.50`, `1.60`, and `2.00`. These are the values on the
+  agreed `1.00-2.00`/`0.05` candidate grid that produce whole logical pixels for
+  both dimensions of the configured 1920x1080 modes.
 - The control center is opened through `qe-control-center` and `Super+Tab`.
   `Super+Escape` remains the existing Rofi power-menu shortcut.
 - Opening another major interactive surface replaces the control center. Service
   failures, stale state, and pending operations remain local to their tile or
   section.
 
-Phase 11 explicitly approves narrow adapters for the existing `rofi_power_menu`
-and `scripts/qe-defaults capture|restore` commands. This exception does not
-authorize arbitrary command execution or direct power actions.
+Phase 11 explicitly approves narrow adapters for the existing `rofi_power_menu`,
+`scripts/qe-defaults capture|restore`, and closed-vocabulary monitor-layout helper
+commands. This exception does not authorize arbitrary command execution, direct
+power actions, or general monitor command construction in presentation QML.
 
 Likely affected files/subsystems:
 
@@ -452,6 +475,12 @@ Acceptance criteria:
 - control center composes existing dashboard capabilities rather than duplicating
   system integration logic
 - one unavailable dashboard or service does not block unrelated tiles
+- monitor controls are unavailable without the configured secondary output;
+  accepted changes are persisted and match confirmed live Hyprland topology
+- per-monitor scale controls cannot request an invalid logical resolution, and
+  directional placement remains adjacent after scaling
+- mirrored mode exposes only the source `eDP-1` scale; the saved HDMI scale
+  returns unchanged when Extended is selected
 
 Validation:
 
@@ -465,7 +494,8 @@ Rollback/recovery:
 
 Out of scope:
 
-- new domain integrations introduced solely for control-center composition
+- additional unbounded domain integrations introduced solely for control-center
+  composition
 - changing the v1 scope of the audio, Bluetooth, or network dashboards
 
 ### Phase 12: Secure lock replacement

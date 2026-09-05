@@ -7,6 +7,7 @@ ComboBox {
 
     implicitHeight: 36
     implicitWidth: 240
+    property string placeholderText: "Select theme"
     font.family: Services.ConfigService.config.appearance.fontFamily
     font.pixelSize: Services.ConfigService.config.appearance.fontSize
 
@@ -17,7 +18,7 @@ ComboBox {
             anchors.right: arrow.left
             anchors.rightMargin: 4
             anchors.verticalCenter: parent.verticalCenter
-            text: root.currentIndex >= 0 ? root.currentText : "Select theme"
+            text: root.currentIndex >= 0 ? root.currentText : root.placeholderText
             color: Services.ThemeService.theme.tokens.on_surface_variant
             font: root.font
             elide: Text.ElideRight

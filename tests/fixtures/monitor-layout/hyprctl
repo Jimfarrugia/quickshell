@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+case "${1:-}" in
+    monitors)
+        mode=${FAKE_MONITOR_MODE:-mirror}
+        direction=${FAKE_MONITOR_DIRECTION:-up}
+        primary_scale=${FAKE_PRIMARY_SCALE:-1}
+        secondary_scale=${FAKE_SECONDARY_SCALE:-1}
+        state_file="${XDG_STATE_HOME}/qe/monitor-layout.json"
+        if [[ -f "$state_file" && "${FAKE_IGNORE_STATE:-0}" == "0" ]]; then
+            candidate_mode=$(jq -er '.mode | select(. == "mirror" or . == "extended")' "$state_file" 2>/dev/null || true)
+            candidate_direction=$(jq -er '.direction | select(. == "left" or . == "up" or . == "right" or . == "down")' "$state_file" 2>/dev/null || true)
+            [[ -z "$candidate_mode" ]] || mode=$candidate_mode
+            [[ -z "$candidate_direction" ]] || direction=$candidate_direction
+            candidate_primary_scale=$(jq -er '.scales["eDP-1"] | numbers' "$state_file" 2>/dev/null || true)
+            candidate_secondary_scale=$(jq -er '.scales["HDMI-A-1"] | numbers' "$state_file" 2>/dev/null || true)
+            [[ -z "$candidate_primary_scale" ]] || primary_scale=$candidate_primary_scale
+            [[ -z "$candidate_secondary_scale" ]] || secondary_scale=$candidate_secondary_scale
+        fi
+
+        if [[ "${FAKE_SECONDARY_CONNECTED:-1}" == "0" ]]; then
+            jq -cn --argjson scale "$primary_scale" \
+                '[{id:0, name:"eDP-1", x:0, y:0, width:1920, height:1080, scale:$scale, mirrorOf:"none"}]'
+            exit 0
+        fi
+
+        x=0
+        y=0
+        mirror="none"
+        if [[ "$mode" == "mirror" ]]; then
+            mirror="0"
+        else
+            case "$direction" in
+                left) x=$(jq -n --argjson scale "$secondary_scale" '(-1920 / $scale)') ;;
+                up) y=$(jq -n --argjson scale "$secondary_scale" '(-1080 / $scale)') ;;
+                right) x=$(jq -n --argjson scale "$primary_scale" '(1920 / $scale)') ;;
+                down) y=$(jq -n --argjson scale "$primary_scale" '(1080 / $scale)') ;;
+            esac
+        fi
+        jq -cn --argjson x "$x" --argjson y "$y" --arg mirror "$mirror" \
+            --argjson primaryScale "$primary_scale" --argjson secondaryScale "$secondary_scale" \
+            '[{id:0, name:"eDP-1", x:0, y:0, width:1920, height:1080, scale:$primaryScale, mirrorOf:"none"},
+              {id:1, name:"HDMI-A-1", x:$x, y:$y, width:1920, height:1080, scale:$secondaryScale, mirrorOf:$mirror}]'
+        ;;
+    reload)
+        [[ "${FAKE_RELOAD_FAILURE:-0}" == "0" ]]
+        ;;
+    *) exit 2 ;;
+esac

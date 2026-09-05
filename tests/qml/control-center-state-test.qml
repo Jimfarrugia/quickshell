@@ -44,6 +44,27 @@ ShellRoot {
                 || String(control.quickSettingTiles[5].alertColor)
                     !== String(Services.ThemeService.theme.tokens.error))
             return fail("audio tile success/error styling is missing");
+        if (control.monitorModeDropdown.model.length !== 2
+                || control.monitorDirectionDropdown.model.length !== 4)
+            return fail("monitor layout options are incomplete");
+        if (control.primaryScaleSlider.from !== 0
+                || control.primaryScaleSlider.to !== 5
+                || control.primaryScaleSlider.stepSize !== 1
+                || control.secondaryScaleSlider.to !== 5)
+            return fail("monitor scale sliders are not discrete validated presets");
+        if (control.primaryScaleControlItem.scaleAtPosition(0) !== 1
+                || control.primaryScaleControlItem.scaleAtPosition(0.2) !== 1.2
+                || control.primaryScaleControlItem.scaleAtPosition(1) !== 2)
+            return fail("monitor scale slider preview does not track thumb position");
+        Services.MonitorLayoutService.confirmedMode = "";
+        if (control.secondaryScaleControlItem.visible)
+            return fail("HDMI scale was visible before live mode confirmation");
+        Services.MonitorLayoutService.confirmedMode = "mirror";
+        if (control.secondaryScaleControlItem.visible)
+            return fail("HDMI scale remained visible while mirrored");
+        Services.MonitorLayoutService.confirmedMode = "extended";
+        if (!control.secondaryScaleControlItem.visible)
+            return fail("HDMI scale was hidden while extended");
         console.log("CONTROL_CENTER_STATE_TEST_PASSED");
         Qt.quit();
     }

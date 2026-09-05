@@ -34,6 +34,8 @@ bash tests/helpers/theme-hot-reload.test.sh
 bash tests/helpers/theme-selector-ipc.test.sh
 bash tests/helpers/dashboard-ipc.test.sh
 bash tests/helpers/control-center-ipc.test.sh
+bash tests/helpers/monitor-layout.test.sh
+bash tests/helpers/monitor-layout-config.test.sh
 bash tests/helpers/wallpaper-random.test.sh
 bash tests/helpers/ai-quota-persistence.test.sh
 bash tests/helpers/external-theme-adapter.test.sh
@@ -87,6 +89,7 @@ timeout 5 quickshell -p tests/qml/dashboard-shell-test.qml
 timeout 5 quickshell -p tests/qml/control-center-test.qml
 timeout 5 quickshell -p tests/qml/control-center-state-test.qml
 timeout 5 quickshell -p tests/qml/control-center-command-test.qml
+timeout 5 quickshell -p tests/qml/monitor-layout-service-test.qml
 timeout 5 quickshell -p tests/qml/audio-dashboard-test.qml
 timeout 7 quickshell -p tests/qml/network-dashboard-test.qml
 timeout 5 quickshell -p tests/qml/network-address-test.qml
@@ -384,3 +387,37 @@ control center appeared on the focused output. `Super+Tab` and `Super+Escape`
 were verified in the live session, as were outside-click/Escape dismissal and
 destination-surface replacement. Existing dashboard, audio, notification, theme,
 defaults, and shell smoke tests remain required after control-center changes.
+
+The monitor-layout helper fixture validates live mirrored-state discovery,
+directional extended application, versioned state persistence, mirror-to-extended
+restart signaling, disconnected-secondary rejection, unsupported-host behavior,
+malformed-state fallback, all four extension directions, selector preservation
+after a failed Hyprland reload, confirmed rollback after a topology mismatch, and
+Hyprland's numeric monitor-ID `mirrorOf` representation. The config fixture loads
+the actual `~/.config/hypr/monitors.lua` through a mocked Lua provider and checks
+schema-v1 scale defaults, schema-v2 independent scales, all scale-adjusted edge
+positions, mirrored scales, and rejection of invalid scale state:
+
+```sh
+bash tests/helpers/monitor-layout.test.sh
+bash tests/helpers/monitor-layout-config.test.sh
+timeout 5 quickshell -p tests/qml/monitor-layout-service-test.qml
+```
+
+The commands must print `MONITOR_LAYOUT_HELPER_TEST_PASSED`,
+`MONITOR_LAYOUT_CONFIG_TEST_PASSED`, and `MONITOR_LAYOUT_SERVICE_TEST_PASSED`.
+Live scale acceptance passed on 2026-09-05. Every exposed scale applied correctly
+to each monitor in extended mode, only the six valid steps were selectable, and
+the indicator previewed the current step while dragging before applying on
+release. Extended layouts remained top-aligned; with unequal logical heights,
+pointer crossing occurred only along the expected shared virtual edge. Mirrored
+mode hid the ineffective HDMI slider immediately on a fresh surface and restored
+its saved value in Extended mode.
+Layout acceptance requires connecting only
+`HDMI-A-1`, applying mirrored mode and each extended direction, confirming the
+built-in-only topology is unchanged after disconnect, and confirming QE restarts
+after the mirrored-to-extended transition. These live checks passed on 2026-09-05:
+mirrored mode remained active, left/up/right/down extended layouts matched the
+requested geometry, mirror-to-extended restarted QE, and disconnecting HDMI left
+only the unchanged `eDP-1` configuration active. A separate built-in-only config
+reload produced no config errors and retained identical monitor JSON.

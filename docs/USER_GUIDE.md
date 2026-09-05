@@ -499,6 +499,22 @@ theme's wallpaper directory. Capture and restore defaults ask for confirmation
 because they change authored or live default files. `Super+Escape` continues to
 open the Rofi power menu directly.
 
+The Monitors section is available on `jim-x1c` while `HDMI-A-1` is connected.
+Choose Mirrored to mirror the built-in `eDP-1` display, or Extended and then
+choose whether HDMI is placed left, up, right, or down relative to the built-in
+display. Each output has an independent stepped scale slider in Extended mode.
+The only available values are `1.00`, `1.20`, `1.25`, `1.50`, `1.60`, and `2.00`,
+all of which produce whole logical pixels at the configured 1920x1080 resolution.
+The label previews a step while dragging and the change applies when the slider is
+released. While mirrored, `eDP-1` controls the mirrored logical layout and the HDMI
+slider is hidden; its previous value returns in Extended mode. Unequal logical
+monitor sizes are top-aligned, so pointer crossing is possible only where their
+virtual edges overlap. The selection persists across Hyprland restarts.
+Switching from mirrored to extended restarts QE automatically so per-screen shell
+surfaces appear on the newly independent output. With HDMI disconnected, the
+controls are disabled; the selected built-in scale remains part of its authored
+profile.
+
 ### Hardware OSDs
 
 Hardware keys update the underlying service and show confirmed QE feedback:

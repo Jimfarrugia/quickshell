@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+printf '%s\n' '{"version":2,"available":true,"message":"","mode":"extended","direction":"right","primaryScale":1.25,"secondaryScale":1.5,"selectedMode":"extended","selectedDirection":"right","selectedPrimaryScale":1.25,"selectedSecondaryScale":1.5,"secondaryConnected":true,"restartRequired":false,"stateValid":true,"migrationNeeded":false,"stateMatchesLive":true}'

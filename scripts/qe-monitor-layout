@@ -1,0 +1,375 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly supported_host="jim-x1c"
+readonly primary_output="eDP-1"
+readonly secondary_output="HDMI-A-1"
+readonly state_home="${XDG_STATE_HOME:-${HOME}/.local/state}"
+readonly state_dir="${state_home}/qe"
+readonly state_file="${state_dir}/monitor-layout.json"
+
+usage() {
+    printf 'Usage: %s query | apply MODE DIRECTION PRIMARY_SCALE SECONDARY_SCALE\n' "$0" >&2
+    exit 2
+}
+
+require_dependencies() {
+    local dependency
+    for dependency in hyprctl jq; do
+        if ! command -v "$dependency" >/dev/null 2>&1; then
+            printf 'Missing dependency: %s\n' "$dependency" >&2
+            exit 127
+        fi
+    done
+}
+
+current_hostname() {
+    if command -v hostnamectl >/dev/null 2>&1; then
+        hostnamectl --static
+    else
+        local hostname=""
+        IFS= read -r hostname </proc/sys/kernel/hostname || true
+        printf '%s\n' "$hostname"
+    fi
+}
+
+emit_unsupported_query() {
+    printf '%s\n' '{"version":2,"available":false,"message":"Monitor layouts are not configured for this host","mode":"unknown","direction":"unknown","primaryScale":null,"secondaryScale":null,"selectedMode":"extended","selectedDirection":"up","selectedPrimaryScale":1,"selectedSecondaryScale":1,"secondaryConnected":false,"restartRequired":false,"stateValid":true,"migrationNeeded":false,"stateMatchesLive":false}'
+}
+
+valid_scale() {
+    case "$1" in
+        1|1.0|1.00|1.2|1.20|1.25|1.5|1.50|1.6|1.60|2|2.0|2.00) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+scale_equals() {
+    jq -en --argjson actual "$1" --argjson expected "$2" \
+        '(($actual - $expected) | fabs) < 0.001' >/dev/null
+}
+
+read_selection() {
+    selected_mode="extended"
+    selected_direction="up"
+    selected_primary_scale="1"
+    selected_secondary_scale="1"
+    state_valid=true
+    migration_needed=false
+    if [[ ! -f "$state_file" ]]; then
+        return
+    fi
+
+    local version mode direction primary_scale secondary_scale
+    version=$(jq -er '.version' "$state_file" 2>/dev/null || true)
+    mode=$(jq -er '.mode | select(. == "mirror" or . == "extended")' "$state_file" 2>/dev/null || true)
+    direction=$(jq -er '.direction | select(. == "left" or . == "up" or . == "right" or . == "down")' "$state_file" 2>/dev/null || true)
+    primary_scale=$(jq -er '.scales["eDP-1"] | numbers | tostring' "$state_file" 2>/dev/null || true)
+    secondary_scale=$(jq -er '.scales["HDMI-A-1"] | numbers | tostring' "$state_file" 2>/dev/null || true)
+    if [[ "$version" == "1" && -n "$mode" && -n "$direction" ]]; then
+        selected_mode="$mode"
+        selected_direction="$direction"
+        migration_needed=true
+    elif [[ "$version" == "2" && -n "$mode" && -n "$direction" && -n "$primary_scale" && -n "$secondary_scale" ]] && valid_scale "$primary_scale" && valid_scale "$secondary_scale"; then
+        selected_mode="$mode"
+        selected_direction="$direction"
+        selected_primary_scale="$primary_scale"
+        selected_secondary_scale="$secondary_scale"
+    else
+        state_valid=false
+    fi
+}
+
+inspect_live() {
+    local monitors=$1
+    primary_connected=$(jq -r --arg name "$primary_output" 'any(.[]; .name == $name)' <<<"$monitors")
+    secondary_connected=$(jq -r --arg name "$secondary_output" 'any(.[]; .name == $name)' <<<"$monitors")
+    live_mode="unknown"
+    live_direction="unknown"
+    state_matches_live=false
+    live_primary_scale=$(jq -r --arg name "$primary_output" '([.[] | select(.name == $name) | .scale][0] // "unknown")' <<<"$monitors")
+    live_secondary_scale=$(jq -r --arg name "$secondary_output" '([.[] | select(.name == $name) | .scale][0] // "unknown")' <<<"$monitors")
+
+    if [[ "$primary_connected" != "true" || "$secondary_connected" != "true" ]]; then
+        return
+    fi
+
+    local mirror_of primary_id
+    mirror_of=$(jq -r --arg name "$secondary_output" '.[] | select(.name == $name) | .mirrorOf // "none"' <<<"$monitors")
+    primary_id=$(jq -r --arg name "$primary_output" '.[] | select(.name == $name) | .id // ""' <<<"$monitors")
+    if [[ "$mirror_of" == "$primary_output" || (-n "$primary_id" && "$mirror_of" == "$primary_id") ]]; then
+        live_mode="mirror"
+        return
+    fi
+
+    live_mode="extended"
+    live_direction=$(jq -r --arg primary "$primary_output" --arg secondary "$secondary_output" '
+        (.[] | select(.name == $primary)) as $p |
+        (.[] | select(.name == $secondary)) as $s |
+        if ($s.x + ($s.width / $s.scale)) <= $p.x then "left"
+        elif ($s.y + ($s.height / $s.scale)) <= $p.y then "up"
+        elif $s.x >= ($p.x + ($p.width / $p.scale)) then "right"
+        elif $s.y >= ($p.y + ($p.height / $p.scale)) then "down"
+        else "unknown"
+        end
+    ' <<<"$monitors")
+}
+
+emit_state() {
+    local available=$1
+    local message=$2
+    local restart_required=${3:-false}
+    jq -cn \
+        --argjson available "$available" \
+        --arg message "$message" \
+        --arg mode "$live_mode" \
+        --arg direction "$live_direction" \
+        --arg primaryScale "$live_primary_scale" \
+        --arg secondaryScale "$live_secondary_scale" \
+        --arg selectedMode "$selected_mode" \
+        --arg selectedDirection "$selected_direction" \
+        --argjson selectedPrimaryScale "$selected_primary_scale" \
+        --argjson selectedSecondaryScale "$selected_secondary_scale" \
+        --argjson secondaryConnected "$secondary_connected" \
+        --argjson restartRequired "$restart_required" \
+        --argjson stateValid "$state_valid" \
+        --argjson migrationNeeded "$migration_needed" \
+        --argjson stateMatchesLive "$state_matches_live" \
+        '{version: 2, available: $available, message: $message, mode: $mode,
+          direction: $direction,
+          primaryScale: ($primaryScale | if . == "unknown" then null else tonumber end),
+          secondaryScale: ($secondaryScale | if . == "unknown" then null else tonumber end),
+          selectedMode: $selectedMode,
+          selectedDirection: $selectedDirection,
+          selectedPrimaryScale: $selectedPrimaryScale,
+          selectedSecondaryScale: $selectedSecondaryScale,
+          secondaryConnected: $secondaryConnected,
+          restartRequired: $restartRequired, stateValid: $stateValid,
+          migrationNeeded: $migrationNeeded, stateMatchesLive: $stateMatchesLive}'
+}
+
+query() {
+    read_selection
+    local monitors
+    monitors=$(hyprctl monitors all -j)
+    inspect_live "$monitors"
+    if [[ "$secondary_connected" != "true" ]]; then
+        if [[ "$primary_connected" == "true" && "$live_primary_scale" != "unknown" ]] \
+            && scale_equals "$live_primary_scale" "$selected_primary_scale"; then
+            state_matches_live=true
+        fi
+        emit_state true ""
+        return
+    fi
+    if [[ "$live_mode" == "$selected_mode"
+        && ("$selected_mode" == "mirror" || "$live_direction" == "$selected_direction") ]] \
+        && [[ "$live_primary_scale" != "unknown" && "$live_secondary_scale" != "unknown" ]] \
+        && scale_equals "$live_primary_scale" "$selected_primary_scale" \
+        && scale_equals "$live_secondary_scale" "$selected_secondary_scale"; then
+        state_matches_live=true
+    fi
+    if [[ "$secondary_connected" != "true" ]]; then
+        emit_state false "Connect HDMI-A-1 to change the monitor layout"
+    elif [[ "$live_mode" == "unknown" || ("$live_mode" == "extended" && "$live_direction" == "unknown") ]]; then
+        emit_state false "The live monitor layout does not match a configured profile"
+    elif [[ "$state_valid" != "true" ]]; then
+        emit_state true "Invalid saved layout; using extended up"
+    elif [[ "$migration_needed" == "true" ]]; then
+        emit_state true "Saved layout will be upgraded when a setting changes"
+    elif [[ "$state_matches_live" != "true" ]]; then
+        emit_state true "Live monitor settings differ from the saved profile"
+    else
+        emit_state true ""
+    fi
+}
+
+confirm_primary_scale() {
+    local expected_scale=$1
+    local monitors
+    local _
+    for _ in {1..10}; do
+        monitors=$(hyprctl monitors all -j)
+        inspect_live "$monitors"
+        if [[ "$primary_connected" == "true" && "$live_primary_scale" != "unknown" ]] \
+            && scale_equals "$live_primary_scale" "$expected_scale"; then
+            return 0
+        fi
+        sleep 0.1
+    done
+    return 1
+}
+
+confirm_target() {
+    local primary_only=$1
+    local mode=$2
+    local direction=$3
+    local primary_scale=$4
+    local secondary_scale=$5
+    if [[ "$primary_only" == "true" ]]; then
+        confirm_primary_scale "$primary_scale"
+    else
+        confirm_layout "$mode" "$direction" "$primary_scale" "$secondary_scale"
+    fi
+}
+
+confirm_layout() {
+    local expected_mode=$1
+    local expected_direction=$2
+    local expected_primary_scale=$3
+    local expected_secondary_scale=$4
+    local monitors
+    local _
+    for _ in {1..10}; do
+        monitors=$(hyprctl monitors all -j)
+        inspect_live "$monitors"
+        if [[ "$live_mode" == "$expected_mode"
+            && ("$expected_mode" == "mirror" || "$live_direction" == "$expected_direction") ]]; then
+            if scale_equals "$live_primary_scale" "$expected_primary_scale" \
+                    && scale_equals "$live_secondary_scale" "$expected_secondary_scale"; then
+                return 0
+            fi
+        fi
+        sleep 0.1
+    done
+    return 1
+}
+
+write_selection() {
+    local mode=$1
+    local direction=$2
+    local primary_scale=$3
+    local secondary_scale=$4
+    mkdir -p "$state_dir"
+    local temporary
+    temporary=$(mktemp "${state_dir}/monitor-layout.json.XXXXXX")
+    chmod 600 "$temporary"
+    jq -cn --arg mode "$mode" --arg direction "$direction" \
+        --argjson primaryScale "$primary_scale" --argjson secondaryScale "$secondary_scale" \
+        '{version: 2, mode: $mode, direction: $direction,
+          scales: {"eDP-1": $primaryScale, "HDMI-A-1": $secondaryScale}}' >"$temporary"
+    mv -f "$temporary" "$state_file"
+}
+
+apply_layout() {
+    local mode=${1:-}
+    local direction=${2:-up}
+    local primary_scale=${3:-}
+    local secondary_scale=${4:-}
+    [[ "$mode" == "mirror" || "$mode" == "extended" ]] || usage
+    [[ "$direction" == "left" || "$direction" == "up" || "$direction" == "right" || "$direction" == "down" ]] || usage
+    valid_scale "$primary_scale" || usage
+    valid_scale "$secondary_scale" || usage
+    [[ $# -eq 4 ]] || usage
+
+    read_selection
+    local monitors
+    monitors=$(hyprctl monitors all -j)
+    inspect_live "$monitors"
+
+    local primary_only=false
+    if [[ "$secondary_connected" != "true" ]]; then
+        primary_only=true
+        if [[ "$primary_connected" != "true" ]]; then
+            printf 'eDP-1 must be connected\n' >&2
+            exit 4
+        fi
+        if [[ "$mode" != "$selected_mode" || "$direction" != "$selected_direction"
+                || "$secondary_scale" != "$selected_secondary_scale" ]]; then
+            printf 'Only the primary scale can be changed while HDMI-A-1 is disconnected\n' >&2
+            exit 4
+        fi
+    elif [[ "$primary_connected" != "true" || "$secondary_connected" != "true" ]]; then
+        printf 'Both configured outputs must be connected\n' >&2
+        exit 4
+    fi
+    if [[ "$live_mode" == "unknown" || "$live_primary_scale" == "unknown"
+            || "$live_secondary_scale" == "unknown" ]] && [[ "$primary_only" != "true" ]]; then
+        printf 'The current monitor topology cannot be safely changed\n' >&2
+        exit 4
+    fi
+
+    local previous_live_mode=$live_mode
+    local rollback_mode=$live_mode
+    local rollback_direction=$live_direction
+    local rollback_primary_scale=$live_primary_scale
+    local rollback_secondary_scale=$live_secondary_scale
+    [[ "$rollback_mode" != "mirror" ]] || rollback_direction=$selected_direction
+    if [[ "$primary_only" == "true" ]]; then
+        rollback_mode=$selected_mode
+        rollback_direction=$selected_direction
+        rollback_secondary_scale=$selected_secondary_scale
+    fi
+    local backup=""
+    local had_state=false
+    if [[ -f "$state_file" ]]; then
+        backup=$(mktemp)
+        cp -- "$state_file" "$backup"
+        had_state=true
+    fi
+
+    write_selection "$mode" "$direction" "$primary_scale" "$secondary_scale"
+    if ! hyprctl reload >/dev/null; then
+        if [[ "$had_state" == "true" ]]; then
+            mv -f "$backup" "$state_file"
+        else
+            rm -f "$state_file"
+        fi
+        printf 'Hyprland rejected the monitor layout reload\n' >&2
+        exit 5
+    fi
+    selected_mode="$mode"
+    selected_direction="$direction"
+    selected_primary_scale="$primary_scale"
+    selected_secondary_scale="$secondary_scale"
+    state_valid=true
+    migration_needed=false
+    if confirm_target "$primary_only" "$mode" "$direction" "$primary_scale" "$secondary_scale"; then
+        state_matches_live=true
+        local restart_required=false
+        [[ "$previous_live_mode" == "mirror" && "$mode" == "extended" ]] && restart_required=true
+        [[ -z "$backup" || ! -f "$backup" ]] || rm -f "$backup"
+        emit_state true "" "$restart_required"
+        return
+    fi
+
+    [[ -z "$backup" || ! -f "$backup" ]] || rm -f "$backup"
+    write_selection "$rollback_mode" "$rollback_direction" "$rollback_primary_scale" "$rollback_secondary_scale"
+    selected_mode=$rollback_mode
+    selected_direction=$rollback_direction
+    selected_primary_scale=$rollback_primary_scale
+    selected_secondary_scale=$rollback_secondary_scale
+    state_valid=true
+    migration_needed=false
+    if ! hyprctl reload >/dev/null 2>&1; then
+        printf 'Hyprland did not confirm the requested layout and rollback reload failed\n' >&2
+        exit 7
+    fi
+    if ! confirm_target "$primary_only" "$rollback_mode" "$rollback_direction" "$rollback_primary_scale" "$rollback_secondary_scale"; then
+        printf 'Hyprland did not confirm the requested layout or the rollback topology\n' >&2
+        exit 8
+    fi
+    printf 'Hyprland did not confirm the requested monitor layout\n' >&2
+    exit 6
+}
+
+case "${1:-}" in
+    query)
+        [[ $# -eq 1 ]] || usage
+        if [[ "$(current_hostname)" != "$supported_host" ]]; then
+            emit_unsupported_query
+            exit 0
+        fi
+        require_dependencies
+        query
+        ;;
+    apply)
+        shift
+        if [[ "$(current_hostname)" != "$supported_host" ]]; then
+            printf 'Monitor layouts are not configured for this host\n' >&2
+            exit 3
+        fi
+        require_dependencies
+        apply_layout "$@"
+        ;;
+    *) usage ;;
+esac
