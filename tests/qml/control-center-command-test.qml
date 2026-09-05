@@ -36,7 +36,7 @@ ShellRoot {
 
     function fail(message) {
         console.error(`CONTROL_CENTER_COMMAND_TEST_FAILED: ${message}`);
-        Qt.quit();
+        Qt.exit(1);
     }
 
     function check() {

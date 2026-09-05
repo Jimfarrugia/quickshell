@@ -13,7 +13,7 @@ ShellRoot {
 
     function fail(message) {
         console.error(`CONTROL_CENTER_STATE_TEST_FAILED: ${message}`);
-        Qt.quit();
+        Qt.exit(1);
     }
 
     function check() {

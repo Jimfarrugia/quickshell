@@ -30,7 +30,7 @@ ShellRoot {
 
     function fail(message) {
         console.error(`WALLPAPER_RANDOM_TEST_FAILED: ${message}`);
-        Qt.quit();
+        Qt.exit(1);
     }
 
     function check() {
