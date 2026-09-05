@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import "../utils/AiQuota.mjs" as AiQuota
 
 QtObject {
@@ -13,6 +14,8 @@ QtObject {
     property bool cycleActive: false
     property string pendingProvider: ""
     property bool busy: false
+    property bool wakeWatcherEnabled: true
+    property bool wakeWatcherDesired: false
     property var runner: CommandRunner {
         command: ["/usr/bin/python3", root.helperPath]
         expectJson: true
@@ -21,6 +24,11 @@ QtObject {
         maxStderrBytes: 4096
     }
     signal refreshed(var result)
+    signal resumed()
+
+    function consumeSleepLine(line) {
+        if (typeof line === "string" && line.trim() === "boolean false") resumed();
+    }
 
     function refresh() {
         if (!active || runner.running) {
@@ -62,7 +70,8 @@ QtObject {
         if (!transient) { next[id] = 0; streak[id] = 0; }
         else {
             streak[id] = Math.min(3, (streak[id] || 0) + 1);
-            const delay = retryAfter || [600000, 1200000, 1800000][streak[id] - 1];
+            const delay = retryAfter !== null && retryAfter !== undefined
+                ? retryAfter * 1000 : [600000, 1200000, 1800000][streak[id] - 1];
             next[id] = Date.now() + delay;
         }
         nextAllowedAt = next;
@@ -95,6 +104,7 @@ QtObject {
         Qt.callLater(() => root.refresh());
     }
     onActiveChanged: {
+        wakeWatcherDesired = active && wakeWatcherEnabled;
         if (active) refresh();
         else {
             if (runner.running) runner.cancel();
@@ -104,6 +114,27 @@ QtObject {
             pendingProvider = "";
         }
     }
+    property Process wakeWatcher: Process {
+        command: ["dbus-monitor", "--system",
+            "type='signal',sender='org.freedesktop.login1',path='/org/freedesktop/login1',interface='org.freedesktop.login1.Manager',member='PrepareForSleep'"]
+        running: root.wakeWatcherDesired
+        stdout: SplitParser {
+            splitMarker: "\n"
+            onRead: data => root.consumeSleepLine(data)
+        }
+        onExited: {
+            if (root.active && root.wakeWatcherEnabled) {
+                root.wakeWatcherDesired = false;
+                wakeWatcherRestart.restart();
+            }
+        }
+    }
+    property Timer wakeWatcherRestart: Timer {
+        interval: 5000
+        repeat: false
+        onTriggered: root.wakeWatcherDesired = root.active && root.wakeWatcherEnabled
+    }
+    onWakeWatcherEnabledChanged: wakeWatcherDesired = active && wakeWatcherEnabled
     property Connections runnerConnection: Connections {
         target: root.runner
         function onFinished(result) { root.publish(result); }

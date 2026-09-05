@@ -23,4 +23,9 @@ assert.equal(validateQuotaDocument({ ...document, providers: { openai: document.
 assert.equal(validateQuotaDocument({ ...document, providers: { ...document.providers, openai: { ...document.providers.openai, weekly: { ...window, remainingPercent: 101 } } } }).ok, false);
 assert.equal(validateQuotaDocument({ ...document, providers: { ...document.providers, openai: { ...document.providers.openai, status: "unexpected" } } }).ok, false);
 assert.equal(validateQuotaDocument({ ...document, providers: { ...document.providers, openai: { ...document.providers.openai, weekly: { ...window, error: null, status: "error", usedPercent: null, remainingPercent: null, resetsAt: null } } } }).ok, false);
+const quotaError = { code: "INVALID_RESPONSE", retryable: false, retryAfterSeconds: null };
+const errorWindow = { status: "error", usedPercent: null, remainingPercent: null, resetsAt: null, error: quotaError };
+assert.equal(validateQuotaDocument({ ...document, providers: { ...document.providers, openai: { ...document.providers.openai, weekly: { ...window, error: quotaError } } } }).ok, false);
+assert.equal(validateQuotaDocument({ ...document, providers: { ...document.providers, openai: { ...document.providers.openai, status: "error", error: quotaError } } }).ok, false);
+assert.equal(validateQuotaDocument({ ...document, providers: { ...document.providers, openai: { ...document.providers.openai, status: "error", fiveHour: errorWindow, error: quotaError } } }).ok, true);
 console.log("AI_QUOTA_TEST_PASSED");

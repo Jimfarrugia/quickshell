@@ -24,9 +24,13 @@ BarChip {
 
     text: current ? `${AiQuota.formatPercent(selected.weekly.remainingPercent)}%` : "--"
     icon: "robot_2"
-    iconColor: current ? Services.ThemeService.theme.tokens.secondary : Services.ThemeService.theme.tokens.error
-    textColor: current ? Services.ThemeService.theme.tokens.on_surface_disabled : Services.ThemeService.theme.tokens.error
-    warning: selected.freshness === "stale"
+    iconColor: selected.freshness === "stale"
+        ? Services.ThemeService.theme.tokens.warning
+        : (current ? Services.ThemeService.theme.tokens.secondary : Services.ThemeService.theme.tokens.error)
+    textColor: selected.freshness === "stale"
+        ? Services.ThemeService.theme.tokens.warning
+        : (current ? Services.ThemeService.theme.tokens.on_surface_disabled : Services.ThemeService.theme.tokens.error)
+    warning: false
     hoverText: Services.AiQuotaService.tooltipText
     visible: Services.ConfigService.config.bar.enabled && Services.ConfigService.config.bar.aiQuotaEnabled
     horizontalPadding: Services.ConfigService.config.bar.moduleSpacing / 2

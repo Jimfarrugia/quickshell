@@ -10,9 +10,11 @@ ShellRoot {
         id: adapter
         active: true
         runner: fakeRunner
+        wakeWatcherEnabled: false
     }
     property int stage: 0
     property bool done: false
+    property bool resumedSeen: false
     function window(used, reset) { return { status: "ok", usedPercent: used, remainingPercent: 100 - used, resetsAt: reset, error: null }; }
     function provider(status, five, weekly, failure) { return { status: status, lastUpdated: "2026-09-04T00:00:00Z", fiveHour: five, weekly: weekly, error: failure || null }; }
     function document(id, failure) {
@@ -26,6 +28,7 @@ ShellRoot {
     function fail(message) { console.error(`AI_QUOTA_ADAPTER_TEST_FAILED: ${message}`); done = true; Qt.quit(); }
     Connections {
         target: adapter
+        function onResumed() { root.resumedSeen = true; }
         function onRefreshed(result) {
             if (!result.providerId) return root.fail("adapter omitted provider identity");
             if (root.stage === 0) {
@@ -34,6 +37,8 @@ ShellRoot {
                 root.stage = 1;
             } else if (root.stage === 1) {
                 if (result.providerId !== "opencode") return root.fail("shared poller did not advance to OpenCode");
+                if (adapter.nextAllowedAt.opencode - Date.now() < 3500000)
+                    return root.fail("Retry-After was not converted from seconds to milliseconds");
                 root.stage = 2;
             }
         }
@@ -54,6 +59,9 @@ ShellRoot {
                 adapter.backoff("openai", "NETWORK_ERROR", null);
                 adapter.backoff("openai", "NETWORK_ERROR", null);
                 if (adapter.failureStreak.openai !== 3) return root.fail("backoff streak was not bounded");
+                adapter.active = false;
+                adapter.consumeSleepLine("boolean false");
+                if (!root.resumedSeen) return root.fail("resume event was not detected");
                 console.log("AI_QUOTA_ADAPTER_TEST_PASSED");
                 root.done = true;
                 Qt.quit();

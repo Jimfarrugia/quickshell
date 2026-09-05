@@ -6,6 +6,7 @@ QtObject {
     property int refreshCalls: 0
     property QtObject runner: QtObject { property bool running: false }
     signal refreshed(var result)
+    signal resumed()
     function refresh() { refreshCalls++; return active; }
     function publish(document) { refreshed({ ok: true, data: document }); }
 }

@@ -150,6 +150,7 @@ Singleton {
     Connections {
         target: root.adapter
         function onRefreshed(result) { root.publish(result); }
+        function onResumed() { root.refresh(); }
     }
     Timer {
         interval: 300000

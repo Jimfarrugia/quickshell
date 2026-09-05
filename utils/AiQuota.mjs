@@ -26,7 +26,8 @@ export function validateWindow(value) {
   const error = validateError(value.error);
   if (!error.ok) return { ok: false };
   if (value.status === "ok") {
-    if (clampPercent(value.usedPercent) === null || clampPercent(value.remainingPercent) === null
+    if (error.value !== null
+        || clampPercent(value.usedPercent) === null || clampPercent(value.remainingPercent) === null
         || value.usedPercent !== clampPercent(value.usedPercent)
         || value.remainingPercent !== clampPercent(value.remainingPercent)
         || Math.abs(value.remainingPercent - (100 - value.usedPercent)) > 0.01
@@ -51,7 +52,12 @@ export function validateQuotaDocument(document, requiredProviders = PROVIDERS) {
     const providerError = validateError(provider.error);
     if (!fiveHour.ok || !weekly.ok || !monthly.ok || !providerError.ok) { errors.push(`${id}: invalid provider window`); continue; }
     if (provider.lastUpdated !== null && !validDate(provider.lastUpdated)) { errors.push(`${id}: invalid update time`); continue; }
-    if (provider.status === "ok" && (providerError.value !== null || fiveHour.value.status !== "ok" || weekly.value.status !== "ok")) { errors.push(`${id}: status does not match windows`); continue; }
+    const hasWindowError = fiveHour.value.status === "error" || weekly.value.status === "error"
+      || (monthly.value !== null && monthly.value.status === "error");
+    if ((provider.status === "ok" && (providerError.value !== null || hasWindowError))
+        || (provider.status === "error" && (providerError.value === null || !hasWindowError))) {
+      errors.push(`${id}: status does not match windows`); continue;
+    }
     const normalized = { status: provider.status, lastUpdated: provider.lastUpdated || null, fiveHour: fiveHour.value, weekly: weekly.value, error: providerError.value };
     if (monthly.value) normalized.monthly = monthly.value;
     providers[id] = normalized;

@@ -114,11 +114,11 @@ timeout 5 quickshell -p shell.qml
 
 The AI quota JavaScript test must print `AI_QUOTA_TEST_PASSED`. The quota QML
 tests use a fake adapter and must prove shared provider selection, consumer
-registration, independent weekly/five-hour/monthly rendering, dashboard routing, and
-stale/unavailable states without accessing live credentials. The adapter test
-also verifies that the pending indicator remains active across sequential
-provider requests. The dashboard shell test verifies the AI quota header
-refresh control and its service request.
+registration, independent weekly/five-hour/monthly rendering, dashboard routing,
+resume-triggered refresh, and stale/unavailable states without accessing live
+credentials. The adapter test also verifies that the pending indicator remains
+active across sequential provider requests. The dashboard shell test verifies
+the AI quota header refresh control and its service request.
 
 Of the timeout-wrapped commands, exit code `124` is acceptable when a headless
 QML test has already printed its success marker; the `shell.qml` smoke test

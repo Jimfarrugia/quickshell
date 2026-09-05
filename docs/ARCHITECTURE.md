@@ -986,10 +986,13 @@ responses, and refresh tokens never enter QML state, process arguments,
 diagnostics, logs, fixtures, or QE state.
 
 Quota data is consumer-scoped polling because the provider endpoints have no
-usable event source. One singleton adapter operation serves all bars and the
-dashboard; a sequential provider refresh cycle remains one logical pending
-operation between helper processes; polling stops when no consumer remains. Provider or window failure
-does not block shell startup or hide unrelated confirmed data.
+usable event source. The adapter also subscribes to systemd-logind's
+`PrepareForSleep` signal through `dbus-monitor` while a consumer exists and the
+service starts an immediate refresh after the resume event. One singleton
+adapter operation serves all bars and the dashboard; a sequential provider
+refresh cycle remains one logical pending operation between helper processes;
+polling and the resume watcher stop when no consumer remains. Provider or
+window failure does not block shell startup or hide unrelated confirmed data.
 
 ## 8. Theme Architecture
 
