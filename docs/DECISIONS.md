@@ -50,21 +50,27 @@ accepted ADR merely to tidy the sequence.
 | ADR-018 | Stage QE wallpaper themes before promotion | Accepted as part of the Phase 4 wallpaper implementation on 2026-08-25 |
 | ADR-019 | QE-generated external wallpaper theme slots | Not explicitly stated in source record |
 | ADR-020 | Apply-time focused Kitty bar compositing | Not explicitly stated in source record |
-| ADR-022 | Project-owned authored defaults bundle | Accepted by user |
 | ADR-021 | Vim-style selector navigation convention | Accepted by user |
-| ADR-028 | QE-generated Yazi wallpaper flavor | Accepted by user |
+| ADR-022 | Project-owned authored defaults bundle | Accepted by user |
 | ADR-023 | QE-generated imv and mpv wallpaper slots | Accepted by user |
 | ADR-024 | Isolated QE notification ownership prototype | Accepted by user on 2026-08-29 |
 | ADR-025 | QE-owned OSD and reversible action cutover | Accepted for Phase 6 implementation |
 | ADR-026 | Notification center as a layer-shell sidebar | Accepted by user on 2026-08-30 |
 | ADR-027 | Dedicated sidebar surface token | Accepted by user on 2026-08-30 |
+| ADR-028 | QE-generated Yazi wallpaper flavor | Accepted by user |
+| ADR-029 | Persist successful launcher usage counts | Accepted by user on 2026-08-31 |
+| ADR-030 | Launch terminal applications through the configured terminal | Accepted by user on 2026-09-01 |
+| ADR-031 | Launcher uses a centered overlay panel | Accepted by user on 2026-09-01 |
 | ADR-032 | Add low surface semantic token | Accepted by user on 2026-09-01 |
 | ADR-033 | Shared dashboard shell and source-module routing | Accepted by user on 2026-09-02 |
 | ADR-034 | Network dashboard v1 boundary | Accepted by user on 2026-09-03 |
 | ADR-035 | Persist idle inhibitor requested state | Accepted by user on 2026-09-04 |
 | ADR-036 | Read-only AI quota credential boundary | Accepted by user on 2026-09-04 |
 | ADR-037 | Control-center composition and scoped command adapters | Accepted by user on 2026-09-04 |
-| ADR-038 | Plugin-independent monitor-scoped workspace bars | Accepted by user on 2026-09-05 |
+| ADR-038 | Plugin-independent monitor-scoped workspace bars | Accepted by user on 2026-09-05; per-monitor scale extension accepted on 2026-09-05 |
+| ADR-039 | Authored monitor profiles with a persisted selector | Accepted by user on 2026-09-05; per-monitor scale extension accepted on 2026-09-05 |
+| ADR-040 | Curated help reference catalog | Accepted by user on 2026-09-01; revised on 2026-09-01 |
+
 
 ## ADR-035: Persist idle inhibitor requested state
 
@@ -1032,6 +1038,9 @@ blocking the launcher.
 Affected areas: LauncherService, launcher ranking utilities, XDG state schema,
 launcher tests, and the Phase 7 acceptance/rollback validation.
 
+Related decision: ADR-030 later includes eligible `Terminal=true` desktop entries
+and applies the same successful-launch usage-count policy to them.
+
 ## ADR-030: Launch terminal applications through the configured terminal
 
 Status: Accepted by user on 2026-09-01
@@ -1089,7 +1098,9 @@ Status: Accepted by user on 2026-09-04
 Decision: QE reads OpenCode's provider credential store only through a bounded
 helper running as the same unprivileged user. The helper is the only component
 that handles credentials. QE never writes, refreshes, removes, or migrates
-provider credentials; OpenCode remains the sole OAuth refresh owner.
+provider credentials; OpenCode remains the sole OAuth refresh owner. The
+OpenCode Go credential is read from the `opencode-go` record in that store; its
+normalized QE provider identifier remains `opencode`.
 
 The helper returns only normalized weekly and five-hour quota windows. Tokens,
 refresh tokens, account identifiers, authorization headers, raw responses, and
@@ -1212,3 +1223,29 @@ scaled dimensions and remain top-aligned. Version-1 state loads with `1.00` scal
 and upgrades on the next accepted write. A failed reload or unconfirmed topology
 restores the confirmed pre-operation topology and reconciles the selector rather
 than claiming the request as confirmed.
+
+## ADR-040: Curated help reference catalog
+
+Status: Accepted by user on 2026-09-01; revised on 2026-09-01
+
+Decision: use the authored `config/help.json` catalog as the sole authority. It
+uses a versioned `entries` array. Entries require `id`, `category`, and `title`,
+and may contain display-only `shortcut` and `command` strings. Categories are
+restricted to `keybindings` and `commands`.
+
+Invalid entries are rejected individually. The help surface refreshes the
+catalog on open, searches the whole grouped view, and never executes catalog
+commands. Keybinding text is reference data only; Hyprland remains
+authoritative. There is no repository default catalog or merge workflow.
+
+Context: QE needs a help surface for its keybindings and common commands.
+Hyprland owns global keybindings, while QE owns the presentation surface and its
+IPC.
+
+Consequences:
+
+- Help content can be edited without changing QE behavior or executing commands.
+- Users control the complete help catalog, including removal of entries.
+- The catalog can become stale when Hyprland configuration changes.
+- A separate file keeps reference content independent from runtime state.
+- Future live keybinding derivation can replace duplicated reference text.

@@ -59,7 +59,7 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
   operations, one deterministic active-device view, and explicit
   `nm-connection-editor` fallback; wired state is read-only. Detailed acceptance
   and rollback evidence is in `docs/history/PHASES_07-11.md`, and the network
-  boundary is recorded in `docs/adr/0004-network-dashboard-v1-boundary.md`.
+  boundary is recorded in `docs/DECISIONS.md` as ADR-034.
 - Quickshell 0.3.1 does not repopulate all native devices after a NetworkManager
   restart. The dashboard therefore exposes a temporary `Restart QE` recovery
   action for `NETWORKMANAGER_UNAVAILABLE`, using the guarded

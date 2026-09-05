@@ -23,6 +23,9 @@ Before changing code or planning documents:
 7. Verify uncertain Quickshell APIs against the installed version metadata and
    matching official documentation or source before use.
 
+`CONTEXT.md` is glossary-only. Read it for QE domain terminology or when an
+invoked skill requires it; do not treat it as status, a spec, or architecture.
+
 `docs/USER_GUIDE.md` is not normal implementation context. Read it only when the
 task changes a documented user-facing workflow or explicitly concerns the guide.
 
@@ -49,6 +52,7 @@ merely because a document is authoritative.
 
 ### Document authority
 
+- `CONTEXT.md` — durable QE domain vocabulary only.
 - `docs/PLAN.md` — roadmap, project status, active/future phases, prerequisites,
   acceptance criteria, risks, deferred work, polling policy.
 - `docs/ARCHITECTURE.md` — current system design, ownership, boundaries, service
@@ -122,6 +126,8 @@ choose one.
   security, or failure policy changes.
 - Add or revise an ADR in `docs/DECISIONS.md` for every significant
   architectural change.
+- Update `CONTEXT.md` only for durable domain terminology; keep other facts in
+  their authoritative documents.
 - Keep `docs/USER_GUIDE.md` concise and user-facing. Do not add or update
   user-guide content without explicit user approval; suggestions are allowed and
   must be presented for approval first.
@@ -180,17 +186,3 @@ Do not silently deviate from an accepted decision. To propose a change:
 5. Update the appropriate authoritative documents and ADR.
 6. Obtain user approval when scope, behavior, security, or ownership materially
    changes.
-
-## Agent skills
-
-### Issue tracker
-
-Issues and specs live as markdown files under `.scratch/`. See `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-Use the five default labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix`. See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-This is a single-context repository using root `CONTEXT.md` and `docs/adr/`. See `docs/agents/domain.md`.

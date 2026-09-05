@@ -1,6 +1,6 @@
 ---
 name: qe-doc-maintenance
-description: Maintain QE's documentation hierarchy after phase completion or when live working docs accumulate stale historical material. Use when asked to carry out documentation maintenance, archive completed phase records, prune stale PLAN handoff/status context, maintain decision and validation references, or reduce default agent context without losing evidence.
+description: Maintain QE live documentation, archive stale history, and preserve evidence.
 compatibility: OpenCode project-local skill for the QE repository
 metadata:
   project: qe
@@ -25,6 +25,7 @@ Maintain these ownership boundaries:
 | Document | Owns |
 | --- | --- |
 | `AGENTS.md` | Small always-read operating rules and context-routing rules |
+| `CONTEXT.md` | Durable QE domain glossary only; terminology and conceptual distinctions, not status, implementation detail, or architectural rationale |
 | `docs/PLAN.md` | Live roadmap/status, current handoff, active/future phase scope, prerequisites, acceptance criteria, unresolved/deferred work, risks, migration/polling registries |
 | `docs/ARCHITECTURE.md` | Durable current architecture, ownership, boundaries, contracts, lifecycle, failure, security |
 | `docs/DECISIONS.md` | Accepted ADRs and their rationale |
@@ -63,6 +64,7 @@ Classify candidate material before editing:
 | Unresolved question or deferred decision | Keep in live `PLAN.md` |
 | Active/current risk or poller contract | Keep in live `PLAN.md` |
 | Durable current architecture or service contract | Keep/update `ARCHITECTURE.md` only when the architecture actually changed |
+| Durable domain term or conceptual distinction | Keep in `CONTEXT.md` only when it is implementation-independent and likely to remain useful across future work |
 | Accepted ADR | Keep in `DECISIONS.md`; never archive merely because it is old |
 | Completed phase implementation detail | Move losslessly to `docs/history/` |
 | Completed acceptance/rollback evidence | Move with its completed phase record |
@@ -98,7 +100,7 @@ Current archive grouping:
 - Phases 0-6: `docs/history/PHASES_00-06.md`
 - Phases 7-11: `docs/history/PHASES_07-11.md` when the first of those phases is
   archived
-- Phase 12: `docs/history/PHASE_12.md` if a final detailed history file is useful
+- Phases 12-13: `docs/history/PHASES_12-13.md` when the first of those phases is archived
 
 For a new historical file, add a short header explaining that it is
 non-authoritative, then preserve the moved phase body without summarizing away
@@ -156,7 +158,27 @@ Historical facts that explain an earlier phase may move to its history record.
 Durable current constraints belong in architecture or decisions rather than
 being duplicated as historical prose in the live plan.
 
-### 6. Maintain ADR references
+### 6. Maintain the domain glossary
+
+Review `CONTEXT.md` as an on-demand vocabulary layer, not as another planning or
+architecture document. Keep definitions that establish durable QE terminology or
+conceptual distinctions.
+
+Remove or relocate entries that have drifted into:
+
+- phase/project status;
+- implementation steps, file/function ownership, or current code shape;
+- version-specific runtime facts that do not define a durable concept;
+- acceptance criteria or test procedures;
+- active risks, limitations, or future work owned by `docs/PLAN.md`;
+- architectural rationale or accepted decisions owned by
+  `docs/ARCHITECTURE.md`/`docs/DECISIONS.md`.
+
+When a definition mixes durable vocabulary with transient implementation detail,
+preserve the durable definition in `CONTEXT.md` and relocate or remove only the
+transient portion. Do not invent terminology merely to make the glossary larger.
+
+### 7. Maintain ADR references
 
 `docs/DECISIONS.md` is durable and on-demand. Do not move accepted ADRs into
 history when their implementation phase completes.
@@ -170,7 +192,7 @@ history when their implementation phase completes.
   assigns `ADR-028` to **QE-generated Yazi wallpaper flavor**. Preserve that
   mapping when consulting historical source material.
 
-### 7. Maintain architecture narrowly
+### 8. Maintain architecture narrowly
 
 Do not rewrite `docs/ARCHITECTURE.md` merely to mirror phase history.
 
@@ -179,7 +201,7 @@ security, failure behavior, or durable structure changed.
 
 Prefer concise cross-references to ADRs over duplicating full rationale.
 
-### 8. Maintain validation routing
+### 9. Maintain validation routing
 
 Keep `docs/VALIDATION.md` as the command/expected-marker catalogue.
 
@@ -191,7 +213,7 @@ When a phase adds tests:
 - keep phase acceptance criteria in `PLAN.md`, not duplicated as a full test
   transcript.
 
-### 9. Protect the user guide
+### 10. Protect the user guide
 
 Do not edit `docs/USER_GUIDE.md` unless the user's current instruction explicitly
 approves user-guide changes.
@@ -217,8 +239,9 @@ When invoked without a phase-completion focus:
 4. Check whether live plan content duplicates architecture or ADR rationale.
 5. Check `ARCHITECTURE.md`, `DECISIONS.md`, and `VALIDATION.md` for broken
    references caused by prior moves.
-6. Check `AGENTS.md` routing rules against the actual document structure.
-7. Do not restructure merely to meet a target line count.
+6. Review `CONTEXT.md` for stale implementation/status detail or duplicated architecture/decision rationale.
+7. Check `AGENTS.md` routing rules against the actual document structure.
+8. Do not restructure merely to meet a target line count.
 
 The objective is a high signal-to-context ratio, not minimum document size.
 
@@ -227,7 +250,7 @@ The objective is a high signal-to-context ratio, not minimum document size.
 Before finishing:
 
 1. Search repository references to moved documents/headings/ADRs, for example:
-   - `rg -n 'docs/PLAN\.md|docs/ARCHITECTURE\.md|docs/DECISIONS\.md|docs/VALIDATION\.md|docs/history' .`
+   - `rg -n 'CONTEXT\.md|docs/PLAN\.md|docs/ARCHITECTURE\.md|docs/DECISIONS\.md|docs/VALIDATION\.md|docs/history' .`
    - `rg -n 'ADR-[0-9]+' .`
 2. Verify links and referenced filenames exist.
 3. Verify removed historical phase text is present in its history destination
