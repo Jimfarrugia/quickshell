@@ -39,7 +39,7 @@ ShellRoot {
                 || !fakeIntegration.requested
                 || idleModule.icon !== "visibility"
                 || idleModule.active
-                || idleModule.hoverText !== "Requested"
+                || idleModule.hoverText !== "Enabled"
                 || idleModule.iconColor.toString() !== Services.ThemeService.theme.tokens.primary.toString())
             return fail("idle request did not reach the native integration and presentation");
 

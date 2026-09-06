@@ -400,7 +400,7 @@ PanelWindow {
                         checked: Services.IdleService.requested
                         activeColor: Services.ThemeService.theme.tokens.warning
                         primaryEnabled: Services.IdleService.availability === "available" && Services.IdleService.configured
-                        valueText: Services.IdleService.requested ? "Requested" : "Disabled"
+                        valueText: Services.IdleService.requested ? "Enabled" : "Disabled"
                         statusText: Services.IdleService.configured ? Services.IdleService.availability : "Unavailable"
                         onClicked: Services.IdleService.toggle()
                     }
