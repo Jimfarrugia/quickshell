@@ -309,9 +309,12 @@ evidence, rollback history, or implementation rationale.
 ### Completed AI quota milestone
 
 Status: Complete. The read-only provider boundary, bar/dashboard behavior, stale
-handling, and consumer-scoped polling are implemented. Detailed acceptance and
-provider evidence is preserved in `docs/history/PHASES_07-11.md` and the durable
-boundary is recorded in ADR-036.
+handling, consumer-scoped polling, and suspend/resume recovery are implemented.
+Manual refresh retries QE-generated timeout/network backoff but respects provider
+rate limits and `Retry-After`; in-flight helpers are cancelled before sleep and
+resume requests are coalesced until cancellation completes. Detailed acceptance
+and provider evidence is preserved in `docs/history/PHASES_07-11.md` and the
+durable boundary is recorded in ADR-036.
 
 ### Workspace bar monitor scoping
 
@@ -667,7 +670,7 @@ until measured in the named phase.
 | Disk capacity | filesystem capacity has no suitable change signal | 30 seconds | enabled while a disk metric consumer is configured | query configured mount points only | stale after three failed reads; retain last value | Phase 3 |
 | MPRIS position | Quickshell MPRIS position does not advance continuously | 1 second | only while a position consumer is visible and selected player is playing | stop immediately when paused, player vanishes, or view hides | reset from next player event; hide progress if player state is unavailable | media/OSD milestone using it |
 | Brightness fallback | no native Quickshell API; sysfs watcher reliability is unverified | 2 seconds with dashboard/OSD visible; 10 seconds for a configured persistent bar value | only if watcher/operation events cannot satisfy active consumers | one device read; no poll when brightness is not displayed | stale after three failed reads; requested operations still force immediate confirmation read | Phase 3 and Phase 6 |
-| AI provider quota | usage endpoints do not provide a local event source; system resume is a separate logind event | 5 minutes while a bar or dashboard consumer exists, plus an immediate resume-triggered cycle | one singleton adapter/poller and resume watcher shared by all monitors; stop at zero consumers | sequential provider requests remain one logical pending cycle, bounded response/auth reads, per-provider backoff, `Retry-After` respected; resume watcher is event-driven | retain last-known values and mark stale after 15 minutes; one-minute local age refresh does not contact providers | AI quota milestone |
+| AI provider quota | usage endpoints do not provide a local event source; system resume is a separate logind event | 5 minutes while a bar or dashboard consumer exists, plus an immediate resume-triggered cycle | one singleton adapter/poller and resume watcher shared by all monitors; stop at zero consumers | sequential provider requests remain one logical pending cycle, bounded response/auth reads, coalesced manual/resume requests, manual retry of QE-generated timeout/network backoff, provider backoff with `Retry-After` respected; pre-sleep cancellation prevents false failures | retain last-known values and mark stale after 15 minutes; one-minute local age refresh does not contact providers | AI quota milestone |
 
 Polling budget for the bar milestone:
 

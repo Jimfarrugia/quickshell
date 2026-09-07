@@ -121,8 +121,10 @@ tests use a fake adapter and must prove shared provider selection, consumer
 registration, independent weekly/five-hour/monthly rendering, dashboard routing,
 resume-triggered refresh, and stale/unavailable states without accessing live
 credentials. The adapter test also verifies that the pending indicator remains
-active across sequential provider requests. The dashboard shell test verifies
-the AI quota header refresh control and its service request.
+active across sequential provider requests, manual refresh retries local
+timeout/network backoff, provider rate limits remain enforced, and
+suspend/resume cancellation produces one fresh cycle. The dashboard shell test
+verifies the AI quota header refresh control and its service request.
 
 Of the timeout-wrapped commands, exit code `124` is acceptable when a headless
 QML test has already printed its success marker; the `shell.qml` smoke test

@@ -129,7 +129,8 @@ Singleton {
     function registerConsumer() { consumerCount++; updateAdapter(); }
     function unregisterConsumer() { consumerCount = Math.max(0, consumerCount - 1); updateAdapter(); }
     function updateAdapter() { adapter.active = consumerCount > 0; }
-    function refresh() { return adapter.refresh(); }
+    function requestCycle(reason) { return adapter.requestCycle(reason); }
+    function refresh() { return requestCycle("manual"); }
     function cycleProvider() {
         const index = providerIds.indexOf(selectedProvider);
         selectedProvider = providerIds[(index + 1) % providerIds.length];
@@ -150,13 +151,13 @@ Singleton {
     Connections {
         target: root.adapter
         function onRefreshed(result) { root.publish(result); }
-        function onResumed() { root.refresh(); }
+        function onResumed() { root.requestCycle("resume"); }
     }
     Timer {
         interval: 300000
         repeat: true
         running: root.polling
-        onTriggered: root.refresh()
+        onTriggered: root.requestCycle("poll")
     }
     Timer {
         interval: 60000

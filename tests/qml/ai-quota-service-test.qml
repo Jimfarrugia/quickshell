@@ -37,10 +37,12 @@ ShellRoot {
             return fail("service did not expose the adapter refresh cycle as pending");
         fake.busy = false;
         Services.AiQuotaService.registerConsumer();
-        const refreshBeforeResume = fake.refreshCalls;
+        const requestsBeforeResume = fake.requestReasons.length;
         fake.resumed();
-        if (fake.refreshCalls <= refreshBeforeResume)
+        if (fake.requestReasons.length <= requestsBeforeResume)
             return fail("resume event did not request an immediate refresh");
+        if (fake.requestReasons[fake.requestReasons.length - 1] !== "resume")
+            return fail("resume event did not preserve its refresh reason");
         fake.publish(root.quotaDocument);
         if (Services.AiQuotaService.provider("openai").weekly.remainingPercent !== 60
                 || Services.AiQuotaService.provider("opencode").fiveHour.remainingPercent !== 90)
