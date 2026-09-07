@@ -1,4 +1,5 @@
 import QtQuick
+import Qt5Compat.GraphicalEffects
 import Quickshell.Wayland
 
 WlSessionLockSurface {
@@ -27,21 +28,55 @@ WlSessionLockSurface {
             Text {
                 id: clock
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: Qt.formatTime(new Date(), "hh:mm")
+                text: Qt.formatTime(new Date(), "h:mm")
                 color: surface.lockTheme.tokens.on_background
                 font.family: surface.appearance.fontFamily
-                font.pixelSize: 64
+                font.pixelSize: 96
+                font.bold: false
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    color: surface.lockTheme.tokens.background
+                    horizontalOffset: 0
+                    verticalOffset: 2
+                    radius: 8
+                    samples: 17
+                }
             }
 
             Rectangle {
-                width: parent.width
+                id: inputField
+                width: clock.implicitWidth
                 height: 52
                 radius: surface.appearance.radius
-                color: surface.lockTheme.tokens.surface
-                border.width: surface.appearance.borderWidth
-                border.color: passwordInput.activeFocus
-                    ? surface.lockTheme.tokens.focus_ring
-                    : surface.lockTheme.tokens.outline
+                anchors.horizontalCenter: parent.horizontalCenter
+                color: "transparent"
+                readonly property bool errorState: surface.controller.state === "retryDelay"
+                    || surface.controller.state === "recoveryRequired"
+                readonly property bool inputPending: passwordInput.text.length > 0
+                    || surface.controller.authenticationSubmitted
+                readonly property string statusMessage: surface.controller.state === "retryDelay"
+                    ? "Authentication failed"
+                    : (surface.controller.state === "recoveryRequired"
+                        ? "Too many failures; recover from a TTY"
+                        : (surface.controller.state === "authenticating"
+                                && surface.controller.authenticationSubmitted
+                            ? "Authenticating..." : ""))
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    color: surface.lockTheme.tokens.background
+                    horizontalOffset: 0
+                    verticalOffset: 4
+                    radius: 10
+                    samples: 21
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: inputBorder.border.width
+                    radius: Math.max(0, inputField.radius - inputBorder.border.width)
+                    color: surface.lockTheme.tokens.background
+                    opacity: 0.35
+                }
 
                 TextInput {
                     id: passwordInput
@@ -65,24 +100,37 @@ WlSessionLockSurface {
                         surface.controller.submit(response);
                     }
                 }
-            }
 
-            Text {
-                width: parent.width
-                horizontalAlignment: Text.AlignHCenter
-                text: surface.controller.state === "retryDelay"
-                    ? "Authentication failed"
-                    : (surface.controller.state === "recoveryRequired"
-                        ? "Too many failures; recover from a TTY"
-                        : "Enter password")
-                color: surface.controller.state === "retryDelay"
-                        || surface.controller.state === "recoveryRequired"
-                    ? surface.lockTheme.tokens.error
-                    : surface.lockTheme.tokens.on_surface_variant
-                font.family: surface.appearance.fontFamily
-                font.pixelSize: surface.appearance.fontSize
-                textFormat: Text.PlainText
-                wrapMode: Text.Wrap
+                Text {
+                    id: statusText
+                    anchors.fill: parent
+                    anchors.margins: 14
+                    visible: passwordInput.text.length === 0 && inputField.statusMessage.length > 0
+                    text: inputField.statusMessage
+                    color: inputField.errorState
+                        ? surface.lockTheme.tokens.error
+                        : surface.lockTheme.tokens.warning
+                    font.family: surface.appearance.fontFamily
+                    font.pixelSize: surface.appearance.fontSize
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    textFormat: Text.PlainText
+                    wrapMode: Text.Wrap
+                }
+
+                Rectangle {
+                    id: inputBorder
+                    anchors.fill: parent
+                    color: "transparent"
+                    border.width: Math.max(1, surface.appearance.borderWidth)
+                    border.color: surface.controller.state === "retryDelay"
+                            || surface.controller.state === "recoveryRequired"
+                        ? surface.lockTheme.tokens.error
+                        : inputField.inputPending
+                        ? surface.lockTheme.tokens.warning
+                        : surface.lockTheme.tokens.primary
+                    radius: inputField.radius
+                }
             }
         }
     }
@@ -91,6 +139,6 @@ WlSessionLockSurface {
         interval: 1000
         running: surface.visible
         repeat: true
-        onTriggered: clock.text = Qt.formatTime(new Date(), "hh:mm")
+        onTriggered: clock.text = Qt.formatTime(new Date(), "h:mm")
     }
 }

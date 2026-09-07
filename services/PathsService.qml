@@ -9,7 +9,13 @@ Singleton {
     readonly property string defaultsManifest: Quickshell.shellPath("defaults/manifest.json")
     readonly property string defaultWallpaperImage: Quickshell.shellPath("defaults/wallpaper/images/current-wallpaper.png")
     readonly property string themeDirectory: Quickshell.shellPath("themes")
-    readonly property string activeThemeState: Quickshell.statePath("active-theme.json")
+    readonly property string globalStateDirectory: {
+        const stateHome = Quickshell.env("XDG_STATE_HOME")
+            || `${Quickshell.env("HOME")}/.local/state`;
+        return `${stateHome}/quickshell`;
+    }
+    readonly property string activeThemeState: `${globalStateDirectory}/active-theme.json`
+    readonly property string legacyActiveThemeState: Quickshell.statePath("active-theme.json")
     readonly property string wallpaperState: Quickshell.statePath("wallpaper.json")
     readonly property string notificationState: Quickshell.statePath("notifications.json")
     readonly property string launcherUsageState: Quickshell.statePath("launcher-usage.json")

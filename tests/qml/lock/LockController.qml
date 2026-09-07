@@ -12,6 +12,7 @@ QtObject {
     property int maxFailures: 5
     property int failureCount: 0
     property int activeAttemptId: 0
+    property bool authenticationSubmitted: false
     readonly property bool secure: sessionLock !== null && sessionLock.secure
     readonly property bool responseRequired: authenticator !== null && authenticator.responseRequired
     readonly property bool responseVisible: authenticator !== null && authenticator.responseVisible
@@ -40,6 +41,7 @@ QtObject {
         if (!secure || state === "unlocked" || state === "acquisitionFailed"
                 || state === "recoveryRequired")
             return false;
+        authenticationSubmitted = false;
         state = "startingAuthentication";
         if (!authenticator.start()) {
             scheduleRetry();
@@ -55,6 +57,7 @@ QtObject {
         if (!secure || state !== "awaitingInput" || !responseRequired || response.length === 0)
             return false;
         state = "authenticating";
+        authenticationSubmitted = true;
         authenticator.respond(response);
         return true;
     }
@@ -76,6 +79,7 @@ QtObject {
             return;
         authenticationTimer.stop();
         authenticator.abort();
+        authenticationSubmitted = false;
         if (result === "success") {
             failureCount = 0;
             state = "unlocking";

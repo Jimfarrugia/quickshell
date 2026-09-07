@@ -9,7 +9,11 @@ QtObject {
     id: root
 
     property string configPath: Quickshell.shellPath("config/qe.json")
-    property string activeThemeStatePath: Quickshell.statePath("active-theme.json")
+    property string activeThemeStatePath: {
+        const stateHome = Quickshell.env("XDG_STATE_HOME")
+            || `${Quickshell.env("HOME")}/.local/state`;
+        return `${stateHome}/quickshell/active-theme.json`;
+    }
     property string themeDirectory: Quickshell.shellPath("themes")
     property string generatedThemePath: {
         const dataHome = Quickshell.env("XDG_DATA_HOME")

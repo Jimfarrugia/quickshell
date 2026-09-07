@@ -79,6 +79,7 @@ Singleton {
     property int nextOperationId: 1
     property bool initialized: false
     property bool stateReady: false
+    property bool legacyStateReady: false
     property bool activeSourceMissing: false
     property var externalAdapter: null
     property string externalOperation: "idle"
@@ -121,10 +122,11 @@ Singleton {
 
     function initializeTheme() {
         if (initialized || !ThemeCatalogService.initialized || !ConfigService.hasLoaded
-                || !DefaultsService.hasLoaded || !stateReady) return;
+                || !DefaultsService.hasLoaded || !stateReady || !legacyStateReady) return;
         let requestedId = DefaultsService.defaultTheme;
-        if (stateFile.loaded) {
-            const parsed = Validation.parseJson(stateFile.text(), "active theme state");
+        const stateSource = stateFile.loaded ? stateFile : legacyStateFile.loaded ? legacyStateFile : null;
+        if (stateSource !== null) {
+            const parsed = Validation.parseJson(stateSource.text(), "active theme state");
             if (parsed.ok) {
                 const state = Validation.validateThemeState(parsed.value);
                 if (state.ok) requestedId = state.value.activeThemeId;
@@ -140,6 +142,8 @@ Singleton {
         }
         initialized = true;
         synchronizeCatalog();
+        if (!stateFile.loaded)
+            stateFile.setText(JSON.stringify({ schemaVersion: 1, activeThemeId }, null, 2) + "\n");
     }
 
     function publishActiveCatalogRevision() {
@@ -257,6 +261,22 @@ Singleton {
         }
         onSaved: root.commitPendingTheme()
         onSaveFailed: error => root.failPendingTheme(error)
+    }
+
+    FileView {
+        id: legacyStateFile
+        path: PathsService.legacyActiveThemeState
+        blockLoading: true
+        watchChanges: false
+        printErrors: false
+        onLoaded: {
+            root.legacyStateReady = true;
+            root.initializeTheme();
+        }
+        onLoadFailed: {
+            root.legacyStateReady = true;
+            root.initializeTheme();
+        }
     }
 
     Connections {
