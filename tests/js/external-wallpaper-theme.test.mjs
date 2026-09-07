@@ -26,11 +26,11 @@ const bases = {
 const result = generateWallpaperExternalTargets(palette, bases, "dark");
 assert.equal(result.ok, true);
 assert.equal(result.errors.length, 0);
-assert.equal(result.targets.length, 17);
+assert.equal(result.targets.length, 16);
 
 const ids = result.targets.map(target => target.id).sort();
 assert.deepEqual(ids, [
-  "bat", "btop", "dunst", "eza", "fzf", "hyprland", "hyprlock", "imv",
+  "bat", "btop", "dunst", "eza", "fzf", "hyprland", "imv",
   "kitty", "mpv", "nvim", "opencode", "rofi", "starship", "tmux", "yazi_palette", "yazi_tmtheme"
 ].sort());
 
@@ -45,7 +45,6 @@ const byId = Object.fromEntries(result.targets.map(target => [target.id, target]
 assert.match(byId.kitty.content, /^color0 #101820$/m);
 assert.match(byId.kitty.content, /^color15 /m);
 assert.match(byId.hyprland.content, /hl\.config\(/);
-assert.match(byId.hyprlock.content, /^\$background/m);
 assert.match(byId.rofi.content, /^  surface-container-low: #1c2731;$/m);
 assert.match(byId.rofi.content, /^  active-background: @surface-container-low;$/m);
 assert.match(byId.rofi.content, /^  foreground: @on-background;$/m);

@@ -38,10 +38,10 @@ bash tests/helpers/control-center-ipc.test.sh
 bash tests/helpers/monitor-layout.test.sh
 bash tests/helpers/monitor-layout-config.test.sh
 bash tests/helpers/wallpaper-random.test.sh
+bash tests/helpers/qe-wallpaper.test.sh
 bash tests/helpers/ai-quota-persistence.test.sh
 bash tests/helpers/external-theme-adapter.test.sh
 bash tests/helpers/wallpaper-cache.test.sh
-bash tests/helpers/wallpaper-helper.test.sh
 bash tests/helpers/wallpaper-service.test.sh
 bash tests/helpers/wallpaper-promotion.test.sh
 bash tests/helpers/wallpaper-generation-failure.test.sh
@@ -102,6 +102,7 @@ timeout 5 quickshell -p tests/qml/ai-quota-multi-consumer-test.qml
 timeout 5 quickshell -p tests/qml/lock-controller-test.qml
 timeout 5 quickshell -p tests/qml/lock-pam-adapter-test.qml
 timeout 5 quickshell -p tests/qml/lock-theme-reader-test.qml
+timeout 5 quickshell -p tests/qml/lock-wallpaper-reader-test.qml
 timeout 5 quickshell -p tests/qml/launcher-usage-test.qml
 timeout 5 quickshell -p tests/qml/launcher-selection-test.qml
 timeout 5 quickshell -p tests/qml/launcher-dashboard-action-test.qml
@@ -248,15 +249,18 @@ successful staged rename and a failed promotion retains the prior artifact. The
 generation-failure fixture must print
 `WALLPAPER_GENERATION_FAILURE_HELPER_TEST_PASSED` after malformed Matugen output
 leaves the valid last-known-good generated theme unchanged.
-The wallpaper helper fixture also verifies that Hyprpaper IPC accepts the
-request and that a rejected request restores the prior derived images.
+The `qe-wallpaper` helper fixture must print `QE_WALLPAPER_HELPER_TEST_PASSED`
+after verifying that the original source is applied through Hyprpaper before
+normalization, a healthy Hyprpaper process is not restarted, post-apply
+generation failure preserves and reapplies the prior LKG artifact. It also
+covers invalid invocation, rejected IPC, and unavailable-daemon recovery.
 The external-wallpaper helper fixture must print
 `EXTERNAL_WALLPAPER_THEME_HELPER_TEST_PASSED` after promoting generated slot
 files (success plus absent-executable skip), preserving unchanged files and
 Stow-style symlink slots, rejecting invalid specs and paths, and proving
 partial promotion. The external wallpaper theme service
 fixture must print `EXTERNAL_WALLPAPER_THEME_TEST_PASSED` after the wallpaper
-generation pipeline produces the full 17-target spec, including imv, mpv, and
+generation pipeline produces the full 16-target spec, including imv, mpv, and
 Yazi artifacts, the fake promotion
 adapter promotes it, and `externalThemeStatus` reaches `succeeded`.
 The repeated wallpaper generation fixture must print
@@ -495,7 +499,7 @@ hook: Hypridle derives login-session membership from the process rather than an
 overridden `XDG_SESSION_ID`, and disposable terminals on this machine are still
 classified under primary session `c1`. The private bus avoids ScreenSaver-owner
 contention, but it cannot safely stage logind integration. Test before-sleep only
-during the controlled production cutover with rollback access. Do not run this
+during the controlled production session with verified TTY recovery access. Do not run this
 fixture in the primary session, and stop it when finished. The fixture sets
 `ignore_inhibit = 1` only to isolate command invocation from unrelated persisted
 inhibitors; production remains `ignore_inhibit = 0` and continues respecting QE
@@ -515,11 +519,12 @@ With that preference restored, the production before-sleep path also passed:
 `systemctl suspend` resumed directly into the QE lock, keyboard input worked, and
 normal PAM authentication released it without exposing a usable desktop first.
 
-The required rollback drill restored Hyprlock and passed manual, before-sleep,
-and idle behavior. The idle timeout was temporarily reduced to one minute for
-the drill and then restored to five minutes. The two QE command values were
-reapplied, Hyprland reported no config errors, Hypridle restarted normally, and
-the final `Super+Backspace` QE smoke passed.
+The historical Phase 12 rollback drill restored Hyprlock and passed manual,
+before-sleep, and idle behavior before that fallback was retired. The idle
+timeout was temporarily reduced to one minute for the drill and then restored
+to five minutes. The two QE command values were reapplied, Hyprland reported no
+config errors, Hypridle restarted normally, and the final `Super+Backspace` QE
+smoke passed.
 
 Run `qmllint` over all QML after lock changes. Do not run
 `quickshell -p lock.qml` in the primary session as a smoke test. Protocol,

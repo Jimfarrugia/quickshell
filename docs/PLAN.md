@@ -48,7 +48,7 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 | Control-center monitor layouts | Complete | Mirror/four-direction layouts and validated per-monitor stepped scaling passed automated and live acceptance 2026-09-05 |
 | Workspace bar monitor scoping | Implemented (automated validation 2026-09-05) | Native monitor matching and active/occupied workspace filtering are service-owned and plugin-independent; physical multi-monitor acceptance remains pending |
 | AI quota bar/dashboard | Complete | Shared bar chip and dashboard for OpenAI and OpenCode Go weekly and five-hour windows; provider endpoints remain external/unstable |
-| Lock replacement | Complete | Phase 12 secure lock, production cutover, manual/idle/before-sleep acceptance, failure recovery, multi-output validation, and Hyprlock rollback drill passed 2026-09-07 |
+| Lock replacement | Complete | Phase 12 secure lock, production cutover, manual/idle/before-sleep acceptance, failure recovery, and multi-output validation passed 2026-09-07; Hyprlock rollback was exercised before retirement |
 | Production hardening | Not started | Phase 13; final deployment location remains undecided |
 
 ### 2.1 Current handoff
@@ -57,9 +57,10 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
   `lock.qml` uses native `WlSessionLock`, a native PAM adapter configured for the
   existing `login` service, lock-only validated disk readers, and a tested
   secure/authentication state machine. The manual lock and Hypridle `lock_cmd`
-  now resolve through `~/.local/bin/qe-lock`; Hyprlock remains installed for the
-  rollback fallback. Manual, five-minute idle, before-sleep, helper/process
-  failure, multi-output, and complete Hyprlock rollback acceptance passed.
+  now resolve through `~/.local/bin/qe-lock`; Hyprlock is installed but retired.
+  Manual, five-minute idle, before-sleep, helper/process
+  failure, and multi-output acceptance passed. Hyprlock rollback was exercised
+  before the later decision to retire that fallback.
 - Phases 9 and 10 are complete. Bluetooth uses native adapter/device lifecycle
   handling with Blueman fallback for interactive pairing because Quickshell 0.3.1
   has no pairing-agent API. Network management is bounded to native open/PSK
@@ -109,7 +110,7 @@ starting environment but is not current-system authority.
 | Audio dashboard | `pavucontrol` remains installed and is the escape hatch for unsupported routing | Complete |
 | Bluetooth dashboard | Blueman Manager remains available, especially for unsupported pairing interactions | Complete |
 | Network dashboard | `nm-connection-editor` remains available for unsupported profiles and advanced configuration | Complete |
-| Session lock | Hyprlock remains the rollback/current lock until the isolated QE lock passes secure-state, idle, suspend, and recovery acceptance | Phase 12 |
+| Session lock | QE owns the secure lock, idle, and suspend paths; Hyprlock is installed but retired | Complete |
 | Production lifecycle | Explicit development launch and the current project checkout remain intentional until supervision and deployment are decided | Phase 13 |
 
 ### 3.2 Historical records
@@ -378,7 +379,8 @@ Foundation record:
   path.
 - `lock.qml` has no IPC and imports neither persistent-shell services nor
   optional integrations. The production manual and Hypridle lock commands now
-  use the stable `qe-lock` launcher; Hyprlock remains installed for rollback.
+  use the stable `qe-lock` launcher; Hyprlock remains installed only as a
+  retired legacy package.
 - The first disposable Hyprland launch on 2026-09-07 exposed a QML name-shadowing
   error in the lock-surface controller binding before the session became locked.
   The entry point now uses the unambiguous `lockController` ID and a static
@@ -444,7 +446,7 @@ Foundation record:
 Threat and failure checklist:
 
 - Pre-secure protocol, surface, or secure-confirmation timeout exits without
-  claiming a locked state; Hyprlock remains installed for explicit rollback.
+  claiming a locked state; Hyprlock is not required for recovery.
 - Post-secure process failure remains compositor-locked and must never trigger
   automatic QE restart or a fullscreen fallback.
 - PAM responses exist only in the local input and native PAM call; the input is
@@ -456,7 +458,8 @@ Threat and failure checklist:
   controller rather than direct unlock authority.
 - Invalid or unavailable disk input uses an opaque-black fallback; no file or
   source reload is consumed after initialization.
-- Idle/before-sleep integration and complete rollback passed on 2026-09-07.
+- Idle/before-sleep integration passed on 2026-09-07. Hyprlock rollback was
+  historically exercised before the fallback was retired.
 
 Emergency recovery gate for every destructive test:
 
@@ -467,8 +470,8 @@ Emergency recovery gate for every destructive test:
 3. If the lock process dies after compositor `secure`, do not restart QE. From
    the verified TTY, terminate the affected graphical session with
    `loginctl terminate-session <graphical-session-id>`.
-4. Start a fresh graphical session with the unchanged Hyprlock configuration.
-   A machine reboot is the final recovery path if session termination fails.
+4. Start a fresh graphical session with the unchanged QE configuration. A
+   machine reboot is the final recovery path if session termination fails.
 
 Alternate-TTY access, post-secure crash recovery, and hot-plug/multi-output
 behavior were manually confirmed in the disposable session on 2026-09-07. The
@@ -502,7 +505,7 @@ Deliverables:
 - secure lock process
 - threat/failure checklist
 - emergency recovery instructions
-- Hyprlock rollback configuration
+- explicit Hyprlock retirement and recovery record
 
 Acceptance criteria:
 
@@ -517,7 +520,7 @@ Acceptance criteria:
 - post-secure process crash behavior and TTY recovery are explicitly tested in
   a disposable session where feasible
 - no IPC method can unlock
-- Hyprlock can be restored through documented config rollback
+- Hyprlock is not required by the QE lock path
 
 Validation:
 
@@ -529,20 +532,10 @@ Validation:
 Rollback/recovery:
 
 - The production Hypr config is version-controlled in the dotfiles repository.
-  Before cutover, install `~/.local/bin/qe-lock` as a symlink to the
-  project-relative `scripts/run-qe-lock.sh` launcher.
-- Cutover changes only `config/programs.lua` from `hyprlock` to `qe-lock` and
-  `hypridle.conf` `lock_cmd` from `pidof hyprlock || hyprlock` to `qe-lock`.
-  The existing manual keybinding continues consuming `programs.lock`; the idle
-  listener and `before_sleep_cmd` continue requesting `loginctl lock-session`.
-- To roll back, restore those two original Hyprlock values, run `hyprctl reload`,
-  terminate only the compositor-owned Hypridle process, and start `hypridle`
-  detached from a primary-session terminal. Fresh-login autostart is the
-  fallback because this Hyprland Lua bridge rejected normal `dispatch exec`
-  syntax during cutover. Verify manual, idle, and before-sleep Hyprlock behavior
-  before considering rollback complete.
-- After a successful rollback drill, reapply the same two QE command values and
-  restart Hypridle through the same procedure before final acceptance.
+  `~/.local/bin/qe-lock` remains the manual and Hypridle entry point.
+- The Hyprlock rollback was completed during Phase 12 validation and is now
+  retired. Do not claim a Hyprlock cutover rollback as an available recovery
+  path; use the alternate TTY session-termination procedure above.
 - a crash after secure lock requires compositor/session recovery, not QE restart
 
 Out of scope:
@@ -648,7 +641,7 @@ Phases 12-13.
 
 | Existing tool | Can coexist? | Conflict / boundary | Disable condition | Development method | Rollback |
 | --- | --- | --- | --- | --- | --- |
-| Hyprlock | Installed as inactive rollback | one session lock at a time | QE secure lock, idle/suspend, and rollback acceptance passed | explicit rollback drill only | restore keybind and Hypridle commands |
+| Hyprlock | Installed but retired | one session lock at a time | QE owns secure lock, idle, and suspend paths | no QE integration | no supported rollback |
 | Rofi | Yes | keybinding/user-flow duplication | primary launcher acceptance; specialized Rofi flows remain separately available | invoke QE launcher separately until cutover | restore `Super+R` |
 | Blueman Manager | Yes | concurrent operations may confuse state | required common Bluetooth flows pass | open either dashboard manually | keep Blueman launcher |
 | `nm-connection-editor` | Yes | concurrent edits can race | retire only for the explicitly supported profile scope | preserve fallback action | keep editor installed |

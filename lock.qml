@@ -7,13 +7,18 @@ ShellRoot {
     id: root
 
     function beginWhenReady() {
-        if (!themeReader.ready || lockController.state !== "idle") return;
-        lockController.prerequisitesReady = !themeReader.watchersActive;
+        if (!themeReader.ready || !wallpaperReader.ready || lockController.state !== "idle") return;
+        lockController.prerequisitesReady = !themeReader.watchersActive && !wallpaperReader.watchersActive;
         lockController.begin();
     }
 
     Lock.LockThemeReader {
         id: themeReader
+        onReadyChanged: root.beginWhenReady()
+    }
+
+    Lock.LockWallpaperReader {
+        id: wallpaperReader
         onReadyChanged: root.beginWhenReady()
     }
 
@@ -28,6 +33,7 @@ ShellRoot {
             controller: lockController
             lockTheme: themeReader.theme
             appearance: themeReader.appearance
+            wallpaperSource: wallpaperReader.sourceUrl
         }
     }
 

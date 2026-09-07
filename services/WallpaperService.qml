@@ -41,6 +41,7 @@ Singleton {
     property var externalThemeFailedTargets: []
     property string pendingPath: ""
     property string pendingOperationId: ""
+    property string pendingCompensationId: ""
     property string pendingGenerationPath: ""
     property string pendingGenerationId: ""
     property string pendingGenerationStagePath: ""
@@ -102,8 +103,8 @@ Singleton {
         const sourcePath = path || selectedPath;
         if (!initialized || !validPath(sourcePath)) {
             if (generationStatus !== "pending") {
-                generationStatus = "failed";
                 lastError = "wallpaper generation requires a path inside the configured wallpaper root";
+                generationStatus = "failed";
             }
             return false;
         }
@@ -121,8 +122,8 @@ Singleton {
         pendingGenerationId = `matugen-${nextOperationId++}`;
         generationStatus = "pending";
         if (!matugenAdapter.generate(sourcePath, currentVariant(), pendingGenerationId)) {
-            generationStatus = "failed";
             lastError = "Matugen generation could not start";
+            generationStatus = "failed";
             pendingGenerationPath = "";
             pendingGenerationId = "";
             return false;
@@ -175,14 +176,25 @@ Singleton {
     }
 
     function handleWallpaperResult(result) {
+        if (result.operationId === pendingCompensationId) {
+            const recovered = result.success && result.live === "requested";
+            pendingCompensationId = "";
+            operation = "failed";
+            freshness = recovered ? "current" : "unknown";
+            lastError = recovered ? "wallpaper state write failed; prior wallpaper restored"
+                : "wallpaper state write failed; live wallpaper is unknown";
+            return;
+        }
         if (result.operationId !== pendingOperationId) return;
         if (!result.success) {
             lastError = result.error || "wallpaper helper failed";
+            freshness = result.live === "unknown" ? "unknown" : "current";
             operation = "failed";
             pendingPath = "";
             pendingOperationId = "";
             return;
         }
+        freshness = "current";
         stateFile.setText(JSON.stringify({ schemaVersion: 1, selectedPath: pendingPath }, null, 2) + "\n");
     }
 
@@ -206,8 +218,8 @@ Singleton {
     }
 
     function failGeneration(error) {
-        generationStatus = "failed";
         lastError = error;
+        generationStatus = "failed";
         pendingGenerationPath = "";
         pendingGenerationId = "";
         const queuedPath = generationQueuedPath;
@@ -321,10 +333,11 @@ Singleton {
             DiagnosticsService.report("WALLPAPER_STATE_REJECTED", "wallpaper-state", "Invalid wallpaper state ignored", parsed.errors.join("; ") || "path is outside the configured wallpaper root", true, null);
         } else {
             selectedPath = parsed.value.selectedPath;
-            appliedPath = parsed.value.selectedPath;
+            appliedPath = "";
+            freshness = "unknown";
         }
         stateReady = true;
-        freshness = "current";
+        freshness = "unknown";
         initialized = true;
         root.syncCache();
         if (ThemeService.activeThemeId === "wallpaper")
@@ -340,7 +353,7 @@ Singleton {
         onLoaded: root.loadState()
         onLoadFailed: {
             root.stateReady = true;
-            root.freshness = "current";
+            root.freshness = "unknown";
             root.initialized = true;
             root.syncCache();
         }
@@ -350,14 +363,24 @@ Singleton {
             root.requestedPath = root.pendingPath;
             root.pendingPath = "";
             root.pendingOperationId = "";
+            root.pendingCompensationId = "";
             root.operation = "succeeded";
             root.lastError = "";
             root.requestGeneration(root.selectedPath);
         }
         onSaveFailed: error => {
             root.lastError = `wallpaper state write failed: ${error}`;
+            const priorPath = root.selectedPath;
             root.pendingPath = "";
             root.pendingOperationId = "";
+            if (root.wallpaperAdapter !== null && root.wallpaperAdapter.availability === "available"
+                    && root.validPath(priorPath)) {
+                root.pendingCompensationId = `wallpaper-recovery-${root.nextOperationId++}`;
+                root.operation = "pending";
+                if (root.wallpaperAdapter.apply(priorPath, root.pendingCompensationId)) return;
+                root.pendingCompensationId = "";
+            }
+            root.freshness = "unknown";
             root.operation = "failed";
         }
     }

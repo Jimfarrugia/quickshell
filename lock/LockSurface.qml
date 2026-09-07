@@ -7,11 +7,17 @@ WlSessionLockSurface {
     required property var controller
     required property var lockTheme
     required property var appearance
+    property string wallpaperSource: ""
     color: lockTheme.tokens.background
+
+    LockBackground {
+        lockTheme: surface.lockTheme
+        source: surface.wallpaperSource
+    }
 
     Rectangle {
         anchors.fill: parent
-        color: surface.lockTheme.tokens.background
+        color: "transparent"
 
         Column {
             anchors.centerIn: parent

@@ -69,7 +69,7 @@ wallpaper pipeline:
 ```sh
 sudo pacman -S --needed \
   git stow bash coreutils findutils procps-ng file jq imagemagick \
-  quickshell hyprland hyprpaper hyprlock matugen \
+  quickshell hyprland hyprpaper matugen \
   networkmanager bluez pipewire wireplumber upower brightnessctl \
   inter-font ttf-jetbrains-mono-nerd ttf-material-symbols-variable
 ```
@@ -80,10 +80,9 @@ Some of these are base-system utilities, and some support optional QE modules:
 | --- | --- |
 | `quickshell` | Runs the QE shell and provides the `qs` IPC client. |
 | `hyprland` | Compositor and Hyprland IPC used by QE. |
-| `hyprpaper` | Displays the processed wallpaper and accepts the confirmed wallpaper request. |
-| `hyprlock` | Existing lock screen integration and lockscreen image consumer. |
+| `hyprpaper` | Displays the wallpaper and accepts the confirmed wallpaper request. |
 | `matugen` | Generates the wallpaper color palette and `Wallpaper` theme. |
-| `imagemagick` | Resizes wallpaper images and creates lockscreen images. |
+| `imagemagick` | Normalizes the wallpaper LKG artifact after Hyprpaper applies the source. |
 | `jq` | Processes structured output used by wallpaper and external integrations. |
 | `file` | Validates wallpaper input MIME types. |
 | `procps-ng` | Provides process utilities used by the launch helpers. |
@@ -101,7 +100,7 @@ QE can generate or apply external themes for these applications when they are
 installed and supported by the local theme-switcher configuration:
 
 ```text
-bat, btop, dunst, eza, fzf, Hyprland, hyprlock, imv, kitty, mpv, Neovim,
+bat, btop, dunst, eza, fzf, Hyprland, imv, kitty, mpv, Neovim,
 OpenCode, rofi, starship, tmux, and Yazi
 ```
 
@@ -127,8 +126,8 @@ enabled:
 - The `qe-action` wrapper for allowlisted hardware and notification actions.
 - The `qe-hyprshot` wrapper for screenshot notifications and actions.
 - Hyprland configuration that starts Hyprpaper and the guarded QE launcher.
-- Hyprpaper and Hyprlock configuration that reads the current image files from
-  `$XDG_DATA_HOME`.
+- Hyprpaper configuration that reads the current wallpaper file from
+  `$XDG_DATA_HOME`; QE composes the lock background from the selected source.
 - A wallpaper collection arranged as
   `~/Pictures/Wallpaper/themes/<theme-id>/` unless `QE_WALLPAPER_ROOT` is set.
 
@@ -145,13 +144,12 @@ QE resolves runtime paths through XDG variables:
 | Path or variable | Use |
 | --- | --- |
 | `XDG_DATA_HOME/current_wallpaper.png` | Processed image consumed by Hyprpaper. |
-| `XDG_DATA_HOME/current_lockscreen.png` | Derived lockscreen image consumed by Hyprlock. |
 | `XDG_DATA_HOME/qe/wallpaper/Wallpaper.json` | Stable generated QE wallpaper theme. |
 | `XDG_STATE_HOME/qe/wallpaper/external/` | Runtime external wallpaper theme files. |
 | `XDG_CACHE_HOME/matugen/nvim-colors.json` | Runtime Neovim wallpaper palette. |
 | `QE_WALLPAPER_ROOT` | Overrides the wallpaper collection root. |
 | `QE_MATUGEN` | Explicit Matugen executable; otherwise `run-qe.sh` discovers `matugen`. |
-| `QE_WALLPAPER_HELPER` | Overrides the wallpaper apply helper. |
+| `QE_WALLPAPER_HELPER` | Overrides the QE wallpaper apply helper; defaults to `scripts/qe-wallpaper`. |
 | `QE_THEME_SWITCHER` | Explicit external theme-switcher executable. |
 | `QE_THEME_SWITCHER_REPO` | Repository path used by the `qe-theme-switcher` wrapper. |
 | `ZSH_CONFIG_HOME` | Overrides the configuration directory used for the FZF theme slot. |
@@ -205,7 +203,7 @@ Ensure the wallpaper collection is also available. The relevant installed paths
 are:
 
 - `~/.config/hypr`
-- `~/.config/hypr/hyprpaper.conf` and `~/.config/hypr/hyprlock.conf`
+- `~/.config/hypr/hyprpaper.conf`
 - `~/.local/bin/qe-shell`
 - `~/.local/bin/qe-theme-switcher`
 - `~/.local/bin/qe-defaults`
@@ -311,6 +309,10 @@ repository.
 The generated `wallpaper` theme is different: it is derived from Matugen output
 and must not be manually added or edited in `themes/`.
 
+QE applies the selected source image immediately through Hyprpaper and then
+normalizes `current_wallpaper.png` for startup. The QE lock renders the selected
+source itself with a subtle blur and transparent-to-black gradient.
+
 ### Modifying an Existing Theme
 
 1. Edit `themes/<theme-id>.json`.
@@ -414,7 +416,8 @@ The committed wallpaper default is stored in the QE repository under:
 
 It contains the authored default snapshot for:
 
-- Processed wallpaper and lockscreen images under `images/`.
+- Processed wallpaper under `images/`. Any legacy lockscreen image remains
+  unmanaged.
 - QE's generated `Wallpaper.json` under `generated-theme/qe/`.
 - Neovim's generated palette and application `wallpaper` theme slots under
   `generated-theme/applications/`.

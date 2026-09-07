@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+data_home=${XDG_DATA_HOME:-$HOME/.local/share}
+runtime_dir=${XDG_RUNTIME_DIR:-$data_home/runtime}
+wallpaper_output="$data_home/current_wallpaper.png"
+lock_directory="$runtime_dir/qe-wallpaper.lock"
+temporary_directory=""
+daemon_started=0
+requested_source=""
+
+emit_result() {
+    local status=$1 error_code=${2:-null} ipc=${3:-none} lkg=${4:-unchanged} live=${5:-unknown}
+    if ! command -v jq >/dev/null 2>&1; then
+        printf '%s\n' '{"schema":"qe-wallpaper","version":1,"status":"unavailable","requestedSource":"","ipc":"none","lkg":"unchanged","live":"unknown","daemonStarted":false,"errorCode":"missing-jq"}'
+        return
+    fi
+    jq -cn \
+        --arg status "$status" \
+        --arg ipc "$ipc" \
+        --arg lkg "$lkg" \
+        --arg live "$live" \
+        --arg requested "$requested_source" \
+        --argjson daemonStarted "$daemon_started" \
+        --argjson errorCode "$error_code" \
+        '{schema:"qe-wallpaper",version:1,status:$status,requestedSource:$requested,
+          ipc:$ipc,lkg:$lkg,live:$live,daemonStarted:$daemonStarted,errorCode:$errorCode}'
+}
+
+fail() {
+    local status=$1 error_code=$2 ipc=${3:-none} lkg=${4:-unchanged} live=${5:-unknown} exit_code=$6
+    emit_result "$status" "\"$error_code\"" "$ipc" "$lkg" "$live"
+    exit "$exit_code"
+}
+
+if [[ $# -ne 1 || -z "${1:-}" ]]; then
+    emit_result invalid "\"invalid-invocation\""
+    exit 2
+fi
+for dependency in file jq magick hyprctl nohup flock pgrep readlink stat timeout; do
+    if ! command -v "$dependency" >/dev/null 2>&1; then
+        fail unavailable "missing-$dependency" none unchanged unknown 3
+    fi
+done
+
+if [[ "$1" == *$'\n'* || "$1" == *','* ]]; then
+    fail invalid unsafe-source none unchanged unknown 2
+fi
+if ! source_path=$(readlink -f -- "$1"); then
+    fail invalid invalid-source none unchanged unknown 2
+fi
+requested_source=$source_path
+
+if [[ ! -f "$source_path" || ! -r "$source_path" ]]; then
+    fail invalid unreadable-source none unchanged unknown 2
+fi
+if [[ "$source_path" == *$'\n'* || "$source_path" == *','* ]]; then
+    fail invalid unsafe-source none unchanged unknown 2
+fi
+if [[ "$(file --mime-type -b -- "$source_path")" != image/* ]]; then
+    fail invalid unsupported-source none unchanged unknown 2
+fi
+if [[ "$(stat -c '%s' -- "$source_path")" -gt 134217728 ]]; then
+    fail invalid source-too-large none unchanged unknown 2
+fi
+
+mkdir -p -- "$data_home" "$runtime_dir"
+exec 9>"$lock_directory"
+flock -x 9
+
+temporary_directory=$(mktemp -d "$data_home/.qe-wallpaper.XXXXXX")
+cleanup() {
+    rm -rf -- "$temporary_directory"
+}
+trap cleanup EXIT
+
+request_wallpaper() {
+    local path=$1
+    timeout 0.25 hyprctl -q hyprpaper wallpaper ",$path,cover" >/dev/null 2>&1
+}
+
+ipc="none"
+if request_wallpaper "$source_path"; then
+    ipc="accepted"
+else
+    if pgrep -x hyprpaper >/dev/null 2>&1; then
+        fail rejected wallpaper-ipc-rejected rejected unchanged unknown 4
+    fi
+    nohup hyprpaper >/dev/null 2>&1 &
+    daemon_started=1
+    ready=0
+    for _ in {1..40}; do
+        if request_wallpaper "$source_path"; then
+            ready=1
+            break
+        fi
+        sleep 0.05
+    done
+    if ((ready == 0)); then
+        fail unavailable wallpaper-daemon-unavailable none unchanged unknown 3
+    fi
+    ipc="accepted"
+fi
+
+previous_exists=0
+if [[ -f "$wallpaper_output" && -r "$wallpaper_output" ]]; then
+    previous_exists=1
+fi
+
+staged_output="$temporary_directory/current_wallpaper.png"
+if ! timeout 25 magick -limit width 10000 -limit height 10000 \
+        "$source_path" -auto-orient -strip PNG32:"$staged_output" >/dev/null 2>&1 \
+        || [[ ! -s "$staged_output" ]] \
+        || ! timeout 3 magick identify -quiet -format '%m %wx%h' -- "$staged_output" >/dev/null 2>&1; then
+    if ((previous_exists)) && request_wallpaper "$wallpaper_output"; then
+        fail failed post-apply-generation-failed accepted preserved previous 5
+    fi
+    fail unknown post-apply-rollback-failed accepted unchanged unknown 6
+fi
+
+if ! mv -f -- "$staged_output" "$wallpaper_output"; then
+    if ((previous_exists)) && request_wallpaper "$wallpaper_output"; then
+        fail failed post-artifact-promotion-failed accepted preserved previous 5
+    fi
+    fail unknown post-artifact-rollback-failed accepted unchanged unknown 6
+fi
+
+emit_result success null "$ipc" promoted requested

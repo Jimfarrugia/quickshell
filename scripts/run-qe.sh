@@ -61,7 +61,7 @@ fi
 export QE_MATUGEN
 
 if [[ -z "${QE_WALLPAPER_HELPER:-}" ]]; then
-    QE_WALLPAPER_HELPER="$project_root/scripts/apply-wallpaper.sh"
+    QE_WALLPAPER_HELPER="$project_root/scripts/qe-wallpaper"
 fi
 export QE_WALLPAPER_HELPER
 

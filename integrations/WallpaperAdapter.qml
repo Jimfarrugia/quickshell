@@ -41,14 +41,34 @@ Scope {
         termGraceMs: root.termGraceMs
         maxStdoutBytes: 16384
         maxStderrBytes: 16384
-        expectJson: false
+        expectJson: true
         onFinished: raw => {
+            const payload = raw.parsed;
+            const contractValid = payload !== null
+                && payload.schema === "qe-wallpaper"
+                && payload.version === 1
+                && ["success", "failed", "unknown", "invalid", "unavailable", "rejected"].indexOf(payload.status) >= 0
+                && ["accepted", "none"].indexOf(payload.ipc) >= 0
+                && ["promoted", "preserved", "unchanged", "unknown"].indexOf(payload.lkg) >= 0
+                && ["requested", "previous", "unknown"].indexOf(payload.live) >= 0
+                && typeof payload.requestedSource === "string"
+                && (payload.errorCode === null || typeof payload.errorCode === "string")
+                && typeof payload.daemonStarted === "boolean";
+            const success = raw.success && contractValid
+                && payload.status === "success"
+                && payload.ipc === "accepted"
+                && payload.lkg === "promoted";
             const result = {
                 operationId: raw.operationId,
-                success: raw.success,
-                confirmation: raw.success ? "hyprpaper-ipc" : "none",
+                success,
+                confirmation: contractValid && payload.ipc === "accepted"
+                    ? "hyprpaper-ipc" : "none",
+                live: contractValid ? payload.live : "unknown",
+                lkg: contractValid ? payload.lkg : "unknown",
                 error: raw.timedOut ? "wallpaper helper timed out"
-                    : raw.errorCode || (raw.exitCode === 0 ? "" : "wallpaper helper failed"),
+                    : raw.cancelled ? "wallpaper helper was cancelled"
+                    : contractValid && payload.errorCode !== null ? payload.errorCode
+                    : raw.parseError || raw.errorCode || "wallpaper helper failed",
                 stderr: raw.stderr,
                 timedOut: raw.timedOut
             };

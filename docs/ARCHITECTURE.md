@@ -45,8 +45,8 @@ sections, ADRs, and validation material relevant to the task.
 If authoritative documents conflict, the conflict must be resolved explicitly;
 agents must not infer a precedence rule and silently choose one.
 
-The architecture must support incremental replacement of Waybar, Hyprlock,
-Rofi, Dunst, Blueman Manager, `nm-connection-editor`, and `pavucontrol` without
+The architecture must support incremental replacement of Waybar, Rofi, Dunst,
+Blueman Manager, `nm-connection-editor`, and `pavucontrol` without
 requiring all replacements to ship together.
 
 ### Goals
@@ -208,7 +208,7 @@ The following remain separate boundaries:
 - the wallpaper application helper
 - `brightnessctl` or a later brightness helper
 - NetworkManager, BlueZ, PipeWire, WirePlumber, UPower, and PAM
-- Rofi and Hyprlock until their documented replacements complete
+- Rofi until its documented replacement is complete
 - Blueman Manager, `nm-connection-editor`, and `pavucontrol` as dashboard
   fallbacks until their supported replacement scopes complete
 
@@ -1183,20 +1183,30 @@ when staging or promotion fails. External Matugen artifacts use the separate
 validated promotion contract described below.
 
 The compatibility wallpaper boundary requires `QE_WALLPAPER_HELPER` and passes
-the selected path as a discrete argument. The QE helper validates and stages
-derived images, restarts Hyprpaper, and waits for the bounded
-`hyprctl hyprpaper wallpaper` request before promoting those images. A
-successful helper result confirms Hyprpaper IPC acceptance, not pixel display;
+the selected path as a discrete argument. The QE `qe-wallpaper` helper first
+asks Hyprpaper to display the original source, then normalizes only the
+`current_wallpaper.png` last-known-good artifact with an atomic promotion. It
+does not kill or restart a healthy Hyprpaper process. A successful helper result confirms
+Hyprpaper IPC acceptance and LKG promotion, not pixel display;
 `WallpaperService` therefore keeps requested, applied, and generation state
-separate. No legacy helper is used unless explicitly configured.
+separate. The old `wallpaper` script remains an untouched compatibility tool.
+
+The lock process reads the validated selected wallpaper before acquiring
+`WlSessionLock`, preloads a bounded image, and detaches its state reader. Each
+lock surface synchronously loads that warmed source cache with
+`Image.PreserveAspectCrop` and
+`autoTransform`, followed by a transparent-to-black vertical gradient; the
+complete composition is then blurred with a cached Gaussian blur (radius 12,
+25 samples). Invalid, missing, or undecodable wallpaper input leaves the lock
+on its opaque fallback.
 
 QE also owns a localized wallpaper selector
 (`modules/wallpaper/WallpaperSelector.qml`) opened through the `qe-wallpaper`
   IPC target. It uses QE-owned thumbnail cache and apply state, remains open after
   a successful apply, and reuses the same apply/generation pipeline as the helper.
-The Hyprpaper and Hyprlock configurations resolve their image paths through
-`$XDG_DATA_HOME` with a `$HOME/.local/share` fallback so both configs and both
-wallpaper scripts stay aligned. Temporary `.desktop` entries launch the theme
+The Hyprpaper configuration resolves its image path through `$XDG_DATA_HOME`
+with a `$HOME/.local/share` fallback so the Hyprpaper config and QE helper stay
+aligned. Temporary `.desktop` entries launch the theme
 and wallpaper selectors through `scripts/qe-launch.sh`, which discovers the
 running `--no-duplicate` QE shell and calls the corresponding IPC target; these
 launchers will be replaced by the planned control center.
@@ -1205,17 +1215,17 @@ When the active QE theme is the generated `wallpaper` theme, QE also generates
 standalone "wallpaper" theme slot files for external applications and the
 external switcher applies them. `ExternalWallpaperTheme` maps the same Matugen
 Material palette into per-application formats (kitty, bat, btop, eza, dunst,
-fzf, hyprland, hyprlock, imv, mpv, rofi, starship, tmux, opencode, and Yazi's
+fzf, hyprland, imv, mpv, rofi, starship, tmux, opencode, and Yazi's
 semantic palette plus TextMate syntax file, and a Palette JSON for Neovim), and
 `WallpaperExternalThemeAdapter` materializes them through
-`scripts/promote-external-theme.sh`, which writes each file into the app's
-the app-specific `wallpaper` slot with staging and atomic same-filesystem
+`scripts/promote-external-theme.sh`, which writes each file into the
+app-specific `wallpaper` slot with staging and atomic same-filesystem
 replacement, skipping targets whose executables are absent, preserving unchanged
 files, and reporting per-target results. Stow-managed installations keep these
 live slots as ignored, restore-managed symlinks to XDG state; promotion resolves
 the link before replacing the runtime target so the QE repository's authored
-defaults remain separate from runtime state. The explicit `qe-defaults restore` operation
-preflights and restores the generated QE theme, wallpaper/lockscreen images,
+defaults remain separate from runtime state. The explicit `qe-defaults restore`
+operation preflights and restores the generated QE theme, wallpaper image,
 Neovim palette, and external slots before creating or repairing the live links.
 It applies the manifest's default theme through running QE or, when QE is
 absent, directly through the external switcher. A missing or failed switcher
@@ -1299,7 +1309,7 @@ reverted atomically and rollback can also fail.
 | Session lock      | compositor                       | lock request and `secure`         | protocol events                   | unlock only after PAM success      | fail closed; no automatic reclaim after crash                                                                                  | nested/test compositor where possible plus manual checklist   |
 | PAM               | configured PAM service           | `PamContext.start()`              | PAM conversation signals          | respond/cancel through context     | bounded attempts; generic UI errors; never log response                                                                        | test PAM profile if safely available; manual login-stack test |
 | Desktop entries   | XDG application dirs             | `DesktopEntries.applications`     | native file monitoring            | structured launch                  | invalid entries omitted; launch failure visible                                                                                | fixture desktop files where API permits                       |
-| Wallpaper         | Hyprpaper/helper                 | compatibility state then QE state | IPC/file changes where observable | apply processed wallpaper          | helper success is not compositor proof unless IPC confirms; bound decode dimensions/time and retain prior on failure           | temporary paths and image fixtures                            |
+| Wallpaper         | Hyprpaper/`qe-wallpaper`         | compatibility state then QE state | IPC/file changes where observable | apply source immediately, then promote normalized LKG | helper success is not compositor proof; retain prior LKG and report unknown after failed compensation | temporary paths and image fixtures                            |
 | External switcher | switcher-owned state             | versioned state/status            | result and optional file watch    | request apply                      | timeout/partial status; no QE rollback                                                                                         | fake target scripts and contract tests                        |
 | Matugen           | generated command output         | on-demand generation              | wallpaper-triggered only          | generate staged set                | debounce, timeout, validate, keep LKG                                                                                          | golden wallpaper and expected schema fixtures                 |
 

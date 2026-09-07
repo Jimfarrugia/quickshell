@@ -436,31 +436,6 @@ function hyprlandLua(c) {
   ].join("\n");
 }
 
-function hyprlockConf(c) {
-  const rgb = (value) => `rgb(${stripHash(value)})`;
-  return [
-    "# hyprlock colors generated from the active wallpaper palette",
-    `$black     = ${rgb(c.background)}`,
-    `$white     = ${rgb(c.foreground)}`,
-    `$gray      = ${rgb(c.surfaceVariant)}`,
-    `$red       = ${rgb(c.error)}`,
-    `$yellow    = ${rgb(c.tertiary)}`,
-    `$yellowRaw = ${stripHash(c.tertiary)}`,
-    `$blue      = ${rgb(c.primary)}`,
-    `$cyan      = ${rgb(c.secondary)}`,
-    `$cyanRaw   = ${stripHash(c.secondary)}`,
-    "",
-    "$foreground      = $white",
-    "$background      = $black",
-    "$shadow_color    = $black",
-    "$date_color      = $cyanRaw",
-    `$rect_background = rgba(${stripHash(c.background)}4A)`,
-    "$rect_border     = $white",
-    "$icon_color      = $yellowRaw",
-    "",
-  ].join("\n");
-}
-
 function rofiRasi(c) {
   return [
     "* {",
@@ -808,12 +783,6 @@ const TARGETS = [
     executable: "Hyprland",
     path: (b, c) => `${b.config}/hypr/themes/hyprland/wallpaper.lua`,
     generate: hyprlandLua,
-  },
-  {
-    id: "hyprlock",
-    executable: "hyprlock",
-    path: (b, c) => `${b.config}/hypr/themes/hyprlock/wallpaper.conf`,
-    generate: hyprlockConf,
   },
   {
     id: "rofi",

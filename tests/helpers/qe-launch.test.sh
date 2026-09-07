@@ -24,7 +24,7 @@ XDG_STATE_HOME="$test_root/state" \
 XDG_DATA_HOME="$test_root/data" \
 XDG_CACHE_HOME="$test_root/cache" \
 QE_WALLPAPER_ROOT="$wallpaper_root" \
-QE_WALLPAPER_HELPER="$project_root/scripts/apply-wallpaper.sh" \
+QE_WALLPAPER_HELPER="$project_root/scripts/qe-wallpaper" \
     quickshell --path "$project_root/shell.qml" >"$log_file" 2>&1 &
 shell_pid="$!"
 
