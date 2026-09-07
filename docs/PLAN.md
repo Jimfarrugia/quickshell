@@ -1,6 +1,6 @@
 # QE Implementation Plan
 
-Status: Phases 1-11 complete; AI quota milestone complete; Phase 12 not started
+Status: Phases 1-12 complete; AI quota milestone complete; Phase 13 not started
 
 Last inventory: 2026-09-05
 
@@ -41,18 +41,25 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 | Theme/Matugen integration | Complete | Manual selector and external machine integration complete; Matugen mapping, staged promotion, QE-localized wallpaper selector, and Hyprpaper XDG-path application complete; external generated Matugen artifacts now delivered as QE-generated `wallpaper` theme slots applied by the external switcher, including imv, mpv, and Yazi; runtime/default artifact separation and idempotent promotion added; `QE_THEME_SWITCHER` wired for production through the installed `qe-theme-switcher` wrapper. Phase 4 acceptance passed on 2026-08-26 |
 | Notifications/OSDs | Complete | QE owns notifications and OSDs; Dunst cutover, rollback, and post-cutover legacy cleanup passed 2026-08-31 |
 | Launcher/help | Complete | Launcher, curated help surface, `Super+R` cutover, `Super+/` help binding, rollback, and focused-output multi-monitor acceptance passed 2026-09-01 |
-| Dashboards/control center | Phase 8 complete | Shared dashboard foundation, audio dashboard, launcher access, resilience, and rollback acceptance passed 2026-09-02 |
+| Audio/dashboard foundation | Complete | Shared dashboard foundation, audio dashboard, launcher access, resilience, and rollback acceptance passed 2026-09-02 |
 | Bluetooth dashboard | Complete | Phase 9 dashboard, native lifecycle, disposable-device acceptance, fallback, and BlueZ restart validation passed 2026-09-02 |
 | Network dashboard | Complete with upstream limitation | Phase 10 v1 implementation and approved-network validation passed; Quickshell 0.3.1 does not repopulate native devices after a NetworkManager restart, so the dashboard provides a temporary guarded `Restart QE` recovery action |
 | Control center composition | Complete | Phase 11 implementation, automated validation, shortcut/dismissal checks, destination replacement, and focused-output multi-monitor acceptance passed 2026-09-05 |
 | Control-center monitor layouts | Complete | Mirror/four-direction layouts and validated per-monitor stepped scaling passed automated and live acceptance 2026-09-05 |
 | Workspace bar monitor scoping | Implemented (automated validation 2026-09-05) | Native monitor matching and active/occupied workspace filtering are service-owned and plugin-independent; physical multi-monitor acceptance remains pending |
 | AI quota bar/dashboard | Complete | Shared bar chip and dashboard for OpenAI and OpenCode Go weekly and five-hour windows; provider endpoints remain external/unstable |
-| Lock replacement | Not started | Phase 12 |
+| Lock replacement | Complete | Phase 12 secure lock, production cutover, manual/idle/before-sleep acceptance, failure recovery, multi-output validation, and Hyprlock rollback drill passed 2026-09-07 |
 | Production hardening | Not started | Phase 13; final deployment location remains undecided |
 
 ### 2.1 Current handoff
 
+- Phase 12 completed on 2026-09-07 after disposable and production acceptance.
+  `lock.qml` uses native `WlSessionLock`, a native PAM adapter configured for the
+  existing `login` service, lock-only validated disk readers, and a tested
+  secure/authentication state machine. The manual lock and Hypridle `lock_cmd`
+  now resolve through `~/.local/bin/qe-lock`; Hyprlock remains installed for the
+  rollback fallback. Manual, five-minute idle, before-sleep, helper/process
+  failure, multi-output, and complete Hyprlock rollback acceptance passed.
 - Phases 9 and 10 are complete. Bluetooth uses native adapter/device lifecycle
   handling with Blueman fallback for interactive pairing because Quickshell 0.3.1
   has no pairing-agent API. Network management is bounded to native open/PSK
@@ -74,10 +81,6 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 - QE owns desktop notifications and hardware-feedback OSDs. The Phase 6 Dunst
   cutover, rollback exercise, closed rollback window, and legacy cleanup are
   complete.
-- The current theme-v1 contract has 34 semantic roles. ADR-015 and ADR-027 in
-  `docs/DECISIONS.md` record the accepted vocabulary and sidebar-token revision;
-  do not reopen that contract without concrete evidence and the planning-change
-  procedure.
 - Full developer validation commands and expected markers live in
   `docs/VALIDATION.md`.
 - Physical external-monitor attach, independent-output startup, reorder, detach,
@@ -86,40 +89,11 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
   QE after that specific transition.
 - QE remains a development checkout rather than a production-managed install.
   Phase 13 decides supervision and final deployment location.
-- The AI quota milestone adds a read-only helper for OpenAI Codex/ChatGPT and
-  OpenCode Go weekly and five-hour windows. Its bar chip is after metrics on the
-  left: left click toggles the shared dashboard and right click cycles the
-  persisted weekly provider selection. Credentials remain owned by OpenCode;
-  expired OpenAI access stays stale until OpenCode refreshes its auth file.
-- Phase 11 is complete. The control center composes the established network,
-  Bluetooth, audio, notification, theme, and wallpaper surfaces. Its approved
-  Rofi power-menu and `qe-defaults` actions are narrow typed adapters with
-  confirmation for defaults capture and restore. `Super+Tab` is the new shortcut;
-  `Super+Escape` remains the existing power-menu binding. Automated Phase 11
-  validation now passes, and live shortcut, dismissal, and destination-surface
-  replacement checks are verified. Focused-output placement was verified with an
-  external monitor on 2026-09-05.
 - Workspace bar monitor scoping is implemented. Each per-screen bar shows only
   positive-ID, active or occupied workspaces whose confirmed Hyprland monitor
   matches that screen. Empty workspaces remain intentionally hidden. Automated
   coverage passes; physical multi-monitor acceptance remains pending until a
   second active output is available.
-- The post-v1 control-center monitor-layout extension is implemented for
-  `jim-x1c`. Automated helper, adapter, service, control-center, lint, schema, and
-  shell smoke validation passes. Mirrored mode, all four extended directions,
-  automatic QE restart from mirror to extended, and post-disconnect built-in-only
-  behavior passed live acceptance on 2026-09-05. Hyprland 0.56 reports a mirror
-  target through numeric `mirrorOf` monitor ID; the helper accepts that confirmed
-  representation and retains output-name compatibility.
-  Per-monitor scaling exposes the six cleanly dividing 1920x1080 presets from
-  `1.00` through `2.00`, previews values while dragging, applies on release, and
-  preserves top-aligned logical geometry. Every step passed live validation on
-  both outputs. Mirrored mode now hides HDMI's visually ineffective slider while
-  retaining its saved value for Extended mode; initial-open behavior was also
-  verified from a fresh surface.
-  The service re-queries on `monitoradded`/`monitorremoved` Hyprland events so the
-  Monitors section updates on secondary-output connect/disconnect without reopening
-  the panel; when the secondary is absent only the primary scale is changeable.
 
 ## 3. Current Working Context
 
@@ -142,7 +116,7 @@ starting environment but is not current-system authority.
 
 - Completed Phase 0-6 implementation, acceptance, rollback, and archived handoff
   details: `docs/history/PHASES_00-06.md`
-- Completed Phase 7-10 implementation, acceptance, rollback, and handoff details:
+- Completed Phase 7-11 implementation, acceptance, rollback, and handoff details:
   `docs/history/PHASES_07-11.md`
 - Original discovery/current-system inventory captured before the completed
   migrations: `docs/history/INITIAL_SYSTEM_INVENTORY.md`
@@ -191,7 +165,9 @@ Known requirements:
 
 ### Assumptions to verify
 
-- The existing PAM stack is suitable for initial password authentication.
+- The selected existing `login` PAM stack is suitable for lock authentication;
+  its file and Quickshell's native PAM contract are verified, but authentication
+  remains to be exercised in the approved disposable and controlled live tests.
 
 Completed-phase assumptions that are no longer active working context are
 preserved in `docs/history/PHASES_00-06.md`.
@@ -200,7 +176,7 @@ preserved in `docs/history/PHASES_00-06.md`.
 
 | Question | Blocking phase | Resolution point |
 | --- | --- | --- |
-| Which PAM service should QE use in production? | Phase 12 | Security review of `login`, `hyprlock`, or dedicated approved config |
+| Which disposable or nested compositor setup will be used for destructive lock tests? | Phase 12 protocol acceptance | Approve an isolated Hyprland test session or install a dedicated nested compositor |
 
 The resolved Phase 4 Hyprpaper-confirmation question is retained in
 `docs/history/PHASES_00-06.md`, not in live working context.
@@ -255,7 +231,7 @@ Phase 1 Foundation
         |
         `--> Phase 12 Secure lock replacement
 
-Phases 3-9 complete enough for daily use
+Phases 3-11 complete enough for daily use
         `--> Phase 13 production supervision, deployment decision, and cleanup
 ```
 
@@ -306,10 +282,10 @@ contract without coordinating through an architecture decision.
 
 ## 8. Implementation Phases
 
-### Completed phases 0-10
+### Completed phases 0-11
 
 Detailed implementation, validation, cutover, and rollback records for phases
-0-10 have been moved losslessly to `docs/history/PHASES_00-06.md` and
+0-11 have been moved losslessly to `docs/history/PHASES_00-06.md` and
 `docs/history/PHASES_07-11.md`.
 
 | Phase | Status | Result |
@@ -325,185 +301,48 @@ Detailed implementation, validation, cutover, and rollback records for phases
 | 8 — Audio dashboard and shared surface foundation | Complete (2026-09-02) | Shared dashboard shell, audio dashboard v1, launcher action, resilience, and `pavucontrol` rollback passed |
 | 9 — Bluetooth dashboard | Complete (2026-09-02) | Native lifecycle, bounded discovery, fallback, disposable-device, and BlueZ restart acceptance passed |
 | 10 — Network dashboard | Complete with upstream limitation (2026-09-03) | Native personal Wi-Fi v1 and approved-network acceptance passed; temporary `Restart QE` recovery remains |
+| 11 — Control center composition | Complete (2026-09-05) | Established dashboard composition, scoped command adapters, shortcut/dismissal behavior, destination replacement, and focused-output acceptance passed |
 
 Read the historical phase record only when a current task depends on its detailed
 evidence, rollback history, or implementation rationale.
 
-### AI quota milestone: bar and dashboard
+### Completed AI quota milestone
 
-Status: Complete.
-
-This standalone milestone is intentionally separate from Phase 11 because it adds
-new external provider integrations. It provides a weekly quota bar chip and a
-shared dashboard with weekly and five-hour windows for OpenAI Codex/ChatGPT and
-weekly, five-hour, and monthly windows for OpenCode Go.
-
-The helper reads OpenCode's auth store read-only. QE never refreshes, writes,
-removes, or persists provider credentials. Expired OpenAI access tokens retain
-the last-known value as stale until OpenCode refreshes its own auth file.
-
-Acceptance criteria:
-
-- the bar chip uses the existing `BarChip` styling, `robot_2`, and weekly remaining percentage;
-- left click toggles the `ai-quota` dashboard and right click cycles the globally selected provider;
-- the AI quota dashboard header provides a `refresh` control that starts one manual refresh cycle;
-- the tooltip lists both providers' weekly remaining percentages;
-- the dashboard displays weekly and five-hour windows independently for both providers and the OpenCode Go monthly window;
-- missing credentials, endpoint failures, malformed data, and stale values remain local to this feature;
-- no credentials enter QML state, command arguments, logs, diagnostics, fixtures, or QE state;
-- dashboard and bar consumers share one poller and one helper operation;
-- active consumers request an immediate refresh after system resume when the
-  logind sleep signal is available;
-- the selected provider persists as versioned state and defaults to OpenAI.
-
-Out of scope: credential provisioning or refresh ownership, billing/API spend
-budgets, arbitrary provider configuration, and guaranteed stability of the
-undocumented upstream usage endpoints.
+Status: Complete. The read-only provider boundary, bar/dashboard behavior, stale
+handling, and consumer-scoped polling are implemented. Detailed acceptance and
+provider evidence is preserved in `docs/history/PHASES_07-11.md` and the durable
+boundary is recorded in ADR-036.
 
 ### Workspace bar monitor scoping
 
-Status: Implemented; physical multi-monitor acceptance pending.
+Status: Implemented; physical multi-monitor acceptance remains pending.
 
-The bar remains instantiated once per Qt screen. Its workspace module scopes the
-native Hyprland workspace model to the corresponding compositor monitor through
-`CompositorService`; the service owns monitor identity matching and the policy of
-showing only positive-ID active or occupied workspaces. Empty workspaces remain
-available through Hyprland keybindings but are intentionally omitted from the bar.
+`CompositorService` owns native monitor matching and the policy that each bar
+shows only positive-ID active or occupied workspaces for its confirmed monitor.
+Empty workspaces remain hidden, and the implementation is independent of any
+workspace-range or monitor-splitting plugin. Automated coverage passes; the live
+multi-monitor check remains the only open acceptance item. Detailed implementation
+and validation evidence is preserved in `docs/history/PHASES_07-11.md`.
 
-This milestone is independent of any Hyprland workspace-range or monitor-splitting
-plugin. Removing such a plugin leaves the native monitor mapping and bar behavior
-valid, but removes any plugin-specific workspace placement or persistence rules.
+Validation: `timeout 5 quickshell -p tests/qml/workspaces-test.qml` must print
+`WORKSPACES_TEST_PASSED`; retain the standard lint, service, and persistent-shell
+smoke checks when the physical acceptance is performed.
 
-Acceptance criteria:
-
-- each bar resolves its Qt screen to the corresponding Hyprland monitor;
-- active and occupied positive-ID workspaces appear only on their associated bar;
-- empty, special, and other-monitor workspaces are hidden;
-- a monitor lookup loss clears the affected workspace projection and a later
-  topology update restores it;
-- workspace activation forwards the native workspace operation through
-  `CompositorService`;
-- missing screen-to-monitor mapping produces no workspace entries;
-- the injected compositor fixture covers the service contract;
-- the policy is validated without requiring a live workspace plugin.
-
-Validation:
-
-- `timeout 5 quickshell -p tests/qml/workspaces-test.qml` prints
-  `WORKSPACES_TEST_PASSED`;
-- full QML lint and the existing phase 2/3 service tests pass;
-- the persistent shell remains alive under the standard smoke test;
-- live multi-monitor validation remains required to confirm independent bar
-  contents and no change to bar reservations when a second output is available.
-
-Rollback/recovery:
-
-- remove the external workspace plugin and its Hyprland config imports/bindings;
-- retain the QE changes, which continue to use native Hyprland monitor and
-  workspace state without plugin-specific assumptions.
-
-Out of scope: replacing the native reactive workspace model with a separate
-normalized snapshot model, changing empty-workspace visibility, or defining
-workspace numbering and placement rules for Hyprland.
+Rollback/recovery: remove the external workspace plugin and its Hyprland config
+imports/bindings; QE's native monitor/workspace behavior remains valid.
 
 ### Phase 11: Control center composition
 
-Objective: compose the completed dashboard capabilities into a control center after
-the audio, Bluetooth, and network dashboards establish their stable v1 contracts.
-
-Prerequisites:
-
-- Phase 8 shared dashboard/surface foundation
-- Phase 9 Bluetooth dashboard v1 and capability findings
-- Phase 10 Network dashboard v1 and agreed unsupported-profile boundary
-- concrete control-center requirements agreed from the completed dashboards
-
-Scope:
-
-- control-center shell and navigation
-- quick-settings composition over existing domain services and dashboards
-- consistent unavailable, stale, pending, and confirmed states across tiles
-
-Agreed v1 specification:
-
-- A centered focused-output overlay with 40px inner spacing, 40px header/content
-  spacing, and `appearance.radius + 2` corner rounding.
-- A left-aligned time and long localized date header, with notification and Rofi
-  power-menu actions on the right.
-- A two-column body with Wi-Fi, Bluetooth, DND, idle-inhibitor, output-volume,
-  and microphone-volume quick-setting tiles. Volume and microphone tiles toggle
-  mute on click and change their level by 5% per wheel step, unmuting on scroll.
-- Right-clicking Wi-Fi or Bluetooth opens its existing dashboard. Existing
-  dashboards and selector surfaces remain the detailed views.
-- A Theme section with semantic palette previews, the established themed dropdown,
-  palette viewer, wallpaper selector, capture-defaults, and restore-defaults
-  actions. Capture and restore require confirmation.
-- A post-v1 Monitors section selects mirrored or extended output layout. Extended
-  mode offers left, up, right, and down placement for the one configured secondary
-  output. Profiles remain authored in `monitors.lua`; QE persists only their
-  selector and does not alter single-monitor or other-host rules.
-- Independent stepped scale sliders for `eDP-1` and `HDMI-A-1` expose only
-  `1.00`, `1.20`, `1.25`, `1.50`, `1.60`, and `2.00`. These are the values on the
-  agreed `1.00-2.00`/`0.05` candidate grid that produce whole logical pixels for
-  both dimensions of the configured 1920x1080 modes.
-- The control center is opened through `qe-control-center` and `Super+Tab`.
-  `Super+Escape` remains the existing Rofi power-menu shortcut.
-- Opening another major interactive surface replaces the control center. Service
-  failures, stale state, and pending operations remain local to their tile or
-  section.
-
-Phase 11 explicitly approves narrow adapters for the existing `rofi_power_menu`,
-`scripts/qe-defaults capture|restore`, and closed-vocabulary monitor-layout helper
-commands. This exception does not authorize arbitrary command execution, direct
-power actions, or general monitor command construction in presentation QML.
-
-Likely affected files/subsystems:
-
-- `modules/controlcenter/`
-- module router and surface service
-- existing dashboard/domain service contracts only where composition exposes a
-  concrete gap
-
-Deliverables:
-
-- agreed control-center v1 specification
-- control-center composition surface
-- quick-setting state summaries with explicit degraded states
-
-Acceptance criteria:
-
-- the agreed v1 layout and interactions are available on the focused output;
-  `Super+Tab` opens it and `Super+Escape` remains Rofi
-- all six tiles render confirmed, pending, unavailable, and stale states locally
-- theme selection, existing surface navigation, and both confirmed defaults
-  actions work without duplicating their service or script logic
-- control center composes existing dashboard capabilities rather than duplicating
-  system integration logic
-- one unavailable dashboard or service does not block unrelated tiles
-- monitor controls are unavailable without the configured secondary output;
-  accepted changes are persisted and match confirmed live Hyprland topology
-- per-monitor scale controls cannot request an invalid logical resolution, and
-  directional placement remains adjacent after scaling
-- mirrored mode exposes only the source `eDP-1` scale; the saved HDMI scale
-  returns unchanged when Extended is selected
-
-Validation:
-
-- control-center fixture tests based on the finalized tile and state matrix
-- keyboard, pointer, dismissal, and multi-monitor surface tests
-- degraded and daemon-loss behavior for each represented service
-
-Rollback/recovery:
-
-- individual dashboard surfaces and their fallback tools remain launchable
-
-Out of scope:
-
-- additional unbounded domain integrations introduced solely for control-center
-  composition
-- changing the v1 scope of the audio, Bluetooth, or network dashboards
+Status: Complete (2026-09-05). Dashboard composition, scoped command adapters,
+shortcut/dismissal behavior, destination replacement, and focused-output
+multi-monitor acceptance passed. The full implementation and acceptance record is
+preserved in `docs/history/PHASES_07-11.md`; durable boundaries remain in ADR-037
+through ADR-039.
 
 ### Phase 12: Secure lock replacement
+
+Status: Complete (2026-09-07). Foundation, disposable security acceptance,
+production cutover, manual/idle/before-sleep behavior, and rollback passed.
 
 Objective: replace Hyprlock with an isolated, compositor-enforced QE lock after
 security and recovery behavior are validated.
@@ -515,8 +354,127 @@ Prerequisites:
 - approved test environment and emergency TTY recovery procedure
 - chosen PAM service
 
-Relevant decisions: ADR-002 (separate lock process) and ADR-011 (native
-integration before commands) in `docs/DECISIONS.md`.
+Foundation record:
+
+- Installed Quickshell 0.3.1 metadata and matching source verify native
+  `WlSessionLock`, per-screen `WlSessionLockSurface`, compositor `secure`, and
+  `PamContext` behavior.
+- ADR-041 selects the existing `/etc/pam.d/login` service. The current
+  `/etc/pam.d/hyprlock` delegates its authentication stack to `login`, so this
+  introduces no new PAM file and does not retain Hyprlock as a PAM dependency.
+- `LockThemeReader` validates configuration, active-theme state, and theme data,
+  rejects oversized input, falls back to an opaque-black lock palette, and
+  releases its discovery model before lock acquisition. It does not watch files
+  after initialization.
+- `LockController` is tested through fake session-lock and authenticator seams.
+  Acquisition requires ready lock-safe inputs, authentication cannot begin
+  before `secure`, and only a successful PAM result after `secure` requests
+  unlock. Empty, failed, cancelled, stale, and out-of-state results remain
+  locked; acquisition and authentication failures are bounded. Each PAM attempt
+  has a five-minute deadline before entering the existing bounded retry/recovery
+  path.
+- `lock.qml` has no IPC and imports neither persistent-shell services nor
+  optional integrations. The production manual and Hypridle lock commands now
+  use the stable `qe-lock` launcher; Hyprlock remains installed for rollback.
+- The first disposable Hyprland launch on 2026-09-07 exposed a QML name-shadowing
+  error in the lock-surface controller binding before the session became locked.
+  The entry point now uses the unambiguous `lockController` ID and a static
+  wiring regression test. A repeated direct-terminal launch acquired the lock;
+  wrong, empty, and correct passwords behaved as expected through the selected
+  `login` PAM stack, and suspend/resume and monitor changes remained locked and
+  usable. No PAM response value appeared in the captured output.
+- The live test found that long password text rendered outside its field. The
+  input now clips its rendering and the source contract covers that property;
+  visual confirmation passed on 2026-09-07 in the disposable direct terminal.
+  A launch from an existing tmux server did
+  not target the disposable compositor because tmux retained the original
+  `WAYLAND_DISPLAY` and `HYPRLAND_INSTANCE_SIGNATURE`; direct terminals are the
+  required test path until compositor-aware tmux environment handling is scoped.
+- Post-secure crash recovery passed in the disposable session on 2026-09-07:
+  killing the main lock process left the compositor lock displayed and
+  non-interactive, with no fullscreen fallback; terminating the affected
+  graphical session from a separate TTY restored its login prompt.
+- Hot-plug and multi-output acceptance passed in the disposable session on
+  2026-09-07. The lock covered all active outputs at startup, appeared on a
+  newly connected output while locked, and remained on the original output
+  after disconnect; authentication then released the lock normally.
+- The first PAM-helper loss test on 2026-09-07 remained securely locked but
+  exposed an unusable prompt: the adapter normalized helper loss while the
+  controller accepted failures only after response submission. The controller
+  now accepts a failed current attempt during prompt acquisition/input and
+  retains the stricter submitted-response gate for success. A repeat confirmed
+  that Quickshell logged the helper failure and created a replacement PAM
+  session, but keyboard focus returned only after pointer movement. The input now
+  explicitly reacquires active focus when the retry enables it. Automated
+  helper-loss and focus-source contracts pass. Disposable confirmation then
+  passed: keyboard input worked without pointer movement after helper replacement.
+  Display repaint still waited for pointer movement after returning from the
+  alternate TTY, matching compositor-wide VT-switch behavior outside the lock.
+- The first staged Hypridle launch was rejected as evidence because it inherited
+  primary login session `c1` and collided with the production Hypridle's shared
+  user-bus `ScreenSaver` owner. A second private-bus launch proved Hypridle still
+  derives login membership as `c1` despite an overridden `XDG_SESSION_ID`.
+  Disposable idle validation therefore invokes the QE lock command directly;
+  logind/before-sleep behavior remains a controlled cutover-and-rollback gate.
+  No production Hypridle configuration was changed.
+- `scripts/run-qe-lock.sh` now provides a project-relative, single-instance lock
+  command, and `tests/fixtures/lock/hypridle.conf` stages direct idle invocation
+  with a 15-second timeout. Staged idle passed before production cutover.
+- Staged direct idle invocation passed in the disposable session on 2026-09-07:
+  Hypridle fired its 15-second rule, launched `run-qe-lock.sh`, observed Wayland
+  lock, and observed normal unlock after successful PAM authentication.
+  Private-bus portal warnings were confined to the fixture.
+- Production cutover then installed `~/.local/bin/qe-lock`, changed
+  `config/programs.lua` and `hypridle.conf` to use it, reloaded Hyprland with no
+  config errors, and restarted the compositor-owned Hypridle successfully.
+  `Super+Backspace` then launched the QE lock on the primary session and normal
+  PAM authentication released it. With QE idle inhibition temporarily disabled,
+  the production five-minute Hypridle timeout also launched QE and normal PAM
+  authentication released it. With the user's idle-inhibitor preference restored,
+  suspend resumed directly into QE and normal PAM authentication released it.
+  The rollback drill then restored Hyprlock for manual, before-sleep, and idle
+  paths; all three passed, with the idle timeout temporarily reduced to one
+  minute and restored to five minutes afterward. QE was reapplied with no
+  Hyprland config errors and Hypridle restarted; the final `Super+Backspace` QE
+  smoke passed.
+
+Threat and failure checklist:
+
+- Pre-secure protocol, surface, or secure-confirmation timeout exits without
+  claiming a locked state; Hyprlock remains installed for explicit rollback.
+- Post-secure process failure remains compositor-locked and must never trigger
+  automatic QE restart or a fullscreen fallback.
+- PAM responses exist only in the local input and native PAM call; the input is
+  cleared before submission and no response is logged or persisted.
+- PAM failure, error, cancellation, stale completion, and empty input never set
+  `locked` false; failed attempts use a bounded retry delay and attempt limit
+  with generic UI text.
+- The lock exposes no IPC endpoint and the presentation component receives the
+  controller rather than direct unlock authority.
+- Invalid or unavailable disk input uses an opaque-black fallback; no file or
+  source reload is consumed after initialization.
+- Idle/before-sleep integration and complete rollback passed on 2026-09-07.
+
+Emergency recovery gate for every destructive test:
+
+1. Before starting, switch to an alternate TTY and prove the user can log in,
+   then return to the graphical session.
+2. Record the graphical session ID with `loginctl list-sessions` and keep these
+   instructions available outside that session.
+3. If the lock process dies after compositor `secure`, do not restart QE. From
+   the verified TTY, terminate the affected graphical session with
+   `loginctl terminate-session <graphical-session-id>`.
+4. Start a fresh graphical session with the unchanged Hyprlock configuration.
+   A machine reboot is the final recovery path if session termination fails.
+
+Alternate-TTY access, post-secure crash recovery, and hot-plug/multi-output
+behavior were manually confirmed in the disposable session on 2026-09-07. The
+lock remained compositor-enforced after the main process was killed, terminating
+the affected graphical session from a separate TTY restored login recovery, and
+output attach/detach preserved lock coverage.
+
+Relevant decisions: ADR-002 (separate lock process), ADR-011 (native integration
+before commands), and ADR-041 (`login` PAM service) in `docs/DECISIONS.md`.
 
 Scope:
 
@@ -567,7 +525,21 @@ Validation:
 
 Rollback/recovery:
 
-- restore Hyprlock command/keybinding and Hypridle lock command
+- The production Hypr config is version-controlled in the dotfiles repository.
+  Before cutover, install `~/.local/bin/qe-lock` as a symlink to the
+  project-relative `scripts/run-qe-lock.sh` launcher.
+- Cutover changes only `config/programs.lua` from `hyprlock` to `qe-lock` and
+  `hypridle.conf` `lock_cmd` from `pidof hyprlock || hyprlock` to `qe-lock`.
+  The existing manual keybinding continues consuming `programs.lock`; the idle
+  listener and `before_sleep_cmd` continue requesting `loginctl lock-session`.
+- To roll back, restore those two original Hyprlock values, run `hyprctl reload`,
+  terminate only the compositor-owned Hypridle process, and start `hypridle`
+  detached from a primary-session terminal. Fresh-login autostart is the
+  fallback because this Hyprland Lua bridge rejected normal `dispatch exec`
+  syntax during cutover. Verify manual, idle, and before-sleep Hyprlock behavior
+  before considering rollback complete.
+- After a successful rollback drill, reapply the same two QE command values and
+  restart Hypridle through the same procedure before final acceptance.
 - a crash after secure lock requires compositor/session recovery, not QE restart
 
 Out of scope:
@@ -669,11 +641,11 @@ work, but the fake and live adapter must satisfy the same reviewed interface.
 Detailed completed-cutover evidence is preserved in
 `docs/history/PHASES_00-06.md` and `docs/history/PHASES_07-11.md`. The live
 matrix contains only coexistence or fallback boundaries that still matter to
-Phases 11-12.
+Phases 12-13.
 
 | Existing tool | Can coexist? | Conflict / boundary | Disable condition | Development method | Rollback |
 | --- | --- | --- | --- | --- | --- |
-| Hyprlock | Yes when only one lock command runs | one session lock at a time | secure lock acceptance, idle/suspend coverage | isolated/manual QE lock invocation in a disposable session | restore keybind and Hypridle commands |
+| Hyprlock | Installed as inactive rollback | one session lock at a time | QE secure lock, idle/suspend, and rollback acceptance passed | explicit rollback drill only | restore keybind and Hypridle commands |
 | Rofi | Yes | keybinding/user-flow duplication | primary launcher acceptance; specialized Rofi flows remain separately available | invoke QE launcher separately until cutover | restore `Super+R` |
 | Blueman Manager | Yes | concurrent operations may confuse state | required common Bluetooth flows pass | open either dashboard manually | keep Blueman launcher |
 | `nm-connection-editor` | Yes | concurrent edits can race | retire only for the explicitly supported profile scope | preserve fallback action | keep editor installed |
@@ -711,7 +683,6 @@ Polling budget for the bar milestone:
 | ID | Risk | Likelihood | Impact | Mitigation | Trigger/review |
 | --- | --- | --- | --- | --- | --- |
 | R1 | Lock process crashes after secure lock and cannot be reclaimed | Low/medium | Critical availability | minimal process, no reload, disposable tests, TTY recovery | any lock dependency or lifecycle change |
-| R2 | Dunst and QE contend for notification DBus ownership | High during migration | High | staged exclusive tests and owner diagnostics | Phase 5 start and Phase 6 cutover |
 | R3 | Quickshell API compatibility can change across installed upgrades | Medium | Medium/high | verify installed qmltypes and matching version documentation before use | every new native integration |
 | R4 | Theme partial application creates visible drift | High | Medium | independent scopes, per-target status, retry, no false global success | external switcher refactor |
 | R5 | Matugen overwrites good artifacts with invalid output | Medium | High | staging, schema/target validation, atomic promotion, LKG set | every template/schema change |
@@ -724,7 +695,6 @@ Polling budget for the bar milestone:
 | R13 | Hard-coded hardware/path assumptions return | Medium | Medium | PathsService, sensor discovery, path lint | every filesystem integration |
 | R14 | Broad dashboard scope delays reliable foundations | High | Medium | explicit v1 non-goals and phased fallbacks | phase planning changes |
 | R15 | External switcher target mutation partially corrupts config | Medium | High | target prevalidation, backups/staging where possible, per-target result | switcher refactor |
-| R16 | Wallpaper helper reports success before compositor display | Low | Low/medium | Hyprpaper IPC acceptance handshake implemented; confirmation labeled as IPC acceptance, not pixel display | Phase 4 |
 | R17 | Production restart loop destabilizes session | Low/medium | High | defer supervision, bounded restart policy based on evidence | Phase 13 decision |
 | R18 | Notification content loads unsafe resources/markup | Medium | High | sanitize/limit rendering and resources | Phase 5 security review |
 | R19 | External theme apply restarts a tool after QE has replaced it | Medium | High | target-retirement controls must precede each cutover and are included in rollback tests | Phases 3, 4, and 6 |

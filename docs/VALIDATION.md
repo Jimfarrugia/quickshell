@@ -17,6 +17,7 @@ below are intended to be run from the repository root:
 
 ```sh
 node tests/js/validation.test.mjs
+node tests/js/lock-entry.test.mjs
 node tests/js/schema.test.mjs
 node tests/js/system-metrics.test.mjs
 node tests/js/brightness.test.mjs
@@ -98,6 +99,9 @@ timeout 5 quickshell -p tests/qml/ai-quota-adapter-test.qml
 timeout 5 quickshell -p tests/qml/ai-quota-bar-test.qml
 timeout 5 quickshell -p tests/qml/ai-quota-dashboard-test.qml
 timeout 5 quickshell -p tests/qml/ai-quota-multi-consumer-test.qml
+timeout 5 quickshell -p tests/qml/lock-controller-test.qml
+timeout 5 quickshell -p tests/qml/lock-pam-adapter-test.qml
+timeout 5 quickshell -p tests/qml/lock-theme-reader-test.qml
 timeout 5 quickshell -p tests/qml/launcher-usage-test.qml
 timeout 5 quickshell -p tests/qml/launcher-selection-test.qml
 timeout 5 quickshell -p tests/qml/launcher-dashboard-action-test.qml
@@ -424,3 +428,98 @@ mirrored mode remained active, left/up/right/down extended layouts matched the
 requested geometry, mirror-to-extended restarted QE, and disconnecting HDMI left
 only the unchanged `eDP-1` configuration active. A separate built-in-only config
 reload produced no config errors and retained identical monitor JSON.
+
+### Phase 12 secure lock foundation
+
+The non-locking fixtures exercise the security state machine and lock-safe disk
+reader without acquiring `ext-session-lock-v1`:
+
+```sh
+node tests/js/lock-entry.test.mjs
+timeout 5 quickshell -p tests/qml/lock-controller-test.qml
+timeout 5 quickshell -p tests/qml/lock-pam-adapter-test.qml
+timeout 5 quickshell -p tests/qml/lock-theme-reader-test.qml
+```
+
+They must print `LOCK_ENTRY_TEST_PASSED`, `LOCK_CONTROLLER_TEST_PASSED`,
+`LOCK_PAM_ADAPTER_TEST_PASSED`, and `LOCK_THEME_READER_TEST_PASSED`. The entry
+test prevents the lock-surface controller property from shadowing its assembly
+object ID. The controller fixture verifies that validated
+inputs and compositor `secure` gate authentication, and that empty, failed, and
+cancelled responses remain locked. It also covers secure-confirmation timeout,
+PAM startup failure, a non-completing PAM-attempt deadline, bounded attempts, and
+stale-success rejection. The PAM
+adapter fixture verifies that each context has an immutable attempt ID and that
+an aborted context cannot complete a replacement attempt. The reader
+fixture verifies validated active-theme publication, whole-document config
+fallback, malformed and oversized input rejection, bounded startup fallback,
+opaque-black fallback, and release of discovery/file-watching state before lock
+acquisition.
+
+Launch destructive disposable-session tests from a terminal created directly by
+that compositor. An existing tmux server can retain another session's
+`WAYLAND_DISPLAY` and `HYPRLAND_INSTANCE_SIGNATURE` and route Quickshell to the
+wrong compositor. The 2026-09-07 direct-terminal test passed wrong, empty, and
+correct password behavior plus suspend/resume and monitor changes. Long-input
+clipping was fixed afterward and visually confirmed on 2026-09-07. Alternate-TTY
+access was confirmed before the test. Post-secure crash recovery also passed:
+killing the main lock process left the session locked and non-interactive, and
+terminating the disposable graphical session from another TTY restored its login
+prompt. Hot-plug/multi-output behavior also passed: the lock covered all outputs
+at startup, added coverage for a connected output while locked, retained the
+remaining output after disconnect, and released normally after authentication.
+The first PAM-helper loss test remained locked but left an unusable prompt. The
+controller now retries a failed current attempt received while awaiting input,
+with automated coverage passing. A repeat proved native helper-error propagation
+and replacement, but input focus returned only after pointer movement; the input
+now explicitly reacquires active focus when re-enabled. Repeated live helper-loss
+confirmation passed: keyboard input worked without pointer movement after helper
+replacement. Display repaint still waited for pointer movement after returning
+from the alternate TTY, matching compositor-wide VT-switch behavior rather than
+lock-specific focus behavior.
+
+For staged idle testing in a disposable session, launch the fixture from the
+repository root on a private user D-Bus:
+
+```sh
+dbus-run-session -- env \
+  QE_LOCK_COMMAND="$PWD/scripts/run-qe-lock.sh" \
+  hypridle -c "$PWD/tests/fixtures/lock/hypridle.conf"
+```
+
+The fixture invokes the QE lock command directly after 15 seconds. It
+intentionally contains no `lock_cmd`, `loginctl lock-session`, or before-sleep
+hook: Hypridle derives login-session membership from the process rather than an
+overridden `XDG_SESSION_ID`, and disposable terminals on this machine are still
+classified under primary session `c1`. The private bus avoids ScreenSaver-owner
+contention, but it cannot safely stage logind integration. Test before-sleep only
+during the controlled production cutover with rollback access. Do not run this
+fixture in the primary session, and stop it when finished. The fixture sets
+`ignore_inhibit = 1` only to isolate command invocation from unrelated persisted
+inhibitors; production remains `ignore_inhibit = 0` and continues respecting QE
+idle inhibition.
+
+This staged idle path passed on 2026-09-07: Hypridle fired the 15-second rule,
+launched `run-qe-lock.sh`, observed Wayland lock, and observed normal unlock after
+PAM authentication. Portal warnings in that run came from the intentionally
+private test D-Bus and do not apply to the production user bus.
+
+After production cutover, `Super+Backspace` and the configured five-minute idle
+timeout both launched QE and unlocked normally through PAM. QE idle inhibition
+was temporarily disabled for the idle test and must be restored to the user's
+prior enabled preference afterward.
+
+With that preference restored, the production before-sleep path also passed:
+`systemctl suspend` resumed directly into the QE lock, keyboard input worked, and
+normal PAM authentication released it without exposing a usable desktop first.
+
+The required rollback drill restored Hyprlock and passed manual, before-sleep,
+and idle behavior. The idle timeout was temporarily reduced to one minute for
+the drill and then restored to five minutes. The two QE command values were
+reapplied, Hyprland reported no config errors, Hypridle restarted normally, and
+the final `Super+Backspace` QE smoke passed.
+
+Run `qmllint` over all QML after lock changes. Do not run
+`quickshell -p lock.qml` in the primary session as a smoke test. Protocol,
+hot-plug, suspend/resume, PAM, and crash tests require the Phase 12 disposable
+environment and the manually confirmed TTY recovery gate in `docs/PLAN.md`.

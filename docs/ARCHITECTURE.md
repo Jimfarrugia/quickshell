@@ -1417,9 +1417,9 @@ blindly retried unless idempotence is proven. Backoff state is adapter-owned.
   fully locked.
 - PAM responses remain in lock-process memory only and are cleared immediately
   after response submission.
-- The initial PAM service uses a verified existing stack such as `login` or
-  `hyprlock`; a custom `/etc/pam.d` file requires separate approval and system
-  change procedure.
+- The initial PAM service is the existing `/etc/pam.d/login` stack. The current
+  Hyprlock service delegates authentication to that same stack; a custom
+  `/etc/pam.d` file requires separate approval and system change procedure.
 - QE IPC is not an authentication boundary and never exposes unlock or raw PAM
   response methods.
 - Network secrets are not persisted or logged by QE.
