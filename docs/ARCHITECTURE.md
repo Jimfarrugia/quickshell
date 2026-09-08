@@ -1,6 +1,6 @@
 # QE Architecture
 
-Status: Current architecture implemented through Phase 11; remaining planned
+Status: Current architecture implemented through Phase 12; remaining planned
 surfaces and deployment choices are tracked in `docs/PLAN.md`
 
 This document is the authoritative description of the Quickshell Environment
@@ -1223,7 +1223,8 @@ with a `$HOME/.local/share` fallback so the Hyprpaper config and QE helper stay
 aligned. Temporary `.desktop` entries launch the theme
 and wallpaper selectors through `scripts/qe-launch.sh`, which discovers the
 running `--no-duplicate` QE shell and calls the corresponding IPC target; these
-launchers will be replaced by the planned control center.
+launchers remain available for direct access alongside the control-center entry
+points.
 
 When the active QE theme is the generated `wallpaper` theme, QE also generates
 standalone "wallpaper" theme slot files for external applications and the
