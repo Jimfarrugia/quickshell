@@ -10,11 +10,15 @@
   - [Paths and Environment Variables](#paths-and-environment-variables)
   - [Current Limitations](#current-limitations)
 - [3. Setting Up](#3-setting-up)
+  - [Expected Setup-Script Baseline](#expected-setup-script-baseline)
   - [Install Packages](#install-packages)
-  - [Clone the Projects](#clone-the-projects)
-  - [Stow the Dotfiles](#stow-the-dotfiles)
+  - [Clone QE](#clone-qe)
+  - [Verify Installed Dotfiles](#verify-installed-dotfiles)
+  - [Reload the User Service](#reload-the-user-service)
   - [Restore the QE Defaults](#restore-the-qe-defaults)
+  - [Verify Lock Prerequisites](#verify-lock-prerequisites)
   - [Start QE](#start-qe)
+  - [Verify QE](#verify-qe)
 - [4. Themes](#4-themes)
   - [Adding a New Theme](#adding-a-new-theme)
   - [Modifying an Existing Theme](#modifying-an-existing-theme)
@@ -67,40 +71,58 @@ the current roadmap and status.
 
 ### Software Dependencies
 
-The following packages provide the core QE runtime and the current Hyprland
-wallpaper pipeline:
+The supported manual procedure assumes the Hyprland branch of
+`arch-setup-script` has completed first. Its package lists already install
+Quickshell, Hyprland, Hypridle, Hyprpaper, Hyprshot, NetworkManager, BlueZ,
+PipeWire/PulseAudio compatibility, WirePlumber, brightness control, Rofi,
+dashboard escape-hatch applications, ImageMagick, `jq`, Stow, and the configured
+Nerd Font and Material Symbols font.
+
+Install the QE-specific packages not currently guaranteed by those authored
+lists:
 
 ```sh
 sudo pacman -S --needed \
-  git stow bash coreutils findutils procps-ng util-linux dbus glib2 systemd \
-  python file jq imagemagick libnotify \
-  quickshell hyprland hyprpaper matugen \
-  networkmanager bluez pipewire wireplumber upower brightnessctl \
-  inter-font ttf-jetbrains-mono-nerd ttf-material-symbols-variable
+  matugen upower inter-font ttf-roboto \
+  python python-dbus python-gobject libnotify
 ```
 
-Some of these are base-system utilities, and some support optional QE modules:
+`python-dbus` and `python-gobject` keep screenshot notification actions alive;
+`ttf-roboto` is used by the lock screen. Matugen provides wallpaper palette
+generation, UPower provides battery state, and Inter is QE's default UI font.
 
-| Package | Purpose |
+For a fresh Arch/Hyprland system that did not use `arch-setup-script`, this is
+the complete supported QE package set:
+
+```sh
+sudo pacman -S --needed \
+  git stow bash coreutils diffutils findutils grep sed procps-ng util-linux \
+  dbus glib2 systemd pam python python-dbus python-gobject \
+  file jq imagemagick libnotify xdg-utils \
+  quickshell hyprland hypridle hyprpaper hyprshot matugen \
+  networkmanager bluez pipewire pipewire-audio pipewire-pulse wireplumber \
+  upower brightnessctl \
+  rofi blueman nm-connection-editor pavucontrol thunar \
+  inter-font ttf-roboto ttf-jetbrains-mono-nerd \
+  ttf-material-symbols-variable
+```
+
+Package responsibilities that are easy to miss:
+
+| Packages | Purpose |
 | --- | --- |
-| `quickshell` | Runs the QE shell and provides the `qs` IPC client. |
-| `hyprland` | Compositor and Hyprland IPC used by QE. |
-| `hyprpaper` | Displays the wallpaper and accepts the confirmed wallpaper request. |
-| `matugen` | Generates the wallpaper color palette and `Wallpaper` theme. |
-| `imagemagick` | Normalizes the wallpaper LKG artifact after Hyprpaper applies the source. |
-| `jq` | Processes structured output used by wallpaper and external integrations. |
-| `file` | Validates wallpaper input MIME types. |
-| `procps-ng` | Provides process utilities used by the launch helpers. |
-| `systemd`, `dbus`, `glib2`, `util-linux` | Provide production supervision, session environment import, DBus ownership diagnostics, and bounded helper execution. |
-| `python` | Runs the AI quota helper and bounded structured-data transformations. |
-| `libnotify` | Provides `notify-send` for integration feedback. |
-| `brightnessctl` | Brightness control helper used by the brightness adapter. |
-| `inter-font`, `ttf-jetbrains-mono-nerd`, `ttf-material-symbols-variable` | Fonts used by the default QE appearance configuration. |
+| `quickshell`, `hyprland`, `systemd`, `dbus`, `glib2`, `pam` | Persistent shell, compositor integration, production supervision, DBus diagnostics, and native lock authentication. |
+| `hypridle`, `hyprpaper`, `hyprshot`, `xdg-utils`, `thunar` | Idle/before-sleep locking, wallpaper display, screenshots, and screenshot actions. |
+| `python`, `python-dbus`, `python-gobject` | AI quota/metrics helpers and the screenshot notification action daemon. |
+| `matugen`, `imagemagick`, `file`, `jq` | Wallpaper validation, processing, generated colors, and structured theme data. |
+| `procps-ng`, `util-linux`, `coreutils`, `diffutils`, `findutils`, `grep`, `sed` | Guarded launch, bounded integration helpers, defaults restoration, and diagnostics. |
+| `networkmanager`, `bluez`, `pipewire`, `pipewire-pulse`, `wireplumber`, `upower`, `brightnessctl` | Network, Bluetooth, audio, battery, and brightness integrations. |
+| `rofi`, `blueman`, `nm-connection-editor`, `pavucontrol` | Current power/specialized Rofi flows and scoped dashboard escape hatches. |
+| `inter-font`, `ttf-roboto`, `ttf-jetbrains-mono-nerd`, `ttf-material-symbols-variable` | QE, lock, monospace, and icon typography. |
 
-NetworkManager, BlueZ, PipeWire/WirePlumber, and UPower should be running in
-the session for their corresponding modules to show live state. Missing
-optional services degrade their modules without preventing the shell from
-starting.
+NetworkManager and Bluetooth are system services. PipeWire and WirePlumber are
+user-session services. UPower is normally DBus-activated. Missing an optional
+service degrades its related module without preventing the shell from starting.
 
 ### Optional Application Dependencies
 
@@ -139,15 +161,15 @@ enabled:
   `qe-shell --service-start` after the compositor environment exists.
 - The `qe-shell.service` systemd user unit supplied by the dotfiles repository.
 - Hyprpaper configuration that reads the current wallpaper file from
-  `$XDG_DATA_HOME`; QE composes the lock background from the selected source.
+  `$HOME/.local/share`; QE composes the lock background from the selected source.
 - A wallpaper collection arranged as
   `~/Pictures/Wallpaper/themes/<theme-id>/` unless `QE_WALLPAPER_ROOT` is set.
 
-The managed production checkout is `~/Projects/quickshell`. Stable commands
-under `~/.local/bin` resolve into that checkout. Set `QE_PROJECT_ROOT` for the
-dotfiles-owned `qe-doctor` wrapper and deliberately redeploy any direct helper
-links if the checkout moves; moving it without updating those entry points will
-break startup and recovery commands.
+The supported managed production checkout is `~/Projects/quickshell`. Stable
+commands under `~/.local/bin` dispatch into that checkout through `qe-project`.
+`QE_PROJECT_ROOT` can override the dispatcher for an interactive command, but
+the production service does not import that override. Keep the checkout at the
+supported default location for a reproducible setup.
 
 ### Paths and Environment Variables
 
@@ -155,7 +177,7 @@ QE resolves runtime paths through XDG variables:
 
 | Path or variable | Use |
 | --- | --- |
-| `XDG_DATA_HOME/current_wallpaper.png` | Processed image consumed by Hyprpaper. |
+| `$HOME/.local/share/current_wallpaper.png` | Processed image consumed by the current Hyprpaper configuration. |
 | `XDG_DATA_HOME/qe/wallpaper/Wallpaper.json` | Stable generated QE wallpaper theme. |
 | `XDG_STATE_HOME/qe/wallpaper/external/` | Runtime external wallpaper theme files. |
 | `XDG_CACHE_HOME/matugen/nvim-colors.json` | Runtime Neovim wallpaper palette. |
@@ -167,8 +189,10 @@ QE resolves runtime paths through XDG variables:
 | `ZSH_CONFIG_HOME` | Overrides the configuration directory used for the FZF theme slot. |
 
 The default values are based on `$HOME` and the standard XDG directories. QE
-does not require the current user's home directory to be hard-coded in the QE
-source.
+itself honors XDG overrides, but the installed Hyprpaper configuration currently
+fixes its data root to `$HOME/.local/share`. Keep
+`XDG_DATA_HOME=$HOME/.local/share` for production unless QE and Hyprpaper are
+updated together.
 
 ### Current Limitations
 
@@ -181,57 +205,143 @@ source.
 
 ## 3. Setting Up
 
+Complete these steps from the setup TTY or another shell before the first
+Hyprland login when possible. The stowed Hyprland configuration already invokes
+QE at login; until the checkout exists, that bounded startup attempt will fail.
+If Hyprland has already been started, finish the same steps there and use the
+documented `qe-shell --service-start` command afterward.
+
+### Expected Setup-Script Baseline
+
+This procedure starts after `arch-setup-script` has completed its Hyprland flow.
+That flow installs the general Hyprland packages, clones local integrations, and
+stows the dotfiles before QE-specific setup begins. It should already provide:
+
+- `~/dotfiles`, `~/Projects/theme-switcher`, and `~/Pictures/Wallpaper`.
+- Git and GitHub CLI; `arch-setup-script` installs Git before cloning and lists
+  GitHub CLI in its universal package set.
+- The universal `scripts` dotfiles package and Hyprland `applications`, `hypr`,
+  `systemd`, and application-configuration packages.
+- `~/.local/bin` on the login-shell `PATH`.
+- QE entry points, Hyprland startup/keybindings, desktop entries, and
+  `~/.config/systemd/user/qe-shell.service` from the dotfiles.
+
+The theme-switcher and wallpaper clones are non-fatal operations in the current
+setup script. Verify that they succeeded before continuing:
+
+```sh
+test -x ~/Projects/theme-switcher/run.sh
+test -d ~/Pictures/Wallpaper/themes/poimandres
+```
+
+If a check fails because the destination is absent, run its corresponding clone
+command:
+
+```sh
+mkdir -p ~/Projects ~/Pictures
+git clone https://github.com/Jimfarrugia/theme-switcher.git \
+  ~/Projects/theme-switcher
+```
+
+```sh
+mkdir -p ~/Pictures
+git clone https://github.com/Jimfarrugia/wallpaper.git \
+  ~/Pictures/Wallpaper
+```
+
 ### Install Packages
 
-Install the core packages listed in [Software Dependencies](#software-dependencies).
-Install any optional applications whose themes you want the external
-theme-switcher to manage.
+Install the QE-specific package delta listed in
+[Software Dependencies](#software-dependencies). Use the complete package list
+there only when setting up without the normal `arch-setup-script` baseline.
 
-Make sure the user services needed by your session are enabled and available,
-especially NetworkManager, Bluetooth, PipeWire, and WirePlumber. QE can still
-start with an unavailable optional service, but its related module will not
-show live state.
+Enable the system-service owners used by the enabled modules:
 
-### Clone the Projects
+```sh
+sudo systemctl enable --now NetworkManager.service bluetooth.service
+```
 
-The current development layout expects QE at `~/Projects/quickshell`:
+PipeWire and WirePlumber are user services. If a user manager is reachable in
+the current environment, enable their normal units now:
+
+```sh
+systemctl --user enable --now \
+  pipewire.socket pipewire-pulse.socket wireplumber.service
+```
+
+If that command cannot connect to the user bus before the first graphical
+login, run it from a terminal after entering Hyprland. These units are commonly
+started by user-session presets already; the command is idempotent.
+
+Confirm the screenshot action imports supplied by the package delta are usable:
+
+```sh
+python3 -c 'import dbus; from gi.repository import GLib'
+```
+
+### Clone QE
+
+QE is not yet cloned by `arch-setup-script`. Install it at the supported managed
+location:
 
 ```sh
 mkdir -p ~/Projects
 git clone https://github.com/Jimfarrugia/quickshell.git ~/Projects/quickshell
-git clone https://github.com/Jimfarrugia/theme-switcher.git ~/Projects/theme-switcher
-git clone https://github.com/Jimfarrugia/dotfiles.git ~/dotfiles
 ```
 
-If the repositories already exist, update them instead of cloning them again.
-The `qe-theme-switcher` wrapper uses `~/Projects/theme-switcher` by default;
-set `QE_THEME_SWITCHER_REPO` if the repository is elsewhere.
+If the checkout already exists, update and inspect it instead of cloning over
+it. The production wrappers default to this exact location.
 
-### Stow the Dotfiles
+### Verify Installed Dotfiles
 
-Use the dotfiles repository's normal Stow procedure. Stow the packages that
-provide the Hyprland configuration, application configurations, and QE helpers.
-Ensure the wallpaper collection is also available. The relevant installed paths
-are:
+Do not re-stow packages after a successful `arch-setup-script` run. Verify the
+QE-facing paths it should have installed:
 
-- `~/.config/hypr`
-- `~/.config/hypr/hyprpaper.conf`
-- `~/.local/bin/qe-shell`
-- `~/.local/bin/qe-theme-switcher`
-- `~/.local/bin/qe-defaults`
-- `~/.local/bin/qe-doctor`
-- `~/.config/systemd/user/qe-shell.service`
-- Your application configuration directories and wallpaper collection.
+```sh
+test -x ~/.local/bin/qe-project
+test -x ~/.local/bin/qe-shell
+test -x ~/.local/bin/qe-lock
+test -x ~/.local/bin/qe-action
+test -x ~/.local/bin/qe-launch
+test -x ~/.local/bin/qe-defaults
+test -x ~/.local/bin/qe-doctor
+test -x ~/.local/bin/qe-hyprshot
+test -x ~/.local/bin/qe-theme-switcher
+test -r ~/.config/hypr/hyprpaper.conf
+test -r ~/.config/systemd/user/qe-shell.service
+```
+
+If these checks fail, repair the corresponding dotfiles Stow operation before
+continuing. The universal `scripts` package provides the commands; the
+Hyprland `hypr`, `systemd`, and `applications` packages provide startup, the
+unit, and desktop integration.
 
 The project-owned `defaults/` directory is an authored snapshot source and is
 not itself a live XDG configuration directory. The QE project checkout must be
 present because it owns both this directory and the `qe-defaults` command.
 Update the snapshot only through `qe-defaults capture`.
 
+### Reload the User Service
+
+Make the newly stowed static unit visible to the systemd user manager:
+
+```sh
+systemctl --user daemon-reload
+systemctl --user show qe-shell.service \
+  -p LoadState -p UnitFileState -p FragmentPath
+```
+
+`LoadState=loaded` and `UnitFileState=static` are expected. Do not enable
+`qe-shell.service`; it intentionally has no `[Install]` section. Hyprland starts
+it after importing the compositor environment. If `systemctl --user` is not
+available before the first graphical login, skip this reload for now, restore
+the defaults, and enter Hyprland. If QE does not start automatically, run the
+reload and then `qe-shell --service-start` from that session.
+
 ### Restore the QE Defaults
 
-After the QE project checkout exists and Stow has installed the dotfiles, run
-the restore helper before starting QE:
+After the QE checkout exists and the dotfiles checks pass, restore the committed
+runtime bundle before the first QE/Hyprpaper start:
 
 ```sh
 qe-defaults restore
@@ -244,18 +354,52 @@ If the helper is not yet on `PATH`, invoke it directly:
 ```
 
 `restore` validates and restores the committed wallpaper, generated theme, and
-external application artifacts. It also repairs the application `wallpaper`
-theme slots and applies the manifest theme. The operation is idempotent.
+external application artifacts. It creates required XDG parent directories,
+repairs application `wallpaper` theme slots as symlinks, and applies the
+manifest theme. Existing regular files at those generated `wallpaper` slots may
+be replaced. The operation is idempotent, does not require a running QE shell,
+and retains restored files if best-effort external theme application fails.
+
+### Verify Lock Prerequisites
+
+QE uses the existing system `login` PAM stack; it does not install a custom PAM
+file. Before relying on the QE lock, verify:
+
+```sh
+test -r /etc/pam.d/login
+test -x ~/.local/bin/qe-lock
+loginctl list-sessions
+```
+
+Confirm that you can log in on an alternate TTY before performing the first real
+lock test. If the lock process crashes after acquiring the secure Wayland lock,
+recovery requires terminating or recovering the graphical session from a TTY;
+starting another lock process cannot reclaim it.
 
 ### Start QE
 
-Production login starts QE through Hyprland and `qe-shell.service`. To start or
-replace the service from an existing Hyprland session while importing the
-current compositor environment, run:
+For initial setup, log out and enter a fresh Hyprland session after restoring
+defaults. Hyprland imports its environment, starts Hyprpaper and Hypridle, and
+triggers the static `qe-shell.service`.
+
+To start or replace QE from an already running Hyprland session, run:
 
 ```sh
 ~/.local/bin/qe-shell --service-start
 ```
+
+From a terminal in the new graphical session, confirm the dispatcher is on the
+session path and exercise an installed `.desktop` entry:
+
+```sh
+command -v qe-launch
+gtk-launch qe-theme-selector
+```
+
+The expected command path is `$HOME/.local/bin/qe-launch`, and the theme selector
+should open. If either check fails, correct the graphical-session `PATH` or
+re-enter the session after verifying the dotfiles-provided login profile. The
+theme, wallpaper, and palette desktop entries all use this dispatcher.
 
 The unit invokes the guarded launcher, which starts one QE process for the
 configuration and discovers Matugen and the external theme switcher. To restart
@@ -276,6 +420,22 @@ Detached mode starts QE in its own session and sends its output to `/dev/null`.
 It is a development/recovery fallback and is not the normal supervised launch.
 `--restart --detach` is rejected while `qe-shell.service` is active; stop the
 unit first when deliberately switching to direct detached recovery.
+
+### Verify QE
+
+Run:
+
+```sh
+systemctl --user status qe-shell.service
+qs list --all
+qe-doctor
+```
+
+Expected results are one active `qe-shell.service`, one instance whose config is
+`~/Projects/quickshell/shell.qml`, QE ownership of notifications and the status
+notifier watcher, no Waybar/Dunst/Hyprlock process, and a `qe-doctor` summary of
+zero failures. Optional integrations may produce warnings without blocking the
+shell.
 
 The selector launchers use QE IPC targets named `qe-theme` and `qe-wallpaper`.
 If the desktop entries are installed, launch the corresponding QE selector
@@ -601,6 +761,11 @@ systemd service and single-instance state, notification and tray DBus ownership,
 and conflicting retired processes. `[FAIL]` items produce a nonzero exit status;
 missing optional integrations produce `[WARN]` without preventing the shell from
 running.
+
+`qe-doctor` complements rather than replaces the setup checks above. It does not
+validate the wallpaper checkout, restored default artifacts, Python DBus/GLib
+modules, fonts, PAM behavior, external daemon health, custom-XDG alignment, or
+secure-lock behavior.
 
 The current enabled configuration additionally uses `python3`, `brightnessctl`,
 `df`, `timeout`, `nmcli`, `setpriv`, `gdbus`, and `dbus-monitor`. Wallpaper and
