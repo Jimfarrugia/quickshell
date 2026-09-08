@@ -9,6 +9,9 @@ assert.equal(formatReset(new Date(2026, 8, 7, 12, 28)), "Monday 7th September at
 const resetTime = new Date(2026, 8, 9, 0, 28).getTime();
 assert.equal(formatTimeUntil(resetTime, new Date(2026, 8, 6, 12, 28).getTime()), "2d 12h");
 assert.equal(formatTimeUntil(resetTime, resetTime - 30 * 60000), "30m");
+assert.equal(formatTimeUntil(resetTime, resetTime - 90 * 60000), "1h 30m");
+assert.equal(formatTimeUntil(resetTime, resetTime - 5.5 * 3600000), "5h 30m");
+assert.equal(formatTimeUntil(resetTime, resetTime - 23 * 3600000 - 45 * 60000), "23h 45m");
 assert.equal(validateAiQuotaState({ schemaVersion: 1, selectedProvider: "opencode" }).ok, true);
 assert.equal(validateAiQuotaState({ schemaVersion: 1, selectedProvider: "other" }).value.selectedProvider, "openai");
 

@@ -90,8 +90,9 @@ export function formatTimeUntil(value, now = Date.now()) {
   const minutes = Math.max(0, Math.ceil(remaining / 60000));
   const days = Math.floor(minutes / 1440);
   const hours = Math.floor((minutes % 1440) / 60);
+  const mins = minutes % 60;
   if (days > 0) return `${days}d${hours > 0 ? ` ${hours}h` : ""}`;
-  if (hours > 0) return `${hours}h`;
+  if (hours > 0) return `${hours}h ${mins}m`;
   return `${minutes}m`;
 }
 
