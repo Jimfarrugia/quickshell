@@ -31,6 +31,9 @@ python3 -m unittest tests/python/test_ai_quota.py
 bash tests/helpers/system-metrics-helper.test.sh
 bash tests/helpers/brightness-helper.test.sh
 bash tests/helpers/single-instance.test.sh
+bash tests/helpers/run-qe.test.sh
+bash tests/helpers/qe-doctor.test.sh
+bash tests/helpers/qe-entrypoints.test.sh
 bash tests/helpers/theme-hot-reload.test.sh
 bash tests/helpers/theme-selector-ipc.test.sh
 bash tests/helpers/dashboard-ipc.test.sh
@@ -117,6 +120,15 @@ timeout 5 quickshell -p shell.qml
 ## Expected markers and special conditions
 
 ### Core, foundation, bar, and theme-selection tests
+
+The run-QE helper test must print `RUN_QE_TEST_PASSED` and prove that an explicit
+restart delegates to the active production systemd user service rather than
+starting a competing direct instance.
+The doctor helper test must print `QE_DOCTOR_TEST_PASSED`, verify healthy
+production ownership against fixtures, reject a conflicting retired process,
+and report a missing required command.
+The entry-point test must print `QE_ENTRYPOINTS_TEST_PASSED` and verify every
+dotfiles-installed QE command dispatches into the selected managed checkout.
 
 The AI quota JavaScript test must print `AI_QUOTA_TEST_PASSED`. The quota QML
 tests use a fake adapter and must prove shared provider selection, consumer
@@ -535,3 +547,48 @@ Run `qmllint` over all QML after lock changes. Do not run
 `quickshell -p lock.qml` in the primary session as a smoke test. Protocol,
 hot-plug, suspend/resume, PAM, and crash tests require the Phase 12 disposable
 environment and the manually confirmed TTY recovery gate in `docs/PLAN.md`.
+
+### Phase 13 production lifecycle
+
+Validate the launch helper and static unit before live cutover:
+
+```sh
+shellcheck scripts/run-qe.sh tests/helpers/run-qe.test.sh
+bash tests/helpers/run-qe.test.sh
+shellcheck scripts/qe-doctor tests/helpers/qe-doctor.test.sh
+bash tests/helpers/qe-doctor.test.sh
+shellcheck tests/helpers/qe-entrypoints.test.sh \
+  "$HOME/dotfiles/scripts/.local/bin/qe-project" \
+  "$HOME/dotfiles/scripts/.local/bin/qe-action" \
+  "$HOME/dotfiles/scripts/.local/bin/qe-defaults" \
+  "$HOME/dotfiles/scripts/.local/bin/qe-doctor" \
+  "$HOME/dotfiles/scripts/.local/bin/qe-hyprshot" \
+  "$HOME/dotfiles/scripts/.local/bin/qe-launch" \
+  "$HOME/dotfiles/scripts/.local/bin/qe-lock" \
+  "$HOME/dotfiles/scripts/.local/bin/qe-shell"
+bash tests/helpers/qe-entrypoints.test.sh
+systemd-analyze --user verify \
+  "$HOME/dotfiles/_hyprland/systemd/.config/systemd/user/qe-shell.service"
+```
+
+After importing `WAYLAND_DISPLAY`, `HYPRLAND_INSTANCE_SIGNATURE`, and
+`XDG_CURRENT_DESKTOP`, a controlled current-session cutover must leave
+`qe-shell.service` active, exactly one `shell.qml` instance in `qs list --all`,
+working QE IPC, and `Configuration Loaded` in the user journal. An intentional
+Quickshell child crash after 10 seconds must exercise its built-in relaunch; an
+intentional `SIGKILL` of the unit main process must produce one systemd restart
+after two seconds. Never apply either crash test to the separate lock process.
+
+The 2026-09-08 current-session cutover passed. The built-in child-crash relaunch
+and systemd main-process recovery both passed, and notification ownership
+returned to the relaunched QE process. A five-second startup using isolated
+empty XDG state, data, and cache directories reached `Configuration Loaded`.
+A controlled `systemctl --user stop qe-shell.service` left no registered or
+matching shell process, and `qe-shell --service-start` restored one supervised
+instance plus notification and tray ownership. Fresh-login acceptance passed on
+2026-09-08: a new user manager started exactly one service-owned QE shell with
+the current `WAYLAND_DISPLAY` and `HYPRLAND_INSTANCE_SIGNATURE`; notification
+and tray ownership belonged to that process, retired conflicting processes were
+absent, and the user confirmed normal bar and interaction behavior. The user
+closed the complete legacy fallback-profile requirement after confirming
+sustained daily use.

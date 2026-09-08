@@ -74,6 +74,8 @@ accepted ADR merely to tidy the sequence.
 | ADR-042 | Render the QE lock background from the selected wallpaper | Accepted by user on 2026-09-08 |
 | ADR-043 | Share the QE active theme state with the lock process | Accepted for lock visual correctness |
 | ADR-044 | Use native UPower for optional lock battery presentation | Accepted by user on 2026-09-08 |
+| ADR-045 | Hyprland-triggered systemd supervision from the managed checkout | Accepted by user on 2026-09-08 |
+| ADR-046 | Retire the complete legacy desktop-shell fallback | Accepted by user on 2026-09-08 |
 
 
 ## ADR-035: Persist idle inhibitor requested state
@@ -1345,3 +1347,58 @@ Consequences: the isolated lock gains one event-driven native DBus dependency
 without importing the persistent shell service graph. UPower failure affects
 only the optional battery visual and cannot block lock acquisition,
 authentication, or unlock.
+
+## ADR-045: Hyprland-triggered systemd supervision from the managed checkout
+
+Status: Accepted by user on 2026-09-08
+
+Decision: retain the existing project checkout as QE's managed production
+location. Hyprland imports the current Wayland display, instance signature, and
+desktop identity before restarting a systemd user service; systemd owns the
+persistent shell process, journal output, and bounded restart on failure. The
+lock remains an unsupervised, on-demand process and is never automatically
+restarted. Hyprland invokes the stable `qe-shell --service-start` lifecycle mode
+rather than embedding shell sequencing in presentation/session configuration.
+
+Context: Phase 13 had deferred both deployment location and supervision until
+runtime behavior was known. The persistent shell now has established guarded
+entry points and daily-use evidence. This system has no active systemd
+graphical-session target, so enabling the unit against such a target would add
+an unverified startup dependency. Hyprland is already the reliable session
+trigger and can hand process ownership to systemd after importing its
+environment.
+
+Consequences: the checkout must remain at a stable location or its XDG user-bin
+links must be deliberately redeployed. Quickshell 0.3.1 internally relaunches a
+crashed shell child only when the prior launch survived at least 10 seconds and
+exits after an immediate repeat crash. Systemd waits two seconds before
+restarting that failed launcher and limits starts to three per 60 seconds;
+failures separated by more than the inner guard may still continue to relaunch
+and remain journal-visible. `qe-shell --restart` delegates to the active service
+but retains a guarded direct fallback for development and recovery. This
+decision resolves and supersedes ADR-010's deferral; it does not supervise the
+security-critical lock process.
+
+## ADR-046: Retire the complete legacy desktop-shell fallback
+
+Status: Accepted by user on 2026-09-08
+
+Decision: after sustained daily-use validation, Phase 13 no longer maintains or
+acceptance-tests a complete Waybar/Rofi/Dunst/Hyprlock restoration profile.
+Production recovery restarts the supervised QE shell or, for a post-secure lock
+failure, recovers the graphical session from a TTY. Rofi remains for specialized
+flows and the power menu. `pavucontrol`, Blueman Manager, and
+`nm-connection-editor` remain scoped escape hatches for unsupported dashboard
+operations rather than a desktop-shell rollback.
+
+Context: the original Phase 13 fallback requirement existed until QE completed
+an agreed daily-use period. The user confirmed that QE is fully validated in
+daily use and explicitly stated that a complete fallback is no longer needed.
+The discovered stale Waybar binary and absent active Dunst configuration do not
+justify repairing and maintaining an otherwise retired profile.
+
+Consequences: `qe-doctor` checks current production dependencies, ownership, and
+conflicts but does not require retired fallback executables or configuration.
+Waybar, Dunst, and Hyprlock packages and archived files may be removed separately
+after explicit package/configuration cleanup approval. This decision does not
+remove the direct guarded QE launcher or the lock's TTY recovery procedure.

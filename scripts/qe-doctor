@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_path=$(readlink -f -- "${BASH_SOURCE[0]}")
+script_dir=$(cd -- "$(dirname -- "$script_path")" && pwd)
+project_root=$(cd -- "$script_dir/.." && pwd)
+user_bin_dir=${QE_DOCTOR_USER_BIN_DIR:-$HOME/.local/bin}
+proc_root=${QE_DOCTOR_PROC_ROOT:-/proc}
+failures=0
+warnings=0
+
+ok() { printf '[OK] %s\n' "$1"; }
+warn() { printf '[WARN] %s\n' "$1"; warnings=$((warnings + 1)); }
+fail() { printf '[FAIL] %s\n' "$1"; failures=$((failures + 1)); }
+
+check_command() {
+    local command_name=$1 class=$2
+    if command -v "$command_name" >/dev/null 2>&1; then
+        ok "$class command: $command_name"
+    elif [[ "$class" == required ]]; then
+        fail "$class command missing: $command_name"
+    else
+        warn "$class command missing: $command_name"
+    fi
+}
+
+check_wrapper() {
+    local name=$1 expected=$2 resolved mapped
+    local path="$user_bin_dir/$name"
+    if [[ ! -x "$path" ]]; then
+        fail "production entry point missing or not executable: $path"
+        return
+    fi
+    resolved=$(readlink -f -- "$path")
+    if [[ "$resolved" != "$project_root/$expected" ]]; then
+        mapped=""
+        if [[ -x "$user_bin_dir/qe-project" ]]; then
+            mapped=$(QE_PROJECT_ROOT="$project_root" \
+                "$user_bin_dir/qe-project" --resolve "$name" 2>/dev/null || true)
+        fi
+        if [[ "$mapped" != "$project_root/$expected" ]]; then
+            fail "production entry point $name does not map into the managed checkout"
+            return
+        fi
+    fi
+    ok "production entry point: $name"
+}
+
+check_bus_owner() {
+    local bus_name=$1 label=$2 expected_pid=$3 reply unique_name pid_reply owner_pid comm
+    reply=$(busctl --user call org.freedesktop.DBus /org/freedesktop/DBus \
+        org.freedesktop.DBus GetNameOwner s "$bus_name" 2>/dev/null || true)
+    read -r _ unique_name <<<"$reply"
+    unique_name=${unique_name//\"/}
+    if [[ -z "$unique_name" ]]; then
+        fail "$label has no DBus owner"
+        return
+    fi
+    pid_reply=$(busctl --user call org.freedesktop.DBus /org/freedesktop/DBus \
+        org.freedesktop.DBus GetConnectionUnixProcessID s "$unique_name" 2>/dev/null || true)
+    read -r _ owner_pid <<<"$pid_reply"
+    if [[ ! "$owner_pid" =~ ^[0-9]+$ ]]; then
+        fail "$label owner PID is unavailable"
+        return
+    fi
+    if [[ "$owner_pid" == "$expected_pid" ]]; then
+        ok "$label owned by supervised QE (PID $owner_pid)"
+        return
+    fi
+    comm=unknown
+    [[ -r "$proc_root/$owner_pid/comm" ]] && comm=$(<"$proc_root/$owner_pid/comm")
+    fail "$label owned by $comm (PID $owner_pid), expected supervised QE PID $expected_pid"
+}
+
+printf '%s\n' 'QE production diagnostics'
+printf 'Managed checkout: %s\n' "$project_root"
+
+for command_name in bash quickshell qs systemctl dbus-update-activation-environment pgrep busctl; do
+    check_command "$command_name" required
+done
+for command_name in python3 brightnessctl df timeout nmcli setpriv gdbus dbus-monitor; do
+    check_command "$command_name" enabled-feature
+done
+for command_name in matugen jq file magick hyprctl hyprpaper flock pavucontrol nm-connection-editor blueman-manager rofi; do
+    check_command "$command_name" optional
+done
+
+check_wrapper qe-shell scripts/run-qe.sh
+check_wrapper qe-lock scripts/run-qe-lock.sh
+check_wrapper qe-action scripts/qe-action.sh
+check_wrapper qe-launch scripts/qe-launch.sh
+check_wrapper qe-defaults scripts/qe-defaults
+check_wrapper qe-doctor scripts/qe-doctor
+check_wrapper qe-hyprshot scripts/qe-hyprshot.sh
+
+service_pid=0
+if systemctl --user is-active --quiet qe-shell.service; then
+    service_pid=$(systemctl --user show -p MainPID --value qe-shell.service)
+    if [[ "$service_pid" =~ ^[1-9][0-9]*$ ]]; then
+        ok "qe-shell.service active (PID $service_pid)"
+    else
+        fail 'qe-shell.service is active without a usable MainPID'
+    fi
+else
+    fail 'qe-shell.service is not active'
+fi
+
+shell_count=0
+if command -v qs >/dev/null 2>&1; then
+    shell_count=$(qs list --all 2>/dev/null | grep -Fc "Config path: $project_root/shell.qml" || true)
+fi
+if [[ "$shell_count" -eq 1 ]]; then
+    ok 'exactly one managed QE shell instance is registered'
+else
+    fail "expected one managed QE shell instance, found $shell_count"
+fi
+
+if [[ "$service_pid" =~ ^[1-9][0-9]*$ ]] && command -v busctl >/dev/null 2>&1; then
+    check_bus_owner org.freedesktop.Notifications 'notification service' "$service_pid"
+    check_bus_owner org.kde.StatusNotifierWatcher 'status notifier watcher' "$service_pid"
+fi
+
+for process_name in waybar dunst hyprlock; do
+    if pgrep -x "$process_name" >/dev/null 2>&1; then
+        fail "retired conflicting process is running: $process_name"
+    else
+        ok "retired conflicting process is stopped: $process_name"
+    fi
+done
+
+printf 'Summary: %d failure(s), %d warning(s)\n' "$failures" "$warnings"
+((failures == 0))

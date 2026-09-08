@@ -1,6 +1,6 @@
 # QE Implementation Plan
 
-Status: Phases 1-12 complete; AI quota milestone complete; Phase 13 not started
+Status: Phases 1-13 complete; AI quota milestone complete
 
 Last inventory: 2026-09-08
 
@@ -49,7 +49,7 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 | Workspace bar monitor scoping | Complete | Native monitor matching and active/occupied workspace filtering are service-owned and plugin-independent; physical multi-monitor acceptance confirmed by the user on 2026-09-08 |
 | AI quota bar/dashboard | Complete | Shared bar chip and dashboard for OpenAI and OpenCode Go weekly and five-hour windows; provider endpoints remain external/unstable |
 | Lock replacement | Complete | Phase 12 secure lock, production cutover, manual/idle/before-sleep acceptance, failure recovery, and multi-output validation passed 2026-09-07; Hyprlock rollback was exercised before retirement |
-| Production hardening | Not started | Phase 13; final deployment location remains undecided |
+| Production hardening | Complete | Phase 13 supervision, deployment, diagnostics, recovery, clean-state, and fresh-login acceptance passed 2026-09-08 |
 
 ### 2.1 Current handoff
 
@@ -86,8 +86,20 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
   and mirror restoration passed in Phase 3. A connected mirror changed to
   extended does not create a new Qt `QScreen`; reconnect the output or restart
   QE after that specific transition.
-- QE remains a development checkout rather than a production-managed install.
-  Phase 13 decides supervision and final deployment location.
+- Phase 13 is complete. The managed project checkout remains the production
+  location. Hyprland triggers a systemd user service that owns the persistent
+  shell, journal output, and bounded crash restart. Controlled current-session
+  cutover, explicit restart routing, Quickshell child-crash recovery, and
+  systemd main-process recovery passed on 2026-09-08. An isolated-XDG clean-state
+  startup and controlled service stop/production-entry-point recovery also
+  passed. Fresh login started exactly one supervised shell with the current
+  Hyprland environment and correct notification/tray ownership; the user
+  confirmed the bar and normal interactions.
+- The read-only production doctor and operations guide are implemented. Current
+  QE service, single-instance, notification-owner, tray-owner, dependency, and
+  stable-entry-point checks pass. The user confirmed sustained daily use and
+  closed the complete legacy fallback-profile requirement on 2026-09-08;
+  scoped dashboard escape hatches remain supported.
 - Workspace bar monitor scoping is complete. Each per-screen bar shows only
   positive-ID, active or occupied workspaces whose confirmed Hyprland monitor
   matches that screen. Empty workspaces remain intentionally hidden. Automated
@@ -108,7 +120,7 @@ starting environment but is not current-system authority.
 | Bluetooth dashboard | Blueman Manager remains available, especially for unsupported pairing interactions | Complete |
 | Network dashboard | `nm-connection-editor` remains available for unsupported profiles and advanced configuration | Complete |
 | Session lock | QE owns the secure lock, idle, and suspend paths; Hyprlock is installed but retired | Complete |
-| Production lifecycle | Explicit development launch and the current project checkout remain intentional until supervision and deployment are decided | Phase 13 |
+| Production lifecycle | Managed checkout and Hyprland-triggered systemd user service are in production; diagnostics and recovery acceptance passed | Complete |
 
 ### 3.2 Historical records
 
@@ -181,7 +193,6 @@ The resolved Phase 4 Hyprpaper-confirmation question is retained in
 
 ### Deferred decisions
 
-- systemd user service versus Hyprland autostart for production
 - final visual design and animation language
 - fingerprint authentication
 - enterprise Wi-Fi, hidden networks, VPN, proxy, and full profile editing
@@ -343,6 +354,19 @@ remain authoritative in `docs/ARCHITECTURE.md` and ADR-041 through ADR-044.
 
 ### Phase 13: Production hardening and deployment
 
+Status: Complete (started and completed 2026-09-08). The user selected
+Hyprland-triggered systemd user supervision, bounded automatic restart for
+persistent-shell crashes, and the existing managed project checkout as the
+production location.
+Production launch configuration and controlled current-session cutover passed
+on 2026-09-08. The production doctor and user-facing operations guide are now
+implemented. The user confirmed sustained daily use and retired the complete
+legacy fallback profile. Isolated-XDG clean-state startup passed; fresh-login
+acceptance passed with exactly one supervised shell, the current compositor
+environment, no retired conflicting process, and user-confirmed normal bar and
+interaction behavior. Controlled stop and `qe-shell --service-start` recovery
+also passed with ownership returning to the single supervised process.
+
 Objective: make QE suitable for daily startup, managed deployment, diagnostics,
 and clean retirement of replaced tools.
 
@@ -351,8 +375,9 @@ Prerequisites:
 - selected features stable in daily use
 - cutover rollback procedures exercised
 
-Relevant decision: ADR-010 (defer production supervision until runtime
-evidence exists) in `docs/DECISIONS.md`.
+Relevant decisions: ADR-010 (defer production supervision until runtime
+evidence exists), ADR-045 (production supervision and deployment), and ADR-046
+(retire the complete legacy fallback) in `docs/DECISIONS.md`.
 
 Scope:
 
@@ -380,7 +405,7 @@ Deliverables:
 - production launch configuration
 - documented, reproducible QE deployment in the selected location
 - dependency and troubleshooting documentation
-- clean fallback profile
+- documented and verified supervised recovery path
 
 Acceptance criteria:
 
@@ -389,7 +414,7 @@ Acceptance criteria:
 - crash/restart behavior matches documented policy
 - all paths work from the final location
 - no retired tool starts or owns a conflicting protocol
-- fallback profile restores Waybar/Rofi/Dunst/Hyprlock and dashboard tools
+- recovery commands restore supervised QE without starting conflicting owners
 - diagnostics identify missing dependencies and current ownership
 
 Validation:
@@ -397,12 +422,12 @@ Validation:
 - fresh-login tests
 - controlled crash/restart tests excluding secure lock crash on primary session
 - selected-location and clean-state tests
-- complete rollback drill
+- controlled QE stop/start recovery drill
 
 Rollback/recovery:
 
-- maintain a documented Hyprland fallback configuration and installed tools
-  until QE has passed an agreed daily-use period
+- the agreed daily-use period has passed; retain direct QE and TTY lock recovery
+  procedures, but no complete legacy desktop-shell fallback profile
 
 Out of scope:
 

@@ -165,11 +165,17 @@ DBus contention, and duplicate external subscriptions.
 The canonical persistent-shell entry point is `scripts/run-qe.sh`, which uses
 Quickshell's per-configuration instance lock through `--no-duplicate` and the
 project-resolved `shell.qml` path. The launcher resolves its own symlink before
-finding the project, and production autostart invokes it through the stable XDG
-user-bin path `~/.local/bin/qe-shell`. Direct unguarded `quickshell --path`
-launches are development-only and can bypass the single-instance guarantee.
-Manual launches that must survive terminal closure may pass `--detach`; this
-starts the guarded shell in a separate session with terminal hangups ignored.
+finding the managed project checkout. Production startup imports the current
+Wayland session environment and asks systemd to restart `qe-shell.service` through
+the stable `~/.local/bin/qe-shell --service-start` Hyprland autostart mode; the
+unit invokes the same stable XDG user-bin entry point without that option.
+Systemd owns journal capture and bounded crash restart.
+An explicit `--restart` delegates to the active unit, while an unavailable unit
+falls back to the guarded direct restart used for development and recovery.
+Direct unguarded `quickshell --path` launches are development-only and can bypass
+the single-instance guarantee. Manual direct launches that must survive terminal
+closure may pass `--detach`; this starts the guarded shell in a separate session
+with terminal hangups ignored.
 
 ### 3.2 Lock process
 
@@ -215,10 +221,16 @@ The following remain separate boundaries:
 - Blueman Manager, `nm-connection-editor`, and `pavucontrol` as dashboard
   fallbacks until their supported replacement scopes complete
 
-Production supervision is deferred. Development launch and process identity
-must not assume either Hyprland autostart or a systemd user service. A later
-decision may select supervision without changing entry points or service
-contracts.
+The persistent shell is supervised by a systemd user service triggered from
+Hyprland after the compositor environment is imported. The installed Quickshell
+0.3.1 crash handler first relaunches a crashed shell child only when its prior
+launch survived at least 10 seconds; an immediate repeat crash makes the
+Quickshell launcher exit. Systemd then waits two seconds before restarting a
+failed launcher and limits starts to three per 60 seconds. This layered policy
+prevents a tight crash loop while retaining recovery from both shell-child and
+launcher failure. Failures separated by more than Quickshell's 10-second guard
+may continue to relaunch and remain visible in the user journal. The separate
+lock process is never supervised or automatically restarted.
 
 ## 4. Proposed Project Structure
 
@@ -1371,6 +1383,14 @@ workspaces, tray, and notifications must use native events.
 8. Expose IPC endpoints.
 9. Report readiness and degraded integrations independently.
 
+Hyprland remains the graphical-session trigger because this system does not
+publish an active systemd graphical-session target. It imports `WAYLAND_DISPLAY`,
+`HYPRLAND_INSTANCE_SIGNATURE`, and the Hyprland desktop identity before starting
+or restarting `qe-shell.service`; optional daemon availability does not
+participate in service ordering. Restarting rather than merely starting replaces
+any process that survived a compositor restart with one using the new session
+environment.
+
 The bar can render with fallback theme and unavailable placeholders while
 optional services initialize. Startup does not block on Matugen, network,
 Bluetooth, external switcher, or wallpaper generation.
@@ -1486,7 +1506,14 @@ A diagnostics service exposes:
 - cache/data/state paths
 
 Quickshell encoded logs remain the base persistent log facility. Production
-supervision may additionally route output to the user journal later.
+supervision also routes standard output and error to the user journal.
+
+The read-only `qe-doctor` helper reports production command and stable-entry-point
+availability, systemd service and single-instance state, notification and tray
+DBus ownership, and conflicting retired processes. A missing optional
+integration is a warning; a missing required or enabled-feature command,
+incorrect owner, duplicate/missing shell, or conflicting retired owner is a
+failure. It does not mutate services, packages, configuration, or QE state.
 
 ## 14. Testing Strategy
 
@@ -1519,8 +1546,8 @@ supervision may additionally route output to the user journal later.
   when intentionally testing alongside a legacy bar. Verify that any
   development reservation does not alter the other bar's edge reservation.
 - Test notification ownership only in an isolated test window/session using the
-  current QE owner. Dunst restoration applies only to an explicit rollback test;
-  the normal post-cutover state is masked/inactive Dunst with QE owning the name.
+  current QE owner. Historical Dunst restoration evidence is archived; the
+  current production state is masked/inactive Dunst with QE owning the name.
 - Test lock behavior in a disposable session or nested compositor where
   protocol support permits, followed by a documented real-session checklist.
 

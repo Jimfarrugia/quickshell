@@ -28,6 +28,10 @@
 - [6. Notifications and OSDs](#6-notifications-and-osds)
   - [Control Center](#control-center)
 - [7. Help Entries](#7-help-entries)
+- [8. Production Operations](#8-production-operations)
+  - [Diagnostics](#diagnostics)
+  - [Logs and Restart](#logs-and-restart)
+  - [Recovery](#recovery)
 
 ## 1. What Is QE?
 
@@ -68,7 +72,8 @@ wallpaper pipeline:
 
 ```sh
 sudo pacman -S --needed \
-  git stow bash coreutils findutils procps-ng file jq imagemagick \
+  git stow bash coreutils findutils procps-ng util-linux dbus glib2 systemd \
+  python file jq imagemagick libnotify \
   quickshell hyprland hyprpaper matugen \
   networkmanager bluez pipewire wireplumber upower brightnessctl \
   inter-font ttf-jetbrains-mono-nerd ttf-material-symbols-variable
@@ -86,6 +91,9 @@ Some of these are base-system utilities, and some support optional QE modules:
 | `jq` | Processes structured output used by wallpaper and external integrations. |
 | `file` | Validates wallpaper input MIME types. |
 | `procps-ng` | Provides process utilities used by the launch helpers. |
+| `systemd`, `dbus`, `glib2`, `util-linux` | Provide production supervision, session environment import, DBus ownership diagnostics, and bounded helper execution. |
+| `python` | Runs the AI quota helper and bounded structured-data transformations. |
+| `libnotify` | Provides `notify-send` for integration feedback. |
 | `brightnessctl` | Brightness control helper used by the brightness adapter. |
 | `inter-font`, `ttf-jetbrains-mono-nerd`, `ttf-material-symbols-variable` | Fonts used by the default QE appearance configuration. |
 
@@ -125,17 +133,21 @@ enabled:
   complete authored theme and wallpaper default bundle.
 - The `qe-action` wrapper for allowlisted hardware and notification actions.
 - The `qe-hyprshot` wrapper for screenshot notifications and actions.
-- Hyprland configuration that starts Hyprpaper and the guarded QE launcher.
+- The `qe-doctor` wrapper for production dependency, ownership, and conflict
+  checks.
+- Hyprland configuration that starts Hyprpaper and invokes
+  `qe-shell --service-start` after the compositor environment exists.
+- The `qe-shell.service` systemd user unit supplied by the dotfiles repository.
 - Hyprpaper configuration that reads the current wallpaper file from
   `$XDG_DATA_HOME`; QE composes the lock background from the selected source.
 - A wallpaper collection arranged as
   `~/Pictures/Wallpaper/themes/<theme-id>/` unless `QE_WALLPAPER_ROOT` is set.
 
-The current development setup uses `~/.local/bin/qe-shell` and
-`~/.local/bin/qe-defaults` as helpers linked to scripts in
-`~/Projects/quickshell`. These absolute development paths are intentional for
-now. If QE is cloned elsewhere, update both helper links, or invoke the project
-scripts directly, before using QE.
+The managed production checkout is `~/Projects/quickshell`. Stable commands
+under `~/.local/bin` resolve into that checkout. Set `QE_PROJECT_ROOT` for the
+dotfiles-owned `qe-doctor` wrapper and deliberately redeploy any direct helper
+links if the checkout moves; moving it without updating those entry points will
+break startup and recovery commands.
 
 ### Paths and Environment Variables
 
@@ -160,8 +172,8 @@ source.
 
 ### Current Limitations
 
-- QE is currently launched from the development checkout through
-  `~/Projects/quickshell`.
+- QE's managed production deployment remains the checkout at
+  `~/Projects/quickshell`; it is not copied into a separate release directory.
 - OpenCode loads and caches theme colors at launch. Regenerated wallpaper
   colors require an OpenCode restart.
 - External theme application is best effort. QE can commit its own theme while
@@ -207,6 +219,8 @@ are:
 - `~/.local/bin/qe-shell`
 - `~/.local/bin/qe-theme-switcher`
 - `~/.local/bin/qe-defaults`
+- `~/.local/bin/qe-doctor`
+- `~/.config/systemd/user/qe-shell.service`
 - Your application configuration directories and wallpaper collection.
 
 The project-owned `defaults/` directory is an authored snapshot source and is
@@ -235,27 +249,33 @@ theme slots and applies the manifest theme. The operation is idempotent.
 
 ### Start QE
 
-Start QE through the guarded development helper:
+Production login starts QE through Hyprland and `qe-shell.service`. To start or
+replace the service from an existing Hyprland session while importing the
+current compositor environment, run:
 
 ```sh
-~/.local/bin/qe-shell
+~/.local/bin/qe-shell --service-start
 ```
 
-The helper starts one QE process for the configuration and discovers Matugen
-and the external theme switcher. To restart the running instance:
+The unit invokes the guarded launcher, which starts one QE process for the
+configuration and discovers Matugen and the external theme switcher. To restart
+the running instance without re-importing the session environment:
 
 ```sh
 ~/.local/bin/qe-shell --restart
 ```
 
 To launch or restart QE from a terminal and keep it running after the terminal
-closes, use detached mode:
+closes while the supervised service is inactive, use detached mode:
 
 ```sh
 ~/.local/bin/qe-shell --restart --detach
 ```
 
 Detached mode starts QE in its own session and sends its output to `/dev/null`.
+It is a development/recovery fallback and is not the normal supervised launch.
+`--restart --detach` is rejected while `qe-shell.service` is active; stop the
+unit first when deliberately switching to direct detached recovery.
 
 The selector launchers use QE IPC targets named `qe-theme` and `qe-wallpaper`.
 If the desktop entries are installed, launch the corresponding QE selector
@@ -564,3 +584,66 @@ and `title`; `shortcut` and `command` are optional display text. Categories are
 
 The catalog is authoritative: edit or remove entries directly to control what
 appears on the help page. Invalid entries are skipped with a warning.
+
+## 8. Production Operations
+
+### Diagnostics
+
+Run the read-only production diagnostic after deployment, upgrades, or an
+unexpected degraded state:
+
+```sh
+qe-doctor
+```
+
+It checks required and enabled-feature commands, stable QE entry points, the
+systemd service and single-instance state, notification and tray DBus ownership,
+and conflicting retired processes. `[FAIL]` items produce a nonzero exit status;
+missing optional integrations produce `[WARN]` without preventing the shell from
+running.
+
+The current enabled configuration additionally uses `python3`, `brightnessctl`,
+`df`, `timeout`, `nmcli`, `setpriv`, `gdbus`, and `dbus-monitor`. Wallpaper and
+external-theme operations additionally use Matugen, ImageMagick, `file`, `jq`,
+Hyprpaper, `hyprctl`, and the project-owned helpers. NetworkManager, BlueZ,
+PipeWire/WirePlumber, UPower, and systemd-logind remain external service owners;
+their absence degrades only the related feature where the architecture permits.
+
+### Logs and Restart
+
+Inspect supervised startup and runtime output with:
+
+```sh
+systemctl --user status qe-shell.service
+journalctl --user -u qe-shell.service -b
+```
+
+Use `qe-shell --restart` for a normal restart. The command delegates to the
+active unit and falls back to the direct guarded launcher only when the unit is
+not active. Quickshell 0.3.1 first handles shell-child crashes internally;
+systemd restarts a failed launcher after two seconds and limits service starts
+to three per 60 seconds. The separate `qe-lock` process is never automatically
+restarted.
+
+If the service has reached its start limit after repeated failures, inspect the
+journal, correct the cause, and then run:
+
+```sh
+systemctl --user reset-failed qe-shell.service
+qe-shell --service-start
+```
+
+### Recovery
+
+The legacy Waybar/Dunst/Hyprlock restoration profile is no longer maintained
+after sustained daily-use acceptance. Rofi remains in use for specialized
+launchers and the power menu. `pavucontrol`, Blueman Manager, and
+`nm-connection-editor` remain installed escape hatches for functionality outside
+the supported dashboard scope; they are not a complete desktop-shell rollback.
+Do not start Waybar, Dunst, or Hyprlock alongside the equivalent QE owner.
+
+If QE itself fails while the compositor remains usable, inspect the journal and
+try `qe-shell --service-start`. If the lock process crashes after the compositor
+has confirmed a secure lock, do not start another lock process: switch to a TTY
+and terminate or recover the graphical session as documented by the lock
+security procedure.

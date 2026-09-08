@@ -3,12 +3,14 @@ set -euo pipefail
 
 restart=0
 detach=0
+service_start=0
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --restart) restart=1 ;;
         --detach) detach=1 ;;
+        --service-start) service_start=1 ;;
         *)
-            printf 'Usage: %s [--restart] [--detach]\n' "$0" >&2
+            printf 'Usage: %s [--restart] [--detach] [--service-start]\n' "$0" >&2
             exit 2
             ;;
     esac
@@ -19,9 +21,28 @@ script_path=$(readlink -f -- "${BASH_SOURCE[0]}")
 script_dir=$(cd -- "$(dirname -- "$script_path")" && pwd)
 project_root=$(cd -- "$script_dir/.." && pwd)
 
-if ! command -v quickshell >/dev/null 2>&1; then
-  printf 'QE launch failed: quickshell is not installed or not in PATH.\n' >&2
-  exit 127
+if ((service_start)); then
+    if ((restart || detach)); then
+        printf '%s\n' 'QE service start failed: --service-start cannot be combined with other options.' >&2
+        exit 2
+    fi
+    for variable in WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP; do
+        if [[ -z "${!variable:-}" ]]; then
+            printf 'QE service start failed: %s is unavailable.\n' "$variable" >&2
+            exit 1
+        fi
+    done
+    if ! command -v dbus-update-activation-environment >/dev/null 2>&1; then
+        printf '%s\n' 'QE service start failed: dbus-update-activation-environment is unavailable.' >&2
+        exit 127
+    fi
+    if ! command -v systemctl >/dev/null 2>&1; then
+        printf '%s\n' 'QE service start failed: systemctl is unavailable.' >&2
+        exit 127
+    fi
+    dbus-update-activation-environment --systemd \
+        WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP
+    exec systemctl --user restart qe-shell.service
 fi
 
 # Gracefully stop any running shell of this config so --no-duplicate can start a
@@ -48,11 +69,37 @@ restart_instance() {
         for pid in "${pids[@]}"; do
             kill -KILL -- "$pid" 2>/dev/null || true
         done
+        for _ in {1..50}; do
+            alive=0
+            for pid in "${pids[@]}"; do
+                if kill -0 -- "$pid" 2>/dev/null; then
+                    alive=1
+                    break
+                fi
+            done
+            [[ $alive -eq 0 ]] && return 0
+            sleep 0.1
+        done
+        printf '%s\n' 'QE restart failed: the previous shell did not exit.' >&2
+        return 1
     fi
 }
 
 if ((restart)); then
+    if command -v systemctl >/dev/null 2>&1 \
+        && systemctl --user is-active --quiet qe-shell.service; then
+        if ((detach)); then
+            printf '%s\n' 'QE restart failed: --detach cannot replace an active supervised service.' >&2
+            exit 2
+        fi
+        exec systemctl --user restart qe-shell.service
+    fi
     restart_instance
+fi
+
+if ! command -v quickshell >/dev/null 2>&1; then
+  printf 'QE launch failed: quickshell is not installed or not in PATH.\n' >&2
+  exit 127
 fi
 
 if [[ -z "${QE_MATUGEN:-}" ]]; then
