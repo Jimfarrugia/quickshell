@@ -103,6 +103,7 @@ timeout 5 quickshell -p tests/qml/lock-controller-test.qml
 timeout 5 quickshell -p tests/qml/lock-pam-adapter-test.qml
 timeout 5 quickshell -p tests/qml/lock-theme-reader-test.qml
 timeout 5 quickshell -p tests/qml/lock-wallpaper-reader-test.qml
+timeout 5 quickshell -p lock-power-reader-test.qml
 timeout 5 quickshell -p tests/qml/launcher-usage-test.qml
 timeout 5 quickshell -p tests/qml/launcher-selection-test.qml
 timeout 5 quickshell -p tests/qml/launcher-dashboard-action-test.qml
@@ -445,10 +446,12 @@ node tests/js/lock-entry.test.mjs
 timeout 5 quickshell -p tests/qml/lock-controller-test.qml
 timeout 5 quickshell -p tests/qml/lock-pam-adapter-test.qml
 timeout 5 quickshell -p tests/qml/lock-theme-reader-test.qml
+timeout 5 quickshell -p lock-power-reader-test.qml
 ```
 
 They must print `LOCK_ENTRY_TEST_PASSED`, `LOCK_CONTROLLER_TEST_PASSED`,
-`LOCK_PAM_ADAPTER_TEST_PASSED`, and `LOCK_THEME_READER_TEST_PASSED`. The entry
+`LOCK_PAM_ADAPTER_TEST_PASSED`, `LOCK_THEME_READER_TEST_PASSED`, and
+`LOCK_POWER_READER_TEST_PASSED`. The entry
 test prevents the lock-surface controller property from shadowing its assembly
 object ID. The controller fixture verifies that validated
 inputs and compositor `secure` gate authentication, and that empty, failed, and
@@ -456,7 +459,9 @@ cancelled responses remain locked. It also covers secure-confirmation timeout,
 PAM startup failure, a non-completing PAM-attempt deadline, bounded attempts, and
 stale-success rejection. The PAM
 adapter fixture verifies that each context has an immutable attempt ID and that
-an aborted context cannot complete a replacement attempt. The reader
+an aborted context cannot complete a replacement attempt. The power fixture
+verifies percentage normalization and omission when no laptop battery is
+available. The reader
 fixture verifies validated active-theme publication, whole-document config
 fallback, malformed and oversized input rejection, bounded startup fallback,
 opaque-black fallback, and release of discovery/file-watching state before lock

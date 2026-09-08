@@ -178,11 +178,14 @@ The lock screen is a separate, minimal, on-demand Quickshell process. It owns:
 - one `WlSessionLock`
 - one `WlSessionLockSurface` per screen
 - its PAM conversation and authentication state
+- one read-only native UPower display-device view
 - lock-local rendering and input state
 
 It does not import the main shell module graph, notification services,
-dashboards, or command adapters. It reads validated configuration and the
-last-known-good QE theme from disk before requesting the lock.
+dashboards, or command adapters. The lock-local UPower view is event-driven,
+starts no process, and is omitted from presentation when no laptop battery is
+available. The lock reads validated configuration and the last-known-good QE
+theme from disk before requesting the lock.
 
 The lock uses `ext-session-lock-v1` through Quickshell. A fullscreen or overlay
 window is never an acceptable substitute.
@@ -196,7 +199,7 @@ separate TTY. For that reason:
 - no unauthenticated IPC may unlock the session
 - authentication and unlock remain in the process that owns `WlSessionLock`
 - the lock process is not automatically restarted after a post-lock crash
-- optional integrations are excluded from the lock process
+- optional process/command integrations are excluded from the lock process
 
 ### 3.3 External processes
 
@@ -283,7 +286,7 @@ The split between `components/` and `modules/` is intentional:
 | `integrations/` | Quickshell/Qt APIs, external contracts                    | presentation policy, feature layouts                         |
 | `utils/`        | no stateful QML objects                                   | Qt object ownership, process ownership, mutable global state |
 | `scripts/`      | documented external tools                                 | presentation assumptions, undocumented stdout consumed by UI |
-| `lock/`         | lock-safe theme/config readers, PAM, Wayland session lock | persistent shell services and nonessential adapters          |
+| `lock/`         | lock-safe theme/config readers, native UPower read, PAM, Wayland session lock | persistent shell services and nonessential adapters |
 
 Circular dependencies are prohibited. A shared concern is promoted to a domain
 service only when at least two modules need it or it owns long-lived external
@@ -1200,6 +1203,16 @@ lock surface synchronously loads that warmed source cache with
 complete composition is then blurred with a cached Gaussian blur (radius 12,
 25 samples). Invalid, missing, or undecodable wallpaper input leaves the lock
 on its opaque fallback.
+
+Lock presentation follows the retired Hyprlock composition without retaining
+its command-backed status reads: bold Roboto at 149px renders the 12-hour time
+in the bottom-left, with bold 36px weekday and ordinal date above it. The clock
+uses its tight glyph bounds and the section uses font descent compensation so
+the visible clock aligns at 60px without shifting the weekday/date. A centered
+password field remains the only interactive element. A lock-local
+native UPower reader exposes confirmed display-battery percentage to a
+bottom-right bold 54px label and Material Symbols icon; the entire battery block
+is hidden when UPower has no laptop battery.
 
 QE also owns a localized wallpaper selector
 (`modules/wallpaper/WallpaperSelector.qml`) opened through the `qe-wallpaper`

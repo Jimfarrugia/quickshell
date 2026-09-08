@@ -55,8 +55,9 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 
 - Phase 12 completed on 2026-09-07 after disposable and production acceptance.
   `lock.qml` uses native `WlSessionLock`, a native PAM adapter configured for the
-  existing `login` service, lock-only validated disk readers, and a tested
-  secure/authentication state machine. The manual lock and Hypridle `lock_cmd`
+  existing `login` service, lock-only validated disk readers, a read-only native
+  UPower view for optional battery presentation, and a tested secure/authentication
+  state machine. The manual lock and Hypridle `lock_cmd`
   now resolve through `~/.local/bin/qe-lock`; Hyprlock is installed but retired.
   Manual, five-minute idle, before-sleep, helper/process
   failure, and multi-output acceptance passed. Hyprlock rollback was exercised
@@ -378,7 +379,8 @@ Foundation record:
   has a five-minute deadline before entering the existing bounded retry/recovery
   path.
 - `lock.qml` has no IPC and imports neither persistent-shell services nor
-  optional integrations. The production manual and Hypridle lock commands now
+  process/command integrations. Its only optional live read is the lock-local,
+  event-driven native UPower display-device view. The production manual and Hypridle lock commands now
   use the stable `qe-lock` launcher; Hyprlock remains installed only as a
   retired legacy package.
 - The first disposable Hyprland launch on 2026-09-07 exposed a QML name-shadowing

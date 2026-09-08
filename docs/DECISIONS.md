@@ -73,6 +73,7 @@ accepted ADR merely to tidy the sequence.
 | ADR-041 | Use the existing `login` PAM service for the QE lock | Accepted with Phase 12 start on 2026-09-07 |
 | ADR-042 | Render the QE lock background from the selected wallpaper | Accepted by user on 2026-09-08 |
 | ADR-043 | Share the QE active theme state with the lock process | Accepted for lock visual correctness |
+| ADR-044 | Use native UPower for optional lock battery presentation | Accepted by user on 2026-09-08 |
 
 
 ## ADR-035: Persist idle inhibitor requested state
@@ -1325,3 +1326,22 @@ switcher's independent state is not used as a lock theme source. The lock can
 now render the same confirmed QE theme across process boundaries, while an
 unavailable or invalid shared state still fails closed to the opaque emergency
 theme.
+
+## ADR-044: Use native UPower for optional lock battery presentation
+
+Status: Accepted by user on 2026-09-08
+
+Decision: add one lock-local, read-only adapter over Quickshell's native UPower
+display device. The adapter exposes only battery availability and normalized
+percentage. Lock presentation hides the battery block when no laptop battery is
+available.
+
+Context: the requested Hyprlock-inspired layout includes battery percentage,
+but the retired layout obtained it through repeatedly executed shell commands.
+The lock process must remain minimal and must not add command execution or
+polling.
+
+Consequences: the isolated lock gains one event-driven native DBus dependency
+without importing the persistent shell service graph. UPower failure affects
+only the optional battery visual and cannot block lock acquisition,
+authentication, or unlock.

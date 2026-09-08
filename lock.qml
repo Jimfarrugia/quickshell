@@ -5,6 +5,13 @@ import "lock" as Lock
 
 ShellRoot {
     id: root
+    property date now: new Date()
+
+    function scheduleClockUpdate() {
+        const millisecondsIntoMinute = Date.now() % 60000;
+        clockTimer.interval = Math.max(1, 60000 - millisecondsIntoMinute);
+        clockTimer.restart();
+    }
 
     function beginWhenReady() {
         if (!themeReader.ready || !wallpaperReader.ready || lockController.state !== "idle") return;
@@ -22,6 +29,10 @@ ShellRoot {
         onReadyChanged: root.beginWhenReady()
     }
 
+    Lock.LockPowerReader {
+        id: powerReader
+    }
+
     Lock.LockPamAdapter {
         id: pamAdapter
     }
@@ -34,6 +45,8 @@ ShellRoot {
             lockTheme: themeReader.theme
             appearance: themeReader.appearance
             wallpaperSource: wallpaperReader.sourceUrl
+            power: powerReader
+            now: root.now
         }
     }
 
@@ -54,5 +67,17 @@ ShellRoot {
         onTriggered: Qt.quit()
     }
 
-    Component.onCompleted: beginWhenReady()
+    Timer {
+        id: clockTimer
+        repeat: false
+        onTriggered: {
+            root.now = new Date();
+            root.scheduleClockUpdate();
+        }
+    }
+
+    Component.onCompleted: {
+        beginWhenReady();
+        scheduleClockUpdate();
+    }
 }
