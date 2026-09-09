@@ -35,7 +35,7 @@
   "tokens": {
     "background": "{palette.background}",
     "on_background": "{palette.foreground}",
-    "surface": "{palette.black}",
+    "surface": "{palette.background}",
     "on_surface": "{palette.foreground}",
     "on_surface_subdued": "{palette.grayLight}",
     "on_surface_indicator": "{palette.muted}",
