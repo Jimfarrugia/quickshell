@@ -10,9 +10,17 @@ BarChip {
     visible: shouldShow
     icon: !Services.BluetoothService.enabled ? "bluetooth_disabled"
         : (Services.BluetoothService.connectedCount > 0 ? "bluetooth_connected" : "bluetooth")
-    iconColor: Services.BluetoothService.connectedCount > 0
-        ? Services.ThemeService.theme.tokens.success
-        : Services.ThemeService.theme.tokens.on_surface_subdued
+    iconColor: Services.BluetoothService.availability === "unavailable"
+        ? Services.ThemeService.theme.tokens.error
+        : (Services.BluetoothService.operation === "failed" || Services.BluetoothService.operationError.length > 0
+            ? Services.ThemeService.theme.tokens.error
+            : (Services.BluetoothService.freshness === "stale"
+            ? Services.ThemeService.theme.tokens.warning
+            : (Services.BluetoothService.operation === "pending"
+                ? Services.ThemeService.theme.tokens.primary
+                : (Services.BluetoothService.connectedCount > 0
+                    ? Services.ThemeService.theme.tokens.success
+                    : Services.ThemeService.theme.tokens.on_surface_indicator))))
     warning: Services.BluetoothService.operation === "pending"
     warningColor: Services.ThemeService.theme.tokens.primary
     hoverText: Services.BluetoothService.hoverText

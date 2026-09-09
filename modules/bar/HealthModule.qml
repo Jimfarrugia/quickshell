@@ -11,6 +11,8 @@ BarChip {
 
     visible: !healthy
     text: pending ? "Starting..." : "Degraded"
+    textColor: pending ? Services.ThemeService.theme.tokens.primary
+        : Services.ThemeService.theme.tokens.warning
     warning: !pending
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
     configuredFontSize: Services.ConfigService.config.appearance.fontSize

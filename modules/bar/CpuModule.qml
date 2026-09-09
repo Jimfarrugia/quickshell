@@ -7,10 +7,12 @@ BarChip {
     && Services.SystemMetricsService.cpu.value > 80
   readonly property bool criticalUsage: Services.SystemMetricsService.cpu.availability === "available"
     && Services.SystemMetricsService.cpu.value > 90
+  readonly property bool stale: Services.SystemMetricsService.cpu.freshness === "stale"
   readonly property color usageColor: Services.SystemMetricsService.cpu.availability === "unavailable"
     || criticalUsage
       ? Services.ThemeService.theme.tokens.error
-      : (highUsage ? Services.ThemeService.theme.tokens.warning : Services.ThemeService.theme.tokens.secondary)
+      : (highUsage || stale ? Services.ThemeService.theme.tokens.warning
+          : Services.ThemeService.theme.tokens.on_surface_indicator)
 
   visible: Services.ConfigService.config.bar.metrics.cpu
   icon: "memory"
@@ -18,9 +20,9 @@ BarChip {
     ? `${Services.SystemMetricsService.cpu.value}%`
     : (Services.SystemMetricsService.cpu.availability === "unavailable" ? "CPU!" : "CPU...")
   iconColor: usageColor
-  textColor: highUsage || Services.SystemMetricsService.cpu.availability === "unavailable"
+  textColor: highUsage || stale || Services.SystemMetricsService.cpu.availability === "unavailable"
     ? usageColor : Services.ThemeService.theme.tokens.on_surface_subdued
-  warning: Services.SystemMetricsService.cpu.freshness === "stale"
+  warning: stale
   hoverText: Services.SystemMetricsService.cpuHoverText
   configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
   configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily

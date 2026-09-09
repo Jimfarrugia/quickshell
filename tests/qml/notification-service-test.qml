@@ -30,13 +30,13 @@ ShellRoot {
 
         Services.NotificationService.setDnd(false);
         if (dndModule.icon !== "do_not_disturb_off"
-                || dndModule.hoverText !== "Do not disturb disabled"
-                || dndModule.iconColor.toString() !== Services.ThemeService.theme.tokens.secondary.toString())
+                || dndModule.hoverText !== "Enable DND"
+                || dndModule.iconColor.toString() !== Services.ThemeService.theme.tokens.on_surface_indicator.toString())
             return fail("disabled DND bar presentation was incorrect");
         dndModule.clicked();
         if (!Services.NotificationService.dnd
                 || dndModule.icon !== "do_not_disturb_on"
-                || dndModule.hoverText !== "Do not disturb enabled"
+                || dndModule.hoverText !== "Disable DND"
                 || dndModule.iconColor.toString() !== Services.ThemeService.theme.tokens.warning.toString())
             return fail("DND bar button did not enable DND or update presentation");
         dndModule.clicked();

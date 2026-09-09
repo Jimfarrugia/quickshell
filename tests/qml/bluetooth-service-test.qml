@@ -30,7 +30,7 @@ ShellRoot {
             return fail("disabled adapter did not use the disabled icon");
         if (!bluetoothModule.shouldShow)
             return fail(`disabled adapter was hidden: availability=${Services.BluetoothService.availability}`);
-        if (bluetoothModule.iconColor.toString() !== Services.ThemeService.theme.tokens.error.toString())
+        if (bluetoothModule.iconColor.toString() !== Services.ThemeService.theme.tokens.on_surface_indicator.toString())
             return fail(`disabled adapter color was ${bluetoothModule.iconColor}`);
 
         fakeBluetooth.enabled = true;
@@ -66,6 +66,8 @@ ShellRoot {
         if (Services.BluetoothService.pendingOperation !== ""
                 || Services.BluetoothService.operationError !== "Could not pair with Pairing Mouse")
             return fail("transient pairing connection did not fail cleanly");
+        if (bluetoothModule.iconColor.toString() !== Services.ThemeService.theme.tokens.error.toString())
+            return fail("failed Bluetooth operation did not use error color");
         fakeBluetooth.devices = [{
             address: "00:11:22:33:44:55", name: "Fixture Mouse", deviceName: "Mouse",
             icon: "input-mouse", connected: true, paired: true, bonded: true,
@@ -101,8 +103,9 @@ ShellRoot {
             return fail(`multiple-device Bluetooth hover was '${bluetoothModule.hoverText}'`);
 
         fakeBluetooth.operation = "pending";
-        if (!bluetoothModule.warning)
-            return fail("pending Bluetooth operation did not show warning state");
+        if (!bluetoothModule.warning
+                || bluetoothModule.iconColor.toString() !== Services.ThemeService.theme.tokens.primary.toString())
+            return fail("pending Bluetooth operation did not use primary intent state");
         fakeBluetooth.operation = "idle";
         fakeBluetooth.availability = "unavailable";
         fakeBluetooth.freshness = "unknown";

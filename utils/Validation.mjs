@@ -4,6 +4,7 @@ const THEME_TOKENS = [
   "surface",
   "on_surface",
   "on_surface_subdued",
+  "on_surface_indicator",
   "surface_variant",
   "on_surface_variant",
   "surface_panel",

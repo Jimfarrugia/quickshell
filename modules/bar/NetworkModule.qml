@@ -13,11 +13,10 @@ BarChip {
     trailingText: wifiConnected ? `${Services.NetworkService.signalStrength}%`
         : (wiredConnected ? `${Services.NetworkService.linkSpeed} Mbps` : "")
     icon: wifiConnected ? "wifi" : (wiredConnected ? "lan" : "signal_wifi_bad")
-    textColor: wifiConnected || wiredConnected ? Services.ThemeService.theme.tokens.primary
-                                                : Services.ThemeService.theme.tokens.on_surface_subdued
+    textColor: wifiConnected ? Services.ThemeService.theme.tokens.primary
+        : Services.ThemeService.theme.tokens.on_surface_subdued
     trailingTextColor: Services.ThemeService.theme.tokens.on_surface_subdued
-    iconColor: wifiConnected || wiredConnected ? Services.ThemeService.theme.tokens.secondary
-                                               : Services.ThemeService.theme.tokens.error
+    iconColor: Services.ThemeService.theme.tokens.on_surface_indicator
     warning: false
     hoverText: Services.NetworkService.hoverText
     horizontalPadding: Services.ConfigService.config.bar.moduleSpacing / 2

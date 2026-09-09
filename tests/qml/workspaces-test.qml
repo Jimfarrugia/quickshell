@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import "modules/bar" as Bar
 import "services" as Services
 import "fixtures/qml" as Fixtures
 
@@ -10,7 +11,7 @@ ShellRoot {
     property var externalScreen: ({ name: "HDMI-A-1" })
     property var workspaces: [
         ({ id: 1, name: "1", active: true, monitor: ({ name: "eDP-1" }), toplevels: ({ values: [] }) }),
-        ({ id: 2, name: "2", active: false, monitor: ({ name: "eDP-1" }), toplevels: ({ values: [{}] }) }),
+        ({ id: 2, name: "2", active: false, urgent: true, monitor: ({ name: "eDP-1" }), toplevels: ({ values: [{}] }) }),
         ({ id: 3, name: "3", active: false, monitor: ({ name: "eDP-1" }), toplevels: ({ values: [] }) }),
         ({ id: 11, name: "11", active: false, monitor: ({ name: "HDMI-A-1" }), toplevels: ({ values: [{}] }) }),
         ({ id: -99, name: "special", active: true, monitor: ({ name: "eDP-1" }), toplevels: ({ values: [{}] }) })
@@ -28,6 +29,8 @@ ShellRoot {
         value: fakeCompositor
         restoreMode: Binding.RestoreBindingOrValue
     }
+
+    Bar.WorkspacesModule { id: workspaceModule; sourceScreen: root.internalScreen }
 
     property bool done: false
     property string resolvedInternalMonitor: Services.CompositorService.monitorNameForScreen(root.internalScreen)
@@ -61,6 +64,12 @@ ShellRoot {
         expectVisible(root.workspaces[4], root.internalScreen, false, "special workspace");
         expectVisible(root.workspaces[3], root.externalScreen, true, "occupied external workspace");
         expectVisible(root.workspaces[0], null, false, "workspace without a screen");
+        if (workspaceModule.itemAt(0).iconColor.toString()
+                !== Services.ThemeService.theme.tokens.on_surface_indicator.toString())
+            return fail("focused workspace did not retain neutral indicator color");
+        if (workspaceModule.itemAt(1).iconColor.toString()
+                !== Services.ThemeService.theme.tokens.warning.toString())
+            return fail("urgent workspace did not use warning color");
 
         if (!Services.CompositorService.activateWorkspace(root.workspaces[1])
                 || fakeCompositor.lastActivatedWorkspace !== root.workspaces[1])

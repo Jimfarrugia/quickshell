@@ -301,6 +301,17 @@ omit the ordinary boundary, and keyboard focus restores a visible focus ring.
 Filled emphasis is limited to primary actions because status roles do not yet
 have guaranteed foreground pairs.
 
+The bar uses a separate optical hierarchy from action controls. Ordinary text
+and percentages use `on_surface_subdued`; ordinary compact icons and uniformly
+tinted tray icons use `on_surface_indicator`. The SSID and clock time retain
+deliberate `primary` emphasis. Confirmed domain states override the neutral
+indicator: Bluetooth connectivity uses `success`, mute and DND suppression use
+`warning`, idle inhibition uses `primary`, stale values use `warning`, confirmed
+failure or critical state uses `error`, and ordinary charging uses `charging`.
+Network connectivity and workspace focus do not change the neutral icon color;
+urgent workspaces use `warning`. Precedence is critical/error, stale/warning,
+pending, charging, confirmed success, active mode, then neutral indicator.
+
 ### Directory dependency rules
 
 | Directory       | May depend on                                             | Must not depend on                                           |
@@ -1079,6 +1090,7 @@ contract. The initial shape is:
     "surface": "{palette.background}",
     "on_surface": "{palette.foreground}",
     "on_surface_subdued": "{palette.muted}",
+    "on_surface_indicator": "{palette.blueGray}",
     "surface_variant": "{palette.gray}",
     "on_surface_variant": "{palette.purpleLight}",
     "surface_panel": "#f21b1e28",
@@ -1113,7 +1125,7 @@ contract. The initial shape is:
 }
 ```
 
-The approved 35-role token names use Matugen-style `snake_case` and paired
+The approved 36-role token names use Matugen-style `snake_case` and paired
 `on_*` foregrounds. ADR-015 records the Phase 4 pre-release contract revision
 that supersedes the provisional vocabulary and the individual additions in
 ADR-012 and ADR-014 while retaining their charging and tooltip semantics.
@@ -1125,7 +1137,10 @@ semantic tokens only.
 An `on_*` role is foreground content intended for its named surface or accent;
 for example, `on_surface_variant` is paired with `surface_variant`, not a
 generic lower-emphasis form of `on_surface`. `on_surface_subdued` is enabled,
-lower-emphasis text and icon content on QE's ordinary neutral surface family.
+lower-emphasis text content on QE's ordinary neutral surface family.
+`on_surface_indicator` is enabled neutral compact indicator and iconographic
+content on that surface family, allowing optical prominence above subdued text
+without borrowing the `secondary` accent role.
 `on_surface_disabled` is reserved for genuinely unavailable controls, and
 `on_surface_placeholder` remains specific to editable hints. Boundaries use
 `outline` or `outline_variant` rather than a content role. A theme may map
@@ -1151,6 +1166,9 @@ over every external image.
 and the panel composited over the theme background. Normal action foregrounds
 also target 4.5:1 on hover and pressed surfaces so text-bearing controls remain
 readable.
+`on_surface_indicator` has the same 4.5:1 neutral-surface targets; themes may map
+it to the same color as another role when their authored palette has no useful
+intermediate value.
 
 Typography, spacing, radii, border widths, shadows parameters, opacity policy,
 and animation durations belong to user configuration initially, not individual
@@ -1218,7 +1236,7 @@ generation or application.
 The current adapter boundary requires `QE_MATUGEN` to name the executable; an
 unset or missing executable is an isolated unavailable state. `MatugenAdapter`
 requests noninteractive JSON output with an explicit mode and source-color
-preference, bounds the process, and validates the mapped 35-role theme before
+preference, bounds the process, and validates the mapped 36-role theme before
 the service stages it. `WallpaperPromotionAdapter` then promotes the staged QE
 `Wallpaper.json` into its stable XDG data path, preserving the previous artifact
 when staging or promotion fails. External Matugen artifacts use the separate

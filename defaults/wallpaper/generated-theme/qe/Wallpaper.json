@@ -61,6 +61,7 @@
     "surface": "#121318",
     "on_surface": "#e4e1e9",
     "on_surface_subdued": "#c7c5d0",
+    "on_surface_indicator": "#e4e1e9",
     "surface_variant": "#1f1f25",
     "on_surface_variant": "#c7c5d0",
     "surface_panel": "#f5121318",

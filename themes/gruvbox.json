@@ -38,6 +38,7 @@
     "surface": "{palette.black}",
     "on_surface": "{palette.foreground}",
     "on_surface_subdued": "{palette.grayLight}",
+    "on_surface_indicator": "{palette.muted}",
     "surface_variant": "{palette.blackLight}",
     "on_surface_variant": "{palette.muted}",
     "surface_panel": "#f2282828",

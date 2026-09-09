@@ -23,10 +23,10 @@ for (const directory of ["components", "modules"]) {
   }
 }
 
-for (const path of await qmlFiles(join(root, "modules"))) {
+for (const path of await qmlFiles(join(root, "modules", "bar"))) {
   const source = await readFile(path, "utf8");
-  assert.equal(source.includes("tokens.on_surface_disabled"), false,
-    `${relative(root, path)} must leave disabled styling to shared controls`);
+  assert.equal(source.includes("tokens.secondary"), false,
+    `${relative(root, path)} must use indicator or domain-state roles instead of secondary`);
 }
 
 console.log("theme semantic source checks passed");

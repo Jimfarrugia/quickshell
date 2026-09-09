@@ -39,6 +39,14 @@ ShellRoot {
                     || String(module.iconColor) !== String(Services.ThemeService.theme.tokens.warning)
                     || String(module.textColor) !== String(Services.ThemeService.theme.tokens.warning))
                 return root.fail("stale bar chip did not use warning text/icon colors without a border");
+            Services.AiQuotaService.providers = Object.assign({}, Services.AiQuotaService.providers, {
+                openai: Object.assign({}, Services.AiQuotaService.provider("openai"), {
+                    freshness: "current"
+                })
+            });
+            if (String(module.iconColor) !== String(Services.ThemeService.theme.tokens.on_surface_indicator)
+                    || String(module.textColor) !== String(Services.ThemeService.theme.tokens.on_surface_subdued))
+                return root.fail("current bar chip did not separate indicator and text emphasis");
             module.clicked();
             if (controller.opens !== 1 || controller.toggles !== 0 || controller.lastScreen !== "monitor-test") return root.fail("left click did not open the dashboard on the source monitor");
             module.secondaryClicked();

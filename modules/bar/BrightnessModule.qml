@@ -24,16 +24,19 @@ BarChip {
         && Services.BrightnessService.availability !== "unavailable"
     icon: iconForPercentage(displayPercent)
     iconColor: unavailable
-        ? Services.ThemeService.theme.tokens.on_surface_subdued
-        : (stale
-            ? Services.ThemeService.theme.tokens.warning
-            : Services.ThemeService.theme.tokens.secondary)
+        ? Services.ThemeService.theme.tokens.on_surface_disabled
+        : (Services.BrightnessService.operation === "failed" ? Services.ThemeService.theme.tokens.error
+            : (stale ? Services.ThemeService.theme.tokens.warning
+            : (pending ? Services.ThemeService.theme.tokens.primary
+                : Services.ThemeService.theme.tokens.on_surface_indicator)))
     text: unavailable
         ? "Light..."
         : `${displayPercent}%`
-     textColor: unavailable
-         ? Services.ThemeService.theme.tokens.on_surface_subdued
-         : Services.ThemeService.theme.tokens.on_surface_subdued
+     textColor: unavailable ? Services.ThemeService.theme.tokens.on_surface_disabled
+         : (Services.BrightnessService.operation === "failed" ? Services.ThemeService.theme.tokens.error
+             : (stale ? Services.ThemeService.theme.tokens.warning
+             : (pending ? Services.ThemeService.theme.tokens.primary
+                 : Services.ThemeService.theme.tokens.on_surface_subdued)))
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
     configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily
     configuredFontSize: Services.ConfigService.config.appearance.fontSize

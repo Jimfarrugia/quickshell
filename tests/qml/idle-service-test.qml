@@ -27,6 +27,9 @@ ShellRoot {
         Services.IdleService.requested = false;
         Services.IdleService.updateIntegration();
 
+        if (idleModule.iconColor.toString() !== Services.ThemeService.theme.tokens.on_surface_indicator.toString())
+            return fail("inactive idle inhibitor did not use the neutral indicator color");
+
         if (Services.IdleService.requested || Services.IdleService.setRequested(true))
             return fail("idle inhibition did not default off or accepted a request without a window");
 

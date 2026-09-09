@@ -29,6 +29,7 @@
     "surface": "{palette.background}",
     "on_surface": "{palette.foreground}",
     "on_surface_subdued": "{palette.muted}",
+    "on_surface_indicator": "{palette.blueGray}",
     "surface_variant": "{palette.gray}",
     "on_surface_variant": "{palette.purpleLight}",
     "surface_panel": "#f21b1e28",

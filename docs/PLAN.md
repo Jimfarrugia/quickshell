@@ -40,6 +40,7 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 | Bar parity and Waybar cutover | Complete | Phase 3 acceptance passed 2026-08-25 |
 | Theme/Matugen integration | Complete | Manual selector and external machine integration complete; Matugen mapping, staged promotion, QE-localized wallpaper selector, and Hyprpaper XDG-path application complete; external generated Matugen artifacts now delivered as QE-generated `wallpaper` theme slots applied by the external switcher, including imv, mpv, and Yazi; runtime/default artifact separation and idempotent promotion added; `QE_THEME_SWITCHER` wired for production through the installed `qe-theme-switcher` wrapper. Phase 4 acceptance passed on 2026-08-26 |
 | Theme semantics refinement | Complete | Added enabled subdued content semantics, centralized action-control state styling, and remapped authored/generated themes without speculative palette generation; acceptance passed 2026-09-09 |
+| Bar indicator semantics | Complete | Added a neutral indicator role, unified ordinary bar/tray icon tint, and restored domain-state color distinctions without reusing selection semantics; acceptance passed 2026-09-09 |
 | Notifications/OSDs | Complete | QE owns notifications and OSDs; Dunst cutover, rollback, and post-cutover legacy cleanup passed 2026-08-31 |
 | Launcher/help | Complete | Launcher, curated help surface, `Super+R` cutover, `Super+/` help binding, rollback, and focused-output multi-monitor acceptance passed 2026-09-01 |
 | Audio/dashboard foundation | Complete | Shared dashboard foundation, audio dashboard, launcher access, resilience, and rollback acceptance passed 2026-09-02 |
@@ -54,6 +55,11 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 
 ### 2.1 Current handoff
 
+- Bar indicator semantics refinement is complete. Neutral bar and tray icons
+  use `on_surface_indicator`; status colors are reserved for confirmed domain
+  states, while the primary SSID and clock treatment remains intentional.
+  Theme contrast, bar-state, tray, generated-theme, lint, and shell smoke tests
+  passed.
 - Theme semantics refinement is complete. ADR-047 adds
   `on_surface_subdued`, reserves `on_surface_disabled` for unavailable controls,
   and makes reusable action controls own normal, selected, pending,

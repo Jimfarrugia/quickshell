@@ -28,6 +28,8 @@ ShellRoot {
     Services.BrightnessService.__confirmedDeviceMaxBrightness = 1060;
     if (brightnessModule.textColor.toString() !== Services.ThemeService.theme.tokens.on_surface_subdued.toString())
       return fail("brightness text did not use the standard muted text color");
+    if (brightnessModule.iconColor.toString() !== Services.ThemeService.theme.tokens.on_surface_indicator.toString())
+      return fail("brightness icon did not use the neutral indicator color");
     if (brightnessModule.hoverText !== "")
       return fail("brightness module unexpectedly exposed hover content");
 
@@ -66,8 +68,8 @@ ShellRoot {
       return fail("pending state was not published");
     if (brightnessModule.displayPercent !== 42)
       return fail("module did not show pending percent");
-    if (brightnessModule.iconColor.toString() !== Services.ThemeService.theme.tokens.secondary.toString())
-      return fail("pending brightness request changed the normal icon color");
+    if (brightnessModule.iconColor.toString() !== Services.ThemeService.theme.tokens.primary.toString())
+      return fail("pending brightness request did not use primary intent color");
 
     // A background read is external state, not confirmation of the pending request.
     fakeIntegration.emitRead({ ok: true, name: "intel_backlight", brightness: 636, maxBrightness: 1060, percent: 60 });
@@ -91,6 +93,9 @@ ShellRoot {
       return fail("pendingPercent was not cleared after failed set");
     if (Services.BrightnessService.operation !== "failed")
       return fail("operation was not marked failed");
+    if (brightnessModule.iconColor.toString() !== Services.ThemeService.theme.tokens.error.toString()
+        || brightnessModule.textColor.toString() !== Services.ThemeService.theme.tokens.error.toString())
+      return fail("failed brightness operation did not use error color");
 
     // A command that cannot start must not leave pending state behind.
     fakeIntegration.acceptSet = false;

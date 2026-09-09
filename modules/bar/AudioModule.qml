@@ -14,10 +14,20 @@ BarChip {
 
     visible: Services.AudioService.availability !== "unavailable"
     icon: Services.AudioService.muted ? "volume_off" : iconForVolume(Services.AudioService.displayVolumePercent)
-    iconColor: Services.ThemeService.theme.tokens.on_surface_subdued
+    iconColor: Services.AudioService.operation === "failed" ? Services.ThemeService.theme.tokens.error
+        : (Services.AudioService.muted || Services.AudioService.freshness === "stale"
+        ? Services.ThemeService.theme.tokens.warning
+        : (Services.AudioService.operation === "pending"
+            ? Services.ThemeService.theme.tokens.primary
+            : Services.ThemeService.theme.tokens.on_surface_indicator))
     text: Services.AudioService.availability === "available"
         ? (Services.AudioService.muted ? "" : `${Services.AudioService.displayVolumePercent}%`)
         : "Audio..."
+    textColor: Services.AudioService.operation === "failed" ? Services.ThemeService.theme.tokens.error
+        : (Services.AudioService.freshness === "stale" ? Services.ThemeService.theme.tokens.warning
+            : (Services.AudioService.operation === "pending"
+                ? Services.ThemeService.theme.tokens.primary
+                : Services.ThemeService.theme.tokens.on_surface_subdued))
     warning: Services.AudioService.availability !== "available"
     hoverText: Services.AudioService.description
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily

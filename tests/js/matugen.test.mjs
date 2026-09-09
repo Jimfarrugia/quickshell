@@ -12,6 +12,7 @@ assert.equal(result.value.tokens.surface_sidebar, "#0a0f14");
 assert.equal(result.value.tokens.surface_low, "#0a0f14");
 assert.equal(result.value.tokens.surface_variant, "#202b35");
 assert.equal(result.value.tokens.on_surface_subdued, "#d1dae4");
+assert.equal(result.value.tokens.on_surface_indicator, "#f4f7fb");
 assert.equal(result.value.tokens.on_surface_disabled, "#414b56");
 const translucent = mapMatugenTheme(fixture, "dark", { kittyOpacity: 0.96, hyprlandActiveOpacity: 0.95 });
 assert.equal(translucent.value.tokens.surface_panel, "#e9101820");
@@ -33,6 +34,7 @@ assert.equal(actualResult.value.tokens.primary, "#9ecaff");
 const actualLightResult = mapMatugenTheme(actualV4, "light");
 assert.equal(actualLightResult.ok, true, actualLightResult.errors.join("; "));
 assert.equal(actualLightResult.value.tokens.on_surface_subdued, "#3f4b56");
+assert.equal(actualLightResult.value.tokens.on_surface_indicator, "#101820");
 assert.equal(actualLightResult.value.tokens.on_surface_disabled, "#c1cbd6");
 assert.equal(actualLightResult.value.tokens.on_surface_placeholder, "#717b86");
 

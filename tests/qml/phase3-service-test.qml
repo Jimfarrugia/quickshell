@@ -60,6 +60,9 @@ ShellRoot {
       return fail(`memory usage was ${Services.SystemMetricsService.memory.value}, expected 75`);
     if (memoryModule.hoverText !== "Used: 750 KiB\nTotal: 1000 KiB")
       return fail(`memory hover was '${memoryModule.hoverText}'`);
+    if (memoryModule.iconColor.toString() !== Services.ThemeService.theme.tokens.on_surface_indicator.toString()
+        || memoryModule.textColor.toString() !== Services.ThemeService.theme.tokens.on_surface_subdued.toString())
+      return fail("normal metric did not separate indicator and text emphasis");
 
     // Temperature.
     fakeHelper.emitThermal({ ok: true, data: { schemaVersion: 1, sensors: [{ name: "k10temp", label: "Tctl", path: "/sys/test", temp: 42850 }] } });
@@ -99,6 +102,15 @@ ShellRoot {
       return fail("cpu was not marked stale after second failure");
     if (Services.SystemMetricsService.cpu.value !== 100)
       return fail("cpu value was not retained when stale");
+    if (cpuModule.iconColor.toString() !== Services.ThemeService.theme.tokens.error.toString()
+        || cpuModule.textColor.toString() !== Services.ThemeService.theme.tokens.error.toString())
+      return fail("critical CPU state did not take precedence over stale warning");
+    Services.SystemMetricsService.cpu = Object.assign({}, Services.SystemMetricsService.cpu, {
+      value: 50, availability: "available"
+    });
+    if (cpuModule.iconColor.toString() !== Services.ThemeService.theme.tokens.warning.toString()
+        || cpuModule.textColor.toString() !== Services.ThemeService.theme.tokens.warning.toString())
+      return fail("stale CPU icon and value did not use warning color");
 
     // Recovery.
     fakeProc.emitCpu("cpu 300 0 0 900 0 0 0 0 0 0", false, "");

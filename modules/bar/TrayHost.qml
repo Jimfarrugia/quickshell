@@ -25,7 +25,7 @@ Row {
             required property var modelData
             readonly property bool themedIcon: true
             readonly property string iconSource: modelData.icon
-            readonly property color tintColor: Services.ThemeService.theme.tokens.secondary
+            readonly property color tintColor: Services.ThemeService.theme.tokens.on_surface_indicator
 
             width: 18 + root.itemHorizontalPadding * 2
             height: 26

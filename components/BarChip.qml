@@ -19,7 +19,7 @@ Rectangle {
     property real iconSpacing: 5
     property real contentVerticalOffset: 0
     property color iconColor: active ? Services.ThemeService.theme.tokens.on_primary_container
-                                      : Services.ThemeService.theme.tokens.secondary
+                                      : Services.ThemeService.theme.tokens.on_surface_indicator
     property color textColor: active ? Services.ThemeService.theme.tokens.on_primary_container
                                        : Services.ThemeService.theme.tokens.on_surface_subdued
     property color trailingTextColor: textColor

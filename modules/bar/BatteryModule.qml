@@ -8,9 +8,10 @@ BarChip {
     readonly property bool critical: Services.PowerService.percentage <= 15
     readonly property bool low: Services.PowerService.percentage >= 16
                                 && Services.PowerService.percentage <= 24
+    readonly property bool stale: Services.PowerService.freshness === "stale"
     readonly property color stateColor: critical ? Services.ThemeService.theme.tokens.error
-                                                 : (low ? Services.ThemeService.theme.tokens.warning
-                                                          : Services.ThemeService.theme.tokens.on_surface_subdued)
+                                                 : (low || stale ? Services.ThemeService.theme.tokens.warning
+                                                           : Services.ThemeService.theme.tokens.on_surface_indicator)
 
     function iconForPercentage(percentage) {
         if (percentage <= 15) return "battery_android_alert";
@@ -27,15 +28,14 @@ BarChip {
     icon: Services.PowerService.charging
         ? "battery_android_frame_bolt"
         : iconForPercentage(Services.PowerService.percentage)
-    iconColor: Services.PowerService.charging
-        ? Services.ThemeService.theme.tokens.charging
-        : (critical || low ? stateColor : Services.ThemeService.theme.tokens.secondary)
+    iconColor: critical || low || stale ? stateColor
+        : (Services.PowerService.charging ? Services.ThemeService.theme.tokens.charging
+            : Services.ThemeService.theme.tokens.on_surface_indicator)
     text: Services.PowerService.availability === "available"
         ? `${Services.PowerService.percentage}%`
         : "Battery..."
-    textColor: Services.PowerService.charging
-        ? Services.ThemeService.theme.tokens.on_surface_subdued
-        : (critical || low ? stateColor : Services.ThemeService.theme.tokens.on_surface_subdued)
+    textColor: critical || low || stale ? stateColor
+        : Services.ThemeService.theme.tokens.on_surface_subdued
     warning: false
     hoverText: Services.PowerService.availability === "available"
         ? Services.PowerService.remainingTimeText : "Battery unavailable"

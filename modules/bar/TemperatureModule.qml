@@ -7,10 +7,12 @@ BarChip {
     && Services.SystemMetricsService.temperature.value > 70
   readonly property bool criticalTemperature: Services.SystemMetricsService.temperature.availability === "available"
     && Services.SystemMetricsService.temperature.value > 80
+  readonly property bool stale: Services.SystemMetricsService.temperature.freshness === "stale"
   readonly property color temperatureColor: Services.SystemMetricsService.temperature.availability === "unavailable"
     || criticalTemperature
       ? Services.ThemeService.theme.tokens.error
-      : (highTemperature ? Services.ThemeService.theme.tokens.warning : Services.ThemeService.theme.tokens.secondary)
+      : (highTemperature || stale ? Services.ThemeService.theme.tokens.warning
+          : Services.ThemeService.theme.tokens.on_surface_indicator)
 
   visible: Services.ConfigService.config.bar.metrics.temperature
   icon: "thermostat"
@@ -18,9 +20,9 @@ BarChip {
     ? `${Services.SystemMetricsService.temperature.value}°C`
     : (Services.SystemMetricsService.temperature.availability === "unavailable" ? "Temp!" : "Temp...")
   iconColor: temperatureColor
-  textColor: highTemperature || Services.SystemMetricsService.temperature.availability === "unavailable"
+  textColor: highTemperature || stale || Services.SystemMetricsService.temperature.availability === "unavailable"
     ? temperatureColor : Services.ThemeService.theme.tokens.on_surface_subdued
-  warning: Services.SystemMetricsService.temperature.freshness === "stale"
+  warning: stale
   hoverText: Services.SystemMetricsService.temperatureHoverText
   configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
   configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily

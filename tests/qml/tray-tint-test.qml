@@ -35,8 +35,8 @@ ShellRoot {
             return fail("tray delegates were not created");
         if (!nextcloudDelegate.themedIcon || !otherDelegate.themedIcon)
             return fail("not every tray icon used the color-overlay path");
-        if (nextcloudDelegate.tintColor.toString() !== Services.ThemeService.theme.tokens.secondary.toString()
-                || otherDelegate.tintColor.toString() !== Services.ThemeService.theme.tokens.secondary.toString())
+        if (nextcloudDelegate.tintColor.toString() !== Services.ThemeService.theme.tokens.on_surface_indicator.toString()
+                || otherDelegate.tintColor.toString() !== Services.ThemeService.theme.tokens.on_surface_indicator.toString())
             return fail("tray icons did not use the default bar icon color");
         if (nextcloudDelegate.iconSource !== nextcloud.icon)
             return fail("color-overlay path did not retain the native dynamic icon source");
