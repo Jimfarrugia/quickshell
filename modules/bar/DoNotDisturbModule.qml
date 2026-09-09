@@ -7,9 +7,7 @@ BarChip {
     icon: Services.NotificationService.dnd
         ? "do_not_disturb_on"
         : "do_not_disturb_off"
-    iconColor: Services.NotificationService.dnd
-        ? Services.ThemeService.theme.tokens.warning
-        : Services.ThemeService.theme.tokens.secondary
+    iconColor: Services.ThemeService.theme.tokens.on_surface_subdued
     hoverText: Services.NotificationService.dnd
         ? "Disable DND"
         : "Enable DND"

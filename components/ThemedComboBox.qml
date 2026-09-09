@@ -19,7 +19,9 @@ ComboBox {
             anchors.rightMargin: 4
             anchors.verticalCenter: parent.verticalCenter
             text: root.currentIndex >= 0 ? root.currentText : root.placeholderText
-            color: Services.ThemeService.theme.tokens.on_surface_variant
+            color: !root.enabled ? Services.ThemeService.theme.tokens.on_surface_disabled
+                : (root.currentIndex >= 0 ? Services.ThemeService.theme.tokens.on_surface_subdued
+                    : Services.ThemeService.theme.tokens.on_surface_placeholder)
             font: root.font
             elide: Text.ElideRight
         }
@@ -29,7 +31,8 @@ ComboBox {
             anchors.rightMargin: 8
             anchors.verticalCenter: parent.verticalCenter
             text: "arrow_drop_down"
-            color: Services.ThemeService.theme.tokens.on_surface_disabled
+            color: root.enabled ? Services.ThemeService.theme.tokens.on_surface_subdued
+                : Services.ThemeService.theme.tokens.on_surface_disabled
             font.family: Services.ConfigService.config.appearance.iconFontFamily
             font.pixelSize: 24
         }
@@ -43,11 +46,12 @@ ComboBox {
             : (hover.hovered ? Services.ThemeService.theme.tokens.surface_hover
                 : Services.ThemeService.theme.tokens.surface)
         border.width: Services.ConfigService.config.appearance.borderWidth
-        border.color: Services.ThemeService.theme.tokens.on_surface_disabled
+        border.color: Services.ThemeService.theme.tokens.outline_variant
     }
 
     HoverHandler {
         id: hover
+        enabled: root.enabled
         cursorShape: Qt.PointingHandCursor
     }
 

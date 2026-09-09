@@ -15,7 +15,7 @@ ColumnLayout {
         && Services.NetworkService.lastError.code === "NETWORKMANAGER_UNAVAILABLE"
 
     component LabelText: Text {
-        color: Services.ThemeService.theme.tokens.on_surface_variant
+        color: Services.ThemeService.theme.tokens.on_surface_subdued
         font.family: Services.ConfigService.config.appearance.fontFamily
         font.pixelSize: Services.ConfigService.config.appearance.fontSize
     }
@@ -68,8 +68,9 @@ ColumnLayout {
         Components.IconButton {
             visible: root.networkManagerUnavailable
             iconName: "restart_alt"
-            foregroundColor: Services.ThemeService.theme.tokens.warning
-            borderColor: Services.ThemeService.theme.tokens.warning
+            pending: Services.ShellLifecycleService.restartPending
+            tone: pending ? "primary" : "neutral"
+            emphasis: pending ? "filled" : "outlined"
             tooltipText: Services.ShellLifecycleService.restartPending ? "Restarting QE" : "Restart QE"
             enabled: !Services.ShellLifecycleService.restartPending
             onClicked: Services.ShellLifecycleService.restart()
@@ -127,7 +128,7 @@ ColumnLayout {
                 Text {
                     visible: Services.NetworkService.connectionType !== "wired"
                     text: "signal_cellular_alt"
-                    color: Services.ThemeService.theme.tokens.on_surface_variant
+                    color: Services.ThemeService.theme.tokens.on_surface_subdued
                     font.family: Services.ConfigService.config.appearance.iconFontFamily
                     font.pixelSize: Services.ConfigService.config.appearance.fontSize + 2
                 }
@@ -166,7 +167,7 @@ ColumnLayout {
             readonly property var row: modelData
             readonly property color rowTextColor: row.network.connected
                 ? Services.ThemeService.theme.tokens.primary
-                : Services.ThemeService.theme.tokens.on_surface_variant
+                : Services.ThemeService.theme.tokens.on_surface_subdued
             Layout.fillWidth: true
             spacing: 6
             Item {
@@ -184,14 +185,14 @@ ColumnLayout {
                         text: row.name
                         color: row.network.connected
                             ? Services.ThemeService.theme.tokens.primary
-                            : Services.ThemeService.theme.tokens.on_surface_variant
+                            : Services.ThemeService.theme.tokens.on_surface_subdued
                         elide: Text.ElideRight
                     }
                     LabelText {
                         visible: row.profiles.length === 1
                         text: row.profiles.length === 1
                             ? `Profile: ${row.profiles[0].name}` : ""
-                        color: Services.ThemeService.theme.tokens.on_surface_disabled
+                        color: Services.ThemeService.theme.tokens.on_surface_subdued
                         font.pixelSize: Services.ConfigService.config.appearance.fontSize - 1
                         elide: Text.ElideRight
                     }
@@ -237,7 +238,7 @@ ColumnLayout {
                     }
                     Text {
                         text: "signal_cellular_alt"
-                        color: Services.ThemeService.theme.tokens.on_surface_variant
+                        color: Services.ThemeService.theme.tokens.on_surface_subdued
                         font.family: Services.ConfigService.config.appearance.iconFontFamily
                         font.pixelSize: Services.ConfigService.config.appearance.fontSize + 2
                     }
@@ -258,8 +259,9 @@ ColumnLayout {
                     Layout.preferredWidth: visible ? implicitWidth : 0
                     Layout.maximumWidth: visible ? implicitWidth : 0
                     iconName: "delete"
-                    foregroundColor: Services.ThemeService.theme.tokens.error
-                    borderColor: Services.ThemeService.theme.tokens.error
+                    pending: root.rowPending(row)
+                    tone: pending ? "primary" : "destructive"
+                    emphasis: pending ? "filled" : "outlined"
                     tooltipText: "Forget"
                     enabled: !root.rowPending(row)
                     onClicked: root.confirmForgetKey = root.confirmForgetKey === row.key ? "" : row.key
@@ -275,9 +277,11 @@ ColumnLayout {
                     Layout.preferredWidth: visible ? implicitWidth : 0
                     Layout.maximumWidth: visible ? implicitWidth : 0
                     iconName: "check"
-                    foregroundColor: rowTextColor
-                    borderColor: rowTextColor
+                    pending: root.rowPending(row)
+                    tone: pending ? "primary" : "destructive"
+                    emphasis: pending ? "filled" : "outlined"
                     tooltipText: "Confirm"
+                    enabled: !pending
                     onClicked: {
                         Services.NetworkService.forget(root.selectedRow(row));
                         root.confirmForgetKey = "";
@@ -294,8 +298,9 @@ ColumnLayout {
                     Layout.preferredWidth: visible ? implicitWidth : 0
                     Layout.maximumWidth: visible ? implicitWidth : 0
                     iconName: "link"
-                    foregroundColor: Services.ThemeService.theme.tokens.success
-                    borderColor: Services.ThemeService.theme.tokens.success
+                    pending: root.rowPending(row)
+                    tone: pending ? "primary" : "neutral"
+                    emphasis: pending ? "filled" : "outlined"
                     tooltipText: "Disconnect"
                     enabled: !root.rowPending(row)
                     onClicked: Services.NetworkService.disconnect(root.selectedRow(row))
@@ -305,8 +310,6 @@ ColumnLayout {
                     Layout.preferredWidth: visible ? implicitWidth : 0
                     Layout.maximumWidth: visible ? implicitWidth : 0
                     iconName: "settings"
-                    foregroundColor: rowTextColor
-                    borderColor: rowTextColor
                     tooltipText: "Unsupported security — open NetworkManager editor"
                     onClicked: Services.NetworkService.openNetworkFallback(row)
                 }
@@ -357,9 +360,11 @@ ColumnLayout {
                         }
                         Components.IconButton {
                             iconName: "check"
-                            foregroundColor: rowTextColor
-                            borderColor: rowTextColor
+                            pending: root.rowPending(row)
+                            tone: pending ? "primary" : "neutral"
+                            emphasis: pending ? "filled" : "outlined"
                             tooltipText: "Confirm"
+                            enabled: !pending
                             onClicked: {
                                 Services.NetworkService.connect(root.selectedRow(row), psk.text);
                                 psk.clear();
@@ -372,8 +377,9 @@ ColumnLayout {
                     Layout.preferredWidth: visible ? implicitWidth : 0
                     Layout.maximumWidth: visible ? implicitWidth : 0
                     iconName: "link"
-                    foregroundColor: rowTextColor
-                    borderColor: rowTextColor
+                    pending: root.rowPending(row)
+                    tone: pending ? "primary" : "neutral"
+                    emphasis: pending ? "filled" : "outlined"
                     tooltipText: "Connect"
                     enabled: !root.rowPending(row)
                     onClicked: {

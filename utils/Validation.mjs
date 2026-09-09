@@ -3,6 +3,7 @@ const THEME_TOKENS = [
   "on_background",
   "surface",
   "on_surface",
+  "on_surface_subdued",
   "surface_variant",
   "on_surface_variant",
   "surface_panel",

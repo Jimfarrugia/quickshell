@@ -7,11 +7,11 @@ Rectangle {
 
     property var labels: ["First", "Second"]
     property bool checked: false
-    signal toggled()
+    signal toggled(bool checked)
 
-    function activate() {
+    function activate(nextChecked) {
         root.forceActiveFocus();
-        root.toggled();
+        root.toggled(nextChecked === undefined ? !root.checked : nextChecked);
     }
 
     activeFocusOnTab: true
@@ -37,7 +37,7 @@ Rectangle {
                     anchors.fill: parent
                     radius: Services.ConfigService.config.appearance.radius
                     color: optionRoot.index === (root.checked ? 1 : 0)
-                        ? Services.ThemeService.theme.tokens.primary
+                        ? Services.ThemeService.theme.tokens.primary_container
                         : Services.ThemeService.theme.tokens.surface_variant
                 }
 
@@ -47,7 +47,7 @@ Rectangle {
                     width: Services.ConfigService.config.appearance.radius
                     height: parent.height
                     color: optionRoot.index === (root.checked ? 1 : 0)
-                        ? Services.ThemeService.theme.tokens.primary
+                        ? Services.ThemeService.theme.tokens.primary_container
                         : Services.ThemeService.theme.tokens.surface_variant
                 }
 
@@ -57,22 +57,23 @@ Rectangle {
                     width: Services.ConfigService.config.appearance.radius
                     height: parent.height
                     color: optionRoot.index === (root.checked ? 1 : 0)
-                        ? Services.ThemeService.theme.tokens.primary
+                        ? Services.ThemeService.theme.tokens.primary_container
                         : Services.ThemeService.theme.tokens.surface_variant
                 }
 
                 Text {
                     anchors.centerIn: parent
                     text: root.labels[optionRoot.index] || ""
-                    color: optionRoot.index === (root.checked ? 1 : 0)
-                        ? Services.ThemeService.theme.tokens.on_primary
-                        : Services.ThemeService.theme.tokens.on_surface_variant
+                    color: !root.enabled ? Services.ThemeService.theme.tokens.on_surface_disabled
+                        : (optionRoot.index === (root.checked ? 1 : 0)
+                            ? Services.ThemeService.theme.tokens.on_primary_container
+                            : Services.ThemeService.theme.tokens.on_surface_variant)
                     font.family: Services.ConfigService.config.appearance.fontFamily
                     font.weight: Font.DemiBold
                 }
 
                 TapHandler {
-                    onTapped: root.activate()
+                    onTapped: root.activate(optionRoot.index === 1)
                 }
             }
         }

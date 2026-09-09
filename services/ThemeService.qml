@@ -33,6 +33,7 @@ Singleton {
             on_background: "#ffffff",
             surface: "#181818",
             on_surface: "#ffffff",
+            on_surface_subdued: "#b0b0b0",
             surface_variant: "#242424",
             on_surface_variant: "#b0b0b0",
             surface_panel: "#f0000000",

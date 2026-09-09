@@ -14,8 +14,7 @@ BarChip {
 
     visible: Services.AudioService.availability !== "unavailable"
     icon: Services.AudioService.muted ? "volume_off" : iconForVolume(Services.AudioService.displayVolumePercent)
-    iconColor: Services.AudioService.muted ? Services.ThemeService.theme.tokens.error
-                                           : Services.ThemeService.theme.tokens.secondary
+    iconColor: Services.ThemeService.theme.tokens.on_surface_subdued
     text: Services.AudioService.availability === "available"
         ? (Services.AudioService.muted ? "" : `${Services.AudioService.displayVolumePercent}%`)
         : "Audio..."

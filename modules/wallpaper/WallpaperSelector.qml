@@ -232,7 +232,7 @@ FloatingWindow {
                     anchors.centerIn: parent
                     visible: wallpaperGrid.count === 0
                     text: "No wallpapers found for this theme"
-                    color: Services.ThemeService.theme.tokens.on_surface_variant
+                    color: Services.ThemeService.theme.tokens.on_surface_subdued
                     font.family: Services.ConfigService.config.appearance.fontFamily
                     font.pixelSize: 16
                 }
@@ -252,7 +252,7 @@ FloatingWindow {
                         : `${wallpaperGrid.count} wallpapers`
                     color: Services.WallpaperService.operation === "failed"
                         ? Services.ThemeService.theme.tokens.error
-                        : Services.ThemeService.theme.tokens.on_surface_variant
+                        : Services.ThemeService.theme.tokens.on_surface_subdued
                     font.family: Services.ConfigService.config.appearance.monospaceFontFamily
                     font.pixelSize: 11
                 }
@@ -262,7 +262,7 @@ FloatingWindow {
                     horizontalAlignment: Text.AlignRight
                     elide: Text.ElideMiddle
                     text: root.focusedWallpaperFileName
-                    color: Services.ThemeService.theme.tokens.on_surface_variant
+                    color: Services.ThemeService.theme.tokens.on_surface_subdued
                     font.family: Services.ConfigService.config.appearance.monospaceFontFamily
                     font.pixelSize: 11
                 }

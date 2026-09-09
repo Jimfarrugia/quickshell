@@ -39,6 +39,7 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 | Bar vertical slice | Complete | Phase 2; top reserved edge selected, tray host disabled during Waybar coexistence |
 | Bar parity and Waybar cutover | Complete | Phase 3 acceptance passed 2026-08-25 |
 | Theme/Matugen integration | Complete | Manual selector and external machine integration complete; Matugen mapping, staged promotion, QE-localized wallpaper selector, and Hyprpaper XDG-path application complete; external generated Matugen artifacts now delivered as QE-generated `wallpaper` theme slots applied by the external switcher, including imv, mpv, and Yazi; runtime/default artifact separation and idempotent promotion added; `QE_THEME_SWITCHER` wired for production through the installed `qe-theme-switcher` wrapper. Phase 4 acceptance passed on 2026-08-26 |
+| Theme semantics refinement | Complete | Added enabled subdued content semantics, centralized action-control state styling, and remapped authored/generated themes without speculative palette generation; acceptance passed 2026-09-09 |
 | Notifications/OSDs | Complete | QE owns notifications and OSDs; Dunst cutover, rollback, and post-cutover legacy cleanup passed 2026-08-31 |
 | Launcher/help | Complete | Launcher, curated help surface, `Super+R` cutover, `Super+/` help binding, rollback, and focused-output multi-monitor acceptance passed 2026-09-01 |
 | Audio/dashboard foundation | Complete | Shared dashboard foundation, audio dashboard, launcher access, resilience, and rollback acceptance passed 2026-09-02 |
@@ -53,6 +54,11 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 
 ### 2.1 Current handoff
 
+- Theme semantics refinement is complete. ADR-047 adds
+  `on_surface_subdued`, reserves `on_surface_disabled` for unavailable controls,
+  and makes reusable action controls own normal, selected, pending,
+  destructive, disabled, and focus styling. Authored and generated theme
+  contrast checks, affected QML tests, hot reload, lint, and shell smoke passed.
 - Phase 12 is complete. QE owns the compositor-enforced lock, manual/idle/
   before-sleep paths, and native PAM authentication through `qe-lock`; Hyprlock
   is installed but retired. Current lock ownership, failure, and recovery
@@ -321,6 +327,16 @@ Status: Complete. The read-only provider boundary, bar/dashboard behavior, stale
 handling, consumer-scoped polling, and suspend/resume recovery are implemented.
 Detailed acceptance and provider evidence is preserved in
 `docs/history/PHASES_07-11.md`; the durable boundary is recorded in ADR-036.
+
+### Theme semantic refinement
+
+Status: Complete (2026-09-09). The theme-v1 contract now distinguishes enabled
+subdued content from disabled content, reusable action controls own semantic
+state composition, and current presentation consumers no longer use disabled
+or variant foreground roles as generic styling colors. Gruvbox, Poimandres, and
+generated Wallpaper mappings pass the documented contrast matrix. A general
+palette generator remains deferred until an authored palette demonstrates a
+specific unsatisfied role.
 
 ### Workspace bar monitor scoping
 

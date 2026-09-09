@@ -109,7 +109,7 @@ PanelWindow {
                 Text {
                     Layout.fillWidth: true
                     text: root.featureTitle
-                    color: Services.ThemeService.theme.tokens.on_surface_disabled
+                    color: Services.ThemeService.theme.tokens.on_surface
                     font.family: Services.ConfigService.config.appearance.fontFamily
                 font.pixelSize: 22
                 font.weight: Font.DemiBold
@@ -120,15 +120,7 @@ PanelWindow {
                 Components.IconButton {
                     iconName: "wifi"
                     toggleable: true
-                    toggleColor: Services.NetworkService.wifiTogglePending
-                        ? Services.ThemeService.theme.tokens.warning
-                        : Services.ThemeService.theme.tokens.success
-                    foregroundColor: Services.NetworkService.wifiTogglePending
-                        ? Services.ThemeService.theme.tokens.warning
-                        : Services.ThemeService.theme.tokens.on_surface_disabled
-                    borderColor: Services.NetworkService.wifiTogglePending
-                        ? Services.ThemeService.theme.tokens.warning
-                        : Services.ThemeService.theme.tokens.on_surface_disabled
+                    pending: Services.NetworkService.wifiTogglePending
                     checked: Services.NetworkService.wifiTogglePending
                         ? Services.NetworkService.pendingWifiEnabled
                         : Services.NetworkService.wifiEnabled
@@ -141,8 +133,6 @@ PanelWindow {
                 }
                 Components.IconButton {
                     iconName: "wifi_find"
-                    foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
-                    borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     enabled: Services.NetworkService.availability === "available"
                     tooltipText: "Scan for networks"
                     tooltipBelow: true
@@ -156,13 +146,6 @@ PanelWindow {
                     iconName: "power_settings_new"
                     toggleable: true
                     checked: Services.BluetoothService.enabled
-                    toggleColor: Services.ThemeService.theme.tokens.success
-                    foregroundColor: Services.BluetoothService.enabled
-                        ? Services.ThemeService.theme.tokens.success
-                        : Services.ThemeService.theme.tokens.error
-                    borderColor: Services.BluetoothService.enabled
-                        ? Services.ThemeService.theme.tokens.success
-                        : Services.ThemeService.theme.tokens.error
                     enabled: Services.BluetoothService.availability === "available"
                     tooltipText: Services.BluetoothService.enabled
                         ? "Disable Bluetooth" : "Enable Bluetooth"
@@ -173,9 +156,6 @@ PanelWindow {
                     iconName: "explore"
                     toggleable: true
                     checked: Services.BluetoothService.discoverable
-                    toggleColor: Services.ThemeService.theme.tokens.success
-                    foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
-                    borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     enabled: Services.BluetoothService.enabled
                     tooltipText: Services.BluetoothService.discoverable
                         ? "Disable Discoverable Mode" : "Enable Discoverable Mode"
@@ -186,9 +166,6 @@ PanelWindow {
                     iconName: "join_right"
                     toggleable: true
                     checked: Services.BluetoothService.pairable
-                    toggleColor: Services.ThemeService.theme.tokens.success
-                    foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
-                    borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     enabled: Services.BluetoothService.enabled
                     tooltipText: Services.BluetoothService.pairable
                         ? "Disable Pairable Mode" : "Enable Pairable Mode"
@@ -199,9 +176,6 @@ PanelWindow {
                     iconName: Services.BluetoothService.discovering ? "stop" : "search"
                     toggleable: true
                     checked: Services.BluetoothService.discovering
-                    toggleColor: Services.ThemeService.theme.tokens.warning
-                    foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
-                    borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     enabled: Services.BluetoothService.enabled
                     tooltipText: Services.BluetoothService.discovering
                         ? "Stop Searching" : "Search for Devices"
@@ -214,8 +188,7 @@ PanelWindow {
                 objectName: "ai-quota-refresh"
                 visible: !!root.controller && root.controller.activeId === "ai-quota"
                 iconName: "refresh"
-                foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
-                borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
+                pending: Services.AiQuotaService.operation === "pending"
                 enabled: Services.AiQuotaService.operation !== "pending"
                 tooltipText: "Refresh usage"
                 tooltipBelow: true
@@ -225,8 +198,6 @@ PanelWindow {
                     id: settingsButton
                 visible: !!root.controller && ["audio", "bluetooth", "network"].indexOf(root.controller.activeId) >= 0
                     iconName: "settings"
-                    foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
-                    borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     tooltipText: root.controller && root.controller.activeId === "bluetooth"
                     ? "Open Blueman" : (root.controller && root.controller.activeId === "network"
                         ? "Open NetworkManager editor" : "Open pavucontrol")
@@ -275,7 +246,7 @@ PanelWindow {
         id: unavailableDashboard
         Text {
             text: `${root.featureTitle || "Dashboard"} is not available yet`
-            color: Services.ThemeService.theme.tokens.on_surface_variant
+            color: Services.ThemeService.theme.tokens.on_surface_subdued
             font.family: Services.ConfigService.config.appearance.fontFamily
             font.pixelSize: Services.ConfigService.config.appearance.fontSize
         }

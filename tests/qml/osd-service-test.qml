@@ -72,7 +72,7 @@ ShellRoot {
         if (!Services.OSDService.activeItem || Services.OSDService.activeItem.title !== "Charging"
                 || Services.OSDService.activeItem.detail !== "86% remaining (1h 30m)")
             return fail("charging battery popup did not include the expected title and estimate");
-        if (batteryModule.textColor.toString() !== Services.ThemeService.theme.tokens.on_surface_disabled.toString())
+        if (batteryModule.textColor.toString() !== Services.ThemeService.theme.tokens.on_surface_subdued.toString())
             return fail("charging battery text did not use the standard muted text color");
 
         fakePower.charging = false;

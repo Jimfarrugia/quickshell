@@ -125,8 +125,10 @@ ShellRoot {
         if (shell.featureTitle !== "AI Usage") return fail("AI quota dashboard title was not updated");
         const refreshButton = shell.aiQuotaRefreshControl;
         if (!refreshButton || !refreshButton.visible || refreshButton.iconName !== "refresh"
-                || String(refreshButton.foregroundColor) !== String(Services.ThemeService.theme.tokens.on_surface_disabled)
-                || String(refreshButton.borderColor) !== String(Services.ThemeService.theme.tokens.on_surface_disabled))
+                || !Qt.colorEqual(refreshButton.resolvedForegroundColor,
+                    Services.ThemeService.theme.tokens.on_surface_subdued)
+                || !Qt.colorEqual(refreshButton.resolvedBorderColor,
+                    Services.ThemeService.theme.tokens.outline_variant))
             return fail("AI quota refresh button was missing or incorrectly styled");
         const refreshCalls = fakeQuotaAdapter.refreshCalls;
         refreshButton.clicked();

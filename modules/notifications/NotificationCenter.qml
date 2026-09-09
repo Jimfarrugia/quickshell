@@ -224,7 +224,7 @@ Components.Sidebar {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignVCenter
                     text: "Notifications"
-                    color: Services.ThemeService.theme.tokens.on_surface_panel
+                    color: Services.ThemeService.theme.tokens.on_surface
                     font.family: Services.ConfigService.config.appearance.fontFamily
                     font.pixelSize: 22
                     font.weight: Font.DemiBold
@@ -233,8 +233,6 @@ Components.Sidebar {
                     id: clearHistoryButton
                     Layout.alignment: Qt.AlignVCenter
                     iconName: "clear_all"
-                    foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
-                    borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
                     onClicked: {
                         root.focusHeader(0);
                         Services.NotificationService.clearHistory();
@@ -255,12 +253,9 @@ Components.Sidebar {
                     iconName: "warning"
                     toggleable: true
                     checked: root.criticalFirst
-                    toggleColor: Services.ThemeService.theme.tokens.warning
-                    foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
-                    borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
-                    onToggled: function(nextChecked) {
+                    onClicked: {
                         root.focusHeader(1);
-                        root.criticalFirst = nextChecked;
+                        root.criticalFirst = checked;
                     }
                     Rectangle {
                         anchors.fill: parent
@@ -277,12 +272,9 @@ Components.Sidebar {
                     iconName: "do_not_disturb_on"
                     toggleable: true
                     checked: Services.NotificationService.dnd
-                    toggleColor: Services.ThemeService.theme.tokens.warning
-                    foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
-                    borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
-                    onToggled: function(nextChecked) {
+                    onClicked: {
                         root.focusHeader(2);
-                        Services.NotificationService.setDnd(nextChecked);
+                        Services.NotificationService.setDnd(checked);
                     }
                     Rectangle {
                         anchors.fill: parent
@@ -375,7 +367,7 @@ Components.Sidebar {
                                 text: modelData.data.iconName
                                 color: modelData.data.urgency === "critical"
                                     ? Services.ThemeService.theme.tokens.error
-                                    : Services.ThemeService.theme.tokens.on_surface_disabled
+                                    : Services.ThemeService.theme.tokens.on_surface_subdued
                                 font.family: Services.ConfigService.config.appearance.iconFontFamily
                                 font.pixelSize: 64
                                 horizontalAlignment: Text.AlignHCenter
@@ -400,7 +392,7 @@ Components.Sidebar {
                                     Layout.fillWidth: true
                                     Layout.alignment: Qt.AlignTop
                                     text: modelData.data.summary
-                                    color: Services.ThemeService.theme.tokens.on_surface_variant
+                                    color: Services.ThemeService.theme.tokens.on_surface
                                     font.family: Services.ConfigService.config.appearance.fontFamily
                                     font.pixelSize: 16
                                     font.weight: Font.DemiBold
@@ -419,7 +411,7 @@ Components.Sidebar {
                                     Text {
                                         anchors.fill: parent
                                         text: "close"
-                                        color: Services.ThemeService.theme.tokens.on_surface_disabled
+                                        color: Services.ThemeService.theme.tokens.on_surface_subdued
                                         font.family: Services.ConfigService.config.appearance.iconFontFamily
                                         font.pixelSize: 18
                                         horizontalAlignment: Text.AlignHCenter
@@ -440,7 +432,7 @@ Components.Sidebar {
                                 clip: true
                                 text: modelData.data.body
                                 textFormat: modelData.data.isScreenshot ? Text.PlainText : Text.RichText
-                                color: Services.ThemeService.theme.tokens.on_surface_variant
+                                color: Services.ThemeService.theme.tokens.on_surface_subdued
                                 font.family: Services.ConfigService.config.appearance.fontFamily
                                 font.pixelSize: 14
                                 wrapMode: modelData.data.isScreenshot ? Text.NoWrap : Text.WordWrap
@@ -477,7 +469,9 @@ Components.Sidebar {
                                         Text {
                                             anchors.centerIn: parent
                                             text: modelData.text
-                                            color: Services.ThemeService.theme.tokens.on_surface_variant
+                                            color: actionHover.hovered
+                                                ? Services.ThemeService.theme.tokens.on_surface
+                                                : Services.ThemeService.theme.tokens.on_surface_variant
                                             font.family: Services.ConfigService.config.appearance.fontFamily
                                             font.pixelSize: 13
                                         }
@@ -503,7 +497,7 @@ Components.Sidebar {
 
                                 Text {
                                     text: modelData.data.appName
-                                    color: Services.ThemeService.theme.tokens.on_surface_disabled
+                                    color: Services.ThemeService.theme.tokens.on_surface_subdued
                                     font.family: Services.ConfigService.config.appearance.monospaceFontFamily
                                     font.pixelSize: 12
                                     horizontalAlignment: Text.AlignRight
@@ -512,7 +506,7 @@ Components.Sidebar {
 
                                 Text {
                                     text: root.formatNotificationTime(modelData.data.receivedAt)
-                                    color: Services.ThemeService.theme.tokens.on_surface_disabled
+                                    color: Services.ThemeService.theme.tokens.on_surface_subdued
                                     font.family: Services.ConfigService.config.appearance.monospaceFontFamily
                                     font.pixelSize: 12
                                     horizontalAlignment: Text.AlignRight
@@ -526,7 +520,7 @@ Components.Sidebar {
                     anchors.centerIn: parent
                     visible: historyList.count === 0
                     text: "History is empty."
-                    color: Services.ThemeService.theme.tokens.on_surface_placeholder
+                    color: Services.ThemeService.theme.tokens.on_surface_subdued
                     font.family: Services.ConfigService.config.appearance.fontFamily
                     font.pixelSize: 14
                 }
@@ -605,7 +599,7 @@ Components.Sidebar {
 
                 Text {
                     text: "keyboard_arrow_down"
-                    color: Services.ThemeService.theme.tokens.on_surface_variant
+                    color: Services.ThemeService.theme.tokens.on_surface_subdued
                     font.family: Services.ConfigService.config.appearance.iconFontFamily
                     font.pixelSize: 24
                     height: infoPill.height
@@ -614,7 +608,7 @@ Components.Sidebar {
 
                 Text {
                     text: root.notificationsBelowFold
-                    color: Services.ThemeService.theme.tokens.on_surface_variant
+                    color: Services.ThemeService.theme.tokens.on_surface_subdued
                     font.family: Services.ConfigService.config.appearance.fontFamily
                     font.pixelSize: 14
                     height: infoPill.height

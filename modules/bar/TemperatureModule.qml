@@ -19,7 +19,7 @@ BarChip {
     : (Services.SystemMetricsService.temperature.availability === "unavailable" ? "Temp!" : "Temp...")
   iconColor: temperatureColor
   textColor: highTemperature || Services.SystemMetricsService.temperature.availability === "unavailable"
-    ? temperatureColor : Services.ThemeService.theme.tokens.on_surface_disabled
+    ? temperatureColor : Services.ThemeService.theme.tokens.on_surface_subdued
   warning: Services.SystemMetricsService.temperature.freshness === "stale"
   hoverText: Services.SystemMetricsService.temperatureHoverText
   configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily

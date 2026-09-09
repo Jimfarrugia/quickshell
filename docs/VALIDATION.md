@@ -19,6 +19,7 @@ below are intended to be run from the repository root:
 node tests/js/validation.test.mjs
 node tests/js/lock-entry.test.mjs
 node tests/js/schema.test.mjs
+node tests/js/theme-semantics.test.mjs
 node tests/js/system-metrics.test.mjs
 node tests/js/brightness.test.mjs
 node tests/js/external-theme.test.mjs
@@ -88,6 +89,8 @@ timeout 5 quickshell -p tests/qml/tray-tint-test.qml
 timeout 5 quickshell -p tests/qml/theme-selector-test.qml
 timeout 5 quickshell -p tests/qml/wallpaper-selector-test.qml
 timeout 5 quickshell -p tests/qml/segmented-toggle-test.qml
+timeout 5 quickshell -p tests/qml/action-button-test.qml
+timeout 5 quickshell -p tests/qml/quick-setting-tile-test.qml
 timeout 5 quickshell -p tests/qml/palette-viewer-test.qml
 timeout 5 quickshell -p tests/qml/dashboard-shell-test.qml
 timeout 5 quickshell -p tests/qml/control-center-test.qml

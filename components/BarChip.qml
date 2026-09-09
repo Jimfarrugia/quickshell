@@ -19,9 +19,9 @@ Rectangle {
     property real iconSpacing: 5
     property real contentVerticalOffset: 0
     property color iconColor: active ? Services.ThemeService.theme.tokens.on_primary_container
-                                     : Services.ThemeService.theme.tokens.secondary
+                                      : Services.ThemeService.theme.tokens.secondary
     property color textColor: active ? Services.ThemeService.theme.tokens.on_primary_container
-                                      : Services.ThemeService.theme.tokens.on_surface_disabled
+                                       : Services.ThemeService.theme.tokens.on_surface_subdued
     property color trailingTextColor: textColor
     property string hoverText: ""
     property color warningColor: Services.ThemeService.theme.tokens.warning

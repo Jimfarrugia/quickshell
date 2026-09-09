@@ -105,7 +105,7 @@ PanelWindow {
                     anchors.leftMargin: 16
                     anchors.verticalCenter: parent.verticalCenter
                     text: "search"
-                    color: Services.ThemeService.theme.tokens.on_surface_disabled
+                    color: Services.ThemeService.theme.tokens.on_surface_subdued
                     font.family: Services.ConfigService.config.appearance.iconFontFamily
                     font.pixelSize: 22
                 }
@@ -159,8 +159,8 @@ PanelWindow {
                         visible: !applicationIcon.visible
                         text: "package_2"
                         color: index === Services.LauncherService.selectedIndex
-                            ? Services.ThemeService.theme.tokens.on_surface_disabled
-                            : Services.ThemeService.theme.tokens.on_surface_disabled
+                            ? Services.ThemeService.theme.tokens.on_surface_subdued
+                            : Services.ThemeService.theme.tokens.on_surface_subdued
                         font.family: Services.ConfigService.config.appearance.iconFontFamily
                         font.pixelSize: 24
                         horizontalAlignment: Text.AlignHCenter
@@ -192,9 +192,7 @@ PanelWindow {
                         width: parent.width
                         visible: text !== ""
                         text: String(modelData.genericName || modelData.comment || "")
-                        color: index === Services.LauncherService.selectedIndex
-                            ? Services.ThemeService.theme.tokens.on_surface_variant
-                            : Services.ThemeService.theme.tokens.on_surface_variant
+                        color: Services.ThemeService.theme.tokens.on_surface_subdued
                         opacity: 0.78
                         font.family: Services.ConfigService.config.appearance.fontFamily
                         font.pixelSize: 11
@@ -219,7 +217,7 @@ PanelWindow {
                 text: Services.LauncherService.query === ""
                     ? "No applications available"
                     : "No matches."
-                color: Services.ThemeService.theme.tokens.on_surface_variant
+                color: Services.ThemeService.theme.tokens.on_surface_subdued
                 font.family: Services.ConfigService.config.appearance.fontFamily
                 font.pixelSize: 16
             }

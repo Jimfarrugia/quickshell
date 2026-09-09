@@ -6,7 +6,7 @@ import { normalizeNotification, sanitizeMarkup, shouldKeepHistory, shouldShowPop
 const fixture = async path => JSON.parse(await readFile(new URL(`../fixtures/${path}`, import.meta.url), "utf8"));
 
 const expectedThemeTokens = [
-  "background", "on_background", "surface", "on_surface", "surface_variant", "on_surface_variant",
+  "background", "on_background", "surface", "on_surface", "on_surface_subdued", "surface_variant", "on_surface_variant",
   "surface_panel", "surface_sidebar", "surface_low", "on_surface_panel", "surface_tooltip", "on_surface_tooltip", "surface_hover",
   "surface_pressed", "primary", "on_primary", "primary_container", "on_primary_container", "secondary",
   "on_secondary", "outline", "outline_variant", "focus_ring", "on_surface_disabled",
@@ -80,6 +80,7 @@ assert.equal(poimandres.value.tokens.surface_low, "#171922");
 assert.equal(poimandres.value.tokens.surface_tooltip, "#171922");
 assert.equal(poimandres.value.tokens.on_surface_tooltip, "#8290a5");
 assert.equal(poimandres.value.tokens.surface, "#1b1e28");
+assert.equal(poimandres.value.tokens.on_surface_subdued, "#8290a5");
 assert.equal(poimandres.value.tokens.surface_variant, "#303340");
 assert.equal(poimandres.value.tokens.surface_hover, "#41434f");
 assert.equal(poimandres.value.tokens.outline_variant, "#506477");
@@ -89,13 +90,21 @@ const gruvbox = validateTheme(JSON.parse(await readFile(new URL("../../themes/gr
 assert.equal(Object.keys(gruvbox.value.tokens).at(-1), "charging");
 assert.equal(gruvbox.value.palette.sidebar, "#1d2021");
 assert.equal(gruvbox.value.tokens.surface_sidebar, "#1d2021");
+assert.equal(gruvbox.value.tokens.on_surface_subdued, "#a89984");
 assert.equal(gruvbox.value.tokens.surface_low, "#1d2021");
 assert.equal(gruvbox.value.tokens.surface_tooltip, "#3c3836");
 assert.equal(gruvbox.value.tokens.surface_hover, "#504945");
-assert.equal(gruvbox.value.tokens.surface_pressed, "#458588");
+assert.equal(gruvbox.value.tokens.surface_pressed, "#665c54");
 assert.equal(gruvbox.value.tokens.outline, "#928374");
 assert.equal(gruvbox.value.tokens.on_primary_container, "#32302f");
-for (const theme of [poimandres.value, gruvbox.value]) {
+const wallpaper = validateTheme(JSON.parse(await readFile(
+  new URL("../../defaults/wallpaper/generated-theme/qe/Wallpaper.json", import.meta.url), "utf8")));
+assert.equal(wallpaper.ok, true, wallpaper.errors.join("; "));
+assert.notEqual(wallpaper.value.tokens.on_surface_disabled, wallpaper.value.tokens.on_surface_subdued);
+assert.notEqual(wallpaper.value.tokens.on_surface_placeholder, wallpaper.value.tokens.on_surface_variant);
+assert.equal(new Set([wallpaper.value.tokens.success, wallpaper.value.tokens.charging,
+  wallpaper.value.tokens.warning, wallpaper.value.tokens.error]).size, 4);
+for (const theme of [poimandres.value, gruvbox.value, wallpaper.value]) {
   for (const [surface, foreground] of [
     ["background", "on_background"], ["surface", "on_surface"],
     ["surface_variant", "on_surface_variant"], ["surface_tooltip", "on_surface_tooltip"],
@@ -105,6 +114,10 @@ for (const theme of [poimandres.value, gruvbox.value]) {
     assert.ok(contrastRatio(theme.tokens[surface], theme.tokens[foreground]) >= 4.5,
       `${theme.id}: ${foreground} must contrast with ${surface}`);
   }
+  for (const surface of ["background", "surface", "surface_sidebar", "surface_low"]) {
+    assert.ok(contrastRatio(theme.tokens[surface], theme.tokens.on_surface_subdued) >= 4.5,
+      `${theme.id}: on_surface_subdued must contrast with ${surface}`);
+  }
   assert.ok(contrastRatio(theme.tokens.surface, theme.tokens.outline) >= 3,
     `${theme.id}: outline must contrast with surface`);
   assert.ok(contrastRatio(theme.tokens.surface, theme.tokens.focus_ring) >= 3,
@@ -112,6 +125,12 @@ for (const theme of [poimandres.value, gruvbox.value]) {
   const compositedPanel = compositeArgb(theme.tokens.surface_panel, theme.tokens.background);
   assert.ok(contrastRatio(compositedPanel, theme.tokens.on_surface_panel) >= 4.5,
     `${theme.id}: on_surface_panel must contrast with surface_panel over background`);
+  assert.ok(contrastRatio(compositedPanel, theme.tokens.on_surface_subdued) >= 4.5,
+    `${theme.id}: on_surface_subdued must contrast with surface_panel over background`);
+  for (const stateSurface of ["surface_hover", "surface_pressed"]) {
+    assert.ok(contrastRatio(theme.tokens[stateSurface], theme.tokens.on_surface) >= 4.5,
+      `${theme.id}: on_surface must contrast with ${stateSurface}`);
+  }
   const compositedSidebar = compositeArgb(theme.tokens.surface_sidebar, theme.tokens.background);
   assert.ok(relativeLuminance(compositedSidebar) < relativeLuminance(theme.tokens.background),
     `${theme.id}: surface_sidebar must be darker than background`);

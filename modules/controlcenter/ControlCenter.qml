@@ -39,11 +39,6 @@ PanelWindow {
     readonly property var secondaryScaleSlider: secondaryScaleControl.slider
     readonly property var primaryScaleControlItem: primaryScaleControl
     readonly property var secondaryScaleControlItem: secondaryScaleControl
-    readonly property color buttonSurface: Services.ThemeService.theme.tokens.surface
-    readonly property color buttonSurfaceHover: Services.ThemeService.theme.tokens.surface_hover
-    readonly property color buttonSurfacePressed: Services.ThemeService.theme.tokens.surface_pressed
-    readonly property color buttonForeground: Services.ThemeService.theme.tokens.on_surface_disabled
-    readonly property color buttonBorder: Services.ThemeService.theme.tokens.on_surface_disabled
     readonly property real themeSectionSpacing: 12
     readonly property real themeTitleSpacing: 12
     readonly property real quickSettingWidth: Math.max(wifiTile.implicitWidth,
@@ -139,7 +134,7 @@ PanelWindow {
 
             Text {
                 text: scaleControl.title
-                color: Services.ThemeService.theme.tokens.on_surface_variant
+                color: Services.ThemeService.theme.tokens.on_surface_subdued
                 font.family: Services.ConfigService.config.appearance.fontFamily
                 font.pixelSize: 13
                 Layout.fillWidth: true
@@ -156,7 +151,7 @@ PanelWindow {
                         : `Saved ${scaleControl.selectedScale.toFixed(2)}x`))
                 color: scaleSlider.pressed
                     ? Services.ThemeService.theme.tokens.warning
-                    : Services.ThemeService.theme.tokens.on_surface_variant
+                    : Services.ThemeService.theme.tokens.on_surface_subdued
                 font.family: Services.ConfigService.config.appearance.fontFamily
                 font.pixelSize: 13
             }
@@ -268,14 +263,14 @@ PanelWindow {
                     spacing: 6
                     Text {
                         text: Services.TimeService.timeText
-                        color: Services.ThemeService.theme.tokens.on_surface_variant
+                        color: Services.ThemeService.theme.tokens.on_surface
                         font.family: Services.ConfigService.config.appearance.fontFamily
                         font.pixelSize: 48
                         font.weight: Font.DemiBold
                     }
                     Text {
                         text: Services.TimeService.longDateText
-                        color: Services.ThemeService.theme.tokens.on_surface_disabled
+                        color: Services.ThemeService.theme.tokens.on_surface_subdued
                         font.family: Services.ConfigService.config.appearance.fontFamily
                         font.pixelSize: 14
                     }
@@ -290,12 +285,7 @@ PanelWindow {
                     implicitWidth: 52
                     implicitHeight: 52
                     radius: width / 2
-                    border.width: 2
-                    foregroundColor: root.buttonForeground
-                    borderColor: root.buttonBorder
-                    baseBackgroundColor: root.buttonSurface
-                    hoverBackgroundColor: root.buttonSurfaceHover
-                    pressedBackgroundColor: root.buttonSurfacePressed
+                    borderWidth: 2
                     tooltipText: "Open notifications"
                     onClicked: root.openDestination(() => Services.SurfaceService.openNotificationCenter())
                 }
@@ -306,12 +296,7 @@ PanelWindow {
                     implicitWidth: 52
                     implicitHeight: 52
                     radius: width / 2
-                    border.width: 2
-                    foregroundColor: root.buttonForeground
-                    borderColor: root.buttonBorder
-                    baseBackgroundColor: root.buttonSurface
-                    hoverBackgroundColor: root.buttonSurfaceHover
-                    pressedBackgroundColor: root.buttonSurfacePressed
+                    borderWidth: 2
                     tooltipText: "Open power menu"
                     onClicked: root.openDestination(() => Services.PowerService.openPowerMenu())
                 }
@@ -382,7 +367,6 @@ PanelWindow {
                         title: "Do Not Disturb"
                         iconName: Services.NotificationService.dnd ? "do_not_disturb_on" : "do_not_disturb_off"
                         checked: Services.NotificationService.dnd
-                        activeColor: Services.ThemeService.theme.tokens.warning
                         primaryEnabled: Services.NotificationService.stateReady
                         valueText: Services.NotificationService.dnd ? "On" : "Off"
                         statusText: Services.NotificationService.stateReady ? "Notifications" : "Unavailable"
@@ -398,7 +382,6 @@ PanelWindow {
                         title: "Idle inhibitor"
                         iconName: Services.IdleService.requested ? "visibility" : "visibility_off"
                         checked: Services.IdleService.requested
-                        activeColor: Services.ThemeService.theme.tokens.warning
                         primaryEnabled: Services.IdleService.availability === "available" && Services.IdleService.configured
                         valueText: Services.IdleService.requested ? "Enabled" : "Disabled"
                         statusText: Services.IdleService.configured ? Services.IdleService.availability : "Unavailable"
@@ -414,9 +397,6 @@ PanelWindow {
                         title: "Volume"
                         iconName: Services.AudioService.muted ? "volume_off" : "volume_up"
                         checked: !Services.AudioService.muted
-                        alert: Services.AudioService.muted
-                        activeColor: Services.ThemeService.theme.tokens.success
-                        alertColor: Services.ThemeService.theme.tokens.error
                         pending: Services.AudioService.pendingMuted !== null
                             || Services.AudioService.pendingVolumePercent >= 0
                         primaryEnabled: Services.AudioService.availability === "available"
@@ -437,9 +417,6 @@ PanelWindow {
                         title: "Microphone"
                         iconName: Services.AudioService.microphoneMuted ? "mic_off" : "mic"
                         checked: !Services.AudioService.microphoneMuted
-                        alert: Services.AudioService.microphoneMuted
-                        activeColor: Services.ThemeService.theme.tokens.success
-                        alertColor: Services.ThemeService.theme.tokens.error
                         pending: Services.AudioService.pendingMicrophoneMuted !== null
                             || Services.AudioService.pendingMicrophoneVolumePercent >= 0
                         primaryEnabled: Services.AudioService.microphoneAvailability === "available"
@@ -500,33 +477,18 @@ PanelWindow {
                         spacing: 6
                         Components.IconButton {
                             iconName: "palette"
-                            foregroundColor: root.buttonForeground
-                            borderColor: root.buttonBorder
-                            baseBackgroundColor: root.buttonSurface
-                            hoverBackgroundColor: root.buttonSurfaceHover
-                            pressedBackgroundColor: root.buttonSurfacePressed
                             Layout.fillWidth: true
                             tooltipText: "Open palette viewer"
                             onClicked: root.openDestination(() => Services.SurfaceService.openPaletteViewer())
                         }
                         Components.IconButton {
                             iconName: "wallpaper"
-                            foregroundColor: root.buttonForeground
-                            borderColor: root.buttonBorder
-                            baseBackgroundColor: root.buttonSurface
-                            hoverBackgroundColor: root.buttonSurfaceHover
-                            pressedBackgroundColor: root.buttonSurfacePressed
                             Layout.fillWidth: true
                             tooltipText: "Select wallpaper"
                             onClicked: root.openDestination(() => Services.SurfaceService.openWallpaperSelector())
                         }
                         Components.IconButton {
                             iconName: "wallpaper_slideshow"
-                            foregroundColor: root.buttonForeground
-                            borderColor: root.buttonBorder
-                            baseBackgroundColor: root.buttonSurface
-                            hoverBackgroundColor: root.buttonSurfaceHover
-                            pressedBackgroundColor: root.buttonSurfacePressed
                             Layout.fillWidth: true
                             enabled: Services.WallpaperService.wallpaperDirectoryReady
                                 && Services.WallpaperService.wallpaperDirectoryCount > 0
@@ -535,22 +497,12 @@ PanelWindow {
                         }
                         Components.IconButton {
                             iconName: "save"
-                            foregroundColor: root.buttonForeground
-                            borderColor: root.buttonBorder
-                            baseBackgroundColor: root.buttonSurface
-                            hoverBackgroundColor: root.buttonSurfaceHover
-                            pressedBackgroundColor: root.buttonSurfacePressed
                             Layout.fillWidth: true
                             tooltipText: "Capture defaults"
                             onClicked: root.requestDefaults("capture")
                         }
                         Components.IconButton {
                             iconName: "restore"
-                            foregroundColor: root.buttonForeground
-                            borderColor: root.buttonBorder
-                            baseBackgroundColor: root.buttonSurface
-                            hoverBackgroundColor: root.buttonSurfaceHover
-                            pressedBackgroundColor: root.buttonSurfacePressed
                             Layout.fillWidth: true
                             tooltipText: "Restore defaults"
                             onClicked: root.requestDefaults("restore")
@@ -649,7 +601,7 @@ PanelWindow {
                         color: Services.MonitorLayoutService.operation === "failed"
                             ? Services.ThemeService.theme.tokens.error
                             : (Services.MonitorLayoutService.availability === "available"
-                                ? Services.ThemeService.theme.tokens.on_surface_disabled
+                                ? Services.ThemeService.theme.tokens.on_surface_subdued
                                 : Services.ThemeService.theme.tokens.warning)
                         font.family: Services.ConfigService.config.appearance.fontFamily
                         font.pixelSize: 12
@@ -705,7 +657,7 @@ PanelWindow {
                     text: root.confirmationAction === "capture"
                         ? "This replaces the authored defaults snapshot."
                         : "This changes the live theme and wallpaper files."
-                    color: Services.ThemeService.theme.tokens.on_surface_variant
+                    color: Services.ThemeService.theme.tokens.on_surface_subdued
                     font.family: Services.ConfigService.config.appearance.fontFamily
                     font.pixelSize: 13
                     horizontalAlignment: Text.AlignHCenter
@@ -716,22 +668,11 @@ PanelWindow {
                     spacing: 12
                     Components.IconButton {
                         iconName: "close"
-                        foregroundColor: root.buttonForeground
-                        borderColor: root.buttonBorder
-                        baseBackgroundColor: root.buttonSurface
-                        hoverBackgroundColor: root.buttonSurfaceHover
-                        pressedBackgroundColor: root.buttonSurfacePressed
                         tooltipText: "Cancel"
                         onClicked: root.confirmationAction = ""
                     }
                     Components.IconButton {
                         iconName: "check"
-                        foregroundColor: root.buttonForeground
-                        borderColor: root.buttonBorder
-                        baseBackgroundColor: root.buttonSurface
-                        hoverBackgroundColor: root.buttonSurfaceHover
-                        pressedBackgroundColor: root.buttonSurfacePressed
-                        toggleColor: Services.ThemeService.theme.tokens.warning
                         tooltipText: "Confirm"
                         onClicked: root.performDefaults()
                     }

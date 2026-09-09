@@ -128,7 +128,7 @@ ShellRoot {
         if (batteryModule.icon !== "battery_android_frame_bolt")
             return fail("charging battery did not use the bolt icon");
         if (batteryModule.iconColor.toString() !== Services.ThemeService.theme.tokens.charging
-                || batteryModule.textColor.toString() !== Services.ThemeService.theme.tokens.on_surface_disabled)
+                || batteryModule.textColor.toString() !== Services.ThemeService.theme.tokens.on_surface_subdued)
             return fail("charging battery did not use charging semantics");
         if (batteryModule.hoverText !== "Time to full: 1h 30m")
             return fail(`charging battery hover was '${batteryModule.hoverText}'`);

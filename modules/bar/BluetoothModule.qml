@@ -12,9 +12,7 @@ BarChip {
         : (Services.BluetoothService.connectedCount > 0 ? "bluetooth_connected" : "bluetooth")
     iconColor: Services.BluetoothService.connectedCount > 0
         ? Services.ThemeService.theme.tokens.success
-        : (Services.BluetoothService.enabled
-            ? Services.ThemeService.theme.tokens.secondary
-            : Services.ThemeService.theme.tokens.error)
+        : Services.ThemeService.theme.tokens.on_surface_subdued
     warning: Services.BluetoothService.operation === "pending"
     warningColor: Services.ThemeService.theme.tokens.primary
     hoverText: Services.BluetoothService.hoverText

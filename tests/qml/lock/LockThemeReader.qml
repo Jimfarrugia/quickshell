@@ -44,7 +44,7 @@ QtObject {
         palette: { background: "#000000", foreground: "#ffffff" },
         tokens: {
             background: "#000000", on_background: "#ffffff",
-            surface: "#000000", on_surface: "#ffffff",
+            surface: "#000000", on_surface: "#ffffff", on_surface_subdued: "#b0b0b0",
             surface_variant: "#000000", on_surface_variant: "#ffffff",
             surface_panel: "#000000", surface_sidebar: "#000000",
             surface_low: "#000000", on_surface_panel: "#ffffff",

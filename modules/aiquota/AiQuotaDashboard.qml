@@ -21,7 +21,7 @@ ColumnLayout {
     }
 
     component Caption: Text {
-        color: Services.ThemeService.theme.tokens.on_surface_variant
+        color: Services.ThemeService.theme.tokens.on_surface_subdued
         font.family: Services.ConfigService.config.appearance.fontFamily
         font.pixelSize: Services.ConfigService.config.appearance.fontSize
         wrapMode: Text.Wrap
@@ -106,7 +106,7 @@ ColumnLayout {
                 : (parent.limit.error ? parent.limit.error.code : "No confirmed data")
             textFormat: Text.RichText
             color: parent.limit.status === "ok" && parent.limit.freshness !== "stale"
-                ? Services.ThemeService.theme.tokens.on_surface_variant
+                ? Services.ThemeService.theme.tokens.on_surface_subdued
                 : Services.ThemeService.theme.tokens.warning
         }
     }
@@ -171,7 +171,7 @@ ColumnLayout {
         Layout.topMargin: Math.max(0, 20 - root.spacing)
         visible: Services.AiQuotaService.operation === "pending"
             || Services.AiQuotaService.lastUpdated !== null
-        color: Services.ThemeService.theme.tokens.on_surface_disabled
+        color: Services.ThemeService.theme.tokens.on_surface_subdued
         text: Services.AiQuotaService.operation === "pending"
             ? "Refreshing..."
             : (Services.AiQuotaService.lastUpdated

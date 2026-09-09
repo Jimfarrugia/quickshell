@@ -185,7 +185,7 @@ FloatingWindow {
                             text: themeMenu.displayText
                             color: themeMenu.hovered || themeMenu.activeFocus
                                 ? Services.ThemeService.theme.tokens.link
-                                : Services.ThemeService.theme.tokens.on_surface_panel
+                                : Services.ThemeService.theme.tokens.on_surface_subdued
                             font: themeMenu.font
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -294,7 +294,7 @@ FloatingWindow {
                 checked: root.viewMode === "palette"
                 focus: root.focusTarget === "toggle"
                 onActiveFocusChanged: if (activeFocus) root.focusTarget = "toggle"
-                onToggled: root.viewMode = root.viewMode === "tokens" ? "palette" : "tokens"
+                onToggled: checked => root.viewMode = checked ? "palette" : "tokens"
 
                 Keys.onEscapePressed: Services.SurfaceService.closePaletteViewer()
                 Keys.onPressed: function(event) {
@@ -506,13 +506,13 @@ FloatingWindow {
                 Text {
                     Layout.fillWidth: true
                     text: `${root.entries.length} ${root.viewMode}`
-                    color: Services.ThemeService.theme.tokens.on_surface_variant
+                    color: Services.ThemeService.theme.tokens.on_surface_subdued
                     font.family: Services.ConfigService.config.appearance.monospaceFontFamily
                     font.pixelSize: 11
                 }
                 Text {
                     text: "Click copy to copy a color / q or Esc close"
-                    color: Services.ThemeService.theme.tokens.on_surface_variant
+                    color: Services.ThemeService.theme.tokens.on_surface_subdued
                     font.family: Services.ConfigService.config.appearance.monospaceFontFamily
                     font.pixelSize: 11
                 }

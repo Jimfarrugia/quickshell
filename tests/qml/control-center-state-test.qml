@@ -30,20 +30,14 @@ ShellRoot {
                 || !control.quickSettingTiles[4].secondaryEnabled
                 || !control.quickSettingTiles[5].secondaryEnabled)
             return fail("dashboard secondary actions are missing");
-        if (String(control.quickSettingTiles[2].activeColor)
-                    !== String(Services.ThemeService.theme.tokens.warning)
-                || String(control.quickSettingTiles[3].activeColor)
-                    !== String(Services.ThemeService.theme.tokens.warning))
-            return fail("DND and idle inhibitor do not use warning active styling");
-        if (String(control.quickSettingTiles[4].activeColor)
-                    !== String(Services.ThemeService.theme.tokens.success)
-                || String(control.quickSettingTiles[4].alertColor)
-                    !== String(Services.ThemeService.theme.tokens.error)
-                || String(control.quickSettingTiles[5].activeColor)
-                    !== String(Services.ThemeService.theme.tokens.success)
-                || String(control.quickSettingTiles[5].alertColor)
-                    !== String(Services.ThemeService.theme.tokens.error))
-            return fail("audio tile success/error styling is missing");
+        if (control.quickSettingTiles[2].checked !== Services.NotificationService.dnd
+                || control.quickSettingTiles[3].checked !== Services.IdleService.requested)
+            return fail("DND and idle inhibitor semantic state is stale");
+        if (control.quickSettingTiles[4].checked !== !Services.AudioService.muted
+                || control.quickSettingTiles[4].alert
+                || control.quickSettingTiles[5].checked !== !Services.AudioService.microphoneMuted
+                || control.quickSettingTiles[5].alert)
+            return fail("audio tile semantic state is stale");
         if (control.monitorModeDropdown.model.length !== 2
                 || control.monitorDirectionDropdown.model.length !== 4)
             return fail("monitor layout options are incomplete");

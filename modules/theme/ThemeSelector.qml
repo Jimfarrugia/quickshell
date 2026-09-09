@@ -153,7 +153,7 @@ FloatingWindow {
                                     Text {
                                         text: `${modelData.id} / ${modelData.variant}`
                                         color: modelData.id === Services.ThemeService.activeThemeId
-                                            ? modelData.tokens.on_primary_container : modelData.tokens.on_surface_variant
+                                            ? modelData.tokens.on_primary_container : modelData.tokens.on_surface_subdued
                                         opacity: 0.78
                                         font.family: Services.ConfigService.config.appearance.monospaceFontFamily
                                         font.pixelSize: 11
@@ -205,7 +205,7 @@ FloatingWindow {
                                         ? "Theme apply in progress"
                                         : "Select to apply"
                                 color: modelData.id === Services.ThemeService.activeThemeId
-                                    ? modelData.tokens.on_primary_container : modelData.tokens.on_surface_variant
+                                    ? modelData.tokens.on_primary_container : modelData.tokens.on_surface_subdued
                                 font.family: Services.ConfigService.config.appearance.fontFamily
                                 font.pixelSize: 12
                             }
@@ -256,7 +256,7 @@ FloatingWindow {
                         : `${Services.ThemeService.catalog.length} validated themes`
                     color: Services.ThemeService.operation === "failed"
                         ? Services.ThemeService.theme.tokens.error
-                        : Services.ThemeService.theme.tokens.on_surface_variant
+                        : Services.ThemeService.theme.tokens.on_surface_subdued
                     font.family: Services.ConfigService.config.appearance.monospaceFontFamily
                     font.pixelSize: 11
                 }
@@ -283,14 +283,14 @@ FloatingWindow {
                             ? Services.ThemeService.theme.tokens.warning
                             : Services.ThemeService.externalStatus === "failed"
                                 ? Services.ThemeService.theme.tokens.error
-                                : Services.ThemeService.theme.tokens.on_surface_variant
+                                : Services.ThemeService.theme.tokens.on_surface_subdued
                     font.family: Services.ConfigService.config.appearance.monospaceFontFamily
                     font.pixelSize: 11
                 }
 
                 Text {
                     text: "h/j/k/l navigate / q or Esc close / Enter apply"
-                    color: Services.ThemeService.theme.tokens.on_surface_variant
+                    color: Services.ThemeService.theme.tokens.on_surface_subdued
                     font.family: Services.ConfigService.config.appearance.monospaceFontFamily
                     font.pixelSize: 11
                 }

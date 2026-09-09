@@ -287,6 +287,20 @@ The split between `components/` and `modules/` is intentional:
 - `modules/` composes windows, panels, popups, and feature-specific views from
   components and services.
 
+Reusable action controls own the mapping from interaction state to semantic
+theme roles. `ActionButton` provides neutral, primary, and destructive tones;
+ghost, outlined, and filled emphasis; and normal, hover, pressed, selected,
+pending, disabled, and focus treatment. `IconButton` specializes that contract
+for icon-only actions. Modules select a tone and emphasis but do not choose raw
+foreground, border, hover, or pressed colors. Ordinary selection uses
+`primary_container`/`on_primary_container`; confirmed success, warning, and
+error roles are not aliases for checked or pending state.
+Outlined primary and destructive actions use their tone for the boundary while
+retaining a readable content foreground on interaction surfaces. Ghost actions
+omit the ordinary boundary, and keyboard focus restores a visible focus ring.
+Filled emphasis is limited to primary actions because status roles do not yet
+have guaranteed foreground pairs.
+
 ### Directory dependency rules
 
 | Directory       | May depend on                                             | Must not depend on                                           |
@@ -718,18 +732,16 @@ controls remain separate from card dismissal.
 Notification cards and popups share the same media-first layout and normalized
 fallback icon policy. A supplied image is preferred; otherwise OpenCode uses
 `robot_2`, critical notifications use `warning`, and low/normal notifications
-use `notifications`. Fallback icons use `on_surface_disabled`, except critical
+use `notifications`. Fallback icons use `on_surface_subdued`, except critical
 icons, which use the theme error color.
 
 The notification center's DND control is a controlled toggle `IconButton` with
 the `do_not_disturb_on` icon. Its state is owned by `NotificationService`.
-Toggle buttons retain the regular `IconButton` background states and expose the
-next state through `toggled(bool)`; while toggled on, their foreground and
-border use `toggleColor`, which defaults to the theme `success` token. The
-notification-center instances override their foreground, border, and DND
-off-state colors with `on_surface_disabled`, while
-DND retains `warning` for its toggled-on foreground and border.
-Non-toggle buttons retain the regular `clicked()` behavior.
+Toggle buttons retain the regular `IconButton` interaction states. Their
+checked state uses `primary_container`/`on_primary_container`, while enabled
+off-state controls use the neutral subdued action style. Disabled styling is
+reserved for controls that cannot accept an action. Non-toggle buttons retain
+the regular `clicked()` behavior.
 
 The notification center also provides a controlled icon-only critical-first
 toggle using the `warning` icon. When enabled, it partitions the current and
@@ -764,7 +776,7 @@ When history extends below the viewport, a view-local info pill overlays the
 list when one or more history cards are entirely below it. It reports the
 number of those cards without changing the list's available viewport or
 notification service state. The pill uses `surface_hover` with centered
-`on_surface_variant` `keyboard_arrow_down` icon and count, a 1px
+`on_surface` `keyboard_arrow_down` icon and count, a 1px
 `outline` top edge at 30% alpha, and the theme shadow token with a
 24px blur when appearance shadows are enabled.
 
@@ -1064,13 +1076,14 @@ contract. The initial shape is:
   "tokens": {
     "background": "{palette.background}",
     "on_background": "{palette.foreground}",
-    "surface": "{palette.gray}",
+    "surface": "{palette.background}",
     "on_surface": "{palette.foreground}",
-    "surface_variant": "{palette.blueGrayDark}",
-    "on_surface_variant": "{palette.foreground}",
+    "on_surface_subdued": "{palette.muted}",
+    "surface_variant": "{palette.gray}",
+    "on_surface_variant": "{palette.purpleLight}",
     "surface_panel": "#f21b1e28",
-    "surface_sidebar": "#f5171922",
-    "surface_low": "#f5171922",
+    "surface_sidebar": "#171922",
+    "surface_low": "#171922",
     "on_surface_panel": "{palette.foreground}",
     "surface_tooltip": "{palette.black}",
     "on_surface_tooltip": "{palette.muted}",
@@ -1100,7 +1113,7 @@ contract. The initial shape is:
 }
 ```
 
-The approved 34-role token names use Matugen-style `snake_case` and paired
+The approved 35-role token names use Matugen-style `snake_case` and paired
 `on_*` foregrounds. ADR-015 records the Phase 4 pre-release contract revision
 that supersedes the provisional vocabulary and the individual additions in
 ADR-012 and ADR-014 while retaining their charging and tooltip semantics.
@@ -1108,6 +1121,16 @@ Any explicit pre-release contract revision is recorded in an ADR and updates all
 themes, fixtures, fallbacks, and validators together. Token references are
 resolved once by pure validation logic; normal components consume resolved
 semantic tokens only.
+
+An `on_*` role is foreground content intended for its named surface or accent;
+for example, `on_surface_variant` is paired with `surface_variant`, not a
+generic lower-emphasis form of `on_surface`. `on_surface_subdued` is enabled,
+lower-emphasis text and icon content on QE's ordinary neutral surface family.
+`on_surface_disabled` is reserved for genuinely unavailable controls, and
+`on_surface_placeholder` remains specific to editable hints. Boundaries use
+`outline` or `outline_variant` rather than a content role. A theme may map
+different semantic roles to the same color; semantic independence and required
+contrast, not unique color count, define conformance.
 
 Raw palette names describe source colors. Semantic tokens describe UI roles.
 Normal components never consume palette entries directly, which allows Matugen
@@ -1124,6 +1147,10 @@ contain alpha, so static validation composites them over the theme background;
 live acceptance also checks
 representative wallpapers because no fixed foreground can guarantee contrast
 over every external image.
+`on_surface_subdued` targets 4.5:1 against background, surface, low, sidebar,
+and the panel composited over the theme background. Normal action foregrounds
+also target 4.5:1 on hover and pressed surfaces so text-bearing controls remain
+readable.
 
 Typography, spacing, radii, border widths, shadows parameters, opacity policy,
 and animation durations belong to user configuration initially, not individual
@@ -1191,7 +1218,7 @@ generation or application.
 The current adapter boundary requires `QE_MATUGEN` to name the executable; an
 unset or missing executable is an isolated unavailable state. `MatugenAdapter`
 requests noninteractive JSON output with an explicit mode and source-color
-preference, bounds the process, and validates the mapped 34-role theme before
+preference, bounds the process, and validates the mapped 35-role theme before
 the service stages it. `WallpaperPromotionAdapter` then promotes the staged QE
 `Wallpaper.json` into its stable XDG data path, preserving the previous artifact
 when staging or promotion fails. External Matugen artifacts use the separate

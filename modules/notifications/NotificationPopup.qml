@@ -92,7 +92,7 @@ Item {
                     Layout.fillWidth: true
                     Layout.bottomMargin: 12
                     text: root.record.data.summary
-                    color: Services.ThemeService.theme.tokens.on_surface_variant
+                    color: Services.ThemeService.theme.tokens.on_surface
                     font.family: Services.ConfigService.config.appearance.fontFamily
                     font.pixelSize: 16
                     font.weight: Font.DemiBold
@@ -106,7 +106,7 @@ Item {
                     clip: true
                     text: root.record.data.body
                     textFormat: root.record.data.isScreenshot ? Text.PlainText : Text.RichText
-                    color: Services.ThemeService.theme.tokens.on_surface_variant
+                    color: Services.ThemeService.theme.tokens.on_surface_subdued
                     font.family: Services.ConfigService.config.appearance.fontFamily
                     font.pixelSize: 14
                     wrapMode: root.record.data.isScreenshot ? Text.NoWrap : Text.WordWrap
@@ -138,7 +138,9 @@ Item {
                             Text {
                                 anchors.centerIn: parent
                                 text: modelData.text
-                                color: Services.ThemeService.theme.tokens.on_surface_variant
+                                color: actionHover.hovered
+                                    ? Services.ThemeService.theme.tokens.on_surface
+                                    : Services.ThemeService.theme.tokens.on_surface_variant
                                 font.family: Services.ConfigService.config.appearance.fontFamily
                                 font.pixelSize: 13
                                 elide: Text.ElideRight
@@ -164,7 +166,7 @@ Item {
 
                     Text {
                         text: root.record.data.appName
-                        color: Services.ThemeService.theme.tokens.on_surface_disabled
+                        color: Services.ThemeService.theme.tokens.on_surface_subdued
                         font.family: Services.ConfigService.config.appearance.monospaceFontFamily
                         font.pixelSize: 12
                         horizontalAlignment: Text.AlignRight
@@ -173,7 +175,7 @@ Item {
 
                     Text {
                         text: root.formatNotificationTime(root.record.data.receivedAt)
-                        color: Services.ThemeService.theme.tokens.on_surface_disabled
+                        color: Services.ThemeService.theme.tokens.on_surface_subdued
                         font.family: Services.ConfigService.config.appearance.monospaceFontFamily
                         font.pixelSize: 12
                         horizontalAlignment: Text.AlignRight

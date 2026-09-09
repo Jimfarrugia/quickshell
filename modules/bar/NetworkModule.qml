@@ -14,8 +14,8 @@ BarChip {
         : (wiredConnected ? `${Services.NetworkService.linkSpeed} Mbps` : "")
     icon: wifiConnected ? "wifi" : (wiredConnected ? "lan" : "signal_wifi_bad")
     textColor: wifiConnected || wiredConnected ? Services.ThemeService.theme.tokens.primary
-                                                : Services.ThemeService.theme.tokens.on_surface_disabled
-    trailingTextColor: Services.ThemeService.theme.tokens.on_surface_disabled
+                                                : Services.ThemeService.theme.tokens.on_surface_subdued
+    trailingTextColor: Services.ThemeService.theme.tokens.on_surface_subdued
     iconColor: wifiConnected || wiredConnected ? Services.ThemeService.theme.tokens.secondary
                                                : Services.ThemeService.theme.tokens.error
     warning: false

@@ -142,7 +142,7 @@ PanelWindow {
                             Text {
                                 Layout.fillWidth: true
                                 text: modelData === "keybindings" ? "Keybindings" : "Commands"
-                                color: Services.ThemeService.theme.tokens.secondary
+                                color: Services.ThemeService.theme.tokens.on_surface
                                 font.family: Services.ConfigService.config.appearance.fontFamily
                                 font.pixelSize: 22
                                 font.weight: Font.DemiBold
@@ -190,7 +190,7 @@ PanelWindow {
                                                 width: parent.width
                                                 text: modelData.shortcut || modelData.command || ""
                                                 visible: text !== ""
-                                                color: Services.ThemeService.theme.tokens.on_surface_variant
+                                                color: Services.ThemeService.theme.tokens.on_surface_subdued
                                                 font.family: modelData.command
                                                     ? Services.ConfigService.config.appearance.monospaceFontFamily
                                                     : Services.ConfigService.config.appearance.fontFamily
@@ -213,7 +213,7 @@ PanelWindow {
             width: parent.width - 40
             visible: Services.HelpService.results.length === 0
             text: Services.HelpService.query === "" ? "No help entries" : "No matches."
-            color: Services.ThemeService.theme.tokens.on_surface_variant
+            color: Services.ThemeService.theme.tokens.on_surface_subdued
             font.family: Services.ConfigService.config.appearance.fontFamily
             font.pixelSize: 16
             horizontalAlignment: Text.AlignHCenter

@@ -29,7 +29,7 @@ BarChip {
         : (current ? Services.ThemeService.theme.tokens.secondary : Services.ThemeService.theme.tokens.error)
     textColor: selected.freshness === "stale"
         ? Services.ThemeService.theme.tokens.warning
-        : (current ? Services.ThemeService.theme.tokens.on_surface_disabled : Services.ThemeService.theme.tokens.error)
+        : (current ? Services.ThemeService.theme.tokens.on_surface_subdued : Services.ThemeService.theme.tokens.error)
     warning: false
     hoverText: Services.AiQuotaService.tooltipText
     visible: Services.ConfigService.config.bar.enabled && Services.ConfigService.config.bar.aiQuotaEnabled

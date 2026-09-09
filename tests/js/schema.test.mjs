@@ -55,7 +55,8 @@ const helpSchema = await load("../../config/schema/help.schema.json");
 
 for (const path of ["../../config/qe.json", "../fixtures/config/valid.json"])
   assert.deepEqual(validate(await load(path), configSchema), [], path);
-for (const path of ["../../themes/poimandres.json", "../../themes/gruvbox.json", "../fixtures/themes/valid.json"])
+for (const path of ["../../themes/poimandres.json", "../../themes/gruvbox.json",
+  "../../defaults/wallpaper/generated-theme/qe/Wallpaper.json", "../fixtures/themes/valid.json"])
   assert.deepEqual(validate(await load(path), themeSchema), [], path);
 assert.deepEqual(validate(await load("../fixtures/state/valid.json"), stateSchema), []);
 assert.deepEqual(validate(await load("../fixtures/notification-state/valid.json"), notificationStateSchema), []);

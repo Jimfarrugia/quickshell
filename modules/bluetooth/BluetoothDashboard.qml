@@ -10,7 +10,7 @@ ColumnLayout {
     property var forgettingAddresses: []
 
     component LabelText: Text {
-        color: Services.ThemeService.theme.tokens.on_surface_variant
+        color: Services.ThemeService.theme.tokens.on_surface_subdued
         font.family: Services.ConfigService.config.appearance.fontFamily
         font.pixelSize: Services.ConfigService.config.appearance.fontSize
     }
@@ -149,7 +149,7 @@ ColumnLayout {
                     spacing: 0
                     Text {
                         text: "battery_0_bar"
-                        color: Services.ThemeService.theme.tokens.on_surface_variant
+                        color: Services.ThemeService.theme.tokens.on_surface_subdued
                         font.family: Services.ConfigService.config.appearance.iconFontFamily
                         font.pixelSize: Services.ConfigService.config.appearance.fontSize
                     }
@@ -175,8 +175,9 @@ ColumnLayout {
                         Components.IconButton {
                             visible: actionGroup.rowDevice.connected
                             iconName: "link"
-                            foregroundColor: Services.ThemeService.theme.tokens.success
-                            borderColor: Services.ThemeService.theme.tokens.success
+                            pending: Services.BluetoothService.pendingDeviceAddress === actionGroup.rowDevice.address
+                            tone: pending ? "primary" : "neutral"
+                            emphasis: pending ? "filled" : "outlined"
                             tooltipText: "Disconnect"
                             enabled: Services.BluetoothService.pendingDeviceAddress !== actionGroup.rowDevice.address
                             onClicked: Services.BluetoothService.begin(actionGroup.rowDevice.address, "disconnect")
@@ -185,6 +186,9 @@ ColumnLayout {
                             visible: !actionGroup.rowDevice.connected
                                 && (actionGroup.rowDevice.paired || actionGroup.rowDevice.bonded)
                             iconName: "link"
+                            pending: Services.BluetoothService.pendingDeviceAddress === actionGroup.rowDevice.address
+                            tone: pending ? "primary" : "neutral"
+                            emphasis: pending ? "filled" : "outlined"
                             tooltipText: "Connect"
                             enabled: Services.BluetoothService.pendingDeviceAddress !== actionGroup.rowDevice.address
                             onClicked: Services.BluetoothService.begin(actionGroup.rowDevice.address, "connect")
@@ -192,6 +196,9 @@ ColumnLayout {
                         Components.IconButton {
                             visible: !actionGroup.rowDevice.paired && !actionGroup.rowDevice.bonded
                             iconName: actionGroup.rowDevice.pairing ? "cancel" : "add_link"
+                            pending: Services.BluetoothService.pendingDeviceAddress === actionGroup.rowDevice.address
+                            tone: pending ? "primary" : "neutral"
+                            emphasis: pending ? "filled" : "outlined"
                             tooltipText: actionGroup.rowDevice.pairing ? "Cancel pairing" : "Open Blueman"
                             enabled: actionGroup.rowDevice.pairing
                                 ? Services.BluetoothService.pendingDeviceAddress === actionGroup.rowDevice.address
@@ -203,8 +210,7 @@ ColumnLayout {
                         Components.IconButton {
                             visible: actionGroup.rowDevice.paired || actionGroup.rowDevice.bonded
                             iconName: "delete"
-                            foregroundColor: Services.ThemeService.theme.tokens.error
-                            borderColor: Services.ThemeService.theme.tokens.error
+                            tone: "destructive"
                             tooltipText: "Forget"
                             enabled: Services.BluetoothService.pendingDeviceAddress === ""
                                 && !root.forgetting(actionGroup.rowDevice.address)
@@ -214,7 +220,11 @@ ColumnLayout {
                         Components.IconButton {
                             visible: root.forgetting(actionGroup.rowDevice.address)
                             iconName: "check"
+                            pending: Services.BluetoothService.pendingDeviceAddress === actionGroup.rowDevice.address
+                            tone: pending ? "primary" : "destructive"
+                            emphasis: pending ? "filled" : "outlined"
                             tooltipText: "Confirm forget"
+                            enabled: !pending
                             onClicked: Services.BluetoothService.forget(actionGroup.rowDevice.address)
                         }
                     }

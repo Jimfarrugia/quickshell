@@ -6,9 +6,7 @@ BarChip {
         && Services.ConfigService.config.bar.idleInhibitorEnabled
         && Services.IdleService.availability === "available"
     icon: Services.IdleService.requested ? "visibility" : "visibility_off"
-    iconColor: Services.IdleService.requested
-        ? Services.ThemeService.theme.tokens.primary
-        : Services.ThemeService.theme.tokens.secondary
+    iconColor: Services.ThemeService.theme.tokens.on_surface_subdued
     hoverText: Services.IdleService.requested ? "Enabled" : "Disabled"
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
     configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily

@@ -22,24 +22,41 @@ ShellRoot {
         return null;
     }
 
+    function textChild(item) {
+        for (const child of item.children) {
+            if (child.text !== undefined) return child;
+        }
+        return null;
+    }
+
     function check() {
         const first = childWithName(toggle, "segment-0");
         const second = childWithName(toggle, "segment-1");
         if (first === null || second === null)
             return fail("binary segments were not created");
+        const firstText = textChild(first);
+        const secondText = textChild(second);
+        if (firstText === null || secondText === null)
+            return fail("binary segment labels were not created");
         if (Math.abs(first.width - toggle.width / 2) > 0.01
                 || Math.abs(second.width - toggle.width / 2) > 0.01)
             return fail("segments do not divide the available width equally");
         if (Math.abs(first.x) > 0.01 || Math.abs(second.x - first.width) > 0.01)
             return fail("segments overlap or leave an outer gap");
-        if (!Qt.colorEqual(first.children[0].color, Services.ThemeService.theme.tokens.primary)
+        if (!Qt.colorEqual(first.children[0].color,
+                Services.ThemeService.theme.tokens.primary_container)
+                || !Qt.colorEqual(firstText.color,
+                    Services.ThemeService.theme.tokens.on_primary_container)
                 || !Qt.colorEqual(second.children[0].color,
                     Services.ThemeService.theme.tokens.surface_variant))
             return fail("unchecked segment colors are incorrect");
 
         toggle.checked = true;
         if (!Qt.colorEqual(first.children[0].color, Services.ThemeService.theme.tokens.surface_variant)
-                || !Qt.colorEqual(second.children[0].color, Services.ThemeService.theme.tokens.primary))
+                || !Qt.colorEqual(second.children[0].color,
+                    Services.ThemeService.theme.tokens.primary_container)
+                || !Qt.colorEqual(secondText.color,
+                    Services.ThemeService.theme.tokens.on_primary_container))
             return fail("checked segment colors are incorrect");
 
         toggle.activate();
@@ -61,7 +78,10 @@ ShellRoot {
             id: toggle
             anchors.fill: parent
             labels: ["First", "Second"]
-            onToggled: root.toggleCount += 1
+            onToggled: function(checked) {
+                root.toggleCount += 1;
+                toggle.checked = checked;
+            }
         }
     }
 

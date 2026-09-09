@@ -27,7 +27,7 @@ Rectangle {
         }
         Text {
             text: Services.ThemeService.operation === "pending" ? "Saving requested theme..." : "Phase 1 preview"
-            color: Services.ThemeService.theme.tokens.on_surface_variant
+            color: Services.ThemeService.theme.tokens.on_surface_subdued
         }
         Row {
             spacing: 8

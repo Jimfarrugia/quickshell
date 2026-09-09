@@ -16,7 +16,7 @@ ColumnLayout {
     }
 
     component StateLabel: Text {
-        color: Services.ThemeService.theme.tokens.on_surface_variant
+        color: Services.ThemeService.theme.tokens.on_surface_subdued
         font.family: Services.ConfigService.config.appearance.fontFamily
         font.pixelSize: Services.ConfigService.config.appearance.fontSize
     }
@@ -36,7 +36,7 @@ ColumnLayout {
         required property bool input
         property bool stream: false
         property bool showName: true
-        property color nameColor: Services.ThemeService.theme.tokens.on_surface_variant
+        property color nameColor: Services.ThemeService.theme.tokens.on_surface_subdued
         Layout.fillWidth: true
         spacing: 8
 
@@ -70,13 +70,10 @@ ColumnLayout {
                 iconName: deviceRow.input ? "mic_off" : "volume_off"
                 toggleable: true
                 checked: deviceRow.node ? Services.AudioService.displayNodeMuted(deviceRow.node) : false
-                toggleColor: Services.ThemeService.theme.tokens.error
-                foregroundColor: Services.ThemeService.theme.tokens.on_surface_disabled
-                borderColor: Services.ThemeService.theme.tokens.on_surface_disabled
                 tooltipText: deviceRow.node && Services.AudioService.displayNodeMuted(deviceRow.node)
                     ? "Unmute" : "Mute"
-                onToggled: function(nextChecked) {
-                    Services.AudioService.setNodeMuted(deviceRow.node, nextChecked);
+                onClicked: {
+                    Services.AudioService.setNodeMuted(deviceRow.node, checked);
                 }
             }
             Slider {
@@ -113,7 +110,7 @@ ColumnLayout {
                 width: 14
                 height: 14
                 radius: width / 2
-                color: Services.ThemeService.theme.palette.foreground
+                color: Services.ThemeService.theme.tokens.on_surface
                 border.width: 1
                 border.color: Services.ThemeService.theme.tokens.outline
             }
@@ -186,7 +183,7 @@ ColumnLayout {
                         anchors.rightMargin: 8
                         anchors.verticalCenter: parent.verticalCenter
                         text: "arrow_drop_down"
-                        color: Services.ThemeService.theme.tokens.on_surface_disabled
+                        color: Services.ThemeService.theme.tokens.on_surface_subdued
                         font.family: Services.ConfigService.config.appearance.iconFontFamily
                         font.pixelSize: 24
                     }
@@ -205,7 +202,7 @@ ColumnLayout {
                     radius: Services.ConfigService.config.appearance.radius
                     color: Services.ThemeService.theme.tokens.background
                     border.width: Services.ConfigService.config.appearance.borderWidth
-                    border.color: Services.ThemeService.theme.tokens.on_surface_disabled
+                    border.color: Services.ThemeService.theme.tokens.outline_variant
                 }
             }
 

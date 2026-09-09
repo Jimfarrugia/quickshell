@@ -26,7 +26,7 @@ ShellRoot {
     Services.BrightnessService.__confirmedDeviceName = "intel_backlight";
     Services.BrightnessService.__confirmedDeviceClass = "backlight";
     Services.BrightnessService.__confirmedDeviceMaxBrightness = 1060;
-    if (brightnessModule.textColor.toString() !== Services.ThemeService.theme.tokens.on_surface_disabled.toString())
+    if (brightnessModule.textColor.toString() !== Services.ThemeService.theme.tokens.on_surface_subdued.toString())
       return fail("brightness text did not use the standard muted text color");
     if (brightnessModule.hoverText !== "")
       return fail("brightness module unexpectedly exposed hover content");
