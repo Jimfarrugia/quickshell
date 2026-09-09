@@ -19,7 +19,7 @@
     "tokens": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["background", "on_background", "surface", "on_surface", "on_surface_subdued", "on_surface_indicator", "surface_variant", "on_surface_variant", "surface_panel", "surface_sidebar", "surface_low", "on_surface_panel", "surface_tooltip", "on_surface_tooltip", "surface_hover", "surface_pressed", "primary", "on_primary", "primary_container", "on_primary_container", "secondary", "on_secondary", "outline", "outline_variant", "focus_ring", "on_surface_disabled", "on_surface_placeholder", "link", "highlight", "on_highlight", "success", "charging", "warning", "error", "shadow", "scrim"],
+      "required": ["background", "on_background", "surface", "on_surface", "on_surface_subdued", "on_surface_indicator", "surface_container_lowest", "surface_container_low", "surface_container", "surface_container_high", "surface_container_highest", "surface_variant", "on_surface_variant", "surface_panel", "surface_sidebar", "surface_low", "on_surface_panel", "surface_tooltip", "on_surface_tooltip", "surface_hover", "surface_pressed", "primary", "on_primary", "primary_container", "on_primary_container", "secondary", "on_secondary", "outline", "outline_variant", "focus_ring", "on_surface_disabled", "on_surface_placeholder", "link", "highlight", "on_highlight", "success", "warning", "error", "shadow", "scrim", "charging"],
       "properties": {
         "background": { "$ref": "#/$defs/colorOrReference" },
         "on_background": { "$ref": "#/$defs/colorOrReference" },
@@ -27,6 +27,11 @@
         "on_surface": { "$ref": "#/$defs/colorOrReference" },
         "on_surface_subdued": { "$ref": "#/$defs/colorOrReference" },
         "on_surface_indicator": { "$ref": "#/$defs/colorOrReference" },
+        "surface_container_lowest": { "$ref": "#/$defs/colorOrReference" },
+        "surface_container_low": { "$ref": "#/$defs/colorOrReference" },
+        "surface_container": { "$ref": "#/$defs/colorOrReference" },
+        "surface_container_high": { "$ref": "#/$defs/colorOrReference" },
+        "surface_container_highest": { "$ref": "#/$defs/colorOrReference" },
         "surface_variant": { "$ref": "#/$defs/colorOrReference" },
         "on_surface_variant": { "$ref": "#/$defs/colorOrReference" },
         "surface_panel": { "$ref": "#/$defs/colorOrReference" },
@@ -52,11 +57,11 @@
         "highlight": { "$ref": "#/$defs/colorOrReference" },
         "on_highlight": { "$ref": "#/$defs/colorOrReference" },
         "success": { "$ref": "#/$defs/colorOrReference" },
-        "charging": { "$ref": "#/$defs/colorOrReference" },
         "warning": { "$ref": "#/$defs/colorOrReference" },
         "error": { "$ref": "#/$defs/colorOrReference" },
         "shadow": { "$ref": "#/$defs/colorOrReference" },
-        "scrim": { "$ref": "#/$defs/colorOrReference" }
+        "scrim": { "$ref": "#/$defs/colorOrReference" },
+        "charging": { "$ref": "#/$defs/colorOrReference" }
       }
     }
   },

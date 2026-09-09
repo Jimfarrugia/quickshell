@@ -1069,6 +1069,12 @@ contract. The initial shape is:
     "foreground": "#e4f0fb",
     "muted": "#8290a5",
     "black": "#171922",
+    "surfaceContainerLowest": "#171a24",
+    "surfaceContainerLow": "#232630",
+    "surfaceContainer": "#272a35",
+    "surfaceContainerHigh": "#323540",
+    "surfaceContainerHighest": "#3e404b",
+    "surfaceBright": "#424550",
     "gray": "#303340",
     "grayLight": "#41434F",
     "blueGrayDark": "#506477",
@@ -1091,6 +1097,11 @@ contract. The initial shape is:
     "on_surface": "{palette.foreground}",
     "on_surface_subdued": "{palette.muted}",
     "on_surface_indicator": "{palette.blueGray}",
+    "surface_container_lowest": "{palette.surfaceContainerLowest}",
+    "surface_container_low": "{palette.surfaceContainerLow}",
+    "surface_container": "{palette.surfaceContainer}",
+    "surface_container_high": "{palette.surfaceContainerHigh}",
+    "surface_container_highest": "{palette.surfaceContainerHighest}",
     "surface_variant": "{palette.gray}",
     "on_surface_variant": "{palette.purpleLight}",
     "surface_panel": "#f21b1e28",
@@ -1099,7 +1110,7 @@ contract. The initial shape is:
     "on_surface_panel": "{palette.foreground}",
     "surface_tooltip": "{palette.black}",
     "on_surface_tooltip": "{palette.muted}",
-    "surface_hover": "{palette.grayLight}",
+    "surface_hover": "{palette.surfaceBright}",
     "surface_pressed": "{palette.blueGrayDark}",
     "primary": "{palette.green}",
     "on_primary": "{palette.black}",
@@ -1125,7 +1136,7 @@ contract. The initial shape is:
 }
 ```
 
-The approved 36-role token names use Matugen-style `snake_case` and paired
+The approved 41-role token names use Matugen-style `snake_case` and paired
 `on_*` foregrounds. ADR-015 records the Phase 4 pre-release contract revision
 that supersedes the provisional vocabulary and the individual additions in
 ADR-012 and ADR-014 while retaining their charging and tooltip semantics.
@@ -1169,6 +1180,23 @@ readable.
 `on_surface_indicator` has the same 4.5:1 neutral-surface targets; themes may map
 it to the same color as another role when their authored palette has no useful
 intermediate value.
+
+The five `surface_container*` roles form an ordered Material neutral-surface
+hierarchy. Generated Wallpaper themes map them directly from Matugen's
+same-named palette roles. Authored themes store static derived colors: generation
+converts the authored `surface` to Material HCT, retains its requested hue and
+chroma, adds the standard-contrast tone delta, clamps tone to `[0, 100]`, and
+uses Material's sRGB gamut solver. The dark deltas for lowest, low, container,
+high, and highest are respectively `-2`, `+4`, `+6`, `+11`, and `+16`; the
+light deltas are `+2`, `-2`, `-4`, `-6`, and `-8`. Gamut conversion may reduce
+realized chroma. Ordinary content on these surfaces uses `on_surface` and keeps
+the normal 4.5:1 text target.
+
+`surface_hover` remains an interaction-state role rather than a container alias.
+Wallpaper themes map it from Matugen `surface_bright`. Authored dark themes
+derive it from `surface` with the corresponding `+18` HCT tone delta; the light
+delta is zero. This does not change `surface_pressed`, `surface_sidebar`, or
+`surface_low`.
 
 Typography, spacing, radii, border widths, shadows parameters, opacity policy,
 and animation durations belong to user configuration initially, not individual
@@ -1236,7 +1264,7 @@ generation or application.
 The current adapter boundary requires `QE_MATUGEN` to name the executable; an
 unset or missing executable is an isolated unavailable state. `MatugenAdapter`
 requests noninteractive JSON output with an explicit mode and source-color
-preference, bounds the process, and validates the mapped 36-role theme before
+preference, bounds the process, and validates the mapped 41-role theme before
 the service stages it. `WallpaperPromotionAdapter` then promotes the staged QE
 `Wallpaper.json` into its stable XDG data path, preserving the previous artifact
 when staging or promotion fails. External Matugen artifacts use the separate

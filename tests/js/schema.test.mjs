@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { themeTokenNames } from "../../utils/Validation.mjs";
 
 const load = async path => JSON.parse(await readFile(new URL(path, import.meta.url), "utf8"));
 
@@ -52,6 +53,9 @@ const notificationStateSchema = await load("../../config/schema/notification-sta
 const idleInhibitorStateSchema = await load("../../config/schema/idle-inhibitor-state.schema.json");
 const aiQuotaStateSchema = await load("../../config/schema/ai-quota-state.schema.json");
 const helpSchema = await load("../../config/schema/help.schema.json");
+
+assert.deepEqual(themeSchema.properties.tokens.required, themeTokenNames());
+assert.deepEqual(Object.keys(themeSchema.properties.tokens.properties), themeTokenNames());
 
 for (const path of ["../../config/qe.json", "../fixtures/config/valid.json"])
   assert.deepEqual(validate(await load(path), configSchema), [], path);

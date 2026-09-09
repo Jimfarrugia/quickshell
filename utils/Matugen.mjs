@@ -3,8 +3,9 @@ import { alphaHex } from "./Opacity.mjs";
 
 const COLOR_PATTERN = /^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
 const REQUIRED_COLORS = [
-  "background", "on_background", "surface", "on_surface", "surface_container",
-  "surface_variant",
+  "background", "on_background", "surface", "on_surface", "surface_bright",
+  "surface_container_lowest", "surface_container_low", "surface_container",
+  "surface_container_high", "surface_container_highest", "surface_variant",
   "on_surface_variant", "primary", "on_primary", "primary_container",
   "on_primary_container", "secondary", "on_secondary", "secondary_container",
   "on_secondary_container", "outline", "outline_variant", "error"
@@ -105,6 +106,11 @@ export function mapMatugenTheme(document, variant = "dark", opacitySnapshot = nu
       on_surface: color("on_surface"),
       on_surface_subdued: color("on_surface_variant"),
       on_surface_indicator: color("on_surface"),
+      surface_container_lowest: color("surface_container_lowest"),
+      surface_container_low: color("surface_container_low"),
+      surface_container: color("surface_container"),
+      surface_container_high: color("surface_container_high"),
+      surface_container_highest: color("surface_container_highest"),
       surface_variant: color("surface_container"),
       on_surface_variant: color("on_surface_variant"),
       surface_panel: withAlpha(color("background"), alphaHex(opacitySnapshot)),
@@ -113,7 +119,7 @@ export function mapMatugenTheme(document, variant = "dark", opacitySnapshot = nu
       on_surface_panel: color("on_surface"),
       surface_tooltip: color("surface_variant"),
       on_surface_tooltip: color("on_surface_variant"),
-      surface_hover: color("surface_variant"),
+      surface_hover: color("surface_bright"),
       surface_pressed: color("primary_container"),
       primary: color("primary"),
       on_primary: color("on_primary"),

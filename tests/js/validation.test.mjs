@@ -6,7 +6,9 @@ import { normalizeNotification, sanitizeMarkup, shouldKeepHistory, shouldShowPop
 const fixture = async path => JSON.parse(await readFile(new URL(`../fixtures/${path}`, import.meta.url), "utf8"));
 
 const expectedThemeTokens = [
-  "background", "on_background", "surface", "on_surface", "on_surface_subdued", "on_surface_indicator", "surface_variant", "on_surface_variant",
+  "background", "on_background", "surface", "on_surface", "on_surface_subdued", "on_surface_indicator",
+  "surface_container_lowest", "surface_container_low", "surface_container", "surface_container_high", "surface_container_highest",
+  "surface_variant", "on_surface_variant",
   "surface_panel", "surface_sidebar", "surface_low", "on_surface_panel", "surface_tooltip", "on_surface_tooltip", "surface_hover",
   "surface_pressed", "primary", "on_primary", "primary_container", "on_primary_container", "secondary",
   "on_secondary", "outline", "outline_variant", "focus_ring", "on_surface_disabled",
@@ -25,6 +27,13 @@ function relativeLuminance(color) {
   const channels = color.slice(1).match(/../g).map(value => Number.parseInt(value, 16) / 255)
     .map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
   return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+}
+
+function hctTone(color) {
+  const luminance = relativeLuminance(color);
+  const epsilon = 216 / 24389;
+  const kappa = 24389 / 27;
+  return luminance <= epsilon ? luminance * kappa : 116 * Math.cbrt(luminance) - 16;
 }
 
 function compositeArgb(color, background) {
@@ -82,8 +91,13 @@ assert.equal(poimandres.value.tokens.on_surface_tooltip, "#8290a5");
 assert.equal(poimandres.value.tokens.surface, "#1b1e28");
 assert.equal(poimandres.value.tokens.on_surface_subdued, "#8290a5");
 assert.equal(poimandres.value.tokens.on_surface_indicator, "#7390aa");
+assert.equal(poimandres.value.tokens.surface_container_lowest, "#171a24");
+assert.equal(poimandres.value.tokens.surface_container_low, "#232630");
+assert.equal(poimandres.value.tokens.surface_container, "#272a35");
+assert.equal(poimandres.value.tokens.surface_container_high, "#323540");
+assert.equal(poimandres.value.tokens.surface_container_highest, "#3e404b");
 assert.equal(poimandres.value.tokens.surface_variant, "#303340");
-assert.equal(poimandres.value.tokens.surface_hover, "#41434f");
+assert.equal(poimandres.value.tokens.surface_hover, "#424550");
 assert.equal(poimandres.value.tokens.outline_variant, "#506477");
 assert.equal(poimandres.value.tokens.outline, "#767c9d");
 assert.equal(poimandres.value.tokens.on_primary, "#171922");
@@ -94,16 +108,45 @@ assert.equal(gruvbox.value.tokens.surface_sidebar, "#1d2021");
 assert.equal(gruvbox.value.tokens.on_surface_subdued, "#a89984");
 assert.equal(gruvbox.value.tokens.on_surface_indicator, "#b8a98a");
 assert.equal(gruvbox.value.tokens.surface_low, "#1d2021");
+assert.equal(gruvbox.value.tokens.surface_container_lowest, "#242424");
+assert.equal(gruvbox.value.tokens.surface_container_low, "#313130");
+assert.equal(gruvbox.value.tokens.surface_container, "#353535");
+assert.equal(gruvbox.value.tokens.surface_container_high, "#404040");
+assert.equal(gruvbox.value.tokens.surface_container_highest, "#4c4b4b");
 assert.equal(gruvbox.value.tokens.surface_tooltip, "#3c3836");
-assert.equal(gruvbox.value.tokens.surface_hover, "#504945");
+assert.equal(gruvbox.value.tokens.surface_hover, "#515050");
 assert.equal(gruvbox.value.tokens.surface_pressed, "#665c54");
 assert.equal(gruvbox.value.tokens.outline, "#928374");
 assert.equal(gruvbox.value.tokens.on_primary_container, "#32302f");
+const darkSurfaceToneDeltas = {
+  surface_container_lowest: -2,
+  surface_container_low: 4,
+  surface_container: 6,
+  surface_container_high: 11,
+  surface_container_highest: 16,
+  surface_hover: 18
+};
+for (const theme of [poimandres.value, gruvbox.value]) {
+  const surfaceTone = hctTone(theme.tokens.surface);
+  for (const [token, expectedDelta] of Object.entries(darkSurfaceToneDeltas)) {
+    const actualDelta = hctTone(theme.tokens[token]) - surfaceTone;
+    assert.ok(Math.abs(actualDelta - expectedDelta) <= 0.25,
+      `${theme.id}: ${token} HCT tone delta ${actualDelta} must match ${expectedDelta}`);
+    assert.ok(contrastRatio(theme.tokens[token], theme.tokens.on_surface) >= 4.5,
+      `${theme.id}: on_surface must contrast with ${token}`);
+  }
+}
 const wallpaper = validateTheme(JSON.parse(await readFile(
   new URL("../../defaults/wallpaper/generated-theme/qe/Wallpaper.json", import.meta.url), "utf8")));
 assert.equal(wallpaper.ok, true, wallpaper.errors.join("; "));
 assert.notEqual(wallpaper.value.tokens.on_surface_disabled, wallpaper.value.tokens.on_surface_subdued);
 assert.equal(wallpaper.value.tokens.on_surface_indicator, "#e4e1e9");
+assert.equal(wallpaper.value.tokens.surface_container_lowest, wallpaper.value.palette.surface_container_lowest);
+assert.equal(wallpaper.value.tokens.surface_container_low, wallpaper.value.palette.surface_container_low);
+assert.equal(wallpaper.value.tokens.surface_container, wallpaper.value.palette.surface_container);
+assert.equal(wallpaper.value.tokens.surface_container_high, wallpaper.value.palette.surface_container_high);
+assert.equal(wallpaper.value.tokens.surface_container_highest, wallpaper.value.palette.surface_container_highest);
+assert.equal(wallpaper.value.tokens.surface_hover, wallpaper.value.palette.surface_bright);
 assert.notEqual(wallpaper.value.tokens.on_surface_placeholder, wallpaper.value.tokens.on_surface_variant);
 assert.equal(new Set([wallpaper.value.tokens.success, wallpaper.value.tokens.charging,
   wallpaper.value.tokens.warning, wallpaper.value.tokens.error]).size, 4);
