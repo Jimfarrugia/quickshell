@@ -136,6 +136,21 @@ for (const theme of [poimandres.value, gruvbox.value]) {
       `${theme.id}: on_surface must contrast with ${token}`);
   }
 }
+const lightTheme = validateTheme(await fixture("themes/valid.json")).value;
+const lightSurfaceToneDeltas = {
+  surface_container_lowest: 2,
+  surface_container_low: -2,
+  surface_container: -4,
+  surface_container_high: -6,
+  surface_container_highest: -8,
+  surface_hover: 0
+};
+const lightSurfaceTone = hctTone(lightTheme.tokens.surface);
+for (const [token, expectedDelta] of Object.entries(lightSurfaceToneDeltas)) {
+  const actualDelta = hctTone(lightTheme.tokens[token]) - lightSurfaceTone;
+  assert.ok(Math.abs(actualDelta - expectedDelta) <= 0.25,
+    `${lightTheme.id}: ${token} HCT tone delta ${actualDelta} must match ${expectedDelta}`);
+}
 const wallpaper = validateTheme(JSON.parse(await readFile(
   new URL("../../defaults/wallpaper/generated-theme/qe/Wallpaper.json", import.meta.url), "utf8")));
 assert.equal(wallpaper.ok, true, wallpaper.errors.join("; "));

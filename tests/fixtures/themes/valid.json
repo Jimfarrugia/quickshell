@@ -6,9 +6,9 @@
   "palette": { "base": "#ffffff", "raised": "#eeeeee", "text": "#101010", "muted": "#606060", "accent": "#0055cc", "warning": "#aa6600", "error": "#cc0022" },
   "tokens": {
     "background": "{palette.base}", "on_background": "{palette.text}", "surface": "{palette.raised}", "on_surface": "{palette.text}", "on_surface_subdued": "{palette.muted}", "on_surface_indicator": "{palette.text}",
-    "surface_container_lowest": "#ffffff", "surface_container_low": "#e9e9e9", "surface_container": "#e3e3e3", "surface_container_high": "#dedede", "surface_container_highest": "#d8d8d8",
+    "surface_container_lowest": "#f4f4f4", "surface_container_low": "#e8e8e8", "surface_container": "#e3e3e3", "surface_container_high": "#dddddd", "surface_container_highest": "#d7d7d7",
     "surface_variant": "{palette.raised}", "on_surface_variant": "{palette.muted}", "surface_panel": "#eeffffff", "surface_sidebar": "#eeeeee", "surface_low": "#eeeeee", "on_surface_panel": "{palette.text}",
-    "surface_tooltip": "{palette.raised}", "on_surface_tooltip": "{palette.text}", "surface_hover": "#dddddd", "surface_pressed": "#cccccc",
+    "surface_tooltip": "{palette.raised}", "on_surface_tooltip": "{palette.text}", "surface_hover": "#eeeeee", "surface_pressed": "#cccccc",
     "primary": "{palette.accent}", "on_primary": "#ffffff", "primary_container": "#cce0ff", "on_primary_container": "{palette.text}",
     "secondary": "{palette.muted}", "on_secondary": "#ffffff", "outline": "{palette.muted}", "outline_variant": "#bbbbbb",
     "focus_ring": "{palette.accent}", "on_surface_disabled": "#777777", "on_surface_placeholder": "{palette.muted}",
