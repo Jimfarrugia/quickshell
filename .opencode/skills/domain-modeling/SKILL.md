@@ -67,7 +67,7 @@ batching glossary work. Use the format in
 - version-specific facts unless they define a durable domain term;
 - test procedures or acceptance criteria;
 - architectural rationale already owned by `docs/DECISIONS.md`;
-- current limitations that belong in `docs/PLAN.md` or `docs/ARCHITECTURE.md`.
+- current limitations/backlog that belong in `docs/STATUS.md` or architecture contracts that belong in `docs/ARCHITECTURE.md` / `docs/architecture/`.
 
 ### Offer ADRs sparingly
 

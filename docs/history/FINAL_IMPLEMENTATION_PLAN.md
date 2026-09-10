@@ -1,3 +1,9 @@
+# Archived Final Implementation Plan
+
+> Non-authoritative historical snapshot captured at the maintenance-mode documentation refactor on 2026-09-10. The content below is the former `docs/PLAN.md` preserved intact for phase history, acceptance provenance, risks, and planning context. Current status is owned by `docs/STATUS.md`.
+
+---
+
 # QE Implementation Plan
 
 Status: Phases 1-13 complete; AI quota milestone complete

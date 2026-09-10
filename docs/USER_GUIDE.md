@@ -62,10 +62,10 @@ The current implementation provides:
   battery state.
 - Screenshot notifications with actions to view the image or open its folder.
 
-QE is still under active development. This guide documents supported
+QE is in maintenance and refinement mode. This guide documents supported
 user-facing workflows and operational requirements, but it is not authoritative
-for project status or remaining implementation phases. See `docs/PLAN.md` for
-the current roadmap and status.
+for project status, known limitations, or planned refinements. See
+`docs/STATUS.md` for the current baseline and maintenance status.
 
 ## 2. Dependencies and Integrations
 

@@ -3,17 +3,17 @@
 Status: Authoritative accepted-decision record
 
 This document is the authoritative log of QE architectural decisions and their
-recorded rationale. `docs/ARCHITECTURE.md` remains authoritative for the current
-architecture, while `docs/PLAN.md` remains authoritative for roadmap, status,
-active/future phases, risks, and planning sequence.
+recorded rationale. `docs/ARCHITECTURE.md` and `docs/architecture/` remain
+authoritative for current architecture, while `docs/STATUS.md` owns the current
+production baseline, limitations, maintenance direction, and live risks.
 
 Agents should not read this entire file by default. Read ADRs explicitly
-referenced by the active phase or task, plus any ADR whose affected area overlaps
-a proposed architectural change.
+referenced by the task/affected code or whose affected area overlaps a proposed
+architectural change.
 
 Historical age does not make an ADR non-authoritative. An accepted decision
 remains in this log unless it is explicitly superseded or revised through the
-planning-change procedure.
+architectural-change process in `AGENTS.md`.
 
 ## Identifier integrity note
 

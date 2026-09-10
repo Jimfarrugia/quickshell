@@ -2,13 +2,31 @@
 
 ## How to use this file
 
-`docs/PLAN.md` owns phase acceptance criteria. This file owns the concrete
-developer commands, expected success markers, and special test conditions.
+This file owns concrete developer commands, expected success markers, special
+test conditions, and routing from changed areas to appropriate validation.
+Completed phase acceptance evidence is historical and is not required to choose
+tests for maintenance work.
 
-Implementation agents should read the subsection relevant to the changed
-subsystem before testing. Run the broader command catalogue when the active
-phase or regression scope requires it; do not load unrelated historical phase
-records merely to discover test commands.
+Start with the affected subsystem below. Run the broader command catalogue only
+when a cross-cutting or regression scope warrants it. Test filenames that still
+contain `phaseN` are retained implementation names, not instructions to load or
+replay the historical phase plan.
+
+### Change-to-validation routing
+
+| Changed area | Start with | Add when relevant |
+| --- | --- | --- |
+| `components/`, presentation-only module styling/layout | affected QML/component tests + `qmllint` | shell smoke if shared component/startup behavior can be affected |
+| `modules/bar/`, workspaces, tray, indicators | core/bar/theme-selection markers | monitor/workspace, tray, domain-service, or theme tests touched by the module |
+| `services/` | matching service QML test | matching adapter/helper tests plus daemon-loss/stale-state coverage |
+| `integrations/` or external helpers | matching adapter/helper contract tests | service consumer tests, malformed/timeout/retry/degraded paths |
+| `themes/`, theme schema, Matugen, wallpaper generation/promotion | theme/schema + Matugen/wallpaper groups | external-theme targets, hot reload, restoration, shell smoke |
+| notifications/OSDs/hardware actions | notification or OSD/action group | ownership/reload and live opt-in checks when boundary ownership changes |
+| network/Bluetooth/audio dashboards | corresponding dashboard/service group | fallback/degraded/live daemon checks when integration behavior changes |
+| control center/monitor layouts | control-center + monitor-layout group | focused-output/multi-monitor live checks for routing/layout changes |
+| AI quota | JS/Python/helper + AI quota QML group | persistence/resume/provider-failure paths when touched |
+| `lock.qml` or `lock/` | secure-lock group | disposable/live recovery checks for PAM/session-lock/lifecycle changes |
+| launch/restart/systemd/doctor/single-instance | production lifecycle group | isolated-XDG/fresh-login checks for supervision/deployment changes |
 
 ## Command catalogue
 
@@ -354,7 +372,7 @@ timeout 5 quickshell -p tests/qml/network-address-test.qml
 
 It must print `NETWORK_ADDRESS_TEST_PASSED`.
 
-### Phase 10 network dashboard
+### Network dashboard
 
 The fixture dashboard test exercises native-shaped Wi-Fi state, active-device
 selection, stable duplicate saved/unprofiled identities, security gating and
@@ -391,7 +409,7 @@ return. A live NetworkManager restart also produced the expected unavailable
 transition, but Quickshell 0.3.1 did not repopulate the Wi-Fi device afterward;
 the temporary dashboard `Restart QE` recovery action was verified separately.
 
-### Phase 11 control center
+### Control center and monitor layouts
 
 The control-center fixture exercises centered geometry, 40px panel spacing, clock
 and theme bindings, degraded-state projection, defaults confirmation, and lazy
@@ -451,7 +469,7 @@ requested geometry, mirror-to-extended restarted QE, and disconnecting HDMI left
 only the unchanged `eDP-1` configuration active. A separate built-in-only config
 reload produced no config errors and retained identical monitor JSON.
 
-### Phase 12 secure lock foundation
+### Secure lock
 
 The non-locking fixtures exercise the security state machine and lock-safe disk
 reader without acquiring `ext-session-lock-v1`:
@@ -548,10 +566,12 @@ smoke passed.
 
 Run `qmllint` over all QML after lock changes. Do not run
 `quickshell -p lock.qml` in the primary session as a smoke test. Protocol,
-hot-plug, suspend/resume, PAM, and crash tests require the Phase 12 disposable
-environment and the manually confirmed TTY recovery gate in `docs/PLAN.md`.
+hot-plug, suspend/resume, PAM, and crash tests require a disposable test
+environment and a pre-confirmed TTY recovery path. Current safety boundaries are
+in `docs/architecture/SECURITY.md` and `docs/architecture/RUNTIME.md`; the
+historical acceptance/rollback evidence is in `docs/history/PHASES_12-13.md`.
 
-### Phase 13 production lifecycle
+### Production lifecycle and supervision
 
 Validate the launch helper and static unit before live cutover:
 

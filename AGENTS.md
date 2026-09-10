@@ -1,188 +1,139 @@
 # QE Agent Instructions
 
-These instructions apply to all work in this repository.
+These instructions apply to all work in this repository. QE is in maintenance
+and refinement mode; completed implementation phases are historical context, not
+the default workflow.
 
-## Required Reading and Context Selection
+## Context routing
 
-Do not load every project document by default. Read the smallest authoritative
-set that covers the requested work.
-
-Before changing code or planning documents:
+Read the smallest authoritative set that covers the requested change.
 
 1. Read this file.
-2. Read `docs/PLAN.md` sections **Project Status**, **Current handoff**, and the
-   active phase. Read additional plan registries, risks, prerequisites, or
-   deferred items only when the task touches them.
-3. Read the relevant sections of `docs/ARCHITECTURE.md` using the routing table
-   below.
-4. Read only the ADRs in `docs/DECISIONS.md` that the active phase/task references
-   or whose affected areas overlap a proposed architectural change.
-5. Inspect the current implementation and every external integration affected by
-   the task.
-6. Before validation, read the relevant portion of `docs/VALIDATION.md`.
-7. Verify uncertain Quickshell APIs against the installed version metadata and
-   matching official documentation or source before use.
+2. Inspect the affected implementation and current `git status --short`.
+3. Read `docs/STATUS.md` only when the task depends on the current production
+   baseline, a known limitation/escape hatch, backlog/deferred scope, or a live
+   risk trigger. Do not load it for a purely local styling change.
+4. Read `docs/ARCHITECTURE.md` for cross-cutting invariants when the change is
+   more than presentation-local, then follow only the relevant domain route.
+5. Read only ADRs in `docs/DECISIONS.md` that are explicitly referenced by the
+   affected code/docs or whose affected area overlaps a proposed architectural
+   change.
+6. Before testing, read the relevant routing row/subsection in
+   `docs/VALIDATION.md`.
+7. Verify uncertain/version-sensitive Quickshell APIs against the installed
+   version metadata and matching official documentation/source before use.
 
-`CONTEXT.md` is glossary-only. Read it for QE domain terminology or when an
-invoked skill requires it; do not treat it as status, a spec, or architecture.
+`CONTEXT.md` is glossary-only. Read it when QE domain terminology is unclear or
+an invoked skill requires it. `docs/USER_GUIDE.md` is user-facing and is not
+normal implementation context. `docs/history/` is non-authoritative and should
+be read only for provenance, rollback history, superseded constraints, or old
+acceptance evidence.
 
-`docs/USER_GUIDE.md` is not normal implementation context. Read it only when the
-task changes a documented user-facing workflow or explicitly concerns the guide.
+### Change routes
 
-`docs/history/` is not normal implementation context and is never authoritative
-for current behavior. Read historical files only when reconstructing prior
-evidence, rollback history, superseded constraints, or decision provenance.
-
-### Architecture reading routes
-
-| Work touches | Read at minimum |
+| Change type | Normal context |
 | --- | --- |
-| Presentation/components/module composition | Architecture §§2.2-2.3 and 4 |
-| Configuration, paths, keybindings, persistent/shared state | Architecture §§5-7 plus the relevant service subsection |
-| Themes, wallpaper, Matugen, external theme application | Architecture §§7.2-7.3, 8, and 9 |
-| A system integration or domain service | Relevant Architecture §7.x service contract plus §§9 and 11 |
-| Shell lifecycle, reload, transient surfaces, or IPC | Architecture §§3, 10, and 11 |
-| Notifications or OSDs | Architecture §§7.11-7.12, 10.2, 11, and 12 |
-| Launcher/help | Architecture §7.14, §10.4, and §11 |
-| Lock/authentication/security | Architecture §§3.2, 5, 6, 10-12 |
-| Architectural or ownership change | All directly affected architecture sections plus relevant ADRs |
+| Styling, spacing, typography, local presentation state | `AGENTS.md` + affected QML/component + targeted validation |
+| Existing bar/module/dashboard UI refinement | Above + relevant service contract only if service-owned state/operations are touched |
+| New bar module or small surface | `docs/ARCHITECTURE.md` + relevant service contract + project model as needed |
+| Theme/token/wallpaper/Matugen work | `docs/ARCHITECTURE.md` + `docs/architecture/THEMING.md` + relevant integration section |
+| Service/domain-state change | `docs/ARCHITECTURE.md` + relevant `docs/architecture/SERVICES.md` subsection |
+| Native/DBus/IPC/file/command adapter or poller | Relevant service + `docs/architecture/INTEGRATIONS.md` |
+| Config/path/persistent-state ownership | `docs/architecture/PROJECT_MODEL.md` + relevant service |
+| Reload/restart/supervision/transient-surface routing | `docs/architecture/RUNTIME.md` + relevant service/integration |
+| Lock/PAM/credentials/security-sensitive work | `docs/architecture/SECURITY.md` + `docs/architecture/RUNTIME.md` + affected contract |
+| Architectural ownership/boundary change | All directly affected domain docs + relevant ADRs + `docs/STATUS.md` if the live baseline/risk changes |
 
-Read more when dependencies cross these boundaries, but do not expand context
-merely because a document is authoritative.
+Expand context when dependencies cross these boundaries; do not expand it merely
+because a document is authoritative.
 
-### Document authority
+## Authority
 
-- `CONTEXT.md` — durable QE domain vocabulary only.
-- `docs/PLAN.md` — roadmap, project status, active/future phases, prerequisites,
-  acceptance criteria, risks, deferred work, polling policy.
-- `docs/ARCHITECTURE.md` — current system design, ownership, boundaries, service
-  contracts, lifecycle, failure, and security policy.
+- `docs/STATUS.md` — current production baseline, limitations/escape hatches,
+  maintenance direction, deferred capabilities, and live risk triggers.
+- `docs/ARCHITECTURE.md` — compact cross-cutting architecture and routing map.
+- `docs/architecture/*.md` — detailed current architecture by domain.
 - `docs/DECISIONS.md` — accepted architectural decisions and rationale.
-- `docs/VALIDATION.md` — developer validation catalogue and expected markers.
+- `docs/VALIDATION.md` — validation routing, commands, and expected markers.
+- `CONTEXT.md` — durable QE vocabulary only.
+- `docs/USER_GUIDE.md` — stable user-facing guidance.
 - `docs/history/` — non-authoritative historical evidence.
-- `docs/USER_GUIDE.md` — concise user-facing guidance; non-authoritative for
-  project status.
 
-Resolve conflicts between authoritative documents explicitly; do not silently
+Resolve conflicts between authoritative documents explicitly; never silently
 choose one.
 
-## Scope Control
+## Core implementation rules
 
-- Work only within the active phase and requested task.
-- Satisfy phase prerequisites before implementing dependent feature work.
-- Do not bundle unrelated refactors, visual redesigns, package changes, or
-  production configuration changes.
-- Do not disable or replace an existing desktop tool before its documented
-  cutover criteria and rollback test pass.
-- Do not implement deferred features as implicit defaults.
-- Preserve user changes and unrelated dirty-worktree changes.
-
-## Architecture Rules
-
-- Dependency direction is modules/presentation -> domain services -> integration
+- Make the smallest change that satisfies the requested behavior. Do not bundle
+  unrelated refactors, redesigns, package changes, or production-config changes.
+- Preserve unrelated user/dirty-worktree changes.
+- Dependency direction is presentation/modules -> domain services -> integration
   adapters -> external systems.
 - Presentation QML must not construct system commands, parse command output,
-  write shared state, or own external subscriptions.
-- Shared long-lived state and operations belong to a domain service. View-local
+  write shared external state, or own long-lived external subscriptions.
+- Shared long-lived state/operations belong to a domain service; view-local
   state remains local.
-- Each integration adapter owns one external boundary and exposes normalized
-  availability, freshness, errors, and pending/confirmed operation state.
-- Use QML for reactive state and Qt object lifetime. Use JavaScript only for pure
-  transformations. Use scripts only for reviewed stable external contracts.
-- Prefer native Quickshell/Qt/Wayland/DBus/IPC facilities over commands.
-- Never add polling without documenting the missing event source, interval,
-  cost, consumer lifecycle, and stale-state behavior in the `docs/PLAN.md`
-  poller registry.
-- The lock process remains isolated and minimal. Never expose unlock through QE
-  IPC or replace `WlSessionLock` with a fullscreen window.
+- Each integration adapter owns one external boundary and normalizes
+  availability, freshness/errors, and requested-versus-confirmed state.
+- Prefer native Quickshell/Qt/Wayland/DBus/IPC facilities over commands. Use
+  QML for reactive ownership, JavaScript for pure transforms, and scripts only
+  for reviewed stable external contracts.
+- Never add or change polling without updating the registry in
+  `docs/architecture/INTEGRATIONS.md` with event-source rationale, interval,
+  consumer lifecycle, cost control, and stale behavior.
+- Keep authored inputs separate from generated data/caches and never present a
+  request/cache as confirmed external state.
+- Use project-relative/XDG-resolved paths; never hard-code `/home/jim` or the
+  current checkout path.
+- Pass command arguments structurally, validate inputs/outputs, enforce timeouts,
+  bound logs, and define exit-code semantics.
+- Never log or persist PAM responses, network secrets, provider credentials, or
+  equivalent sensitive data.
+- The lock process remains isolated/minimal; never expose unlock through QE IPC
+  or substitute a fullscreen window for `WlSessionLock`.
 
-## State and Integration Rules
+## Documentation impact
 
-- Assign one authoritative owner to every independently editable value.
-- Distinguish confirmed live state, requested state, generated artifacts,
-  caches, last-known-good values, and local UI state.
-- Never present a request or cache as confirmed external state.
-- Do not use `~/.local/share/theme_data` as QE's state store; it is a transitional
-  external compatibility source.
-- QE and external desktop themes are intentionally independent scopes. Follow
-  the apply semantics in `docs/ARCHITECTURE.md`.
-- Keep authored inputs separate from generated data and caches.
-- Use project-relative and XDG-resolved paths. Do not hard-code `/home/jim` or
-  the current repository location.
-- Pass command arguments as arrays. Validate inputs and structured outputs,
-  enforce timeouts, bound logs, and define exit-code semantics.
-- Never log or persist PAM responses, network secrets, or other credentials.
+Do not update documentation merely because code changed. Classify the impact:
 
-## Implementation Workflow
+| Change | Documentation expectation |
+| --- | --- |
+| Pure styling/local implementation/refactor with unchanged contracts | Usually none |
+| Production baseline, known limitation, fallback, accepted backlog/deferred item, or live risk changed | Update `docs/STATUS.md` |
+| Ownership, boundary, service contract, lifecycle, failure, security, or durable structure changed | Update the affected architecture domain |
+| Significant architectural choice with meaningful alternatives/consequences | Add/revise an ADR in `docs/DECISIONS.md` |
+| Test command/routing/expected marker changed | Update `docs/VALIDATION.md` |
+| Durable domain vocabulary changed | Update `CONTEXT.md` |
+| Stable user-facing workflow changed | Update `docs/USER_GUIDE.md` when the task includes/approves guide maintenance |
 
-- Inspect existing code and relevant live/external configuration before editing.
-- Make the smallest change that satisfies the active milestone and architecture.
-- If a required interface is not established, implement or obtain approval for
-  that foundation before feature UI.
-- Keep adapters replaceable and test them with fixtures independent of UI.
-- Update `docs/PLAN.md` status when a milestone begins or completes and record
-  newly discovered dependencies, risks, open questions, or deferred work.
-- Update `docs/ARCHITECTURE.md` when ownership, boundaries, contracts, lifecycle,
-  security, or failure policy changes.
-- Add or revise an ADR in `docs/DECISIONS.md` for every significant
-  architectural change.
-- Update `CONTEXT.md` only for durable domain terminology; keep other facts in
-  their authoritative documents.
-- Keep `docs/USER_GUIDE.md` concise and user-facing. Do not add or update
-  user-guide content without explicit user approval; suggestions are allowed and
-  must be presented for approval first.
-
-## Documentation Maintenance
-
-A normal phase-status update and a full documentation-maintenance pass are
-separate operations.
-
-- When a phase begins or completes, update the live status and handoff in
-  `docs/PLAN.md` as part of normal implementation work.
-- When the user explicitly requests documentation maintenance, or invokes
-  `/docs-maintain`, load and follow the project-local `qe-doc-maintenance` skill.
-- Use that maintenance procedure to archive completed implementation detail,
-  remove stale working context from the live plan, maintain cross-references,
-  and keep default agent context small without destroying evidence.
-- Documentation maintenance may relocate or compact historical working material;
-  it must not silently change architecture, accepted decisions, security policy,
-  current behavior, or unresolved requirements.
-- Never renumber, merge, delete, or reinterpret an accepted ADR as housekeeping.
-- Relocate historical material losslessly before compacting its live reference.
+When the user explicitly invokes `/docs-maintain`, load the project-local
+`qe-doc-maintenance` skill. Documentation maintenance may relocate or compact
+history but must not silently change current architecture, accepted decisions,
+security policy, or behavior.
 
 ## Validation
 
-- Run `qmllint` over all QML files after QML changes.
-- Run JSON/theme/schema validation after configuration or theme changes.
+- Use `docs/VALIDATION.md` to select subsystem-specific tests rather than running
+  historical phase checklists by default.
+- Run `qmllint` over affected QML and the repository-wide lint set after QML
+  changes when practical.
+- Run JSON/theme/schema validation after configuration/theme changes.
 - Run `shellcheck` for new or modified shell helpers.
-- Run relevant unit and contract tests, then the phase-specific validation from
-  `docs/PLAN.md` using commands and expected markers in `docs/VALIDATION.md`.
-- Smoke-test the persistent shell with `quickshell -p shell.qml` under a timeout.
-- Test missing dependencies, malformed output, timeouts, stale state, and daemon
-  loss for every external integration.
-- Exercise the documented rollback before declaring a replacement cutover done.
-- Never test destructive service, notification-owner, or lock changes on the
-  primary session without the approvals and recovery steps required by the plan.
+- Run relevant unit/contract tests before broader smoke/integration checks.
+- Smoke-test the persistent shell after changes that can affect shell startup or
+  shared runtime behavior.
+- For external integrations, test unavailable dependencies, malformed output,
+  timeout/retry/stale behavior, and daemon loss when those paths are affected.
+- Never test destructive notification-owner, service-supervision, credential, or
+  lock changes on the primary session without the recovery/safety procedure in
+  the relevant architecture/validation documentation.
 
-## Uncertainty and Conflicts
+## Uncertainty and architectural changes
 
-- Label unverified behavior as an assumption; do not turn remembered APIs into
-  implementation facts.
-- Verify the currently installed Quickshell version and use its matching
-  metadata/documentation/source when version-sensitive behavior matters.
-- Ask for clarification when a choice changes user-visible behavior, security,
-  ownership, external configuration, package state, or phase scope.
-- If code, documentation, and runtime behavior disagree, stop relying on the
-  disputed claim, collect evidence, and update the authoritative documents.
+Label unverified behavior as an assumption. If code, docs, and runtime behavior
+disagree, stop relying on the disputed claim and collect evidence.
 
-## Architectural Changes
-
-Do not silently deviate from an accepted decision. To propose a change:
-
-1. Explain the concrete problem and evidence.
-2. Identify affected contracts, phases, risks, and users.
-3. Present the replacement and alternatives.
-4. Document consequences and migration impact.
-5. Update the appropriate authoritative documents and ADR.
-6. Obtain user approval when scope, behavior, security, or ownership materially
-   changes.
+Do not silently deviate from an accepted ADR. For a substantive architecture,
+security, ownership, external-behavior, or user-visible contract change: explain
+the evidence and alternatives, update the affected authority, and obtain user
+clarification when the choice is not already established by the task.
