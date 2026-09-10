@@ -109,7 +109,7 @@ bash tests/helpers/restored-wallpaper-theme.test.sh
 # Routine QML work: lint the changed/affected files directly, for example:
 # qmllint components/ChangedComponent.qml modules/bar/ChangedModule.qml
 # Broader checkpoint/cross-cutting lint:
-qmllint $(find . -maxdepth 1 -name '*.qml') $(find components modules services tests -name '*.qml') $(find integrations -maxdepth 1 -name '*.qml' ! -name 'ThemeSelectorIpc.qml' ! -name 'WallpaperSelectorIpc.qml' ! -name 'PaletteViewerIpc.qml')
+qmllint $(find . -maxdepth 1 -name '*.qml') $(find components lock modules services tests -name '*.qml') $(find integrations -maxdepth 1 -name '*.qml' ! -name 'ThemeSelectorIpc.qml' ! -name 'WallpaperSelectorIpc.qml' ! -name 'PaletteViewerIpc.qml')
 timeout 5 quickshell -p tests/qml/command-runner-test.qml
 # Run the next command twice without changing XDG_STATE_HOME between runs.
 timeout 5 quickshell -p tests/qml/foundation-service-test.qml
@@ -148,7 +148,7 @@ timeout 5 quickshell -p tests/qml/lock-controller-test.qml
 timeout 5 quickshell -p tests/qml/lock-pam-adapter-test.qml
 timeout 5 quickshell -p tests/qml/lock-theme-reader-test.qml
 timeout 5 quickshell -p tests/qml/lock-wallpaper-reader-test.qml
-timeout 5 quickshell -p lock-power-reader-test.qml
+timeout 5 quickshell -p tests/qml/lock-power-reader-test.qml
 timeout 5 quickshell -p tests/qml/launcher-usage-test.qml
 timeout 5 quickshell -p tests/qml/launcher-selection-test.qml
 timeout 5 quickshell -p tests/qml/launcher-dashboard-action-test.qml
@@ -500,12 +500,13 @@ node tests/js/lock-entry.test.mjs
 timeout 5 quickshell -p tests/qml/lock-controller-test.qml
 timeout 5 quickshell -p tests/qml/lock-pam-adapter-test.qml
 timeout 5 quickshell -p tests/qml/lock-theme-reader-test.qml
-timeout 5 quickshell -p lock-power-reader-test.qml
+timeout 5 quickshell -p tests/qml/lock-wallpaper-reader-test.qml
+timeout 5 quickshell -p tests/qml/lock-power-reader-test.qml
 ```
 
 They must print `LOCK_ENTRY_TEST_PASSED`, `LOCK_CONTROLLER_TEST_PASSED`,
-`LOCK_PAM_ADAPTER_TEST_PASSED`, `LOCK_THEME_READER_TEST_PASSED`, and
-`LOCK_POWER_READER_TEST_PASSED`. The entry
+`LOCK_PAM_ADAPTER_TEST_PASSED`, `LOCK_THEME_READER_TEST_PASSED`,
+`LOCK_WALLPAPER_READER_TEST_PASSED`, and `LOCK_POWER_READER_TEST_PASSED`. The entry
 test prevents the lock-surface controller property from shadowing its assembly
 object ID. The controller fixture verifies that validated
 inputs and compositor `secure` gate authentication, and that empty, failed, and
