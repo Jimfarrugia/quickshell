@@ -114,12 +114,14 @@ The historical duplicate-ID resolution remains fixed: `ADR-022` is **Project-own
 authored defaults bundle** and `ADR-028` is **QE-generated Yazi wallpaper
 flavor**.
 
-### 4. Keep validation task-oriented
+### 4. Keep testing risk-driven and validation task-oriented
 
-Maintain `docs/VALIDATION.md` as a subsystem/change-to-test router plus command
-and marker catalogue. Historical `phaseN` test filenames may remain if renaming
-would be code/test churn; do not rebuild phase-oriented documentation around
-them.
+Maintain `docs/architecture/TESTING.md` as the risk-based testing policy and
+`docs/VALIDATION.md` as a subsystem/change-to-validation router plus command and
+marker catalogue. Do not turn test count, coverage percentage, or one-test-per-
+change into documentation requirements. Historical `phaseN` test filenames may
+remain if renaming would be code/test churn; do not rebuild phase-oriented
+documentation around them or preserve low-value assertions solely for history.
 
 ### 5. Keep the glossary narrow
 

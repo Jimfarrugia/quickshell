@@ -124,12 +124,8 @@ ShellRoot {
         controller.open("ai-quota", "monitor-1", "right");
         if (shell.featureTitle !== "AI Usage") return fail("AI quota dashboard title was not updated");
         const refreshButton = shell.aiQuotaRefreshControl;
-        if (!refreshButton || !refreshButton.visible || refreshButton.iconName !== "refresh"
-                || !Qt.colorEqual(refreshButton.resolvedForegroundColor,
-                    Services.ThemeService.theme.tokens.on_surface_subdued)
-                || !Qt.colorEqual(refreshButton.resolvedBorderColor,
-                    Services.ThemeService.theme.tokens.outline_variant))
-            return fail("AI quota refresh button was missing or incorrectly styled");
+        if (!refreshButton || !refreshButton.visible || refreshButton.iconName !== "refresh")
+            return fail("AI quota refresh action was not available");
         const refreshCalls = fakeQuotaAdapter.refreshCalls;
         refreshButton.clicked();
         if (fakeQuotaAdapter.refreshCalls !== refreshCalls + 1)

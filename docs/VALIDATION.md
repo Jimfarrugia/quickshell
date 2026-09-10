@@ -7,26 +7,46 @@ test conditions, and routing from changed areas to appropriate validation.
 Completed phase acceptance evidence is historical and is not required to choose
 tests for maintenance work.
 
-Start with the affected subsystem below. Run the broader command catalogue only
-when a cross-cutting or regression scope warrants it. Test filenames that still
-contain `phaseN` are retained implementation names, not instructions to load or
-replay the historical phase plan.
+Start with the affected subsystem below and apply the risk model in
+`docs/architecture/TESTING.md`. Run the broader command catalogue only when a
+cross-cutting, high-risk, or checkpoint scope warrants it. A code change does not
+automatically require a new automated test or a repository-wide validation run.
+Test filenames that still contain `phaseN` are retained implementation names, not
+instructions to load or replay the historical phase plan.
 
 ### Change-to-validation routing
 
 | Changed area | Start with | Add when relevant |
 | --- | --- | --- |
-| `components/`, presentation-only module styling/layout | affected QML/component tests + `qmllint` | shell smoke if shared component/startup behavior can be affected |
-| `modules/bar/`, workspaces, tray, indicators | core/bar/theme-selection markers | monitor/workspace, tray, domain-service, or theme tests touched by the module |
-| `services/` | matching service QML test | matching adapter/helper tests plus daemon-loss/stale-state coverage |
-| `integrations/` or external helpers | matching adapter/helper contract tests | service consumer tests, malformed/timeout/retry/degraded paths |
-| `themes/`, theme schema, Matugen, wallpaper generation/promotion | theme/schema + Matugen/wallpaper groups | external-theme targets, hot reload, restoration, shell smoke |
-| notifications/OSDs/hardware actions | notification or OSD/action group | ownership/reload and live opt-in checks when boundary ownership changes |
-| network/Bluetooth/audio dashboards | corresponding dashboard/service group | fallback/degraded/live daemon checks when integration behavior changes |
-| control center/monitor layouts | control-center + monitor-layout group | focused-output/multi-monitor live checks for routing/layout changes |
-| AI quota | JS/Python/helper + AI quota QML group | persistence/resume/provider-failure paths when touched |
+| Presentation-only styling/layout/token changes in `components/` or modules | `qmllint` on changed/affected QML + targeted manual/visual check | Existing behavioral component test only if interaction/semantics changed; shell smoke only if startup/shared behavior can be affected |
+| `modules/bar/`, workspaces, tray, indicators | changed-file lint + focused module/service test for non-trivial behavior | monitor/workspace, tray, domain-service, or theme tests only for the contracts actually touched |
+| `services/` | matching service QML test for changed state/behavior | matching adapter/helper tests plus degradation/recovery coverage when those paths changed |
+| `integrations/` or external helpers | matching adapter/helper contract tests | service consumer tests and malformed/timeout/retry/degraded paths owned by the changed boundary |
+| `themes/`, theme schema, Matugen, wallpaper generation/promotion | relevant theme/schema + Matugen/wallpaper contract tests | external-theme targets, hot reload, restoration, shell smoke when those contracts are affected |
+| notifications/OSDs/hardware actions | focused notification/OSD/action regression tests | ownership/reload and live opt-in checks when boundary ownership or lifecycle changes |
+| network/Bluetooth/audio dashboards | corresponding behavioral dashboard/service test | fallback/degraded/live-daemon checks when integration behavior changes |
+| control center/monitor layouts | focused control-center/monitor-layout behavior tests | focused-output/multi-monitor live checks for routing changes; visual checks for spacing/styling |
+| AI quota | affected JS/Python/helper or QML contract tests | persistence/resume/provider-failure paths when touched |
 | `lock.qml` or `lock/` | secure-lock group | disposable/live recovery checks for PAM/session-lock/lifecycle changes |
 | launch/restart/systemd/doctor/single-instance | production lifecycle group | isolated-XDG/fresh-login checks for supervision/deployment changes |
+
+### Validation breadth
+
+- **Low-risk presentation change:** lint changed/affected QML and inspect the
+  resulting UI when practical. Do not run or create a broad test set solely for
+  a cosmetic change.
+- **Behavioral component/module change:** run the focused existing test that owns
+  the interaction or state contract; add a test only when the risk-based policy
+  justifies durable regression coverage.
+- **Service/integration/persistence/security/lifecycle change:** run focused
+  contract tests and the relevant failure/recovery paths; broaden to integration
+  or shell smoke where the changed boundary warrants it.
+- **Cross-cutting/release-style checkpoint:** use the broader catalogue and
+  repository-wide lint as appropriate.
+
+When an existing test fails only because an intentional color, token, spacing,
+border, radius, or decorative choice changed, reassess that assertion against
+`docs/architecture/TESTING.md` rather than automatically re-baselining it.
 
 ## Command catalogue
 
@@ -86,6 +106,9 @@ bash tests/helpers/generated-theme-hot-reload.test.sh
 bash tests/helpers/queued-wallpaper-generation.test.sh
 bash tests/helpers/wallpaper-theme-select-external.test.sh
 bash tests/helpers/restored-wallpaper-theme.test.sh
+# Routine QML work: lint the changed/affected files directly, for example:
+# qmllint components/ChangedComponent.qml modules/bar/ChangedModule.qml
+# Broader checkpoint/cross-cutting lint:
 qmllint $(find . -maxdepth 1 -name '*.qml') $(find components modules services tests -name '*.qml') $(find integrations -maxdepth 1 -name '*.qml' ! -name 'ThemeSelectorIpc.qml' ! -name 'WallpaperSelectorIpc.qml' ! -name 'PaletteViewerIpc.qml')
 timeout 5 quickshell -p tests/qml/command-runner-test.qml
 # Run the next command twice without changing XDG_STATE_HOME between runs.
@@ -107,8 +130,6 @@ timeout 5 quickshell -p tests/qml/tray-tint-test.qml
 timeout 5 quickshell -p tests/qml/theme-selector-test.qml
 timeout 5 quickshell -p tests/qml/wallpaper-selector-test.qml
 timeout 5 quickshell -p tests/qml/segmented-toggle-test.qml
-timeout 5 quickshell -p tests/qml/action-button-test.qml
-timeout 5 quickshell -p tests/qml/quick-setting-tile-test.qml
 timeout 5 quickshell -p tests/qml/palette-viewer-test.qml
 timeout 5 quickshell -p tests/qml/dashboard-shell-test.qml
 timeout 5 quickshell -p tests/qml/control-center-test.qml

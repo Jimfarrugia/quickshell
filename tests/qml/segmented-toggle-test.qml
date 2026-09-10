@@ -1,12 +1,12 @@
 import QtQuick
 import Quickshell
 import "components" as Components
-import "services" as Services
 
 ShellRoot {
     id: root
 
     property int toggleCount: 0
+    property bool lastRequestedState: false
 
     function fail(message) {
         console.error(`SEGMENTED_TOGGLE_TEST_FAILED: ${message}`);
@@ -36,34 +36,19 @@ ShellRoot {
             return fail("binary segments were not created");
         const firstText = textChild(first);
         const secondText = textChild(second);
-        if (firstText === null || secondText === null)
-            return fail("binary segment labels were not created");
-        if (Math.abs(first.width - toggle.width / 2) > 0.01
-                || Math.abs(second.width - toggle.width / 2) > 0.01)
-            return fail("segments do not divide the available width equally");
-        if (Math.abs(first.x) > 0.01 || Math.abs(second.x - first.width) > 0.01)
-            return fail("segments overlap or leave an outer gap");
-        if (!Qt.colorEqual(first.children[0].color,
-                Services.ThemeService.theme.tokens.primary_container)
-                || !Qt.colorEqual(firstText.color,
-                    Services.ThemeService.theme.tokens.on_primary_container)
-                || !Qt.colorEqual(second.children[0].color,
-                    Services.ThemeService.theme.tokens.surface_variant))
-            return fail("unchecked segment colors are incorrect");
+        if (firstText === null || secondText === null
+                || firstText.text !== "First" || secondText.text !== "Second")
+            return fail("binary segment labels were not projected");
 
-        toggle.checked = true;
-        if (!Qt.colorEqual(first.children[0].color, Services.ThemeService.theme.tokens.surface_variant)
-                || !Qt.colorEqual(second.children[0].color,
-                    Services.ThemeService.theme.tokens.primary_container)
-                || !Qt.colorEqual(secondText.color,
-                    Services.ThemeService.theme.tokens.on_primary_container))
-            return fail("checked segment colors are incorrect");
-
-        toggle.activate();
-        if (root.toggleCount !== 1)
-            return fail("activation did not emit exactly one toggle request");
+        toggle.activate(true);
+        if (root.toggleCount !== 1 || !root.lastRequestedState || !toggle.checked)
+            return fail("activation did not request and apply the selected state exactly once");
         if (!toggle.activeFocus)
             return fail("activation did not focus the toggle");
+
+        toggle.activate(false);
+        if (root.toggleCount !== 2 || root.lastRequestedState || toggle.checked)
+            return fail("explicit activation did not request and apply the unselected state");
 
         console.log("SEGMENTED_TOGGLE_TEST_PASSED");
         Qt.quit();
@@ -80,6 +65,7 @@ ShellRoot {
             labels: ["First", "Second"]
             onToggled: function(checked) {
                 root.toggleCount += 1;
+                root.lastRequestedState = checked;
                 toggle.checked = checked;
             }
         }

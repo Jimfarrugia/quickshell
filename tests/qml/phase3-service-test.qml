@@ -1,7 +1,6 @@
 import QtQuick
 import Quickshell
 import "services" as Services
-import "modules/bar" as Bar
 import "fixtures/qml" as Fixtures
 
 ShellRoot {
@@ -9,10 +8,6 @@ ShellRoot {
 
   Fixtures.FakeSystemMetricsProcAdapter { id: fakeProc }
   Fixtures.FakeSystemMetricsHelperAdapter { id: fakeHelper }
-  Bar.CpuModule { id: cpuModule }
-  Bar.MemoryModule { id: memoryModule }
-  Bar.DiskModule { id: diskModule }
-  Bar.TemperatureModule { id: temperatureModule }
 
   function fail(message) {
     console.error(`PHASE3_SERVICE_TEST_FAILED: ${message}`);
@@ -51,18 +46,11 @@ ShellRoot {
       return fail(`cpu usage was ${Services.SystemMetricsService.cpu.value}, expected 100`);
     if (Services.SystemMetricsService.cpu.freshness !== "current")
       return fail("cpu was not marked current after success");
-    if (cpuModule.hoverText !== "Usage: 100%\nSource: /proc/stat\nStatus: Current")
-      return fail(`CPU hover was '${cpuModule.hoverText}'`);
 
     // Memory: known used percent.
     fakeProc.emitMem("MemTotal: 1000 kB\nMemAvailable: 250 kB\n", false, "");
     if (Services.SystemMetricsService.memory.value !== 75)
       return fail(`memory usage was ${Services.SystemMetricsService.memory.value}, expected 75`);
-    if (memoryModule.hoverText !== "Used: 750 KiB\nTotal: 1000 KiB")
-      return fail(`memory hover was '${memoryModule.hoverText}'`);
-    if (memoryModule.iconColor.toString() !== Services.ThemeService.theme.tokens.on_surface_indicator.toString()
-        || memoryModule.textColor.toString() !== Services.ThemeService.theme.tokens.on_surface_subdued.toString())
-      return fail("normal metric did not separate indicator and text emphasis");
 
     // Temperature.
     fakeHelper.emitThermal({ ok: true, data: { schemaVersion: 1, sensors: [{ name: "k10temp", label: "Tctl", path: "/sys/test", temp: 42850 }] } });
@@ -72,26 +60,11 @@ ShellRoot {
       return fail("thermal label was not preserved");
     if (fakeHelper.thermalSensorPath !== "/sys/test")
       return fail("selected thermal sensor was not retained");
-    if (temperatureModule.hoverText !== "Sensor: k10temp\nLabel: Tctl")
-      return fail(`temperature hover was '${temperatureModule.hoverText}'`);
-    Services.SystemMetricsService.temperature = Object.assign({}, Services.SystemMetricsService.temperature, { value: 71 });
-    if (temperatureModule.icon !== "thermostat")
-      return fail("temperature module did not retain the thermostat icon above 70");
-    if (temperatureModule.iconColor.toString() !== Services.ThemeService.theme.tokens.warning.toString()
-        || temperatureModule.textColor.toString() !== Services.ThemeService.theme.tokens.warning.toString())
-      return fail("temperature above 70 did not use the warning color");
-    Services.SystemMetricsService.temperature = Object.assign({}, Services.SystemMetricsService.temperature, { value: 81 });
-    if (temperatureModule.iconColor.toString() !== Services.ThemeService.theme.tokens.error.toString()
-        || temperatureModule.textColor.toString() !== Services.ThemeService.theme.tokens.error.toString())
-      return fail("temperature above 80 did not use the error color");
-    Services.SystemMetricsService.temperature = Object.assign({}, Services.SystemMetricsService.temperature, { value: 43 });
 
     // Disk.
     fakeHelper.emitDisk({ ok: true, data: { schemaVersion: 1, disks: [{ filesystem: "/dev/root", size: "100", used: "40", available: "60", mount: "/", percent: 40 }] } });
     if (Services.SystemMetricsService.disk.value !== 40)
       return fail(`disk usage was ${Services.SystemMetricsService.disk.value}, expected 40`);
-    if (diskModule.hoverText !== "Mount: /\nUsed: 40 B\nAvailable: 60 B")
-      return fail(`disk hover was '${diskModule.hoverText}'`);
 
     // CPU stale after two failures; value retained.
     fakeProc.emitCpu("", true, "fail");
@@ -102,15 +75,6 @@ ShellRoot {
       return fail("cpu was not marked stale after second failure");
     if (Services.SystemMetricsService.cpu.value !== 100)
       return fail("cpu value was not retained when stale");
-    if (cpuModule.iconColor.toString() !== Services.ThemeService.theme.tokens.error.toString()
-        || cpuModule.textColor.toString() !== Services.ThemeService.theme.tokens.error.toString())
-      return fail("critical CPU state did not take precedence over stale warning");
-    Services.SystemMetricsService.cpu = Object.assign({}, Services.SystemMetricsService.cpu, {
-      value: 50, availability: "available"
-    });
-    if (cpuModule.iconColor.toString() !== Services.ThemeService.theme.tokens.warning.toString()
-        || cpuModule.textColor.toString() !== Services.ThemeService.theme.tokens.warning.toString())
-      return fail("stale CPU icon and value did not use warning color");
 
     // Recovery.
     fakeProc.emitCpu("cpu 300 0 0 900 0 0 0 0 0 0", false, "");

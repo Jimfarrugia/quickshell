@@ -111,19 +111,41 @@ When the user explicitly invokes `/docs-maintain`, load the project-local
 history but must not silently change current architecture, accepted decisions,
 security policy, or behavior.
 
+## Testing methodology
+
+- Testing is risk-driven, not change-driven. A code change does not automatically
+  require a new or modified automated test.
+- Prefer automated coverage for durable observable behavior, state transitions,
+  external contracts, persistence/reload behavior, failure recovery, security,
+  and regressions that are subtle or have occurred in practice.
+- Do not normally add tests solely for colors, theme-token choices, borders,
+  spacing, typography, decorative icon choices, or exact pixel geometry. Use
+  lint plus targeted manual/visual validation unless the property is a documented
+  accessibility or durable functional contract.
+- Before adding a test, confirm that it protects a plausible regression through a
+  stable seam, is not already covered, and is likely to survive intentional
+  refactors/styling changes. Do not invent production abstractions solely to test
+  low-risk presentation details.
+- When an existing test fails because an intentional presentation detail changed,
+  reconsider the assertion instead of mechanically updating its expected value.
+- Test count and coverage percentage are not goals. Prefer one focused owner for
+  a durable contract over duplicate aggregate and component coverage.
+- `docs/architecture/TESTING.md` owns the detailed risk model and TDD guidance.
+
 ## Validation
 
-- Use `docs/VALIDATION.md` to select subsystem-specific tests rather than running
-  historical phase checklists by default.
-- Run `qmllint` over affected QML and the repository-wide lint set after QML
-  changes when practical.
-- Run JSON/theme/schema validation after configuration/theme changes.
-- Run `shellcheck` for new or modified shell helpers.
-- Run relevant unit/contract tests before broader smoke/integration checks.
-- Smoke-test the persistent shell after changes that can affect shell startup or
-  shared runtime behavior.
-- For external integrations, test unavailable dependencies, malformed output,
-  timeout/retry/stale behavior, and daemon loss when those paths are affected.
+- Use `docs/VALIDATION.md` to select subsystem-specific validation rather than
+  running historical phase checklists by default.
+- During routine QML work, lint changed/affected QML. Run repository-wide QML
+  lint for cross-cutting changes or checkpoints where broader confidence is
+  warranted, not for every cosmetic edit.
+- Run JSON/theme/schema validation after relevant configuration/theme contract
+  changes and `shellcheck` for new or modified shell helpers.
+- Run focused unit/contract tests when the changed behavior warrants automated
+  coverage; broaden to smoke/integration checks when startup, shared runtime, or
+  external boundaries can be affected.
+- For external integrations, exercise unavailable/malformed/timeout/retry/stale
+  and daemon-loss paths only when those paths are owned or affected by the change.
 - Never test destructive notification-owner, service-supervision, credential, or
   lock changes on the primary session without the recovery/safety procedure in
   the relevant architecture/validation documentation.

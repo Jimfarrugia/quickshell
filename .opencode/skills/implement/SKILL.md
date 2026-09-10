@@ -14,14 +14,20 @@ enough.
 2. Record the current `HEAD` as the review fixed point before editing.
 3. Inspect the affected implementation and external integrations before changing
    them.
-4. Call the Skill tool with `tdd` where appropriate, especially for behavioural
-   changes with an established test seam. Do not force TDD where the repository's
-   validation strategy or the task makes it a poor fit.
+4. Decide whether new automated coverage is warranted using QE's risk-based
+   testing strategy before invoking `tdd`. Use `tdd` when the user requests
+   test-first work or when a non-trivial behavioural regression/high-risk
+   contract has an established stable seam and a failing test materially improves
+   confidence. Do not invoke it by default for styling, layout, token changes,
+   simple presentation refinements, mechanical refactors, or low-risk wiring.
+   Prefer extending an existing contract test over creating a new test file when
+   the same seam already owns the behavior.
 5. Make the smallest change that satisfies the settled task. Keep documentation
    updates consequence-driven according to `AGENTS.md`; do not manufacture a
    separate plan merely because implementation is underway.
-6. Run focused relevant tests/lint/validation regularly while working, then run
-   the complete task-relevant validation required by `AGENTS.md` before review.
+6. Run proportionate focused lint/tests/validation while working, then complete
+   the task-relevant validation required by `AGENTS.md`. Do not create or run a
+   broad regression suite merely because implementation occurred.
 7. Commit the completed implementation to the current branch. Do not include
    unrelated dirty-worktree changes.
 8. Call the Skill tool with `code-review`, supplying the recorded starting `HEAD`

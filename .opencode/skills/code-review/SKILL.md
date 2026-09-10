@@ -81,6 +81,8 @@ framework. Sources may include:
 - the task-relevant sections of `docs/ARCHITECTURE.md`;
 - relevant accepted decisions in `docs/DECISIONS.md`;
 - task-relevant validation contracts in `docs/VALIDATION.md`;
+- `docs/architecture/TESTING.md` when assessing test changes or whether additional
+  automated coverage is warranted;
 - any language- or directory-specific standards that actually apply to the
   changed files.
 
@@ -138,6 +140,14 @@ Ask it to report, per file/hunk where relevant:
 2. validation obligations that the change appears to miss;
 3. meaningful code smells, clearly labelled as judgement calls rather than hard
    violations.
+
+Absence of a new test is not itself a finding. Recommend additional automated
+coverage only when QE's risk-based testing policy calls for it, and name the
+concrete durable behavior or plausible regression that the proposed test would
+protect. Do not request automated tests for cosmetic presentation details by
+default. If changed tests merely re-baseline exact styling/implementation values,
+consider whether the assertion is over-specified and should be simplified or
+removed instead.
 
 Require concrete evidence. Skip hypothetical style preferences and unrelated
 pre-existing problems.

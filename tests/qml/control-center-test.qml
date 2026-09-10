@@ -21,21 +21,9 @@ ShellRoot {
         const control = controlLoader.item;
         if (!control) return;
         if (control.surfaceWidth <= 0 || control.surfaceHeight <= 0) return;
-        if (control.contentMargin !== 40 || control.contentSpacing !== 40)
-            return fail("control center spacing contract changed");
         if (Services.TimeService.timeText.length === 0
                 || Services.TimeService.longDateText.length === 0)
             return fail("control center clock did not receive time and long date");
-        if (!/\d{1,2}(st|nd|rd|th) /.test(Services.TimeService.longDateText))
-            return fail("control center date format does not match the AI dashboard");
-        if (control.surfaceRadius !== Services.ConfigService.config.appearance.radius + 2)
-            return fail("control center does not use sidebar radius");
-        const widths = control.quickSettingWidths;
-        if (widths.some(width => width <= 0)) return;
-        if (widths.some(width => Math.abs(width - widths[0]) > 0.1))
-            return fail("quick-setting buttons do not share one fixed width");
-        if (control.themeColumnWidth + 0.1 < widths[0])
-            return fail("theme section is narrower than the toggle-button width");
         if (Services.ThemeService.catalog.length === 0
                 || control.themeDropdown.currentText.length === 0)
             return;

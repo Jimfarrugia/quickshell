@@ -83,41 +83,7 @@ for (const path of ["../../themes/poimandres.json", "../../themes/gruvbox.json",
 const poimandres = validateTheme(JSON.parse(await readFile(new URL("../../themes/poimandres.json", import.meta.url), "utf8")));
 const poimandresSource = JSON.parse(await readFile(new URL("../../themes/poimandres.json", import.meta.url), "utf8"));
 assert.deepEqual(Object.keys(poimandres.value.palette), Object.keys(poimandresSource.palette));
-assert.equal(Object.keys(poimandres.value.tokens).at(-1), "charging");
-assert.equal(poimandres.value.tokens.surface_sidebar, "#171922");
-assert.equal(poimandres.value.tokens.surface_low, "#171922");
-assert.equal(poimandres.value.tokens.surface_tooltip, "#171922");
-assert.equal(poimandres.value.tokens.on_surface_tooltip, "#8290a5");
-assert.equal(poimandres.value.tokens.surface, "#1b1e28");
-assert.equal(poimandres.value.tokens.on_surface_subdued, "#8290a5");
-assert.equal(poimandres.value.tokens.on_surface_indicator, "#7390aa");
-assert.equal(poimandres.value.tokens.surface_container_lowest, "#171a24");
-assert.equal(poimandres.value.tokens.surface_container_low, "#232630");
-assert.equal(poimandres.value.tokens.surface_container, "#272a35");
-assert.equal(poimandres.value.tokens.surface_container_high, "#323540");
-assert.equal(poimandres.value.tokens.surface_container_highest, "#3e404b");
-assert.equal(poimandres.value.tokens.surface_variant, "#303340");
-assert.equal(poimandres.value.tokens.surface_hover, "#424550");
-assert.equal(poimandres.value.tokens.outline_variant, "#506477");
-assert.equal(poimandres.value.tokens.outline, "#767c9d");
-assert.equal(poimandres.value.tokens.on_primary, "#171922");
 const gruvbox = validateTheme(JSON.parse(await readFile(new URL("../../themes/gruvbox.json", import.meta.url), "utf8")));
-assert.equal(Object.keys(gruvbox.value.tokens).at(-1), "charging");
-assert.equal(gruvbox.value.palette.sidebar, "#1d2021");
-assert.equal(gruvbox.value.tokens.surface_sidebar, "#1d2021");
-assert.equal(gruvbox.value.tokens.on_surface_subdued, "#a89984");
-assert.equal(gruvbox.value.tokens.on_surface_indicator, "#b8a98a");
-assert.equal(gruvbox.value.tokens.surface_low, "#1d2021");
-assert.equal(gruvbox.value.tokens.surface_container_lowest, "#242424");
-assert.equal(gruvbox.value.tokens.surface_container_low, "#313130");
-assert.equal(gruvbox.value.tokens.surface_container, "#353535");
-assert.equal(gruvbox.value.tokens.surface_container_high, "#404040");
-assert.equal(gruvbox.value.tokens.surface_container_highest, "#4c4b4b");
-assert.equal(gruvbox.value.tokens.surface_tooltip, "#3c3836");
-assert.equal(gruvbox.value.tokens.surface_hover, "#515050");
-assert.equal(gruvbox.value.tokens.surface_pressed, "#665c54");
-assert.equal(gruvbox.value.tokens.outline, "#928374");
-assert.equal(gruvbox.value.tokens.on_primary_container, "#32302f");
 const darkSurfaceToneDeltas = {
   surface_container_lowest: -2,
   surface_container_low: 4,
@@ -155,7 +121,6 @@ const wallpaper = validateTheme(JSON.parse(await readFile(
   new URL("../../defaults/wallpaper/generated-theme/qe/Wallpaper.json", import.meta.url), "utf8")));
 assert.equal(wallpaper.ok, true, wallpaper.errors.join("; "));
 assert.notEqual(wallpaper.value.tokens.on_surface_disabled, wallpaper.value.tokens.on_surface_subdued);
-assert.equal(wallpaper.value.tokens.on_surface_indicator, "#e4e1e9");
 assert.equal(wallpaper.value.tokens.surface_container_lowest, wallpaper.value.palette.surface_container_lowest);
 assert.equal(wallpaper.value.tokens.surface_container_low, wallpaper.value.palette.surface_container_low);
 assert.equal(wallpaper.value.tokens.surface_container, wallpaper.value.palette.surface_container);

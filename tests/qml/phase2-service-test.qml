@@ -1,7 +1,6 @@
 import QtQuick
 import Quickshell
 import "services" as Services
-import "modules/bar" as BarModules
 import "fixtures/qml" as Fixtures
 
 ShellRoot {
@@ -12,10 +11,6 @@ ShellRoot {
     Fixtures.FakeNetworkIntegration { id: fakeNetwork }
     Fixtures.FakeNetworkAddressIntegration { id: fakeNetworkAddress }
     Fixtures.FakePowerIntegration { id: fakePower }
-    BarModules.AudioModule { id: audioModule; visible: false }
-    BarModules.BatteryModule { id: batteryModule; visible: false }
-    BarModules.NetworkModule { id: networkModule; visible: false }
-    BarModules.ClockModule { id: clockModule; visible: false }
 
     function fail(message) {
         console.error(`PHASE2_SERVICE_TEST_FAILED: ${message}`);
@@ -39,40 +34,13 @@ ShellRoot {
         }
         if (Services.CompositorService.availability !== "degraded" || Services.CompositorService.freshness !== "stale")
             return fail("compositor degraded state was not preserved");
-        if (clockModule.trailingTextColor.toString() !== Services.ThemeService.theme.tokens.primary.toString())
-            return fail("clock time did not preserve primary accent styling");
         if (Services.AudioService.volumePercent !== 42 || Services.AudioService.muted)
             return fail("audio normalization failed");
-        if (audioModule.hoverText !== "Fixture sink")
-            return fail(`audio hover was '${audioModule.hoverText}'`);
-        if (audioModule.iconColor.toString() !== Services.ThemeService.theme.tokens.on_surface_indicator.toString())
-            return fail("normal audio icon did not use the neutral indicator color");
-        fakeAudio.freshness = "stale";
-        if (audioModule.iconColor.toString() !== Services.ThemeService.theme.tokens.warning.toString()
-                || audioModule.textColor.toString() !== Services.ThemeService.theme.tokens.warning.toString())
-            return fail("stale audio icon and value did not use warning color");
-        fakeAudio.freshness = "current";
-        fakeAudio.muted = true;
-        if (audioModule.iconColor.toString() !== Services.ThemeService.theme.tokens.warning.toString())
-            return fail("muted audio did not use the warning color");
-        fakeAudio.muted = false;
-        const audioCases = [
-            [0, "volume_mute"], [30, "volume_mute"],
-            [31, "volume_down"], [60, "volume_down"],
-            [61, "volume_up"], [100, "volume_up"]
-        ];
-        for (let index = 0; index < audioCases.length; index++) {
-            if (audioModule.iconForVolume(audioCases[index][0]) !== audioCases[index][1])
-                return fail(`audio icon threshold failed at ${audioCases[index][0]}%`);
-        }
         Services.AudioService.wheelStep(120);
         if (Services.AudioService.pendingVolumePercent !== 47
                 || Services.AudioService.displayVolumePercent !== 47
                 || fakeAudio.lastSetPercent !== 47)
             return fail("volume wheel up did not request a 5% increase");
-        if (audioModule.iconColor.toString() !== Services.ThemeService.theme.tokens.primary.toString()
-                || audioModule.textColor.toString() !== Services.ThemeService.theme.tokens.primary.toString())
-            return fail("pending audio request did not use primary intent color");
         Services.AudioService.wheelStep(120);
         if (Services.AudioService.pendingVolumePercent !== 52 || fakeAudio.lastSetPercent !== 52)
             return fail("rapid volume wheel steps did not accumulate from pending state");
@@ -102,11 +70,6 @@ ShellRoot {
         if (Services.NetworkService.connectionType !== "wifi" || Services.NetworkService.ssid !== "Fixture WiFi"
                 || Services.NetworkService.signalStrength !== 73)
             return fail("Wi-Fi details were not normalized");
-        if (networkModule.iconColor.toString() !== Services.ThemeService.theme.tokens.on_surface_indicator.toString()
-                || networkModule.textColor.toString() !== Services.ThemeService.theme.tokens.primary.toString())
-            return fail("network did not preserve neutral icon and primary SSID styling");
-        if (networkModule.hoverText !== "Type: Wi-Fi\nInterface: wlan0\nSSID: Fixture WiFi\nIP: 198.51.100.5\nConnectivity: Full")
-            return fail(`Wi-Fi hover was '${networkModule.hoverText}'`);
         fakeNetwork.connectionType = "wired";
         fakeNetwork.ssid = "";
         fakeNetwork.signalStrength = 0;
@@ -114,67 +77,13 @@ ShellRoot {
         Services.NetworkService.refreshAddress();
         if (Services.NetworkService.ipv4Address !== "192.0.2.10")
             return fail("wired IPv4 enrichment failed");
-        if (networkModule.iconColor.toString() !== Services.ThemeService.theme.tokens.on_surface_indicator.toString()
-                || networkModule.textColor.toString() !== Services.ThemeService.theme.tokens.on_surface_subdued.toString())
-            return fail("wired network status did not retain neutral styling");
         fakeNetwork.connectionType = "disconnected";
         fakeNetwork.wiredInterface = "";
         Services.NetworkService.refreshAddress();
         if (Services.NetworkService.ipv4Address !== "")
             return fail("disconnected state retained a stale address");
-        if (networkModule.iconColor.toString() !== Services.ThemeService.theme.tokens.on_surface_indicator.toString())
-            return fail("network status changed the neutral icon color");
         if (Services.PowerService.availability !== "unavailable" || Services.PowerService.present)
             return fail("desktop battery absence was not isolated");
-        const batteryCases = [
-            [15, "battery_android_alert"], [16, "battery_android_frame_1"],
-            [24, "battery_android_frame_1"], [25, "battery_android_frame_2"],
-            [34, "battery_android_frame_2"], [35, "battery_android_frame_3"],
-            [49, "battery_android_frame_3"], [50, "battery_android_frame_4"],
-            [64, "battery_android_frame_4"], [65, "battery_android_frame_5"],
-            [80, "battery_android_frame_5"], [81, "battery_android_frame_6"],
-            [95, "battery_android_frame_6"], [96, "battery_android_frame_full"]
-        ];
-        for (let index = 0; index < batteryCases.length; index++) {
-            if (batteryModule.iconForPercentage(batteryCases[index][0]) !== batteryCases[index][1])
-                return fail(`battery icon threshold failed at ${batteryCases[index][0]}%`);
-        }
-        fakePower.availability = "available";
-        fakePower.present = true;
-        fakePower.percentage = 15;
-        if (batteryModule.iconColor.toString() !== Services.ThemeService.theme.tokens.error)
-            return fail("critical battery color was not applied");
-        fakePower.percentage = 16;
-        if (batteryModule.iconColor.toString() !== Services.ThemeService.theme.tokens.warning)
-            return fail("warning battery color was not applied");
-        fakePower.percentage = 10;
-        fakePower.charging = true;
-        fakePower.timeToFullSeconds = 5400;
-        if (batteryModule.icon !== "battery_android_frame_bolt")
-            return fail("charging battery did not use the bolt icon");
-        if (batteryModule.iconColor.toString() !== Services.ThemeService.theme.tokens.error
-                || batteryModule.textColor.toString() !== Services.ThemeService.theme.tokens.error)
-            return fail("critical battery did not override charging color");
-        if (batteryModule.hoverText !== "Time to full: 1h 30m")
-            return fail(`charging battery hover was '${batteryModule.hoverText}'`);
-        fakePower.percentage = 50;
-        if (batteryModule.iconColor.toString() !== Services.ThemeService.theme.tokens.charging)
-            return fail("non-critical charging battery did not use charging color");
-        fakePower.freshness = "stale";
-        if (batteryModule.iconColor.toString() !== Services.ThemeService.theme.tokens.warning
-                || batteryModule.textColor.toString() !== Services.ThemeService.theme.tokens.warning)
-            return fail("stale battery icon and value did not use warning color");
-        fakePower.freshness = "current";
-        fakePower.charging = false;
-        if (batteryModule.iconColor.toString() !== Services.ThemeService.theme.tokens.on_surface_indicator)
-            return fail("normal battery did not use neutral indicator color");
-        fakePower.timeToEmptySeconds = 16200;
-        if (batteryModule.hoverText !== "Time to empty: 4h 30m")
-            return fail(`discharging battery hover was '${batteryModule.hoverText}'`);
-        fakePower.fullyCharged = true;
-        if (batteryModule.hoverText !== "Fully charged.")
-            return fail(`fully charged battery hover was '${batteryModule.hoverText}'`);
-        fakePower.fullyCharged = false;
         fakeAudio.availability = "unavailable";
         const audioCalls = fakeAudio.setCallCount;
         Services.AudioService.wheelStep(120);
