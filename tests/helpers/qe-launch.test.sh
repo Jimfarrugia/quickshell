@@ -47,6 +47,17 @@ QE_SHELL_PID="$shell_pid" "$project_root/scripts/qe-launch.sh" qe-wallpaper open
 QE_SHELL_PID="$shell_pid" "$project_root/scripts/qe-launch.sh" qe-wallpaper close
 [[ "$(qs ipc --pid "$shell_pid" call qe-wallpaper isOpen)" == "false" ]]
 
+mkdir -p -- "$test_root/bin"
+cat >"$test_root/bin/qs" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$*" >"$TEST_ROOT/qs-arguments"
+EOF
+chmod +x "$test_root/bin/qs"
+PATH="$test_root/bin:$PATH" TEST_ROOT="$test_root" \
+  "$project_root/scripts/qe-launch.sh" qe-theme open
+[[ "$(<"$test_root/qs-arguments")" == "ipc --path $project_root/shell.qml call qe-theme open" ]]
+
 if ! kill -0 "$shell_pid" 2>/dev/null; then
   while IFS= read -r line; do
     printf '%s\n' "$line" >&2

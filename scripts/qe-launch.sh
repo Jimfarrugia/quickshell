@@ -11,16 +11,16 @@ command -v qs >/dev/null 2>&1 || {
   exit 127
 }
 
+script_path=$(readlink -f -- "${BASH_SOURCE[0]}")
+script_dir=$(cd -- "$(dirname -- "$script_path")" && pwd)
+project_root=$(cd -- "$script_dir/.." && pwd)
+
 pid=${QE_SHELL_PID:-}
-if [[ -z "$pid" ]]; then
-  pid=$(pgrep -f 'quickshell --no-duplicate --path .*/shell.qml' | head -1)
-fi
-if [[ -z "$pid" ]]; then
-  printf '%s\n' 'QE launcher failed: no running QE shell to control.' >&2
-  exit 1
-fi
 
 target=$1
 function=$2
 shift 2
-exec qs ipc --pid "$pid" call "$target" "$function" "$@"
+if [[ -n "$pid" ]]; then
+  exec qs ipc --pid "$pid" call "$target" "$function" "$@"
+fi
+exec qs ipc --path "$project_root/shell.qml" call "$target" "$function" "$@"
