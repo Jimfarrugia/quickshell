@@ -6,7 +6,6 @@ import Quickshell as QS
 import Quickshell.Networking
 import "services" as Services
 import "integrations"
-import "modules/test_surface"
 import "modules/bar"
 import "components"
 
@@ -23,7 +22,6 @@ ShellRoot {
     readonly property string defaultTheme: Services.DefaultsService.defaultTheme
     readonly property string activeTheme: Services.ThemeService.activeThemeId
 
-    TestSurface {}
     BarHost { dashboardController: dashboardController }
     ThemeSelectorIpc {}
     WallpaperSelectorIpc {}

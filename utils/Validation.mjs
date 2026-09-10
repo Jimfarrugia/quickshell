@@ -47,7 +47,6 @@ const THEME_ID_PATTERN = /^[a-z0-9]+(?:_[a-z0-9]+)*$/;
 
 export const defaultConfig = Object.freeze({
   schemaVersion: 1,
-  preview: Object.freeze({ enabled: true }),
   bar: Object.freeze({
     enabled: false,
     edge: "bottom",
@@ -113,7 +112,6 @@ function numberIn(value, minimum, maximum) {
 function copyDefaults() {
   return {
     schemaVersion: defaultConfig.schemaVersion,
-    preview: Object.assign({}, defaultConfig.preview),
     bar: Object.assign({}, defaultConfig.bar, {
       metrics: Object.assign({}, defaultConfig.bar.metrics, {
         order: Array.prototype.slice.call(defaultConfig.bar.metrics.order)
@@ -143,11 +141,6 @@ export function validateConfig(document) {
     return { ok: false, value, errors: ["config: root must be an object"] };
   if (document.schemaVersion !== 1)
     return { ok: false, value, errors: ["config.schemaVersion: expected 1"] };
-
-  if (isObject(document.preview) && typeof document.preview.enabled === "boolean")
-    value.preview.enabled = document.preview.enabled;
-  else if (document.preview !== undefined)
-    errors.push("config.preview.enabled: expected a boolean");
 
   if (isObject(document.bar)) {
     if (typeof document.bar.enabled === "boolean") value.bar.enabled = document.bar.enabled;

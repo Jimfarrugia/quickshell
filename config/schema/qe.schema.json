@@ -7,11 +7,6 @@
   "required": ["schemaVersion"],
   "properties": {
     "schemaVersion": { "const": 1 },
-    "preview": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": { "enabled": { "type": "boolean", "default": true } }
-    },
     "bar": {
       "type": "object",
       "additionalProperties": false,

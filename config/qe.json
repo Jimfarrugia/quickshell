@@ -1,8 +1,5 @@
 {
   "schemaVersion": 1,
-  "preview": {
-    "enabled": false
-  },
   "bar": {
     "enabled": true,
     "edge": "bottom",
