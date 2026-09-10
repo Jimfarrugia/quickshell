@@ -73,11 +73,22 @@ if PATH="$test_bin:/usr/bin" QE_DOCTOR_USER_BIN_DIR="$user_bin" \
 fi
 grep -Fq '[FAIL] retired conflicting process is running: dunst' "$test_root/failure-output"
 
-rm -f -- "$test_bin/quickshell"
 ln -s /usr/bin/bash "$test_bin/bash"
 ln -s /usr/bin/dirname "$test_bin/dirname"
 ln -s /usr/bin/grep "$test_bin/grep"
 ln -s /usr/bin/readlink "$test_bin/readlink"
+rm -f -- "$test_bin/brightnessctl"
+if PATH="$test_bin" QE_DOCTOR_USER_BIN_DIR="$user_bin" \
+    QE_DOCTOR_PROC_ROOT="$proc_root" "$project_root/scripts/qe-doctor" \
+    >"$test_root/enabled-feature-output"; then
+    printf '%s\n' 'qe-doctor unexpectedly accepted a missing enabled-feature command' >&2
+    exit 1
+fi
+grep -Fq '[FAIL] enabled-feature command missing: brightnessctl' \
+    "$test_root/enabled-feature-output"
+cp -- "$test_bin/python3" "$test_bin/brightnessctl"
+
+rm -f -- "$test_bin/quickshell"
 if PATH="$test_bin" QE_DOCTOR_USER_BIN_DIR="$user_bin" \
     QE_DOCTOR_PROC_ROOT="$proc_root" /usr/bin/bash "$project_root/scripts/qe-doctor" \
     >"$test_root/missing-output"; then

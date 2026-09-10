@@ -17,10 +17,10 @@ check_command() {
     local command_name=$1 class=$2
     if command -v "$command_name" >/dev/null 2>&1; then
         ok "$class command: $command_name"
-    elif [[ "$class" == required ]]; then
-        fail "$class command missing: $command_name"
-    else
+    elif [[ "$class" == optional ]]; then
         warn "$class command missing: $command_name"
+    else
+        fail "$class command missing: $command_name"
     fi
 }
 

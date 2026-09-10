@@ -168,7 +168,7 @@ restart delegates to the active production systemd user service rather than
 starting a competing direct instance.
 The doctor helper test must print `QE_DOCTOR_TEST_PASSED`, verify healthy
 production ownership against fixtures, reject a conflicting retired process,
-and report a missing required command.
+and report missing required or production enabled-feature commands.
 The entry-point test must print `QE_ENTRYPOINTS_TEST_PASSED` and verify every
 dotfiles-installed QE command dispatches into the selected managed checkout.
 
