@@ -57,6 +57,7 @@ run_defaults() {
     XDG_DATA_HOME="$test_root/data" \
     XDG_STATE_HOME="$test_root/state" \
     XDG_CACHE_HOME="$test_root/cache" \
+    ZSH_CONFIG_HOME="$test_root/home/.config/zsh" \
     TEST_ROOT="$test_root" \
     TEST_IPC_AVAILABLE="${TEST_IPC_AVAILABLE:-1}" \
     QE_DEFAULTS_PROJECT_ROOT="$project_root" \
@@ -92,6 +93,64 @@ cmp -s -- "$test_root/project/defaults/wallpaper/generated-theme/applications/mp
 [[ -L "$test_root/home/.config/imv/themes/wallpaper.conf" ]]
 [[ -L "$test_root/home/.config/mpv/themes/wallpaper.conf" ]]
 grep -q -- '--machine --theme poimandres' "$test_root/switcher.log"
+
+mapfile -t generated_paths < <(node --input-type=module - \
+    "$project_root" "$test_root/home" "$test_root/cache" <<'EOF'
+import { readFile } from "node:fs/promises";
+import { pathToFileURL } from "node:url";
+
+const [projectRoot, home, cache] = process.argv.slice(2);
+const { generateWallpaperExternalTargets } = await import(pathToFileURL(
+  `${projectRoot}/utils/ExternalWallpaperTheme.mjs`
+));
+const { validateTheme } = await import(pathToFileURL(`${projectRoot}/utils/Validation.mjs`));
+const theme = JSON.parse(await readFile(`${projectRoot}/themes/poimandres.json`, "utf8"));
+const validatedTheme = validateTheme(theme);
+if (!validatedTheme.ok) throw new Error(validatedTheme.errors.join("; "));
+const result = generateWallpaperExternalTargets(validatedTheme.value.tokens, {
+  home,
+  config: `${home}/.config`,
+  zshConfig: `${home}/.config/zsh`,
+  cache
+}, "dark");
+if (!result.ok) throw new Error(result.errors.join("; "));
+for (const target of result.targets) console.log(target.path);
+EOF
+)
+
+authored_root="$test_root/project/defaults/wallpaper/generated-theme/applications"
+runtime_root="$test_root/state/qe/wallpaper/external"
+shopt -s nullglob
+authored_artifacts=("$authored_root"/*)
+runtime_artifacts=("$runtime_root"/*)
+[[ ${#generated_paths[@]} -eq 16 ]]
+[[ ${#authored_artifacts[@]} -eq 16 ]]
+[[ ${#runtime_artifacts[@]} -eq 15 ]]
+
+declare -A generated_seen represented_artifacts
+for generated_path in "${generated_paths[@]}"; do
+    if [[ -n "${generated_seen[$generated_path]+present}" ]]; then
+        printf 'duplicate generated wallpaper target path: %s\n' "$generated_path" >&2
+        exit 1
+    fi
+    generated_seen[$generated_path]=1
+    if [[ "$generated_path" == "$test_root/cache/matugen/nvim-colors.json" ]]; then
+        cmp -s -- "$authored_root/nvim-colors.json" "$generated_path"
+        represented_artifacts[nvim-colors.json]=1
+        continue
+    fi
+    [[ -L "$generated_path" ]]
+    resolved_path=$(readlink -f -- "$generated_path")
+    [[ "$resolved_path" == "$runtime_root/"* ]]
+    artifact_name=${resolved_path##*/}
+    cmp -s -- "$authored_root/$artifact_name" "$resolved_path"
+    represented_artifacts[$artifact_name]=1
+done
+
+for authored_artifact in "${authored_artifacts[@]}"; do
+    artifact_name=${authored_artifact##*/}
+    [[ -n "${represented_artifacts[$artifact_name]+present}" ]]
+done
 
 printf '%s\n' gruvbox >"$test_root/active-theme"
 printf '%s\n' 'captured-rofi' >"$test_root/state/qe/wallpaper/external/rofi-wallpaper.rasi"

@@ -352,7 +352,8 @@ tests/helpers/qe-defaults.test.sh
 ```
 
 It must print `QE_DEFAULTS_TEST_PASSED` after staged capture, pending-operation
-rejection, artifact restore, live-slot repair, fixed-theme application, and the
+rejection, complete generated-target/authored-artifact/runtime/live-slot
+alignment, artifact restore, live-slot repair, fixed-theme application, and the
 stopped-QE wallpaper `--skip-gtk` fallback pass.
 
 ### Relocation, lint exceptions, degradation, and opt-in live checks
