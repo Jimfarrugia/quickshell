@@ -25,9 +25,11 @@ DBus contention, and duplicate external subscriptions.
 
 The canonical persistent-shell entry point is `scripts/run-qe.sh`, which uses
 Quickshell's per-configuration instance lock through `--no-duplicate` and the
-project-resolved `shell.qml` path. The launcher resolves its own symlink before
-finding the managed project checkout. Production startup imports the current
-Wayland session environment and asks systemd to restart `qe-shell.service` through
+project-resolved `shell.qml` path. The IPC launcher resolves its own symlink and
+uses Quickshell's path-scoped IPC lookup for that exact `shell.qml`, while its
+explicit `QE_SHELL_PID` override remains reserved for tests. Production startup
+imports the current Wayland session environment and asks systemd to restart
+`qe-shell.service` through
 the stable `~/.local/bin/qe-shell --service-start` Hyprland autostart mode; the
 unit invokes the same stable XDG user-bin entry point without that option.
 Systemd owns journal capture and bounded crash restart.

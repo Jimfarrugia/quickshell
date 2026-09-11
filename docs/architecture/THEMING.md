@@ -269,10 +269,10 @@ QE also owns a localized wallpaper selector
 The Hyprpaper configuration resolves its image path through `$XDG_DATA_HOME`
 with a `$HOME/.local/share` fallback so the Hyprpaper config and QE helper stay
 aligned. Temporary `.desktop` entries launch the theme
-and wallpaper selectors through `scripts/qe-launch.sh`, which discovers the
-running `--no-duplicate` QE shell and calls the corresponding IPC target; these
-launchers remain available for direct access alongside the control-center entry
-points.
+and wallpaper selectors through `scripts/qe-launch.sh`, which resolves the
+managed checkout and calls the corresponding IPC target through Quickshell's
+path-scoped lookup; these launchers remain available for direct access alongside
+the control-center entry points.
 
 When the active QE theme is the generated `wallpaper` theme, QE also generates
 standalone "wallpaper" theme slot files for external applications and the
