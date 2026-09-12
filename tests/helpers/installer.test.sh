@@ -46,7 +46,10 @@ fi
 # and Hyprland-policy fixtures.
 cap_home="$test_root/cap-home"
 cap_bin="$test_root/cap-bin"
-mkdir -p -- "$cap_home/.config/hypr" "$cap_bin"
+cap_units="$test_root/cap-units"
+mkdir -p -- "$cap_home/.config/hypr" "$cap_bin" "$cap_units"
+touch "$cap_units/pipewire.socket" "$cap_units/pipewire-pulse.socket" \
+    "$cap_units/wireplumber.service"
 cat >"$cap_home/.config/hypr/hyprland.lua" <<'EOF'
 require("autostart")
 EOF
@@ -60,7 +63,7 @@ printf '%s\n' 'general { lock_cmd = qe-lock }' >"$cap_home/.config/hypr/hypridle
 printf '%s\n' 'path = $HOME/.local/share/current_wallpaper.png' >"$cap_home/.config/hypr/hyprpaper.conf"
 cat >"$cap_bin/systemctl" <<'EOF'
 #!/usr/bin/env bash
-[[ "$*" != '--user cat '* ]] || exit 1
+[[ "${1:-}" != --user ]] || exit 1
 exit 0
 EOF
 cat >"$cap_bin/hyprctl" <<'EOF'
@@ -77,10 +80,11 @@ exit 0
 EOF
 chmod +x "$cap_bin"/*
 run_capability_check() {
-    HOME="$cap_home" USER=test LOGNAME=test \
+    HOME="$cap_home" USER=test LOGNAME=test DISPLAY=:99 WAYLAND_DISPLAY=stale-wayland \
     XDG_CONFIG_HOME="$cap_home/.config" XDG_DATA_HOME="$cap_home/.local/share" \
     XDG_STATE_HOME="$cap_home/.local/state" XDG_CACHE_HOME="$cap_home/.cache" \
     QE_INSTALL_TEST_MODE=1 QE_INSTALL_TEST_CAPABILITIES=1 \
+    QE_INSTALL_TEST_USER_UNIT_DIR="$cap_units" \
     PATH="$cap_bin:/usr/bin" "$project_root/install.sh" check
 }
 if QE_TEST_QS_VERSION=0.3.0 run_capability_check >"$stdout" 2>"$stderr"; then
@@ -89,6 +93,7 @@ if QE_TEST_QS_VERSION=0.3.0 run_capability_check >"$stdout" 2>"$stderr"; then
 fi
 grep -Fq 'requires Quickshell 0.3.1 or newer' "$stderr"
 QE_TEST_QS_VERSION=0.4.0 run_capability_check >"$stdout" 2>"$stderr"
+[[ ! -s "$stdout" ]]
 grep -Fq 'newer than the validated 0.3.1 baseline' "$stderr"
 grep -Fq 'Warning: optional QE integration is unavailable: qe-theme-switcher' "$stderr"
 if QE_TEST_QML_BROKEN=1 run_capability_check >"$stdout" 2>"$stderr"; then
@@ -96,6 +101,12 @@ if QE_TEST_QML_BROKEN=1 run_capability_check >"$stdout" 2>"$stderr"; then
     exit 1
 fi
 grep -Fq 'required QML/API probe failed' "$stderr"
+rm "$cap_units/wireplumber.service"
+if run_capability_check >"$stdout" 2>"$stderr"; then
+    printf '%s\n' 'compatibility check accepted a missing packaged user unit' >&2
+    exit 1
+fi
+grep -Fq 'required user unit is unavailable: wireplumber.service' "$stderr"
 
 # Fixture mode isolates filesystem ownership/activation behavior from the host;
 # package and capability validation has its own query/check fixture paths.

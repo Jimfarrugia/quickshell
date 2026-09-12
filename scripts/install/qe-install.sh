@@ -317,6 +317,10 @@ version_ge() {
 
 check_capabilities() {
     local executable version hyprland_version family unit
+    local user_unit_dir=/usr/lib/systemd/user
+    if [[ "${QE_INSTALL_TEST_MODE:-}" == 1 && -n "${QE_INSTALL_TEST_USER_UNIT_DIR:-}" ]]; then
+        user_unit_dir=$QE_INSTALL_TEST_USER_UNIT_DIR
+    fi
     local required_commands=(bash busctl cmp dbus-update-activation-environment file flock hyprctl hyprpaper hypridle hyprshot jq magick pgrep python3 qs quickshell systemctl timeout xdg-open)
     for executable in "${required_commands[@]}"; do
         command -v "$executable" >/dev/null 2>&1 || {
@@ -378,7 +382,7 @@ check_capabilities() {
         }
     done
     for unit in pipewire.socket pipewire-pulse.socket wireplumber.service; do
-        [[ -r "/usr/lib/systemd/user/$unit" ]] || {
+        [[ -r "$user_unit_dir/$unit" ]] || {
             printf 'QE required user unit is unavailable: %s\n' "$unit" >&2
             return 1
         }
