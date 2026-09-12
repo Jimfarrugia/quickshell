@@ -121,6 +121,19 @@ run_install install --non-interactive --authorize-dunst-cutover
 [[ -f "$home/.local/share/applications/qe-theme-selector.desktop" ]]
 [[ "$receipt_before" != "$(sha256sum "$home/.local/state/qe/installation.json")" ]]
 
+rm -f -- "$home/.config/systemd/user/qe-shell.service"
+ln -s -- "$project_root/install/assets/qe-shell.service" \
+    "$home/.config/systemd/user/qe-shell.service"
+if run_install install --non-interactive --authorize-dunst-cutover \
+        >"$stdout" 2>"$stderr"; then
+    printf '%s\n' 'installer accepted a content-identical asset symlink' >&2
+    exit 1
+fi
+[[ -L "$home/.config/systemd/user/qe-shell.service" ]]
+rm -f -- "$home/.config/systemd/user/qe-shell.service"
+cp -- "$project_root/install/assets/qe-shell.service" \
+    "$home/.config/systemd/user/qe-shell.service"
+
 rm -f -- "$home/.local/share/applications/qe-theme-selector.desktop"
 run_install install --non-interactive --authorize-dunst-cutover
 [[ -f "$home/.local/share/applications/qe-theme-selector.desktop" ]]

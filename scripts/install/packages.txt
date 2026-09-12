@@ -4,6 +4,7 @@ bluez
 brightnessctl
 coreutils
 dbus
+diffutils
 file
 findutils
 fontconfig

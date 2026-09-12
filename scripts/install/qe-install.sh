@@ -228,7 +228,8 @@ validate_destinations() {
     for asset in qe-shell.service qe-theme-selector.desktop qe-wallpaper-selector.desktop qe-palette-viewer.desktop; do
         if [[ "$asset" == qe-shell.service ]]; then destination="$unit_dir/$asset"; else destination="$desktop_dir/$asset"; fi
         [[ ! -e "$destination" && ! -L "$destination" ]] && continue
-        cmp -s -- "$project_root/install/assets/$asset" "$destination" && continue
+        [[ -f "$destination" && ! -L "$destination" ]] \
+            && cmp -s -- "$project_root/install/assets/$asset" "$destination" && continue
         [[ "$asset" != qe-shell.service ]] && is_legacy_desktop "$asset" "$destination" && continue
         printf 'QE refuses unknown or user-owned asset destination: %s\n' "$destination" >&2
         return 1
@@ -316,7 +317,7 @@ version_ge() {
 
 check_capabilities() {
     local executable version hyprland_version family unit
-    local required_commands=(bash busctl dbus-update-activation-environment file flock hyprctl hyprpaper hypridle hyprshot jq magick pgrep python3 qs quickshell systemctl timeout xdg-open)
+    local required_commands=(bash busctl cmp dbus-update-activation-environment file flock hyprctl hyprpaper hypridle hyprshot jq magick pgrep python3 qs quickshell systemctl timeout xdg-open)
     for executable in "${required_commands[@]}"; do
         command -v "$executable" >/dev/null 2>&1 || {
             printf 'QE required capability is unavailable: command %s\n' "$executable" >&2
@@ -487,7 +488,7 @@ install_link() {
 install_asset() {
     local name=$1 destination=$2 source temporary
     source="$project_root/install/assets/$name"
-    if [[ -f "$destination" ]] && cmp -s -- "$source" "$destination"; then
+    if [[ -f "$destination" && ! -L "$destination" ]] && cmp -s -- "$source" "$destination"; then
         return
     fi
     if [[ -e "$destination" || -L "$destination" ]]; then
