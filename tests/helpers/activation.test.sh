@@ -19,7 +19,7 @@ cat >"$bin/systemctl" <<'EOF'
 set -euo pipefail
 printf '%s\n' "$*" >>"$TEST_ROOT/systemctl.log"
 case "$*" in
-    '--user is-system-running') printf '%s\n' running ;;
+    '--user show-environment') ;;
     '--user daemon-reload'|'--user restart qe-shell.service') ;;
     '--user is-enabled --quiet pipewire.socket'|'--user is-enabled --quiet pipewire-pulse.socket'|'--user is-enabled --quiet wireplumber.service') ;;
     '--user is-active --quiet dunst.service') exit 3 ;;

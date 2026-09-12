@@ -107,7 +107,7 @@ service_start_activation() {
     runtime_uid=$(stat -c %u -- "$XDG_RUNTIME_DIR" 2>/dev/null || true)
     [[ "$runtime_uid" == "$(id -u)" ]] || { activation_fail invalid-runtime 'XDG_RUNTIME_DIR is not owned by the effective user.'; return 1; }
     busctl --user list --no-pager >/dev/null 2>&1 || { activation_fail user-bus-unavailable 'the session DBus is unreachable.'; return 1; }
-    systemctl --user is-system-running >/dev/null 2>&1 || { activation_fail user-manager-unavailable 'the systemd user manager is unreachable.'; return 1; }
+    systemctl --user show-environment >/dev/null 2>&1 || { activation_fail user-manager-unavailable 'the systemd user manager is unreachable.'; return 1; }
     socket="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket.sock"
     [[ -S "$socket" || ( "${QE_ACTIVATION_ALLOW_REGULAR_SOCKET_FIXTURE:-0}" == 1 && -e "$socket" && "${QE_ACTIVATION_PROC_ROOT:-}" != "" ) ]] \
         || { activation_fail invalid-hyprland-session 'the current-user Hyprland socket is unavailable.'; return 1; }
