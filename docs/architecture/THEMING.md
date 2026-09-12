@@ -240,7 +240,9 @@ asks Hyprpaper to display the original source, then normalizes only the
 does not kill or restart a healthy Hyprpaper process. A successful helper result confirms
 Hyprpaper IPC acceptance and LKG promotion, not pixel display;
 `WallpaperService` therefore keeps requested, applied, and generation state
-separate. The old `wallpaper` script remains an untouched compatibility tool.
+separate. The legacy `wallpaper` and `select_wallpaper` commands are retired
+because they bypassed confirmed WallpaperService state; no compatibility aliases
+replace them.
 
 The lock process reads the validated active QE theme from the shared
 process-independent state file and reads the validated selected wallpaper before acquiring
@@ -293,7 +295,10 @@ Neovim palette, and external slots before creating or repairing the live links.
 It applies the manifest's default theme through running QE or, when QE is
 absent, directly through the external switcher. A missing or failed switcher
 leaves restored files in place and reports the failure. `capture` is the only
-operation that updates the authored default bundle.
+operation that updates the authored default bundle. Installation uses
+`qe-defaults seed`, which creates only missing first-frame runtime artifacts and
+recognized links, excludes the retired Dunst theme slot, and neither applies the
+manifest theme nor writes confirmed wallpaper selection.
 QE never writes an app's active configuration; the external switcher owns that
 copy. After promotion succeeds, QE delegates external application to the
 switcher with `--machine --theme wallpaper --skip-gtk` (GTK is excluded because

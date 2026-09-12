@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=QE Theme Selector
+Comment=Open the QE theme selector
+Exec=qe-launch qe-theme open
+Terminal=false
+Type=Application
+Icon=preferences-desktop-theme
+Categories=Settings;
+NoDisplay=false

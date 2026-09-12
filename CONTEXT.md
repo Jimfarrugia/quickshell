@@ -5,6 +5,18 @@ the persistent desktop shell and its user-facing surfaces.
 
 ## Language
 
+**Activation deferred**:
+A successful static QE installation whose real user-manager/Hyprland activation
+must occur at a later graphical login or through `qe-shell --service-start`.
+
+**Ready installation**:
+An installation whose last canonical activation completed all correlated
+readiness checks. It is historical success, not a claim of current liveness.
+
+**Activation failure**:
+A durable failed canonical activation outcome with an actionable error code and
+context; a later canonical activation replaces it on success.
+
 **Launcher**:
 A transient QE surface for finding and starting eligible desktop applications.
 _Avoid_: Application menu, Rofi replacement

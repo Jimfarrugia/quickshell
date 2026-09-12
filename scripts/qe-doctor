@@ -4,6 +4,8 @@ set -euo pipefail
 script_path=$(readlink -f -- "${BASH_SOURCE[0]}")
 script_dir=$(cd -- "$(dirname -- "$script_path")" && pwd)
 project_root=$(cd -- "$script_dir/.." && pwd)
+# shellcheck disable=SC1091
+source "$script_dir/lib/qe-installation.sh"
 user_bin_dir=${QE_DOCTOR_USER_BIN_DIR:-$HOME/.local/bin}
 proc_root=${QE_DOCTOR_PROC_ROOT:-/proc}
 failures=0
@@ -75,13 +77,36 @@ check_bus_owner() {
 printf '%s\n' 'QE production diagnostics'
 printf 'Managed checkout: %s\n' "$project_root"
 
-for command_name in bash quickshell qs systemctl dbus-update-activation-environment pgrep busctl; do
+receipt=$(qe_installation_receipt_path)
+if [[ ! -e "$receipt" ]]; then
+    warn "installation receipt is missing: $receipt"
+elif ! receipt_schema=$(jq -er '.schemaVersion | numbers' "$receipt" 2>/dev/null) \
+        || [[ "$receipt_schema" != 1 ]]; then
+    fail "installation receipt is malformed or has an unsupported schema: $receipt"
+else
+    receipt_outcome=$(jq -er '.outcome | select(. == "activation-deferred" or . == "ready" or . == "activation-failed")' "$receipt" 2>/dev/null || true)
+    receipt_checkout=$(jq -er '.checkoutPath | strings' "$receipt" 2>/dev/null || true)
+    if [[ -z "$receipt_outcome" || "$receipt_checkout" != "$project_root" ]]; then
+        fail "installation receipt does not describe this managed checkout: $receipt"
+    elif [[ "$receipt_outcome" == ready ]]; then
+        ok 'last activation completed successfully (current liveness is checked below)'
+    elif [[ "$receipt_outcome" == activation-deferred ]]; then
+        warn 'installation is activation deferred; from Hyprland run: qe-shell --service-start'
+    else
+        receipt_code=$(jq -r '.errorCode // "unknown"' "$receipt")
+        receipt_context=$(jq -r '.errorContext // "no context recorded"' "$receipt")
+        fail "last activation failed: $receipt_code ($receipt_context)"
+        printf '%s\n' '       Recovery: journalctl --user -u qe-shell.service; qe-shell --service-start'
+    fi
+fi
+
+for command_name in bash quickshell qs systemctl dbus-update-activation-environment pgrep busctl jq; do
     check_command "$command_name" required
 done
 for command_name in python3 brightnessctl df timeout nmcli setpriv gdbus dbus-monitor; do
     check_command "$command_name" enabled-feature
 done
-for command_name in matugen jq file magick hyprctl hyprpaper flock pavucontrol nm-connection-editor blueman-manager rofi; do
+for command_name in matugen file magick hyprctl hyprpaper flock pavucontrol nm-connection-editor blueman-manager rofi; do
     check_command "$command_name" optional
 done
 
@@ -92,6 +117,7 @@ check_wrapper qe-launch scripts/qe-launch.sh
 check_wrapper qe-defaults scripts/qe-defaults
 check_wrapper qe-doctor scripts/qe-doctor
 check_wrapper qe-hyprshot scripts/qe-hyprshot.sh
+check_wrapper qe-theme-switcher scripts/qe-theme-switcher
 
 service_pid=0
 if systemctl --user is-active --quiet qe-shell.service; then

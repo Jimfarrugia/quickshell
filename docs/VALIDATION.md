@@ -29,6 +29,7 @@ instructions to load or replay the historical phase plan.
 | AI quota | affected JS/Python/helper or QML contract tests | persistence/resume/provider-failure paths when touched |
 | `lock.qml` or `lock/` | secure-lock group | disposable/live recovery checks for PAM/session-lock/lifecycle changes |
 | launch/restart/systemd/doctor/single-instance | production lifecycle group | isolated-XDG/fresh-login checks for supervision/deployment changes |
+| installer/packages/default seed/Dunst mask/activation receipt | installer/defaults/activation fixture group | production lifecycle group, isolated QML capability probe, and disposable VM acceptance when live ownership changes |
 
 ### Validation breadth
 
@@ -90,6 +91,8 @@ bash tests/helpers/wallpaper-generation-failure.test.sh
 bash tests/helpers/wallpaper-selector-ipc.test.sh
 bash tests/helpers/qe-launch.test.sh
 bash tests/helpers/qe-defaults.test.sh
+bash tests/helpers/installer.test.sh
+bash tests/helpers/activation.test.sh
 bash tests/helpers/external-wallpaper-theme.test.sh
 bash tests/helpers/external-wallpaper-theme-service.test.sh
 bash tests/helpers/notification-owner.test.sh
@@ -596,6 +599,26 @@ historical acceptance/rollback evidence is in `docs/history/PHASES_12-13.md`.
 
 ### Production lifecycle and supervision
 
+Installer and receipt contracts are fixture-only by default:
+
+```sh
+shellcheck install.sh scripts/install/qe-install.sh \
+  scripts/lib/qe-installation.sh scripts/qe-theme-switcher \
+  scripts/qe-defaults scripts/run-qe.sh scripts/qe-doctor \
+  tests/helpers/installer.test.sh tests/helpers/activation.test.sh
+bash tests/helpers/installer.test.sh
+bash tests/helpers/qe-defaults.test.sh
+bash tests/helpers/activation.test.sh
+bash tests/helpers/qe-doctor.test.sh
+systemd-analyze --user verify install/assets/qe-shell.service
+```
+
+These tests must not stop Dunst, restart the live QE service, acquire a session
+lock, or mutate the primary user manager. The activation fixture supplies a
+private runtime tree and fake systemd, Hyprland, DBus, journal, procfs, and
+structured `qs list --all --json` boundaries. Real cutover and lock/PAM checks
+remain disposable-session/VM operations with the documented recovery path.
+
 Validate the launch helper and static unit before live cutover:
 
 ```sh
@@ -603,18 +626,9 @@ shellcheck scripts/run-qe.sh tests/helpers/run-qe.test.sh
 bash tests/helpers/run-qe.test.sh
 shellcheck scripts/qe-doctor tests/helpers/qe-doctor.test.sh
 bash tests/helpers/qe-doctor.test.sh
-shellcheck tests/helpers/qe-entrypoints.test.sh \
-  "$HOME/dotfiles/scripts/.local/bin/qe-project" \
-  "$HOME/dotfiles/scripts/.local/bin/qe-action" \
-  "$HOME/dotfiles/scripts/.local/bin/qe-defaults" \
-  "$HOME/dotfiles/scripts/.local/bin/qe-doctor" \
-  "$HOME/dotfiles/scripts/.local/bin/qe-hyprshot" \
-  "$HOME/dotfiles/scripts/.local/bin/qe-launch" \
-  "$HOME/dotfiles/scripts/.local/bin/qe-lock" \
-  "$HOME/dotfiles/scripts/.local/bin/qe-shell"
+shellcheck tests/helpers/qe-entrypoints.test.sh
 bash tests/helpers/qe-entrypoints.test.sh
-systemd-analyze --user verify \
-  "$HOME/dotfiles/_hyprland/systemd/.config/systemd/user/qe-shell.service"
+systemd-analyze --user verify install/assets/qe-shell.service
 ```
 
 After importing `WAYLAND_DISPLAY`, `HYPRLAND_INSTANCE_SIGNATURE`, and

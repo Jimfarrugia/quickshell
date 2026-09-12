@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_path=$(readlink -f -- "${BASH_SOURCE[0]}")
+project_root=$(cd -- "$(dirname -- "$script_path")" && pwd -P)
+exec "$project_root/scripts/install/qe-install.sh" "$@"

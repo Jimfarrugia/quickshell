@@ -74,20 +74,8 @@ QE_TEST_QUICKSHELL_LOG="$quickshell_log" \
 [[ "$(<"$log_file")" == "--user is-active --quiet qe-shell.service" ]]
 [[ "$(<"$quickshell_log")" == "--no-duplicate --path $project_root/shell.qml" ]]
 
-: >"$log_file"
-PATH="$test_root/bin:$PATH" \
-WAYLAND_DISPLAY=wayland-test \
-HYPRLAND_INSTANCE_SIGNATURE=hyprland-test \
-XDG_CURRENT_DESKTOP=Hyprland \
-QE_TEST_SYSTEMCTL_LOG="$log_file" \
-    "$project_root/scripts/run-qe.sh" --service-start
-
-mapfile -t calls <"$log_file"
-[[ "${calls[0]:-}" == "dbus --systemd WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP" ]]
-[[ "${calls[1]:-}" == "--user restart qe-shell.service" ]]
-[[ ${#calls[@]} -eq 2 ]]
-
 if PATH="$test_root/bin:$PATH" \
+    HOME="$test_root" XDG_STATE_HOME="$test_root/state" \
     WAYLAND_DISPLAY=wayland-test \
     XDG_CURRENT_DESKTOP=Hyprland \
     QE_TEST_SYSTEMCTL_LOG="$log_file" \

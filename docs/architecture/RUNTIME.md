@@ -33,6 +33,11 @@ imports the current Wayland session environment and asks systemd to restart
 the stable `~/.local/bin/qe-shell --service-start` Hyprland autostart mode; the
 unit invokes the same stable XDG user-bin entry point without that option.
 Systemd owns journal capture and bounded crash restart.
+The same `qe-shell --service-start` mode is the sole activation implementation:
+it validates the real session, completes authorized Dunst cutover, restarts the
+unit, correlates structured Quickshell/DBus/journal readiness to one stable
+systemd invocation and PID, observes the ten-second crash guard, and writes the
+process-independent installation receipt. Installer `activate` only delegates.
 An explicit `--restart` delegates to the active unit, while an unavailable unit
 falls back to the guarded direct restart used for development and recovery.
 Direct unguarded `quickshell --path` launches are development-only and can bypass
@@ -183,7 +188,8 @@ A diagnostics service exposes:
 Quickshell encoded logs remain the base persistent log facility. Production
 supervision also routes standard output and error to the user journal.
 
-The read-only `qe-doctor` helper reports production command and stable-entry-point
+The read-only `qe-doctor` helper reports the last installation/activation
+receipt together with current production command and stable-entry-point
 availability, systemd service and single-instance state, notification and tray
 DBus ownership, and conflicting retired processes. A missing optional
 integration is a warning; a missing required or enabled-feature command,

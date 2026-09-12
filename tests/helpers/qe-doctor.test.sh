@@ -11,7 +11,11 @@ cleanup() { rm -rf -- "$test_root"; }
 trap cleanup EXIT
 
 mkdir -p -- "$test_bin" "$user_bin" "$proc_root/4242"
+mkdir -p -- "$test_root/state/qe"
 printf '%s\n' quickshell >"$proc_root/4242/comm"
+cat >"$test_root/state/qe/installation.json" <<EOF
+{"schemaVersion":1,"outcome":"ready","attemptId":"fixture-attempt","attemptedAt":"2026-09-12T00:00:00Z","checkoutPath":"$project_root","errorCode":null,"errorContext":null}
+EOF
 
 commands=(quickshell qs systemctl dbus-update-activation-environment pgrep busctl
     python3 brightnessctl df timeout nmcli setpriv gdbus dbus-monitor matugen jq file
@@ -24,6 +28,8 @@ exit 0
 EOF
     chmod +x "$test_bin/$command_name"
 done
+rm -f -- "$test_bin/jq"
+ln -s /usr/bin/jq "$test_bin/jq"
 
 cat >"$test_bin/systemctl" <<'EOF'
 #!/usr/bin/bash
@@ -54,18 +60,20 @@ ln -s "$project_root/scripts/qe-launch.sh" "$user_bin/qe-launch"
 ln -s "$project_root/scripts/qe-defaults" "$user_bin/qe-defaults"
 ln -s "$project_root/scripts/qe-doctor" "$user_bin/qe-doctor"
 ln -s "$project_root/scripts/qe-hyprshot.sh" "$user_bin/qe-hyprshot"
+ln -s "$project_root/scripts/qe-theme-switcher" "$user_bin/qe-theme-switcher"
 
-output=$(PATH="$test_bin:/usr/bin" QE_DOCTOR_USER_BIN_DIR="$user_bin" \
+output=$(PATH="$test_bin:/usr/bin" XDG_STATE_HOME="$test_root/state" QE_DOCTOR_USER_BIN_DIR="$user_bin" \
     QE_DOCTOR_PROC_ROOT="$proc_root" "$project_root/scripts/qe-doctor")
 [[ "$output" == *'Summary: 0 failure(s), 0 warning(s)'* ]]
 [[ "$output" == *'notification service owned by supervised QE (PID 4242)'* ]]
+[[ "$output" == *'last activation completed successfully'* ]]
 
 cat >"$test_bin/pgrep" <<'EOF'
 #!/usr/bin/bash
 [[ "$*" == '-x dunst' ]]
 EOF
 chmod +x "$test_bin/pgrep"
-if PATH="$test_bin:/usr/bin" QE_DOCTOR_USER_BIN_DIR="$user_bin" \
+if PATH="$test_bin:/usr/bin" XDG_STATE_HOME="$test_root/state" QE_DOCTOR_USER_BIN_DIR="$user_bin" \
     QE_DOCTOR_PROC_ROOT="$proc_root" "$project_root/scripts/qe-doctor" \
     >"$test_root/failure-output"; then
     printf '%s\n' 'qe-doctor unexpectedly accepted a conflicting retired owner' >&2
@@ -78,7 +86,7 @@ ln -s /usr/bin/dirname "$test_bin/dirname"
 ln -s /usr/bin/grep "$test_bin/grep"
 ln -s /usr/bin/readlink "$test_bin/readlink"
 rm -f -- "$test_bin/brightnessctl"
-if PATH="$test_bin" QE_DOCTOR_USER_BIN_DIR="$user_bin" \
+if PATH="$test_bin" XDG_STATE_HOME="$test_root/state" QE_DOCTOR_USER_BIN_DIR="$user_bin" \
     QE_DOCTOR_PROC_ROOT="$proc_root" "$project_root/scripts/qe-doctor" \
     >"$test_root/enabled-feature-output"; then
     printf '%s\n' 'qe-doctor unexpectedly accepted a missing enabled-feature command' >&2
@@ -89,12 +97,37 @@ grep -Fq '[FAIL] enabled-feature command missing: brightnessctl' \
 cp -- "$test_bin/python3" "$test_bin/brightnessctl"
 
 rm -f -- "$test_bin/quickshell"
-if PATH="$test_bin" QE_DOCTOR_USER_BIN_DIR="$user_bin" \
+if PATH="$test_bin" XDG_STATE_HOME="$test_root/state" QE_DOCTOR_USER_BIN_DIR="$user_bin" \
     QE_DOCTOR_PROC_ROOT="$proc_root" /usr/bin/bash "$project_root/scripts/qe-doctor" \
     >"$test_root/missing-output"; then
     printf '%s\n' 'qe-doctor unexpectedly accepted a missing required command' >&2
     exit 1
 fi
 grep -Fq '[FAIL] required command missing: quickshell' "$test_root/missing-output"
+
+printf '%s\n' '{"schemaVersion":99,"outcome":"ready"}' >"$test_root/state/qe/installation.json"
+receipt_before=$(sha256sum "$test_root/state/qe/installation.json")
+if PATH="$test_bin:/usr/bin" XDG_STATE_HOME="$test_root/state" \
+    QE_DOCTOR_USER_BIN_DIR="$user_bin" QE_DOCTOR_PROC_ROOT="$proc_root" \
+    "$project_root/scripts/qe-doctor" >"$test_root/malformed-receipt"; then
+    printf '%s\n' 'qe-doctor accepted an unsupported receipt schema' >&2
+    exit 1
+fi
+grep -Fq 'installation receipt is malformed or has an unsupported schema' \
+    "$test_root/malformed-receipt"
+[[ "$receipt_before" == "$(sha256sum "$test_root/state/qe/installation.json")" ]]
+
+cat >"$test_root/state/qe/installation.json" <<EOF
+{"schemaVersion":1,"outcome":"activation-failed","attemptId":"failed-attempt","attemptedAt":"2026-09-12T00:01:00Z","checkoutPath":"$project_root","errorCode":"readiness-timeout","errorContext":"fixture readiness failed"}
+EOF
+if PATH="$test_bin:/usr/bin" XDG_STATE_HOME="$test_root/state" \
+    QE_DOCTOR_USER_BIN_DIR="$user_bin" QE_DOCTOR_PROC_ROOT="$proc_root" \
+    "$project_root/scripts/qe-doctor" >"$test_root/receipt-failure"; then
+    printf '%s\n' 'qe-doctor accepted an activation failure receipt' >&2
+    exit 1
+fi
+grep -Fq '[FAIL] last activation failed: readiness-timeout (fixture readiness failed)' \
+    "$test_root/receipt-failure"
+grep -Fq 'qe-shell --service-start' "$test_root/receipt-failure"
 
 printf '%s\n' 'QE_DOCTOR_TEST_PASSED'

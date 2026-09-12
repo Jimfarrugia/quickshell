@@ -33,6 +33,7 @@ acceptance evidence.
 
 | Change type | Normal context |
 | --- | --- |
+| Installer/packages/deployment/default seed/Dunst cutover/activation receipt | `docs/architecture/INSTALLATION.md` + `docs/architecture/PROJECT_MODEL.md` + `docs/architecture/RUNTIME.md` |
 | Styling, spacing, typography, local presentation state | `AGENTS.md` + affected QML/component + targeted validation |
 | Existing bar/module/dashboard UI refinement | Above + relevant service contract only if service-owned state/operations are touched |
 | New bar module or small surface | `docs/ARCHITECTURE.md` + relevant service contract + project model as needed |

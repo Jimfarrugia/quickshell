@@ -8,6 +8,8 @@ Authoritative for repository dependency boundaries, configuration and path owner
 .
 |-- shell.qml                  # persistent process entry point
 |-- lock.qml                   # isolated lock process entry point
+|-- install.sh                 # installation protocol entry point
+|-- install/                   # static deployment assets and capability probe
 |-- components/               # reusable presentation primitives
 |-- modules/                  # user-facing feature composition
 |   |-- bar/
@@ -143,7 +145,9 @@ The complete authored bundle lives under `defaults/`. Wallpaper images are
 stored under `defaults/wallpaper/images`; the generated QE wallpaper theme and
 application artifacts are stored under
 `defaults/wallpaper/generated-theme/{qe,applications}`. `scripts/qe-defaults`
-is the sole capture/restore writer. Capture obtains confirmed active theme state
+is the sole seed/capture/restore writer. Seed non-destructively creates missing
+first-frame artifacts and recognized external links without applying a theme or
+fabricating selected-wallpaper state. Capture obtains confirmed active theme state
 through typed QE IPC, rejects pending theme or wallpaper operations, migrates a
 missing runtime artifact from its existing live slot when needed, preflights all
 runtime artifacts, and stages the complete bundle before promotion. Restore
@@ -155,8 +159,10 @@ remove restored files.
 
 ### Paths
 
-No source file may assume `/home/jim`, `~/Projects/quickshell`, or the eventual
-dotfiles location.
+Runtime source files do not assume `/home/jim` or a dotfiles location. The
+installer deliberately enforces the supported `$HOME/Projects/quickshell`
+production checkout from ADR-045; tests may relocate it through explicit fixture
+seams.
 
 - Repository assets use paths relative to Quickshell's shell directory property.
   `Quickshell.shellDir` is canonical in installed Quickshell 0.3.1 and current source; the older
@@ -188,6 +194,7 @@ contracts. UI modules invoke typed domain operations such as `openLauncher()` or
 
 | Concern                     | Authoritative owner/source                    | Representation                                | Readers                                             | Writer                                 | Propagation                                                                               | Lifetime and invalid handling                                           |
 | --------------------------- | --------------------------------------------- | --------------------------------------------- | --------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Installation/activation result | QE installer and canonical activation | `$XDG_STATE_HOME/qe/installation.json`, schema v1 | installer, `qe-doctor` | completed install/activation attempt | atomic replace | process-independent; last result is not a current-liveness claim; malformed versions are preserved until a later completed attempt |
 | QE user configuration       | User                                          | `config/qe.json`                              | `ConfigService`, modules through service properties | User only                              | watched, validate then publish                                                            | persistent; invalid file retains last-known-good or safe defaults       |
 | Help reference catalog      | User                                          | `config/help.json`                              | `HelpService`, help surface                    | User only                              | refresh on help-surface open, validate then publish                                        | persistent reference data; invalid file produces an empty usable catalog and diagnostic |
 | QE authored themes          | User                                          | `themes/*.json`                               | `ThemeCatalogService`                               | User only                              | discovery/watch and validation                                                            | persistent input; invalid themes excluded with diagnostics              |

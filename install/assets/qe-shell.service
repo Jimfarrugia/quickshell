@@ -1,0 +1,11 @@
+[Unit]
+Description=Quickshell Environment persistent shell
+StartLimitIntervalSec=60
+StartLimitBurst=3
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/qe-shell
+Restart=on-failure
+RestartSec=2
+SyslogIdentifier=qe-shell

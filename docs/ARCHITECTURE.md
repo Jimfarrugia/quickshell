@@ -34,6 +34,7 @@ crosses a documented boundary.
 
 | Change touches | Authoritative detail |
 | --- | --- |
+| Installation, packages, deployment ownership, defaults seed, Dunst cutover, activation receipts | `docs/architecture/INSTALLATION.md` |
 | Repository layers, configuration, paths, persistent/shared state | `docs/architecture/PROJECT_MODEL.md` |
 | Domain service ownership or operation semantics | Relevant subsection of `docs/architecture/SERVICES.md` |
 | Themes, wallpaper, Matugen, semantic roles, external theme apply | `docs/architecture/THEMING.md` |

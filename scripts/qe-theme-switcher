@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repository=${QE_THEME_SWITCHER_REPO:-$HOME/Projects/theme-switcher}
+runner="$repository/run.sh"
+if [[ ! -x "$runner" ]]; then
+    printf 'qe-theme-switcher: theme-switcher run.sh not found at %s\n' "$runner" >&2
+    exit 127
+fi
+exec "$runner" "$@"

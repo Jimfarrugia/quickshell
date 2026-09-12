@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+resolve=0
+if [[ "${1:-}" == --resolve ]]; then
+    resolve=1
+    shift
+fi
+if [[ $# -lt 1 ]]; then
+    printf 'Usage: %s [--resolve] <entry-point> [arguments...]\n' "$0" >&2
+    exit 2
+fi
+
+entry_point=$1
+shift
+case "$entry_point" in
+    qe-action) relative_target=scripts/qe-action.sh ;;
+    qe-defaults) relative_target=scripts/qe-defaults ;;
+    qe-doctor) relative_target=scripts/qe-doctor ;;
+    qe-hyprshot) relative_target=scripts/qe-hyprshot.sh ;;
+    qe-launch) relative_target=scripts/qe-launch.sh ;;
+    qe-lock) relative_target=scripts/run-qe-lock.sh ;;
+    qe-shell) relative_target=scripts/run-qe.sh ;;
+    *)
+        printf 'qe-project: unknown entry point %s\n' "$entry_point" >&2
+        exit 2
+        ;;
+esac
+
+project_root=${QE_PROJECT_ROOT:-$HOME/Projects/quickshell}
+target="$project_root/$relative_target"
+if [[ ! -x "$target" ]]; then
+    printf 'qe-project: target not found at %s\n' "$target" >&2
+    exit 127
+fi
+
+if ((resolve)); then
+    printf '%s\n' "$target"
+    exit 0
+fi
+
+exec "$target" "$@"

@@ -5,8 +5,8 @@ import Quickshell
 Singleton {
     id: root
 
-    readonly property string qeVersion: "0.1.0-phase1"
-    readonly property string quickshellVersion: "0.3.0"
+    readonly property string qeVersion: "0.1.0"
+    readonly property string quickshellVersion: "0.3.1"
     readonly property int configSchemaVersion: 1
     readonly property int themeSchemaVersion: 1
     readonly property int stateSchemaVersion: 1

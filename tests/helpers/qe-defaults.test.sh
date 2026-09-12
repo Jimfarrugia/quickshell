@@ -64,8 +64,29 @@ run_defaults() {
     QE_DEFAULTS_ROOT="$test_root/project/defaults" \
     QE_DEFAULTS_IPC="$test_root/ipc" \
     QE_THEME_SWITCHER="$test_root/switcher" \
-        "$project_root/scripts/qe-defaults" "$1"
+        "$project_root/scripts/qe-defaults" "$@"
 }
+
+# Seed is missing-only, does not apply the manifest theme, and can run while the
+# installer owns the shared lock descriptor.
+: >"$test_root/switcher.log"
+TEST_IPC_AVAILABLE=0 run_defaults seed
+[[ -f "$test_root/data/current_wallpaper.png" ]]
+[[ -f "$test_root/data/qe/wallpaper/Wallpaper.json" ]]
+[[ ! -e "$test_root/state/qe/wallpaper/external/dunst-wallpaper.conf" ]]
+[[ ! -e "$test_root/home/.config/dunst/themes/wallpaper.conf" ]]
+[[ ! -s "$test_root/switcher.log" ]]
+printf '%s\n' preserved >"$test_root/data/current_wallpaper.png"
+TEST_IPC_AVAILABLE=0 run_defaults seed
+[[ "$(<"$test_root/data/current_wallpaper.png")" == preserved ]]
+
+lock_path="$test_root/state/qe/install.lock"
+mkdir -p -- "$(dirname -- "$lock_path")"
+exec 9>"$lock_path"
+flock -x 9
+QE_INSTALL_LOCK_FD=9 QE_INSTALL_LOCK_PATH="$lock_path" \
+    TEST_IPC_AVAILABLE=0 run_defaults seed
+exec 9>&-
 
 run_defaults restore
 grep -Fxq -- 'Restored defaults.' "$test_root/notifications.log"

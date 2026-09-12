@@ -2,7 +2,7 @@
 
 Status: Production baseline complete; maintenance and refinement mode
 
-Last baseline update: 2026-09-10
+Last baseline update: 2026-09-12
 
 This document is the authoritative live status surface for QE. It intentionally
 does not contain implementation chronology, phase sequencing, detailed service
@@ -23,6 +23,7 @@ contracts, or test transcripts. Completed planning/acceptance history lives unde
 | Monitor behavior | Per-screen workspace scoping, monitor-layout controls, stepped per-monitor scale, attach/detach/reorder, and mirror restoration are implemented |
 | Lock | QE owns compositor-enforced locking, manual/idle/before-sleep paths, native PAM authentication, and lock-safe presentation; Hyprlock is installed but retired |
 | Operations | `qe-doctor`, stable launch/restart entry points, single-instance checks, and production recovery paths are implemented |
+| Installation | QE owns protocol-v1 package/capability checks, idempotent static deployment, non-destructive defaults seed, authorized Dunst mask, deferred/live activation, and process-independent receipts for the fixed managed checkout |
 
 Completed implementation and acceptance evidence through the final replacement
 phase is preserved in `docs/history/FINAL_IMPLEMENTATION_PLAN.md` and the

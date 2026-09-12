@@ -13,7 +13,7 @@
   - [Expected Setup-Script Baseline](#expected-setup-script-baseline)
   - [Install Packages](#install-packages)
   - [Clone QE](#clone-qe)
-  - [Verify Installed Dotfiles](#verify-installed-dotfiles)
+  - [Verify Installed Deployment](#verify-installed-deployment)
   - [Reload the User Service](#reload-the-user-service)
   - [Restore the QE Defaults](#restore-the-qe-defaults)
   - [Verify Lock Prerequisites](#verify-lock-prerequisites)
@@ -149,7 +149,7 @@ enabled:
 - The `theme-switcher` repository, normally at `~/Projects/theme-switcher`.
   It provides the external application apply scripts and the machine-mode
   interface used by QE.
-- The dotfiles-provided `qe-theme-switcher` wrapper, which forwards QE's
+- The QE-provided `qe-theme-switcher` adapter, which forwards QE's
   machine-mode requests to `theme-switcher`.
 - The project-provided `qe-defaults` helper, which captures and restores the
   complete authored theme and wallpaper default bundle.
@@ -159,17 +159,15 @@ enabled:
   checks.
 - Hyprland configuration that starts Hyprpaper and invokes
   `qe-shell --service-start` after the compositor environment exists.
-- The `qe-shell.service` systemd user unit supplied by the dotfiles repository.
+- The static `qe-shell.service` systemd user unit supplied by QE's installer.
 - Hyprpaper configuration that reads the current wallpaper file from
   `$HOME/.local/share`; QE composes the lock background from the selected source.
 - A wallpaper collection arranged as
   `~/Pictures/Wallpaper/themes/<theme-id>/` unless `QE_WALLPAPER_ROOT` is set.
 
 The supported managed production checkout is `~/Projects/quickshell`. Stable
-commands under `~/.local/bin` dispatch into that checkout through `qe-project`.
-`QE_PROJECT_ROOT` can override the dispatcher for an interactive command, but
-the production service does not import that override. Keep the checkout at the
-supported default location for a reproducible setup.
+commands under `~/.local/bin` are direct absolute links into that checkout. Keep
+the checkout at the supported default location for a reproducible setup.
 
 ### Paths and Environment Variables
 
@@ -205,6 +203,31 @@ updated together.
 
 ## 3. Setting Up
 
+Install QE from its supported checkout as the target user, never as root:
+
+```sh
+cd ~/Projects/quickshell
+./install.sh check
+./install.sh install --packages
+```
+
+The package option uses `sudo` only for the fixed missing-package transaction.
+The installer asks before persistently masking Dunst; unattended callers must
+pass `--authorize-dunst-cutover` only after a QE-specific opt-in. It installs the
+public commands, static unit, desktop entries, and defaults without replacing
+unknown files. Before the first Hyprland login it finishes successfully as
+`activation-deferred`. From an already running Hyprland session, complete or
+retry activation with:
+
+```sh
+qe-shell --service-start
+```
+
+Inspect the durable last result and current liveness with `qe-doctor`; use
+`journalctl --user -u qe-shell.service` for full activation logs. Do not enable
+`qe-shell.service`: Hyprland triggers the static unit with the correct compositor
+environment.
+
 Complete these steps from the setup TTY or another shell before the first
 Hyprland login when possible. The stowed Hyprland configuration already invokes
 QE at login; until the checkout exists, that bounded startup attempt will fail.
@@ -220,11 +243,10 @@ stows the dotfiles before QE-specific setup begins. It should already provide:
 - `~/dotfiles`, `~/Projects/theme-switcher`, and `~/Pictures/Wallpaper`.
 - Git and GitHub CLI; `arch-setup-script` installs Git before cloning and lists
   GitHub CLI in its universal package set.
-- The universal `scripts` dotfiles package and Hyprland `applications`, `hypr`,
-  `systemd`, and application-configuration packages.
+- The Hyprland configuration and application policy retained by dotfiles.
 - `~/.local/bin` on the login-shell `PATH`.
-- QE entry points, Hyprland startup/keybindings, desktop entries, and
-  `~/.config/systemd/user/qe-shell.service` from the dotfiles.
+- Hyprland startup/keybindings plus Hypridle and Hyprpaper policy. QE's installer
+  supplies its commands, desktop entries, and static user unit.
 
 The theme-switcher and wallpaper clones are non-fatal operations in the current
 setup script. Verify that they succeeded before continuing:
@@ -251,9 +273,9 @@ git clone https://github.com/Jimfarrugia/wallpaper.git \
 
 ### Install Packages
 
-Install the QE-specific package delta listed in
-[Software Dependencies](#software-dependencies). Use the complete package list
-there only when setting up without the normal `arch-setup-script` baseline.
+Use `./install.sh package-query` to inspect the QE-owned package delta, or
+`./install.sh install --packages` for independent setup. Do not maintain a
+second QE package list in orchestration or dotfiles.
 
 Enable the system-service owners used by the enabled modules:
 
@@ -281,8 +303,7 @@ python3 -c 'import dbus; from gi.repository import GLib'
 
 ### Clone QE
 
-QE is not yet cloned by `arch-setup-script`. Install it at the supported managed
-location:
+QE must be cloned at the supported managed location before installation:
 
 ```sh
 mkdir -p ~/Projects
@@ -290,15 +311,14 @@ git clone https://github.com/Jimfarrugia/quickshell.git ~/Projects/quickshell
 ```
 
 If the checkout already exists, update and inspect it instead of cloning over
-it. The production wrappers default to this exact location.
+it. The installed direct links target this exact location.
 
-### Verify Installed Dotfiles
+### Verify Installed Deployment
 
-Do not re-stow packages after a successful `arch-setup-script` run. Verify the
-QE-facing paths it should have installed:
+After the installer succeeds, verify the QE-owned leaves and caller-owned
+Hyprland policy separately:
 
 ```sh
-test -x ~/.local/bin/qe-project
 test -x ~/.local/bin/qe-shell
 test -x ~/.local/bin/qe-lock
 test -x ~/.local/bin/qe-action
@@ -311,10 +331,8 @@ test -r ~/.config/hypr/hyprpaper.conf
 test -r ~/.config/systemd/user/qe-shell.service
 ```
 
-If these checks fail, repair the corresponding dotfiles Stow operation before
-continuing. The universal `scripts` package provides the commands; the
-Hyprland `hypr`, `systemd`, and `applications` packages provide startup, the
-unit, and desktop integration.
+If command, unit, or desktop checks fail, rerun the QE installer. If Hyprland,
+Hypridle, or Hyprpaper checks fail, repair the caller-owned dotfiles policy.
 
 The project-owned `defaults/` directory is an authored snapshot source and is
 not itself a live XDG configuration directory. The QE project checkout must be
@@ -323,7 +341,7 @@ Update the snapshot only through `qe-defaults capture`.
 
 ### Reload the User Service
 
-Make the newly stowed static unit visible to the systemd user manager:
+Make the installed static unit visible to the systemd user manager:
 
 ```sh
 systemctl --user daemon-reload
@@ -340,8 +358,8 @@ reload and then `qe-shell --service-start` from that session.
 
 ### Restore the QE Defaults
 
-After the QE checkout exists and the dotfiles checks pass, restore the committed
-runtime bundle before the first QE/Hyprpaper start:
+The installer seeds missing runtime artifacts before the first QE/Hyprpaper
+start. Use restore only for an explicit reset to the committed snapshot:
 
 ```sh
 qe-defaults restore

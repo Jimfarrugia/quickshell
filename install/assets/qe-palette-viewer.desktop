@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=QE Palette Viewer
+Comment=View the current QE color palette
+Exec=qe-launch qe-palette open
+Terminal=false
+Type=Application
+Icon=preferences-desktop-color
+Categories=Settings;
+NoDisplay=false

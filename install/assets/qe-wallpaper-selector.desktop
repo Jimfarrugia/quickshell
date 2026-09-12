@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=QE Wallpaper Selector
+Comment=Open the QE wallpaper selector
+Exec=qe-launch qe-wallpaper open
+Terminal=false
+Type=Application
+Icon=preferences-desktop-wallpaper
+Categories=Settings;
+NoDisplay=false

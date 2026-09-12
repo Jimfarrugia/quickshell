@@ -2,14 +2,14 @@
 set -euo pipefail
 
 usage() {
-    printf 'Usage: %s <capture|restore>\n' "$0" >&2
+    printf 'Usage: %s <capture|restore|seed>\n' "$0" >&2
     exit 2
 }
 
 [[ $# -eq 1 ]] || usage
 action=$1
 case "$action" in
-    capture|restore) ;;
+    capture|restore|seed) ;;
     *) usage ;;
 esac
 
@@ -23,6 +23,8 @@ send_notification() {
 notify_failure() {
     if [[ "$action" == capture ]]; then
         send_notification critical 'Failed to capture new defaults.'
+    elif [[ "$action" == seed ]]; then
+        send_notification critical 'Failed to seed defaults.'
     else
         send_notification critical 'Failed to restore defaults.'
     fi
@@ -38,6 +40,10 @@ state_home=${XDG_STATE_HOME:-$HOME/.local/state}
 cache_home=${XDG_CACHE_HOME:-$HOME/.cache}
 runtime_root="$state_home/qe/wallpaper"
 ipc_launcher=${QE_DEFAULTS_IPC:-$script_dir/qe-launch.sh}
+
+# shellcheck disable=SC1090 # project_root may be replaced by the fixture seam.
+source "$project_root/scripts/lib/qe-installation.sh"
+qe_acquire_install_lock
 
 command -v jq >/dev/null 2>&1 || {
     printf 'QE defaults failed: jq is unavailable.\n' >&2
@@ -85,11 +91,15 @@ declare -A live_slots=(
 )
 
 copy_file() {
-    local source=$1 target=$2
+    local source=$1 target=$2 target_directory temporary
     if [[ -f "$target" ]] && cmp -s -- "$source" "$target"; then
         return 0
     fi
-    install -D -m 0644 -- "$source" "$target"
+    target_directory=$(dirname -- "$target")
+    mkdir -p -- "$target_directory"
+    temporary="$target_directory/.qe-defaults.$$.$RANDOM"
+    install -m 0644 -- "$source" "$temporary"
+    mv -fT -- "$temporary" "$target"
 }
 
 validate_theme_id() {
@@ -212,6 +222,35 @@ repair_live_slots() {
     done
 }
 
+seed_defaults() {
+    local pair relative runtime name target target_directory temporary_link
+    preflight_artifacts defaults
+    for pair in "${artifacts[@]}"; do
+        relative=${pair%%|*}
+        runtime=${pair#*|}
+        name=${relative##*/}
+        [[ "$name" == dunst-wallpaper.conf ]] && continue
+        if [[ ! -e "$runtime" ]]; then
+            copy_file "$defaults_root/$relative" "$runtime"
+        fi
+        target=${live_slots[$name]-}
+        [[ -n "$target" ]] || continue
+        target_directory=$(dirname -- "$target")
+        if [[ -L "$target" && "$(readlink -f -- "$target")" == "$runtime" ]]; then
+            continue
+        fi
+        if [[ -e "$target" || -L "$target" ]]; then
+            printf 'Warning: preserving foreign external wallpaper slot: %s\n' "$target" >&2
+            continue
+        fi
+        mkdir -p -- "$target_directory"
+        temporary_link="$target_directory/.qe-wallpaper-link.$$"
+        ln -s -- "$runtime" "$temporary_link"
+        mv -Tf -- "$temporary_link" "$target"
+    done
+    printf '%s\n' 'QE defaults seeded.'
+}
+
 apply_external_theme() {
     local theme_id=$1 external_switcher output_file external_exit
     external_switcher=${QE_THEME_SWITCHER:-}
@@ -283,7 +322,9 @@ restore_defaults() {
     printf 'QE defaults restored with theme %s.\n' "$default_theme"
 }
 
-if [[ "$action" == capture ]]; then
+if [[ "$action" == seed ]]; then
+    seed_defaults
+elif [[ "$action" == capture ]]; then
     capture_defaults & operation_pid=$!
     if wait "$operation_pid"; then
         send_notification normal 'Captured new defaults.'
