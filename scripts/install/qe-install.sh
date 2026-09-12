@@ -355,8 +355,9 @@ check_capabilities() {
     XDG_CONFIG_HOME="$probe_root/config" XDG_DATA_HOME="$probe_root/data" \
         XDG_STATE_HOME="$probe_root/state" XDG_CACHE_HOME="$probe_root/cache" \
         XDG_RUNTIME_DIR="$probe_root/runtime" \
+        env -u DISPLAY -u WAYLAND_DISPLAY QT_QPA_PLATFORM=offscreen \
         timeout 5 quickshell -p "$project_root/install/qml/capability-probe.qml" \
-        >/dev/null 2>"$probe_root/probe.log" || probe_status=$?
+        >"$probe_root/probe.log" 2>&1 || probe_status=$?
     if [[ $probe_status -ne 0 && $probe_status -ne 124 ]]; then
         printf 'QE required QML/API probe failed: ' >&2
         dd if="$probe_root/probe.log" bs=1 count=2048 status=none >&2 || true
@@ -377,7 +378,7 @@ check_capabilities() {
         }
     done
     for unit in pipewire.socket pipewire-pulse.socket wireplumber.service; do
-        systemctl --user cat "$unit" >/dev/null 2>&1 || {
+        [[ -r "/usr/lib/systemd/user/$unit" ]] || {
             printf 'QE required user unit is unavailable: %s\n' "$unit" >&2
             return 1
         }

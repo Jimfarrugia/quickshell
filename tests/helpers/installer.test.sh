@@ -60,6 +60,7 @@ printf '%s\n' 'general { lock_cmd = qe-lock }' >"$cap_home/.config/hypr/hypridle
 printf '%s\n' 'path = $HOME/.local/share/current_wallpaper.png' >"$cap_home/.config/hypr/hyprpaper.conf"
 cat >"$cap_bin/systemctl" <<'EOF'
 #!/usr/bin/env bash
+[[ "$*" != '--user cat '* ]] || exit 1
 exit 0
 EOF
 cat >"$cap_bin/hyprctl" <<'EOF'
@@ -70,7 +71,8 @@ cat >"$cap_bin/quickshell" <<'EOF'
 #!/usr/bin/env bash
 if [[ "${1:-}" == --version ]]; then printf 'Quickshell %s\n' "${QE_TEST_QS_VERSION:-0.3.1}"; exit 0; fi
 if [[ "${QE_TEST_QML_BROKEN:-0}" == 1 ]]; then exit 1; fi
-printf '%s\n' 'QE_INSTALL_CAPABILITY_PROBE_PASSED' >&2
+[[ "${QT_QPA_PLATFORM:-}" == offscreen && -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" ]] || exit 1
+printf '%s\n' 'QE_INSTALL_CAPABILITY_PROBE_PASSED'
 exit 0
 EOF
 chmod +x "$cap_bin"/*
