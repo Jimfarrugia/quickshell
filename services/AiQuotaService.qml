@@ -66,7 +66,7 @@ Singleton {
         return { code: code, boundary: "ai-quota", summary: safeErrorSummary(code), detail: "", timestamp: new Date(), retryable: retryable, operationId: null };
     }
     function safeErrorSummary(code) {
-        if (code === "AUTH_EXPIRED") return "Open OpenCode to refresh the OpenAI login";
+        if (code === "AUTH_EXPIRED") return "Send an OpenAI request in OpenCode to refresh the login";
         if (code === "AUTH_MISSING") return "OpenCode credentials are not configured";
         if (code === "NOT_ENTITLED") return "OpenCode Go is not enabled for this account";
         if (code === "RATE_LIMITED") return "Quota service rate limited";
