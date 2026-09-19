@@ -48,6 +48,9 @@ Singleton {
     property string generationQueuedPath: ""
     property string pendingCacheId: ""
     property int nextOperationId: 1
+    property bool globalStateUnavailable: false
+    property bool legacyStateSettled: false
+    property bool stateMigrationPending: false
 
     signal cacheUpdated()
 
@@ -320,11 +323,20 @@ Singleton {
             ThemeService.applyExternalTheme("wallpaper", `wallpaper-external-${nextOperationId++}`, true);
     }
 
-    function loadState() {
-        if (!stateFile.loaded) return;
+    function finishStateInitialization() {
+        if (initialized) return;
+        stateReady = true;
+        freshness = "unknown";
+        initialized = true;
+        root.syncCache();
+        if (ThemeService.activeThemeId === "wallpaper")
+            root.requestGeneration(selectedPath);
+    }
+
+    function loadState(text, migrate) {
         let parsed;
         try {
-            parsed = Wallpaper.validateWallpaperState(JSON.parse(stateFile.text()));
+            parsed = Wallpaper.validateWallpaperState(JSON.parse(text));
         } catch (error) {
             parsed = { ok: false, errors: [`invalid JSON: ${error.message}`], value: null };
         }
@@ -335,13 +347,21 @@ Singleton {
             selectedPath = parsed.value.selectedPath;
             appliedPath = "";
             freshness = "unknown";
+            if (migrate) {
+                stateMigrationPending = true;
+                stateFile.setText(JSON.stringify({ schemaVersion: 1, selectedPath }, null, 2) + "\n");
+                return;
+            }
         }
-        stateReady = true;
-        freshness = "unknown";
-        initialized = true;
-        root.syncCache();
-        if (ThemeService.activeThemeId === "wallpaper")
-            root.requestGeneration(selectedPath);
+        root.finishStateInitialization();
+    }
+
+    function tryLegacyState() {
+        if (!globalStateUnavailable || !legacyStateSettled || initialized || stateMigrationPending) return;
+        if (legacyStateFile.loaded)
+            root.loadState(legacyStateFile.text(), true);
+        else
+            root.finishStateInitialization();
     }
 
     FileView {
@@ -350,14 +370,17 @@ Singleton {
         blockLoading: true
         atomicWrites: true
         printErrors: false
-        onLoaded: root.loadState()
+        onLoaded: root.loadState(text(), false)
         onLoadFailed: {
-            root.stateReady = true;
-            root.freshness = "unknown";
-            root.initialized = true;
-            root.syncCache();
+            root.globalStateUnavailable = true;
+            root.tryLegacyState();
         }
         onSaved: {
+            if (root.stateMigrationPending) {
+                root.stateMigrationPending = false;
+                root.finishStateInitialization();
+                return;
+            }
             root.selectedPath = root.pendingPath;
             root.appliedPath = root.pendingPath;
             root.requestedPath = root.pendingPath;
@@ -369,6 +392,12 @@ Singleton {
             root.requestGeneration(root.selectedPath);
         }
         onSaveFailed: error => {
+            if (root.stateMigrationPending) {
+                root.stateMigrationPending = false;
+                root.lastError = `wallpaper state migration failed: ${error}`;
+                root.finishStateInitialization();
+                return;
+            }
             root.lastError = `wallpaper state write failed: ${error}`;
             const priorPath = root.selectedPath;
             root.pendingPath = "";
@@ -382,6 +411,21 @@ Singleton {
             }
             root.freshness = "unknown";
             root.operation = "failed";
+        }
+    }
+
+    FileView {
+        id: legacyStateFile
+        path: PathsService.legacyWallpaperState
+        blockLoading: true
+        printErrors: false
+        onLoaded: {
+            root.legacyStateSettled = true;
+            root.tryLegacyState();
+        }
+        onLoadFailed: {
+            root.legacyStateSettled = true;
+            root.tryLegacyState();
         }
     }
 

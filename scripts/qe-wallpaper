@@ -6,7 +6,7 @@ runtime_dir=${XDG_RUNTIME_DIR:-$data_home/runtime}
 wallpaper_output="$data_home/current_wallpaper.png"
 lock_directory="$runtime_dir/qe-wallpaper.lock"
 temporary_directory=""
-daemon_started=0
+daemon_started=false
 requested_source=""
 
 emit_result() {
@@ -87,7 +87,7 @@ else
         fail rejected wallpaper-ipc-rejected rejected unchanged unknown 4
     fi
     nohup hyprpaper >/dev/null 2>&1 &
-    daemon_started=1
+    daemon_started=true
     ready=0
     for _ in {1..40}; do
         if request_wallpaper "$source_path"; then

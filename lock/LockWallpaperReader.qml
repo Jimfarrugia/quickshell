@@ -5,7 +5,8 @@ import Quickshell.Io
 Item {
     id: root
 
-    property string statePath: Quickshell.statePath("wallpaper.json")
+    property string statePath: `${Quickshell.env("XDG_STATE_HOME")
+        || `${Quickshell.env("HOME")}/.local/state`}/quickshell/wallpaper.json`
     property string wallpaperRoot: Quickshell.env("QE_WALLPAPER_ROOT")
         || `${Quickshell.env("HOME")}/Pictures/Wallpaper`
     property string defaultWallpaperPath: Quickshell.shellPath("defaults/wallpaper/images/current-wallpaper.png")

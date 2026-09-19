@@ -54,6 +54,7 @@ TEST_LOG="$test_root/log" PATH="$bin_dir:$PATH" XDG_DATA_HOME="$data_dir" XDG_RU
     "$project_root/scripts/qe-wallpaper" "$test_root/source.png" >"$test_root/result"
 grep -q '"status":"success"' "$test_root/result"
 grep -q '"live":"requested"' "$test_root/result"
+jq -e '.daemonStarted | type == "boolean"' "$test_root/result" >/dev/null
 [[ "$(<"$data_dir/current_wallpaper.png")" == generated ]]
 if [[ "$(<"$test_root/log")" != *$'hyprctl '*$'\nmagick '* ]]; then
     printf '%s\n' 'IPC was not attempted before generation' >&2

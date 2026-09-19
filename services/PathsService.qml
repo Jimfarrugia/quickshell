@@ -16,7 +16,8 @@ Singleton {
     }
     readonly property string activeThemeState: `${globalStateDirectory}/active-theme.json`
     readonly property string legacyActiveThemeState: Quickshell.statePath("active-theme.json")
-    readonly property string wallpaperState: Quickshell.statePath("wallpaper.json")
+    readonly property string wallpaperState: `${globalStateDirectory}/wallpaper.json`
+    readonly property string legacyWallpaperState: Quickshell.statePath("wallpaper.json")
     readonly property string notificationState: Quickshell.statePath("notifications.json")
     readonly property string launcherUsageState: Quickshell.statePath("launcher-usage.json")
     readonly property string idleInhibitorState: Quickshell.statePath("idle-inhibitor.json")

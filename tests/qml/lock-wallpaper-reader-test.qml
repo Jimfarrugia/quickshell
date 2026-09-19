@@ -5,6 +5,13 @@ import "lock" as Lock
 ShellRoot {
     id: root
 
+    readonly property string sharedStatePath: `${Quickshell.env("XDG_STATE_HOME")
+        || `${Quickshell.env("HOME")}/.local/state`}/quickshell/wallpaper.json`
+
+    Lock.LockWallpaperReader {
+        id: sharedPathReader
+    }
+
     Lock.LockWallpaperReader {
         id: defaultReader
         statePath: Quickshell.shellPath("fixtures/lock/missing-wallpaper-state.json")
@@ -24,6 +31,8 @@ ShellRoot {
 
     function check() {
         if (!defaultReader.ready || !invalidReader.ready) return;
+        if (sharedPathReader.statePath !== root.sharedStatePath)
+            return fail(`wallpaper state is not process-independent: ${sharedPathReader.statePath}`);
         if (defaultReader.usingFallback || defaultReader.sourceUrl.length === 0
                 || defaultReader.watchersActive)
             return fail("authored default wallpaper was not loaded and frozen");
