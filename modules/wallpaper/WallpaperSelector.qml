@@ -327,6 +327,10 @@ FloatingWindow {
                     case Qt.Key_Q:
                         Services.SurfaceService.closeWallpaperSelector();
                         break;
+                    case Qt.Key_Space:
+                        if (currentItem !== null && currentItem.selectable)
+                            root.applyWallpaper(currentItem.sourcePath);
+                        break;
                     default:
                         return;
                     }
