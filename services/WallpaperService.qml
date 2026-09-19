@@ -12,8 +12,9 @@ Singleton {
 
     readonly property string wallpaperRoot: PathsService.wallpaperRoot
     readonly property var catalogModel: thumbnailModel
+    readonly property string wallpaperThemesDirectory: `${wallpaperRoot}/themes`
     readonly property string wallpaperDirectory: `${wallpaperRoot}/themes/${ThemeService.activeThemeId}`
-    readonly property string cacheDirectory: PathsService.cachePath(`wallpaper/${wallpaperDirectory.split("/").pop()}`)
+    readonly property string cacheDirectory: PathsService.cachePath("wallpaper/catalog")
     readonly property string cacheManifestPath: `${cacheDirectory}/manifest`
     property string selectedPath: ""
     property string requestedPath: ""
@@ -139,7 +140,7 @@ Singleton {
                 || cacheAdapter.availability !== "available") return false;
         cacheStatus = "pending";
         pendingCacheId = `cache-${nextOperationId++}`;
-        if (!cacheAdapter.sync(wallpaperDirectory, cacheDirectory, pendingCacheId)) {
+        if (!cacheAdapter.sync(wallpaperThemesDirectory, cacheDirectory, pendingCacheId)) {
             if (cacheAdapter.running) return true;
             lastError = "wallpaper cache sync could not start";
             pendingCacheId = "";
@@ -162,6 +163,14 @@ Singleton {
         return `file://${path.split("/").map(part => encodeURIComponent(part)).join("/")}`;
     }
 
+    function themeIdForPath(path) {
+        const prefix = `${wallpaperThemesDirectory}/`;
+        if (!path.startsWith(prefix)) return "";
+        const relativePath = path.slice(prefix.length);
+        const separator = relativePath.indexOf("/");
+        return separator > 0 ? relativePath.slice(0, separator) : "";
+    }
+
     function loadManifest() {
         if (!cacheManifest.loaded) return;
         thumbnailModel.clear();
@@ -169,10 +178,15 @@ Singleton {
             const fields = line.split("\t");
             if (fields.length !== 2 || !/^[^/]+\.jpg$/.test(fields[0])) continue;
             if (!validPath(fields[1])) continue;
+            const themeId = root.themeIdForPath(fields[1]);
+            if (!themeId) continue;
+            if (themeId !== ThemeService.activeThemeId
+                    && !ThemeService.catalog.some(theme => theme.id === themeId)) continue;
             thumbnailModel.append({
                 thumbnailUrl: root.urlForPath(`${root.cacheDirectory}/${fields[0]}`),
                 sourcePath: fields[1],
-                fileName: fields[1].split("/").pop()
+                fileName: fields[1].split("/").pop(),
+                themeId
             });
         }
         cacheUpdated();

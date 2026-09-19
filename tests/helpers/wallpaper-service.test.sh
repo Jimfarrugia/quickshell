@@ -6,9 +6,10 @@ test_root=$(mktemp -d)
 trap 'rm -rf -- "$test_root"' EXIT
 
 wallpaper_root="$test_root/wallpaper"
-mkdir -p -- "$wallpaper_root/themes/poimandres"
+mkdir -p -- "$wallpaper_root/themes/poimandres" "$wallpaper_root/themes/gruvbox"
 printf '%s' 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' \
     | base64 --decode >"$wallpaper_root/themes/poimandres/sample.png"
+cp -- "$wallpaper_root/themes/poimandres/sample.png" "$wallpaper_root/themes/gruvbox/alternate.png"
 
 XDG_STATE_HOME="$test_root/state" \
 XDG_DATA_HOME="$test_root/data" \

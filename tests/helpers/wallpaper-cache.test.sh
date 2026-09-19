@@ -17,7 +17,13 @@ thumbnail="$(cut -f1 "$manifest")"
 [[ -n "$thumbnail" ]]
 [[ -f "$cache_dir/$thumbnail" ]]
 
+mkdir -p -- "$source_dir/nested"
+cp -- "$cache_dir/$thumbnail" "$source_dir/nested/second.png"
+"$project_root/scripts/sync-wallpaper-thumbs.sh" "$source_dir" "$cache_dir"
+[[ "$(wc -l <"$manifest")" -eq 2 ]]
+
 rm -f -- "$source_dir/sample.png"
+rm -f -- "$source_dir/nested/second.png"
 "$project_root/scripts/sync-wallpaper-thumbs.sh" "$source_dir" "$cache_dir"
 [[ ! -s "$manifest" ]]
 if compgen -G "$cache_dir/*.jpg" >/dev/null; then

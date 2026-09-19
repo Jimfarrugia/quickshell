@@ -266,8 +266,9 @@ is hidden when UPower has no laptop battery.
 
 QE also owns a localized wallpaper selector
 (`modules/wallpaper/WallpaperSelector.qml`) opened through the `qe-wallpaper`
-  IPC target. It uses QE-owned thumbnail cache and apply state, remains open after
-  a successful apply, and reuses the same apply/generation pipeline as the helper.
+  IPC target. It uses QE-owned thumbnail cache and apply state, can filter the
+  catalog by any available theme or show all themes, remains open after a
+  successful apply, and reuses the same apply/generation pipeline as the helper.
 The Hyprpaper configuration resolves its image path through `$XDG_DATA_HOME`
 with a `$HOME/.local/share` fallback so the Hyprpaper config and QE helper stay
 aligned. Temporary `.desktop` entries launch the theme

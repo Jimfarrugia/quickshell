@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls.Basic
 import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
@@ -14,9 +15,50 @@ FloatingWindow {
     color: "transparent"
 
     property var wallpaperModel: Services.WallpaperService.catalogModel
+    property string selectedWallpaperThemeId: Services.ThemeService.activeThemeId
+    property string focusTarget: "grid"
     property alias focusedIndex: wallpaperGrid.currentIndex
     readonly property string focusedWallpaperFileName: wallpaperGrid.currentItem
         ? wallpaperGrid.currentItem.fileName : ""
+    readonly property int wallpaperCount: wallpaperGrid.count
+    readonly property var availableThemes: {
+        const catalog = Services.ThemeService.catalog;
+        if (catalog.some(theme => theme.id === Services.ThemeService.activeThemeId))
+            return catalog;
+        return [Services.ThemeService.theme].concat(catalog);
+    }
+    readonly property var wallpaperSources: [{ id: "*", name: "Show All" }]
+        .concat(root.availableThemes)
+
+    function focusItem(target) {
+        root.focusTarget = target;
+        Qt.callLater(function() {
+            if (target === "dropdown") themeMenu.forceActiveFocus();
+            else wallpaperGrid.forceActiveFocus();
+        });
+    }
+
+    function rebuildWallpaperModel() {
+        filteredWallpaperModel.clear();
+        if (root.wallpaperModel === null || root.wallpaperModel === undefined) return;
+        for (let index = 0; index < root.wallpaperModel.count; ++index) {
+            const wallpaper = root.wallpaperModel.get(index);
+            if (root.selectedWallpaperThemeId !== "*" && wallpaper.themeId !== undefined
+                    && wallpaper.themeId !== root.selectedWallpaperThemeId) continue;
+            filteredWallpaperModel.append({
+                thumbnailUrl: wallpaper.thumbnailUrl,
+                sourcePath: wallpaper.sourcePath,
+                fileName: wallpaper.fileName
+            });
+        }
+        wallpaperGrid.currentIndex = filteredWallpaperModel.count > 0 ? 0 : -1;
+    }
+
+    function syncSelectedTheme() {
+        if (root.selectedWallpaperThemeId === "*"
+                || root.availableThemes.some(theme => theme.id === root.selectedWallpaperThemeId)) return;
+        root.selectedWallpaperThemeId = Services.ThemeService.activeThemeId;
+    }
 
     function applyWallpaper(path) {
         if (Services.WallpaperService.operation === "pending"
@@ -41,6 +83,24 @@ FloatingWindow {
     }
 
     onClosed: Services.SurfaceService.closeWallpaperSelector()
+    onWallpaperModelChanged: rebuildWallpaperModel()
+    onSelectedWallpaperThemeIdChanged: rebuildWallpaperModel()
+
+    Connections {
+        target: root.wallpaperModel
+        ignoreUnknownSignals: true
+        function onCountChanged() { root.rebuildWallpaperModel(); }
+    }
+
+    Connections {
+        target: Services.ThemeService
+        function onCatalogChanged() { root.syncSelectedTheme(); }
+        function onActiveThemeIdChanged() { root.syncSelectedTheme(); }
+    }
+
+    ListModel {
+        id: filteredWallpaperModel
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -68,15 +128,162 @@ FloatingWindow {
                     font.letterSpacing: 1.5
                 }
 
-                Text {
-                    Layout.fillWidth: true
-                    Layout.minimumWidth: 0
-                    text: "Select Wallpaper"
-                    color: Services.ThemeService.theme.tokens.on_surface_panel
+                ComboBox {
+                    id: themeMenu
+                    implicitHeight: 26
+                    topPadding: 0
+                    bottomPadding: 0
+                    implicitWidth: contentItem.implicitWidth
+                    model: root.wallpaperSources
+                    textRole: "name"
+                    valueRole: "id"
+                    currentIndex: Math.max(0, root.wallpaperSources.findIndex(
+                        source => source.id === root.selectedWallpaperThemeId))
+                    displayText: `Theme: ${currentText}`
+                    focus: root.focusTarget === "dropdown"
                     font.family: Services.ConfigService.config.appearance.fontFamily
                     font.pixelSize: 22
                     font.weight: Font.DemiBold
-                    wrapMode: Text.WordWrap
+                    onActivated: {
+                        root.selectedWallpaperThemeId = currentValue;
+                        root.focusTarget = "dropdown";
+                    }
+                    onActiveFocusChanged: if (activeFocus) root.focusTarget = "dropdown"
+
+                    Keys.onEscapePressed: {
+                        if (themeMenu.popup.visible) themeMenu.popup.close();
+                        else Services.SurfaceService.closeWallpaperSelector();
+                    }
+                    Keys.onPressed: function(event) {
+                        if (event.modifiers !== Qt.NoModifier) return;
+                        if (event.key === Qt.Key_Q) {
+                            Services.SurfaceService.closeWallpaperSelector();
+                            event.accepted = true;
+                        } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            themeMenu.popup.open();
+                            event.accepted = true;
+                        } else if (!themeMenu.popup.visible && event.key === Qt.Key_L) {
+                            themeMenu.popup.open();
+                            event.accepted = true;
+                        } else if (!themeMenu.popup.visible && event.key === Qt.Key_J) {
+                            root.focusItem("grid");
+                            event.accepted = true;
+                        }
+                    }
+                    Keys.onReleased: function(event) {
+                        if (event.modifiers === Qt.NoModifier
+                                && (event.key === Qt.Key_Return || event.key === Qt.Key_Enter))
+                            event.accepted = true;
+                    }
+
+                    indicator: Item {
+                        implicitWidth: 0
+                        implicitHeight: 0
+                    }
+
+                    contentItem: Text {
+                        leftPadding: 0
+                        text: themeMenu.displayText
+                        color: themeMenu.hovered || themeMenu.activeFocus
+                            ? Services.ThemeService.theme.tokens.link
+                            : Services.ThemeService.theme.tokens.on_surface_subdued
+                        font: themeMenu.font
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    background: Rectangle {
+                        color: "transparent"
+                        radius: Services.ConfigService.config.appearance.radius
+                    }
+
+                    delegate: ItemDelegate {
+                        id: themeDelegate
+                        required property var modelData
+                        required property int index
+                        readonly property bool selectedOption: themeMenu.currentIndex === index
+                        width: themeMenu.width
+                        implicitHeight: 38
+                        highlighted: themeOptions.currentIndex === index
+                        text: modelData.name
+                        contentItem: Text {
+                            text: themeDelegate.modelData.name
+                            color: themeDelegate.selectedOption
+                                ? Services.ThemeService.theme.tokens.on_primary
+                                : Services.ThemeService.theme.tokens.on_surface
+                            font.family: themeMenu.font.family
+                            font.weight: themeMenu.font.weight
+                            font.pixelSize: 14
+                            verticalAlignment: Text.AlignVCenter
+                            leftPadding: 12
+                        }
+                        background: Rectangle {
+                            color: themeDelegate.selectedOption
+                                ? Services.ThemeService.theme.tokens.primary
+                                : (themeDelegate.highlighted || themeDelegate.hovered
+                                    ? Services.ThemeService.theme.tokens.surface_hover
+                                    : Services.ThemeService.theme.tokens.surface)
+                        }
+                    }
+
+                    popup: Popup {
+                        id: themePopup
+                        y: themeMenu.height
+                        width: themeMenu.width
+                        padding: 4
+                        focus: true
+                        onOpened: Qt.callLater(themeOptions.forceActiveFocus)
+                        onClosed: Qt.callLater(themeMenu.forceActiveFocus)
+
+                        contentItem: ListView {
+                            id: themeOptions
+                            clip: true
+                            focus: true
+                            implicitHeight: contentHeight
+                            model: themeMenu.popup.visible ? themeMenu.delegateModel : null
+                            currentIndex: themeMenu.highlightedIndex
+                            Keys.onEscapePressed: themePopup.close()
+                            Keys.onPressed: function(event) {
+                                if (event.modifiers !== Qt.NoModifier && event.key !== Qt.Key_Escape)
+                                    return;
+                                if (event.key === Qt.Key_Q) {
+                                    Services.SurfaceService.closeWallpaperSelector();
+                                    event.accepted = true;
+                                } else if (event.key === Qt.Key_Escape) {
+                                    themePopup.close();
+                                    event.accepted = true;
+                                } else if (event.key === Qt.Key_J) {
+                                    currentIndex = Math.min(currentIndex + 1, count - 1);
+                                    event.accepted = true;
+                                } else if (event.key === Qt.Key_H) {
+                                    themePopup.close();
+                                    event.accepted = true;
+                                } else if (event.key === Qt.Key_L) {
+                                    root.selectedWallpaperThemeId = root.wallpaperSources[currentIndex].id;
+                                    themePopup.close();
+                                    event.accepted = true;
+                                } else if (event.key === Qt.Key_K) {
+                                    currentIndex = Math.max(currentIndex - 1, 0);
+                                    event.accepted = true;
+                                } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                    root.selectedWallpaperThemeId = root.wallpaperSources[currentIndex].id;
+                                    themeMenu.popup.close();
+                                    event.accepted = true;
+                                }
+                            }
+                            Keys.onReleased: function(event) {
+                                if (event.modifiers === Qt.NoModifier
+                                        && (event.key === Qt.Key_Return || event.key === Qt.Key_Enter))
+                                    event.accepted = true;
+                            }
+                        }
+
+                        background: Rectangle {
+                            color: Services.ThemeService.theme.tokens.surface
+                            border.width: Services.ConfigService.config.appearance.borderWidth
+                            border.color: Services.ThemeService.theme.tokens.outline_variant
+                            radius: Services.ConfigService.config.appearance.radius
+                        }
+                    }
                 }
             }
 
@@ -86,7 +293,7 @@ FloatingWindow {
                 Layout.fillHeight: true
                 Layout.minimumWidth: 0
                 clip: true
-                focus: true
+                focus: root.focusTarget === "grid"
                 readonly property real gridGap: Services.ConfigService.config.appearance.spacing
                 readonly property int columnCount: root.columnsForWidth(root.width,
                     root.screen === null ? 0 : root.screen.width)
@@ -96,7 +303,7 @@ FloatingWindow {
                 cellHeight: cardHeight + gridGap
                 contentHeight: count === 0 ? 0
                     : Math.ceil(count / columnCount) * cellHeight - gridGap
-                model: root.wallpaperModel
+                model: filteredWallpaperModel
                 currentIndex: 0
 
                 Keys.onEscapePressed: Services.SurfaceService.closeWallpaperSelector()
@@ -111,7 +318,8 @@ FloatingWindow {
                         moveCurrentIndexDown();
                         break;
                     case Qt.Key_K:
-                        moveCurrentIndexUp();
+                        if (currentIndex < columnCount) root.focusItem("dropdown");
+                        else moveCurrentIndexUp();
                         break;
                     case Qt.Key_L:
                         moveCurrentIndexRight();
@@ -133,6 +341,7 @@ FloatingWindow {
                     if (currentItem !== null && currentItem.selectable)
                         root.applyWallpaper(currentItem.sourcePath);
                 }
+                onActiveFocusChanged: if (activeFocus) root.focusTarget = "grid"
 
                 delegate: Item {
                     id: delegateRoot
@@ -231,7 +440,9 @@ FloatingWindow {
                 Text {
                     anchors.centerIn: parent
                     visible: wallpaperGrid.count === 0
-                    text: "No wallpapers found for this theme"
+                    text: root.selectedWallpaperThemeId === "*"
+                        ? "No wallpapers found"
+                        : "No wallpapers found for this theme"
                     color: Services.ThemeService.theme.tokens.on_surface_subdued
                     font.family: Services.ConfigService.config.appearance.fontFamily
                     font.pixelSize: 16
@@ -271,5 +482,8 @@ FloatingWindow {
         }
     }
 
-    Component.onCompleted: wallpaperGrid.forceActiveFocus()
+    Component.onCompleted: {
+        root.rebuildWallpaperModel();
+        root.focusItem("grid");
+    }
 }

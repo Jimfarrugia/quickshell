@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import "modules/wallpaper"
+import "services" as Services
 
 ShellRoot {
     id: root
@@ -42,23 +43,38 @@ ShellRoot {
         if (!fuzzyEqual(cardWidth / (cardWidth * 9 / 16), 16 / 9))
             return fail("card dimensions are not 16:9");
 
+        if (selector.wallpaperCount !== 1)
+            return fail("theme filter did not limit the wallpaper model");
         if (selector.focusedIndex !== 0 || selector.focusedWallpaperFileName !== "first.jpg")
             return fail("initial focused filename is incorrect");
-        selector.focusedIndex = 1;
+        selector.selectedWallpaperThemeId = "*";
         Qt.callLater(root.checkSecondItem);
     }
 
     function checkSecondItem() {
+        if (selector.wallpaperCount !== 2)
+            return fail("Show All did not include every theme's wallpapers");
+        selector.focusedIndex = 1;
+        Qt.callLater(root.finish);
+    }
+
+    function finish() {
         if (selector.focusedWallpaperFileName !== "second.jpg")
             return fail("focused filename did not follow the grid index");
         console.log("WALLPAPER_SELECTOR_TEST_PASSED");
         Qt.quit();
     }
 
-    ListModel {
+    QtObject {
         id: fixtureModel
-        ListElement { thumbnailUrl: ""; sourcePath: "/fixture/first.jpg"; fileName: "first.jpg" }
-        ListElement { thumbnailUrl: ""; sourcePath: "/fixture/second.jpg"; fileName: "second.jpg" }
+        readonly property int count: 2
+        function get(index) {
+            return index === 0
+                ? { thumbnailUrl: "", sourcePath: "/fixture/first.jpg", fileName: "first.jpg",
+                    themeId: Services.ThemeService.activeThemeId }
+                : { thumbnailUrl: "", sourcePath: "/fixture/second.jpg", fileName: "second.jpg",
+                    themeId: "fixture-alternate" };
+        }
     }
 
     WallpaperSelector {

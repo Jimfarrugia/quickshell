@@ -81,7 +81,7 @@ Responsibilities:
 - discover and validate wallpaper files through an adapter
 - own the selected wallpaper after legacy migration
 - request application through a stable helper/IPC contract
-- maintain thumbnail cache metadata as derived data
+- maintain a derived thumbnail catalog across each theme's wallpaper directory
 - trigger debounced Matugen regeneration when `Wallpaper` is active
 - distinguish selected path, requested path, and externally confirmed state
 

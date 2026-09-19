@@ -76,7 +76,12 @@ ShellRoot {
             }
         }
         function onCacheUpdated() {
-            root.cached = Services.WallpaperService.catalogModel.count > 0;
+            const themes = [];
+            for (let index = 0; index < Services.WallpaperService.catalogModel.count; ++index)
+                themes.push(Services.WallpaperService.catalogModel.get(index).themeId);
+            if (!themes.includes("poimandres") || !themes.includes("gruvbox"))
+                return root.fail("cache catalog did not include both theme wallpaper directories");
+            root.cached = true;
             root.finishIfReady();
         }
         function onGenerationStatusChanged() {

@@ -44,7 +44,7 @@ while IFS= read -r -d '' source; do
             fi
             ;;
     esac
-done < <(find "$SOURCE_DIR" -maxdepth 1 -type f -print0)
+done < <(find "$SOURCE_DIR" -type f -print0)
 
 LC_ALL=C sort -t $'\t' -k2,2 "$manifest" -o "$manifest"
 while IFS= read -r -d '' thumbnail; do
