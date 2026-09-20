@@ -129,6 +129,7 @@ timeout 5 quickshell -p tests/qml/bluetooth-integration-test.qml
 timeout 5 quickshell -p tests/qml/bluetooth-adapter-test.qml
 timeout 5 quickshell -p tests/qml/bluetooth-dashboard-test.qml
 timeout 5 quickshell -p tests/qml/idle-service-test.qml
+timeout 5 quickshell -p tests/qml/idle-inhibitor-integration-test.qml
 timeout 5 quickshell -p tests/qml/tray-tint-test.qml
 timeout 5 quickshell -p tests/qml/theme-selector-test.qml
 timeout 5 quickshell -p tests/qml/wallpaper-selector-test.qml
@@ -198,6 +199,9 @@ The live brightness adapter test must print `BRIGHTNESS_ADAPTER_TEST_PASSED` and
 does not perform a brightness write.
 The live Bluetooth adapter test must print `BLUETOOTH_ADAPTER_TEST_PASSED` and
 does not change controller or device state.
+The idle-inhibitor integration test must print
+`IDLE_INHIBITOR_INTEGRATION_TEST_PASSED` after proving an enabled request is
+re-armed once the owner surface has settled and disabling releases it.
 The workspace test must print `WORKSPACES_TEST_PASSED` after checking
 screen-to-monitor resolution, active and occupied workspace visibility,
 intentional empty-workspace hiding, special and other-monitor filtering,
