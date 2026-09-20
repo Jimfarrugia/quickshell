@@ -37,6 +37,13 @@ ShellRoot {
             return fail("service did not expose the adapter refresh cycle as pending");
         fake.busy = false;
         Services.AiQuotaService.registerConsumer();
+        fake.busy = true;
+        const requestsBeforeBusyResume = fake.requestReasons.length;
+        fake.resumed();
+        if (fake.requestReasons.length !== requestsBeforeBusyResume + 1
+                || fake.requestReasons[fake.requestReasons.length - 1] !== "resume")
+            return fail("pending cancellation discarded the overdue resume request");
+        fake.busy = false;
         const requestsBeforeUnknown = fake.requestReasons.length;
         if (!Services.AiQuotaService.refreshIfDue("poll")
                 || fake.requestReasons.length !== requestsBeforeUnknown + 1

@@ -134,7 +134,7 @@ Singleton {
     function refresh() { return requestCycle("manual"); }
     function refreshIfDue(reason) {
         markStale();
-        if (!polling || operation === "pending") return false;
+        if (!polling) return false;
         const now = Date.now();
         const due = providerIds.some(id => {
             const attempt = provider(id).lastAttempt;
@@ -169,7 +169,7 @@ Singleton {
         interval: root.refreshIntervalMs
         repeat: true
         running: root.polling
-        onTriggered: root.requestCycle("poll")
+        onTriggered: root.refreshIfDue("poll")
     }
     Timer {
         interval: 60000
