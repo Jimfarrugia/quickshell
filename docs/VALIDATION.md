@@ -178,7 +178,8 @@ dotfiles-installed QE command dispatches into the selected managed checkout.
 The AI quota JavaScript test must print `AI_QUOTA_TEST_PASSED`. The quota QML
 tests use a fake adapter and must prove shared provider selection, consumer
 registration, independent weekly/five-hour/monthly rendering, dashboard routing,
-resume-triggered refresh, and stale/unavailable states without accessing live
+five-minute due checks on resume and dashboard opening, and stale/unavailable
+states without accessing live
 credentials. The adapter test also verifies that the pending indicator remains
 active across sequential provider requests, manual refresh retries local
 timeout/network backoff, provider rate limits remain enforced, and
@@ -456,6 +457,9 @@ control center appeared on the focused output. `Super+Tab` and `Super+Escape`
 were verified in the live session, as were outside-click/Escape dismissal and
 destination-surface replacement. Existing dashboard, audio, notification, theme,
 defaults, and shell smoke tests remain required after control-center changes.
+The control-center IPC helper must additionally prove that opening the control
+center preserves the theme selector, wallpaper selector, and palette viewer while
+still dismissing notification, launcher, help, and dashboard layer-shell surfaces.
 
 The monitor-layout helper fixture validates live mirrored-state discovery,
 directional extended application, versioned state persistence, mirror-to-extended

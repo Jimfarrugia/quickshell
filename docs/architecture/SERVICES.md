@@ -508,9 +508,12 @@ The control center is a separate transient composition surface, not a dashboard
 slot. It is hosted by a full-output overlay `PanelWindow` with a centered panel,
 exclusive keyboard focus, and no exclusive zone. `SurfaceService` owns its
 visibility and `qe-control-center` owns its typed IPC endpoint. Opening the
-control center closes other major interactive surfaces; selecting a dashboard,
-notification center, selector, or power menu closes the control center before
-the destination opens.
+control center closes competing QE layer-shell surfaces that can take exclusive
+keyboard focus: the notification center, launcher, help surface, and active
+dashboard. Hyprland-managed `FloatingWindow` clients such as the theme selector,
+wallpaper selector, and palette viewer remain open behind the overlay. Selecting
+a dashboard, notification center, selector, or power menu still closes the
+control center before the destination opens.
 
 The surface binds to existing domain services for Wi-Fi, Bluetooth, DND, idle
 inhibition, audio, themes, wallpaper, and notifications. It does not construct
@@ -576,14 +579,19 @@ diagnostics, logs, fixtures, or QE state.
 
 Quota data is consumer-scoped polling because the provider endpoints have no
 usable event source. The adapter also subscribes to systemd-logind's
-`PrepareForSleep` signal through `dbus-monitor` while a consumer exists and the
-service starts an immediate refresh after the resume event. A pre-sleep event
-cancels an in-flight helper without recording a provider failure; a resume
-request is coalesced and starts only after cancellation has completed. One
+`PrepareForSleep` signal through `dbus-monitor` while a consumer exists. On
+resume, the service requests a refresh when any provider has no attempt or its
+last attempt is at least five minutes old. Opening the dashboard applies the
+same due check when another consumer is already active; dashboard-only activation
+uses the adapter's existing startup refresh instead of queuing a duplicate. A
+pre-sleep event cancels an in-flight helper without recording a provider failure;
+an overdue resume request is coalesced and starts only after cancellation has
+completed. One
 singleton adapter operation serves all bars and the dashboard; a sequential
 provider refresh cycle remains one logical pending operation between helper
 processes. Requests arriving during a cycle are coalesced, with manual and
-resume requests taking precedence over polling. Manual refresh may retry a
+resume requests taking precedence over polling. Automatic due checks respect
+provider backoff. Manual refresh may retry a
 QE-generated timeout or network backoff once, but never bypasses a provider
 rate-limit or its `Retry-After` deadline. Polling and the resume watcher stop
 when no consumer remains. Provider or window failure does not block shell

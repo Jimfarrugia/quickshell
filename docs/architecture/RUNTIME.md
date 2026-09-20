@@ -163,9 +163,11 @@ never part of this convention.
 
 The control center uses the same convention through the `qe-control-center`
 target. Its centered overlay is placed on the compositor's focused output when
-opened without a source module. Destination actions close the control center
-before opening another major interactive surface, preventing competing exclusive
-keyboard-focus surfaces.
+opened without a source module. Opening it dismisses competing exclusive-focus
+layer-shell surfaces but preserves normal compositor-managed windows behind the
+overlay. Destination actions close the control center before opening another
+major interactive surface, preventing competing exclusive keyboard-focus
+surfaces.
 ## Logging and Diagnostics
 
 Use Qt/Quickshell logging categories by boundary and module. Human-readable logs

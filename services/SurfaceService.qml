@@ -31,7 +31,7 @@ Singleton {
     function closeHelp() { helpVisible = false; }
     function toggleHelp() { helpVisible ? closeHelp() : openHelp(); }
     function openControlCenter() {
-        closeTransientSurfaces();
+        closeExclusiveShellSurfaces();
         controlCenterVisible = true;
     }
     function closeControlCenter() {
@@ -40,10 +40,7 @@ Singleton {
     function toggleControlCenter() {
         controlCenterVisible ? closeControlCenter() : openControlCenter();
     }
-    function closeTransientSurfaces() {
-        themeSelectorVisible = false;
-        wallpaperSelectorVisible = false;
-        paletteViewerVisible = false;
+    function closeExclusiveShellSurfaces() {
         notificationCenterVisible = false;
         launcherVisible = false;
         helpVisible = false;

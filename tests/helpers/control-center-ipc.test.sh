@@ -28,6 +28,22 @@ targets="$(qs ipc --pid "$shell_pid" show)"
 [[ "$targets" == *"target qe-control-center"* ]]
 [[ "$(qs ipc --pid "$shell_pid" call qe-control-center isOpen)" == "false" ]]
 
+qs ipc --pid "$shell_pid" call qe-theme open
+qs ipc --pid "$shell_pid" call qe-wallpaper open
+qs ipc --pid "$shell_pid" call qe-palette open
+qs ipc --pid "$shell_pid" call qe-control-center open
+[[ "$(qs ipc --pid "$shell_pid" call qe-control-center isOpen)" == "true" ]]
+[[ "$(qs ipc --pid "$shell_pid" call qe-theme isOpen)" == "true" ]]
+[[ "$(qs ipc --pid "$shell_pid" call qe-wallpaper isOpen)" == "true" ]]
+[[ "$(qs ipc --pid "$shell_pid" call qe-palette isOpen)" == "true" ]]
+qs ipc --pid "$shell_pid" call qe-control-center close
+[[ "$(qs ipc --pid "$shell_pid" call qe-theme isOpen)" == "true" ]]
+[[ "$(qs ipc --pid "$shell_pid" call qe-wallpaper isOpen)" == "true" ]]
+[[ "$(qs ipc --pid "$shell_pid" call qe-palette isOpen)" == "true" ]]
+qs ipc --pid "$shell_pid" call qe-theme close
+qs ipc --pid "$shell_pid" call qe-wallpaper close
+qs ipc --pid "$shell_pid" call qe-palette close
+
 qs ipc --pid "$shell_pid" call qe-dashboard open audio
 qs ipc --pid "$shell_pid" call qe-control-center open
 [[ "$(qs ipc --pid "$shell_pid" call qe-control-center isOpen)" == "true" ]]
@@ -41,6 +57,10 @@ qs ipc --pid "$shell_pid" call qe-notifications open
 [[ "$(qs ipc --pid "$shell_pid" call qe-control-center isOpen)" == "false" ]]
 [[ "$(qs ipc --pid "$shell_pid" call qe-notifications isOpen)" == "true" ]]
 qs ipc --pid "$shell_pid" call qe-notifications close
+qs ipc --pid "$shell_pid" call qe-notifications open
+qs ipc --pid "$shell_pid" call qe-control-center open
+[[ "$(qs ipc --pid "$shell_pid" call qe-notifications isOpen)" == "false" ]]
+qs ipc --pid "$shell_pid" call qe-control-center close
 qs ipc --pid "$shell_pid" call qe-control-center open
 qs ipc --pid "$shell_pid" call qe-theme open
 [[ "$(qs ipc --pid "$shell_pid" call qe-control-center isOpen)" == "false" ]]
@@ -65,6 +85,10 @@ qs ipc --pid "$shell_pid" call qe-launcher open
 [[ "$(qs ipc --pid "$shell_pid" call qe-control-center isOpen)" == "false" ]]
 [[ "$(qs ipc --pid "$shell_pid" call qe-launcher isOpen)" == "true" ]]
 qs ipc --pid "$shell_pid" call qe-launcher close
+qs ipc --pid "$shell_pid" call qe-launcher open
+qs ipc --pid "$shell_pid" call qe-control-center open
+[[ "$(qs ipc --pid "$shell_pid" call qe-launcher isOpen)" == "false" ]]
+qs ipc --pid "$shell_pid" call qe-control-center close
 qs ipc --pid "$shell_pid" call qe-control-center open
 qs ipc --pid "$shell_pid" call qe-help open
 [[ "$(qs ipc --pid "$shell_pid" call qe-control-center isOpen)" == "false" ]]

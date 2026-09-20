@@ -1137,6 +1137,12 @@ and replaces other major interactive transient surfaces when navigating. Its
 quick-setting tiles compose existing domain services and open existing dashboards
 for detailed operations.
 
+Clarification: replacement applies to competing QE layer-shell surfaces with
+exclusive keyboard-focus behavior. Hyprland-managed normal application windows
+remain open behind the control-center overlay. Explicit destination navigation
+remains replacement-based and closes the control center before opening the
+destination.
+
 Phase 11 also approves two narrow external boundaries needed by the requested
 controls: launching the existing `rofi_power_menu` program and launching the
 project-owned `scripts/qe-defaults capture|restore` helper. These are typed

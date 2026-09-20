@@ -23,6 +23,7 @@ Singleton {
     readonly property var lastError: firstError()
     readonly property string operation: adapter.busy ? "pending" : "idle"
     readonly property bool polling: consumerCount > 0
+    readonly property int refreshIntervalMs: 300000
     readonly property string tooltipText: tooltip()
     property var adapter: Integrations.AiQuotaAdapter { id: realAdapter }
 
@@ -131,6 +132,17 @@ Singleton {
     function updateAdapter() { adapter.active = consumerCount > 0; }
     function requestCycle(reason) { return adapter.requestCycle(reason); }
     function refresh() { return requestCycle("manual"); }
+    function refreshIfDue(reason) {
+        markStale();
+        if (!polling || operation === "pending") return false;
+        const now = Date.now();
+        const due = providerIds.some(id => {
+            const attempt = provider(id).lastAttempt;
+            return !(attempt instanceof Date) || !Number.isFinite(attempt.getTime())
+                || attempt.getTime() > now || now - attempt.getTime() >= refreshIntervalMs;
+        });
+        return due ? requestCycle(reason || "poll") : false;
+    }
     function cycleProvider() {
         const index = providerIds.indexOf(selectedProvider);
         selectedProvider = providerIds[(index + 1) % providerIds.length];
@@ -151,10 +163,10 @@ Singleton {
     Connections {
         target: root.adapter
         function onRefreshed(result) { root.publish(result); }
-        function onResumed() { root.requestCycle("resume"); }
+        function onResumed() { root.refreshIfDue("resume"); }
     }
     Timer {
-        interval: 300000
+        interval: root.refreshIntervalMs
         repeat: true
         running: root.polling
         onTriggered: root.requestCycle("poll")

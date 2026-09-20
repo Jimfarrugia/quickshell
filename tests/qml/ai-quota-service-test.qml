@@ -37,13 +37,25 @@ ShellRoot {
             return fail("service did not expose the adapter refresh cycle as pending");
         fake.busy = false;
         Services.AiQuotaService.registerConsumer();
-        const requestsBeforeResume = fake.requestReasons.length;
+        const requestsBeforeUnknown = fake.requestReasons.length;
+        if (!Services.AiQuotaService.refreshIfDue("poll")
+                || fake.requestReasons.length !== requestsBeforeUnknown + 1
+                || fake.requestReasons[fake.requestReasons.length - 1] !== "poll")
+            return fail("unknown provider state did not request an automatic refresh");
+        fake.publish(root.quotaDocument);
+        const requestsBeforeFreshResume = fake.requestReasons.length;
         fake.resumed();
-        if (fake.requestReasons.length <= requestsBeforeResume)
-            return fail("resume event did not request an immediate refresh");
+        if (fake.requestReasons.length !== requestsBeforeFreshResume)
+            return fail("resume refreshed data before the poll interval elapsed");
+        const oldAttempt = new Date(Date.now() - Services.AiQuotaService.refreshIntervalMs - 1);
+        Services.AiQuotaService.providers = Object.assign({}, Services.AiQuotaService.providers, {
+            openai: Object.assign({}, Services.AiQuotaService.provider("openai"), { lastAttempt: oldAttempt })
+        });
+        fake.resumed();
+        if (fake.requestReasons.length !== requestsBeforeFreshResume + 1)
+            return fail("overdue resume did not request a refresh");
         if (fake.requestReasons[fake.requestReasons.length - 1] !== "resume")
             return fail("resume event did not preserve its refresh reason");
-        fake.publish(root.quotaDocument);
         if (Services.AiQuotaService.provider("openai").weekly.remainingPercent !== 60
                 || Services.AiQuotaService.provider("opencode").fiveHour.remainingPercent !== 90)
             return fail("provider windows were not normalized");
@@ -55,6 +67,10 @@ ShellRoot {
                 || Services.AiQuotaService.provider("openai").weekly.remainingPercent !== 60
                 || Services.AiQuotaService.provider("opencode").weekly.freshness !== "current")
             return fail("provider-local current/LKG handling was incorrect");
+        const requestsBeforeRecentFailure = fake.requestReasons.length;
+        if (Services.AiQuotaService.refreshIfDue("poll")
+                || fake.requestReasons.length !== requestsBeforeRecentFailure)
+            return fail("recent failed attempt did not suppress automatic refresh");
         const oldProvider = Object.assign({}, Services.AiQuotaService.provider("openai"), { lastUpdated: new Date(Date.now() - 900001) });
         Services.AiQuotaService.providers = Object.assign({}, Services.AiQuotaService.providers, { openai: oldProvider });
         Services.AiQuotaService.markStale();

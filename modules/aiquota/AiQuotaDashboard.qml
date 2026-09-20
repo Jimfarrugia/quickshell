@@ -12,6 +12,7 @@ ColumnLayout {
 
     function updateConsumer() {
         if (visible && !registered) {
+            Services.AiQuotaService.refreshIfDue("poll");
             Services.AiQuotaService.registerConsumer();
             registered = true;
         } else if (!visible && registered) {
