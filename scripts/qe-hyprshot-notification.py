@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """Keep screenshot notification actions available for the history lifetime."""
 
-import json
+import errno
+import fcntl
 import hashlib
+import json
 import os
-from pathlib import Path
 import socket
+import stat
 import subprocess
 import sys
-from typing import Any
+from pathlib import Path
+from typing import Any, TextIO
 
 import dbus
 import dbus.mainloop.glib
@@ -42,15 +45,39 @@ def send_to_existing_daemon(path: str, request: dict[str, str]) -> bool:
         return False
 
 
-def create_server(path: str) -> socket.socket | None:
+def create_server(path: str) -> tuple[socket.socket, TextIO] | None:
     server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    lock = None
     try:
-        server.bind(path)
+        # Keep the lock for the server's lifetime: a refused connection alone
+        # does not prove that a busy listener has died.
+        lock_fd = os.open(path + ".lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+        lock = os.fdopen(lock_fd, "r+")
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        try:
+            server.bind(path)
+        except OSError as error:
+            if error.errno != errno.EADDRINUSE:
+                raise
+            with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as probe:
+                probe.settimeout(0.25)
+                try:
+                    probe.connect(path)
+                except ConnectionRefusedError:
+                    endpoint = os.lstat(path)
+                    if not stat.S_ISSOCK(endpoint.st_mode) or endpoint.st_uid != os.getuid():
+                        raise error
+                    os.unlink(path)
+                    server.bind(path)
+                else:
+                    raise error
         server.listen(8)
         server.setblocking(False)
-        return server
+        return server, lock
     except OSError:
         server.close()
+        if lock is not None:
+            lock.close()
         return None
 
 
@@ -86,8 +113,8 @@ def main() -> int:
         print("Screenshot path or directory is unavailable", file=sys.stderr)
         return 1
 
-    server_socket = create_server(notification_socket)
-    if server_socket is None:
+    server_endpoint = create_server(notification_socket)
+    if server_endpoint is None:
         # Another invocation may have won the startup race.
         for _ in range(10):
             if send_to_existing_daemon(notification_socket, request):
@@ -95,6 +122,9 @@ def main() -> int:
             GLib.usleep(10000)
         print("Could not start or contact screenshot notification daemon", file=sys.stderr)
         return 1
+    server_socket, server_lock = server_endpoint
+    endpoint_stat = os.stat(notification_socket)
+    socket_identity = (endpoint_stat.st_dev, endpoint_stat.st_ino)
 
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     try:
@@ -177,9 +207,13 @@ def main() -> int:
     finally:
         server_socket.close()
         try:
-            os.unlink(notification_socket)
+            endpoint_stat = os.stat(notification_socket)
+            if (endpoint_stat.st_dev, endpoint_stat.st_ino) == socket_identity:
+                os.unlink(notification_socket)
         except FileNotFoundError:
             pass
+        finally:
+            server_lock.close()
     return 0
 
 
