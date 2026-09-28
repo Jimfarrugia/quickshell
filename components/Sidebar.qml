@@ -34,9 +34,9 @@ PanelWindow {
         top: root.dismissOnOutsideClick ? 0 : root.outerMargin
         right: root.dismissOnOutsideClick ? 0 : root.outerMargin
         bottom: root.dismissOnOutsideClick ? 0 : root.outerMargin + (root.avoidBottomBar
-            && Services.ConfigService.config.bar.enabled
-            && Services.ConfigService.config.bar.edge === "bottom"
-            ? Services.ConfigService.config.bar.height : 0)
+                && Services.ConfigService.config.bar.enabled
+                && Services.ConfigService.config.bar.edge === "bottom"
+                ? Services.ConfigService.config.bar.height : 0)
     }
 
     Rectangle {
@@ -47,6 +47,11 @@ PanelWindow {
         anchors.bottom: parent.bottom
         width: root.contentWidth + root.outerMargin * 2
         anchors.margins: root.dismissOnOutsideClick ? root.outerMargin : 0
+        anchors.bottomMargin: root.dismissOnOutsideClick
+            ? root.outerMargin + (Services.ConfigService.config.bar.enabled
+                && Services.ConfigService.config.bar.edge === "bottom"
+                ? Services.ConfigService.config.bar.height : 0)
+            : 0
         color: Qt.rgba(root.backgroundColor.r, root.backgroundColor.g, root.backgroundColor.b, 245 / 255)
         radius: root.cornerRadius
         border.width: Services.ConfigService.config.appearance.borderWidth
