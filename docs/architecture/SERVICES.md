@@ -569,10 +569,12 @@ provider and an additional `monthly` window for OpenCode Go. Each exposed
 window has remaining/used percentages, reset time, availability, freshness,
 and a safe error record.
 
-The helper reads OpenCode's `${XDG_DATA_HOME:-$HOME/.local/share}/opencode/auth.json`
-as the unprivileged desktop user and maps the `opencode-go` record to the
-OpenCode Go provider. QE never writes, refreshes, removes, or
-migrates that file. Expired OpenAI OAuth access is unavailable until OpenCode
+The helper reads OpenCode's current read-only credential database at
+`${XDG_DATA_HOME:-$HOME/.local/share}/opencode/opencode.db` as the unprivileged
+desktop user, selecting the active OpenAI credential and mapping the
+`opencode-go` record to the OpenCode Go provider. It supports the older
+`auth.json` store as a fallback. QE never writes, refreshes, removes, or
+migrates either store. Expired OpenAI OAuth access is unavailable until OpenCode
 refreshes its own credential. Tokens, account identifiers, headers, raw upstream
 responses, and refresh tokens never enter QML state, process arguments,
 diagnostics, logs, fixtures, or QE state.

@@ -4,6 +4,7 @@
 import json
 import math
 import os
+import sqlite3
 import stat
 import sys
 import time
@@ -15,8 +16,10 @@ from email.utils import parsedate_to_datetime
 MAX_AUTH_BYTES = 1024 * 1024
 MAX_RESPONSE_BYTES = 256 * 1024
 REQUEST_TIMEOUT = 8
+DATABASE_TIMEOUT = 1
 OPENAI_URL = "https://chatgpt.com/backend-api/wham/usage"
 OPENCODE_URL = "https://opencode.ai/zen/go/v1/usage"
+INVALID_CREDENTIAL = object()
 
 
 def error(code, retryable=True, retry_after=None):
@@ -180,6 +183,11 @@ def auth_path():
     return os.path.join(data_home, "opencode", "auth.json")
 
 
+def credential_db_path():
+    data_home = os.environ.get("XDG_DATA_HOME") or os.path.join(os.path.expanduser("~"), ".local", "share")
+    return os.path.join(data_home, "opencode", "opencode.db")
+
+
 def load_auth(path):
     fd = None
     try:
@@ -205,10 +213,63 @@ def load_auth(path):
             os.close(fd)
 
 
+def load_credential_db(path):
+    try:
+        info = os.stat(path)
+        if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid():
+            return None, error("AUTH_INVALID", False)
+        uri = "file:" + path.replace("%", "%25").replace("?", "%3F").replace("#", "%23") + "?mode=ro"
+        deadline = time.monotonic() + DATABASE_TIMEOUT
+        with sqlite3.connect(uri, uri=True, timeout=DATABASE_TIMEOUT) as database:
+            database.set_progress_handler(lambda: int(time.monotonic() >= deadline), 1000)
+            selected = {}
+            for provider in ("openai", "opencode-go"):
+                selected[provider] = database.execute(
+                    "SELECT length(CAST(value AS BLOB)), "
+                    "CASE WHEN length(CAST(value AS BLOB)) <= ? THEN value ELSE NULL END "
+                    "FROM credential WHERE integration_id = ? "
+                    "ORDER BY CASE WHEN active = 1 THEN 1 ELSE 0 END DESC, time_updated DESC LIMIT 1",
+                    (MAX_AUTH_BYTES, provider),
+                ).fetchone()
+        result = {}
+        for provider, row in selected.items():
+            if row is None:
+                continue
+            length, raw = row
+            if not isinstance(length, int) or length > MAX_AUTH_BYTES or not isinstance(raw, str):
+                result[provider] = INVALID_CREDENTIAL
+                continue
+            try:
+                value = json.loads(raw)
+            except (TypeError, UnicodeDecodeError, json.JSONDecodeError):
+                result[provider] = INVALID_CREDENTIAL
+                continue
+            result[provider] = value if isinstance(value, dict) else INVALID_CREDENTIAL
+        return result, None
+    except FileNotFoundError:
+        return None, error("AUTH_MISSING", False)
+    except (OSError, sqlite3.Error):
+        return None, error("AUTH_INVALID", False)
+
+
+def load_credentials():
+    legacy, legacy_error = load_auth(auth_path())
+    database, database_error = load_credential_db(credential_db_path())
+    if database is None:
+        if database_error and database_error["code"] != "AUTH_MISSING":
+            return None, database_error
+        return (legacy, None) if legacy is not None else (None, legacy_error or database_error or error("AUTH_MISSING", False))
+    result = dict(legacy or {})
+    result.update(database)
+    return result, None
+
+
 def provider_auth(document, provider):
     record = document.get(provider) if isinstance(document, dict) else None
     if provider == "opencode" and record is None:
         record = document.get("opencode-go")
+    if record is INVALID_CREDENTIAL:
+        return None, error("AUTH_INVALID", False)
     if not isinstance(record, dict):
         return None, error("AUTH_MISSING", False)
     if provider == "openai":
@@ -222,7 +283,7 @@ def provider_auth(document, provider):
         if account_id is not None and not safe_secret(account_id):
             return None, error("AUTH_INVALID", False)
         return (record["access"], account_id), None
-    if record.get("type") != "api" or not safe_secret(record.get("key")):
+    if record.get("type") not in ("api", "key") or not safe_secret(record.get("key")):
         return None, error("AUTH_INVALID", False)
     return (record["key"], None), None
 
@@ -232,7 +293,7 @@ def safe_secret(value):
 
 
 def run(provider_filter=None):
-    auth, auth_error = load_auth(auth_path())
+    auth, auth_error = load_credentials()
     providers = {}
     for provider, parser, url in (("openai", parse_openai, OPENAI_URL), ("opencode", parse_opencode, OPENCODE_URL)):
         if provider_filter and provider != provider_filter:

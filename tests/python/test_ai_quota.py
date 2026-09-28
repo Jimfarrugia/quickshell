@@ -2,6 +2,7 @@ import importlib.util
 import io
 import json
 import os
+import sqlite3
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -79,6 +80,56 @@ class AiQuotaTests(unittest.TestCase):
             os.symlink(path, link)
             self.assertEqual(quota.load_auth(link)[1]["code"], "AUTH_INVALID")
 
+    def test_current_opencode_credential_database_is_supported(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "opencode.db")
+            database = sqlite3.connect(path)
+            database.execute("CREATE TABLE credential (integration_id TEXT, value TEXT, active INTEGER, time_updated INTEGER)")
+            database.executemany("INSERT INTO credential VALUES (?, ?, ?, ?)", [
+                ("openai", json.dumps({"type": "oauth", "access": "old", "expires": 1}), 0, 2),
+                ("openai", json.dumps({"type": "oauth", "access": "current", "expires": 9999999999999}), 1, 1),
+                ("opencode-go", json.dumps({"type": "key", "key": "go-key"}), None, 3),
+            ])
+            database.commit()
+            database.close()
+            document, failure = quota.load_credential_db(path)
+            self.assertIsNone(failure)
+            self.assertEqual(quota.provider_auth(document, "openai")[0][0], "current")
+            self.assertEqual(quota.provider_auth(document, "opencode")[0][0], "go-key")
+
+    def test_active_database_credential_is_rejected_instead_of_falling_back(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = os.path.join(directory, "opencode.db")
+            database = sqlite3.connect(path)
+            database.execute("CREATE TABLE credential (integration_id TEXT, value TEXT, active INTEGER, time_updated INTEGER)")
+            database.executemany("INSERT INTO credential VALUES (?, ?, ?, ?)", [
+                ("openai", json.dumps({"type": "oauth", "access": "inactive", "expires": 9999999999999}), 0, 1),
+                ("openai", "not-json", 1, 2),
+                ("opencode-go", "x" * (quota.MAX_AUTH_BYTES + 1), 1, 3),
+            ])
+            database.commit()
+            database.close()
+            document, failure = quota.load_credential_db(path)
+            self.assertIsNone(failure)
+            self.assertEqual(quota.provider_auth(document, "openai")[1]["code"], "AUTH_INVALID")
+            self.assertEqual(quota.provider_auth(document, "opencode")[1]["code"], "AUTH_INVALID")
+
+    def test_legacy_credentials_only_fallback_when_database_is_missing(self):
+        original_auth = quota.load_auth
+        original_database = quota.load_credential_db
+        legacy = {"openai": {"type": "oauth", "access": "legacy", "expires": 9999999999999}}
+        quota.load_auth = lambda path: (legacy, None)
+        try:
+            quota.load_credential_db = lambda path: (None, quota.error("AUTH_MISSING", False))
+            self.assertIs(quota.load_credentials()[0], legacy)
+            quota.load_credential_db = lambda path: (None, quota.error("AUTH_INVALID", False))
+            document, failure = quota.load_credentials()
+            self.assertIsNone(document)
+            self.assertEqual(failure["code"], "AUTH_INVALID")
+        finally:
+            quota.load_auth = original_auth
+            quota.load_credential_db = original_database
+
     def test_request_contract_and_retry_after(self):
         class Response:
             def __enter__(self): return self
@@ -151,10 +202,12 @@ class AiQuotaTests(unittest.TestCase):
 
     def test_normalized_output_does_not_contain_credentials(self):
         original_path = quota.auth_path
+        original_db_path = quota.credential_db_path
         original_load = quota.load_auth
         original_request = quota.request_json
         output = io.StringIO()
         quota.auth_path = lambda: "/fixture/auth.json"
+        quota.credential_db_path = lambda: "/fixture/opencode.db"
         quota.load_auth = lambda path: ({
             "openai": {"type": "oauth", "access": "secret-openai-token", "expires": 9999999999999},
             "opencode-go": {"type": "api", "key": "secret-opencode-key"},
@@ -168,6 +221,7 @@ class AiQuotaTests(unittest.TestCase):
                 quota.run()
         finally:
             quota.auth_path = original_path
+            quota.credential_db_path = original_db_path
             quota.load_auth = original_load
             quota.request_json = original_request
         self.assertNotIn("secret-openai-token", output.getvalue())

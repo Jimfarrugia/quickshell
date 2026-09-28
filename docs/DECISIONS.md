@@ -1123,8 +1123,9 @@ no suitable local event source and are not guaranteed stable public API
 contracts. OpenAI OAuth refresh can rotate credentials owned by OpenCode.
 
 Consequences: expired OpenAI access may remain stale until OpenCode refreshes
-its own auth file. Provider and window failures remain local and cannot block QE
-startup. Removing the feature removes QE's dependency on the external auth file.
+its own credential store. Provider and window failures remain local and cannot
+block QE startup. Removing the feature removes QE's dependency on OpenCode's
+external credential store.
 
 ## ADR-037: Control-center composition and scoped command adapters
 
