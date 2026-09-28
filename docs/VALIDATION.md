@@ -122,6 +122,7 @@ timeout 5 quickshell -p tests/qml/phase3-service-test.qml
 timeout 5 quickshell -p tests/qml/workspaces-test.qml
 timeout 5 quickshell -p tests/qml/system-metrics-adapter-test.qml
 timeout 5 quickshell -p tests/qml/system-metrics-helper-adapter-test.qml
+timeout 5 quickshell -p tests/qml/metric-bar-module-test.qml
 timeout 5 quickshell -p tests/qml/brightness-service-test.qml
 timeout 5 quickshell -p tests/qml/brightness-adapter-test.qml
 timeout 5 quickshell -p tests/qml/bluetooth-service-test.qml

@@ -1,30 +1,10 @@
 import QtQuick
-import "../../components"
-import "../../services" as Services
 
-BarChip {
-  readonly property bool highTemperature: Services.SystemMetricsService.temperature.availability === "available"
-    && Services.SystemMetricsService.temperature.value > 70
-  readonly property bool criticalTemperature: Services.SystemMetricsService.temperature.availability === "available"
-    && Services.SystemMetricsService.temperature.value > 80
-  readonly property bool stale: Services.SystemMetricsService.temperature.freshness === "stale"
-  readonly property color temperatureColor: Services.SystemMetricsService.temperature.availability === "unavailable"
-    || criticalTemperature
-      ? Services.ThemeService.theme.tokens.error
-      : (highTemperature || stale ? Services.ThemeService.theme.tokens.warning
-          : Services.ThemeService.theme.tokens.on_surface_indicator)
-
-  visible: Services.ConfigService.config.bar.metrics.temperature
+MetricBarModule {
+  metricId: "temperature"
   icon: "thermostat"
-  text: Services.SystemMetricsService.temperature.availability === "available"
-    ? `${Services.SystemMetricsService.temperature.value}°C`
-    : (Services.SystemMetricsService.temperature.availability === "unavailable" ? "Temp!" : "Temp...")
-  iconColor: temperatureColor
-  textColor: highTemperature || stale || Services.SystemMetricsService.temperature.availability === "unavailable"
-    ? temperatureColor : Services.ThemeService.theme.tokens.on_surface_subdued
-  warning: stale
-  hoverText: Services.SystemMetricsService.temperatureHoverText
-  configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
-  configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily
-  configuredFontSize: Services.ConfigService.config.appearance.fontSize
+  shortLabel: "Temp"
+  unit: "°C"
+  warnThreshold: 70
+  critThreshold: 80
 }
