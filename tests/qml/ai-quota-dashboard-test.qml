@@ -3,6 +3,7 @@ import Quickshell
 import "services" as Services
 import "fixtures/qml" as Fixtures
 import "modules/aiquota" as AiQuotaModules
+import "utils/AiQuota.mjs" as AiQuota
 
 ShellRoot {
     id: root
@@ -121,7 +122,7 @@ ShellRoot {
                 if (root.textFor(dashboard, "openai-Weekly Limit-remaining").indexOf("stale") < 0) return root.fail("dashboard omitted stale state");
                 if (root.textFor(dashboard, "openai-freshness") !== "stale data") return root.fail("dashboard omitted stale provider label");
                 if (String(root.objectFor(dashboard, "openai-freshness").color) !== String(Services.ThemeService.theme.tokens.warning)) return root.fail("stale provider label was not warning-colored");
-                Services.AiQuotaService.providers = Object.assign({}, Services.AiQuotaService.providers, { opencode: Services.AiQuotaService.blankProvider("opencode") });
+                Services.AiQuotaService.providers = Object.assign({}, Services.AiQuotaService.providers, { opencode: AiQuota.blankProvider("opencode") });
                 if (root.textFor(dashboard, "opencode-Weekly Limit-remaining") !== "Unavailable") return root.fail("dashboard omitted unavailable state");
                 if (root.textFor(dashboard, "opencode-freshness") !== "unknown data") return root.fail("dashboard omitted unknown provider label");
                 dashboard.visible = false;

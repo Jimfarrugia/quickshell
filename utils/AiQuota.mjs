@@ -97,3 +97,140 @@ export function formatTimeUntil(value, now = Date.now()) {
 }
 
 export function providerLabel(id) { return id === "opencode" ? "OpenCode Go" : "OpenAI"; }
+
+// ----- provider state reducer -----
+// Pure transforms that fold a refresh result (or failure) into the normalized
+// provider map. Time is injected as epoch milliseconds so the retention and
+// staleness rules are deterministic in tests.
+
+export const STALE_AFTER_MS = 900000;
+
+export function blankWindow() {
+  return { status: "error", usedPercent: null, remainingPercent: null,
+    resetsAt: null, error: null, freshness: "unknown", lastUpdated: null };
+}
+
+export function blankProvider(id) {
+  return { id: id, label: providerLabel(id), availability: "unknown",
+    freshness: "unknown", lastUpdated: null, lastAttempt: null, lastError: null,
+    fiveHour: blankWindow(), weekly: blankWindow(), monthly: blankWindow() };
+}
+
+function providerOf(providers, id) {
+  return providers[id] || blankProvider(id);
+}
+
+export function safeErrorSummary(code) {
+  if (code === "AUTH_EXPIRED") return "Run an OpenCode request with an openai/... model to refresh the login";
+  if (code === "AUTH_MISSING") return "OpenCode credentials are not configured";
+  if (code === "NOT_ENTITLED") return "OpenCode Go is not enabled for this account";
+  if (code === "RATE_LIMITED") return "Quota service rate limited";
+  if (code === "UNAUTHORIZED") return "Provider authentication was rejected";
+  return "Provider quota is temporarily unavailable";
+}
+
+export function providerError(code, now) {
+  const retryable = ["TIMEOUT", "NETWORK_ERROR", "RATE_LIMITED", "AUTH_EXPIRED"].indexOf(code) !== -1;
+  return { code: code, boundary: "ai-quota", summary: safeErrorSummary(code), detail: "",
+    timestamp: new Date(now), retryable: retryable, operationId: null };
+}
+
+export function publishProviderFailure(providers, providerId, code, now) {
+  const next = Object.assign({}, providers);
+  (providerId ? [providerId] : PROVIDERS).forEach(id => {
+    const current = providerOf(providers, id);
+    const age = current.lastUpdated instanceof Date ? now - current.lastUpdated.getTime() : Infinity;
+    const hasValue = current.fiveHour.status === "ok" || current.weekly.status === "ok";
+    const stale = hasValue && age >= STALE_AFTER_MS;
+    const failure = providerError(code, now);
+    const windows = {};
+    ["fiveHour", "weekly", "monthly"].forEach(name => {
+      windows[name] = Object.assign({}, current[name], {
+        error: failure,
+        freshness: hasValue && current[name].status === "ok" ? (stale ? "stale" : "current") : current[name].freshness
+      });
+    });
+    next[id] = Object.assign({}, current, {
+      availability: hasValue ? "degraded" : "unavailable",
+      freshness: hasValue ? (stale ? "stale" : "current") : "unknown",
+      lastAttempt: new Date(now),
+      lastError: failure
+    }, windows);
+  });
+  return next;
+}
+
+export function mergeQuotaResult(providers, result, now) {
+  if (!result.ok) return publishProviderFailure(providers, result.providerId, result.error, now);
+  const next = Object.assign({}, providers);
+  const ids = result.providerId ? [result.providerId] : PROVIDERS;
+  ids.forEach(id => {
+    const source = result.data.providers[id];
+    const current = providerOf(providers, id);
+    const goodFiveHour = source.fiveHour.status === "ok";
+    const goodWeekly = source.weekly.status === "ok";
+    const hasMonthly = source.monthly !== undefined;
+    const goodMonthly = hasMonthly && source.monthly.status === "ok";
+    const retainedFiveHour = current.fiveHour.status === "ok";
+    const retainedWeekly = current.weekly.status === "ok";
+    const retainedMonthly = current.monthly.status === "ok";
+    const hasValue = goodFiveHour || goodWeekly || goodMonthly || retainedFiveHour || retainedWeekly || retainedMonthly;
+    const sourceUpdated = (goodFiveHour || goodWeekly || goodMonthly)
+      ? new Date(source.lastUpdated || result.data.observedAt) : current.lastUpdated;
+    const stale = hasValue && sourceUpdated instanceof Date
+      && now - sourceUpdated.getTime() >= STALE_AFTER_MS;
+    const updateTime = (goodFiveHour || goodWeekly || goodMonthly)
+      ? new Date(source.lastUpdated || result.data.observedAt) : null;
+    const fiveHourAge = current.fiveHour.lastUpdated instanceof Date ? now - current.fiveHour.lastUpdated.getTime() : Infinity;
+    const weeklyAge = current.weekly.lastUpdated instanceof Date ? now - current.weekly.lastUpdated.getTime() : Infinity;
+    const monthlyAge = current.monthly.lastUpdated instanceof Date ? now - current.monthly.lastUpdated.getTime() : Infinity;
+    const fiveHour = goodFiveHour
+      ? Object.assign({}, source.fiveHour, { freshness: "current", lastUpdated: updateTime })
+      : (retainedFiveHour
+        ? Object.assign({}, current.fiveHour, { error: providerError(source.fiveHour.error?.code || "NETWORK_ERROR", now), freshness: fiveHourAge >= STALE_AFTER_MS ? "stale" : "current" })
+        : source.fiveHour);
+    const weekly = goodWeekly
+      ? Object.assign({}, source.weekly, { freshness: "current", lastUpdated: updateTime })
+      : (retainedWeekly
+        ? Object.assign({}, current.weekly, { error: providerError(source.weekly.error?.code || "NETWORK_ERROR", now), freshness: weeklyAge >= STALE_AFTER_MS ? "stale" : "current" })
+        : source.weekly);
+    const monthly = hasMonthly
+      ? (goodMonthly
+        ? Object.assign({}, source.monthly, { freshness: "current", lastUpdated: updateTime })
+        : (retainedMonthly
+          ? Object.assign({}, current.monthly, { error: providerError(source.monthly.error?.code || "NETWORK_ERROR", now), freshness: monthlyAge >= STALE_AFTER_MS ? "stale" : "current" })
+          : source.monthly))
+      : current.monthly;
+    next[id] = Object.assign({}, current, {
+      availability: goodFiveHour && goodWeekly && (!hasMonthly || goodMonthly)
+        ? "available" : (hasValue ? "degraded" : "unavailable"),
+      freshness: hasValue
+        ? ((stale || fiveHour.freshness === "stale" || weekly.freshness === "stale" || monthly.freshness === "stale") ? "stale" : "current")
+        : "unknown",
+      lastUpdated: sourceUpdated,
+      lastAttempt: new Date(now),
+      lastError: source.error ? providerError(source.error.code, now) : null,
+      fiveHour: fiveHour,
+      weekly: weekly,
+      monthly: monthly
+    });
+  });
+  return next;
+}
+
+export function markProvidersStale(providers, now) {
+  const next = Object.assign({}, providers);
+  PROVIDERS.forEach(id => {
+    const current = providerOf(providers, id);
+    if (current.lastUpdated instanceof Date && now - current.lastUpdated.getTime() >= STALE_AFTER_MS
+        && (current.fiveHour.status === "ok" || current.weekly.status === "ok")) {
+      next[id] = Object.assign({}, current, {
+        availability: "degraded", freshness: "stale",
+        fiveHour: Object.assign({}, current.fiveHour, current.fiveHour.status === "ok" ? { freshness: "stale" } : {}),
+        weekly: Object.assign({}, current.weekly, current.weekly.status === "ok" ? { freshness: "stale" } : {}),
+        monthly: Object.assign({}, current.monthly, current.monthly.status === "ok" ? { freshness: "stale" } : {})
+      });
+    }
+  });
+  return next;
+}
