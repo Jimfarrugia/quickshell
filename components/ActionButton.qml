@@ -16,7 +16,7 @@ AbstractButton {
     readonly property color resolvedForegroundColor: {
         if (root.pending) return Services.ThemeService.theme.tokens.on_primary;
         if (!root.enabled) return Services.ThemeService.theme.tokens.on_surface_disabled;
-        if (root.selected) return Services.ThemeService.theme.tokens.on_primary_container;
+        if (root.selected) return Services.ThemeService.theme.tokens.on_primary;
         if (root.tone === "primary" && root.emphasis === "filled")
             return Services.ThemeService.theme.tokens.on_primary;
         if (root.hovered || root.pressed) return Services.ThemeService.theme.tokens.on_surface;
@@ -31,7 +31,7 @@ AbstractButton {
     readonly property color resolvedBackgroundColor: {
         if (root.pending) return Services.ThemeService.theme.tokens.primary;
         if (!root.enabled) return Services.ThemeService.theme.tokens.surface;
-        if (root.selected) return Services.ThemeService.theme.tokens.primary_container;
+        if (root.selected) return Services.ThemeService.theme.tokens.primary;
         if (root.tone === "primary" && root.emphasis === "filled")
             return Services.ThemeService.theme.tokens.primary;
         if (root.pressed) return Services.ThemeService.theme.tokens.surface_pressed;
@@ -42,8 +42,8 @@ AbstractButton {
         if (root.activeFocus) return Services.ThemeService.theme.tokens.focus_ring;
         if (root.pending) return Services.ThemeService.theme.tokens.primary;
         if (!root.enabled) return Services.ThemeService.theme.tokens.outline_variant;
-        if (root.selected || root.tone === "primary")
-            return Services.ThemeService.theme.tokens.primary;
+        if (root.selected) return Services.ThemeService.theme.tokens.outline_variant;
+        if (root.tone === "primary") return Services.ThemeService.theme.tokens.primary;
         if (root.tone === "destructive") return Services.ThemeService.theme.tokens.error;
         return Services.ThemeService.theme.tokens.outline_variant;
     }

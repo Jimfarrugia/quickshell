@@ -37,7 +37,7 @@ Rectangle {
                     anchors.fill: parent
                     radius: Services.ConfigService.config.appearance.radius
                     color: optionRoot.index === (root.checked ? 1 : 0)
-                        ? Services.ThemeService.theme.tokens.primary_container
+                        ? Services.ThemeService.theme.tokens.primary
                         : Services.ThemeService.theme.tokens.surface_variant
                 }
 
@@ -47,7 +47,7 @@ Rectangle {
                     width: Services.ConfigService.config.appearance.radius
                     height: parent.height
                     color: optionRoot.index === (root.checked ? 1 : 0)
-                        ? Services.ThemeService.theme.tokens.primary_container
+                        ? Services.ThemeService.theme.tokens.primary
                         : Services.ThemeService.theme.tokens.surface_variant
                 }
 
@@ -57,7 +57,7 @@ Rectangle {
                     width: Services.ConfigService.config.appearance.radius
                     height: parent.height
                     color: optionRoot.index === (root.checked ? 1 : 0)
-                        ? Services.ThemeService.theme.tokens.primary_container
+                        ? Services.ThemeService.theme.tokens.primary
                         : Services.ThemeService.theme.tokens.surface_variant
                 }
 
@@ -66,7 +66,7 @@ Rectangle {
                     text: root.labels[optionRoot.index] || ""
                     color: !root.enabled ? Services.ThemeService.theme.tokens.on_surface_disabled
                         : (optionRoot.index === (root.checked ? 1 : 0)
-                            ? Services.ThemeService.theme.tokens.on_primary_container
+                            ? Services.ThemeService.theme.tokens.on_primary
                             : Services.ThemeService.theme.tokens.on_surface_variant)
                     font.family: Services.ConfigService.config.appearance.fontFamily
                     font.weight: Font.DemiBold

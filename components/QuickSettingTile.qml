@@ -25,12 +25,12 @@ Rectangle {
                     : Services.ThemeService.theme.tokens.outline_variant)))
     readonly property color resolvedIconBackgroundColor: root.pending
         ? Services.ThemeService.theme.tokens.primary
-        : (root.checked ? Services.ThemeService.theme.tokens.primary_container
+        : (root.checked ? Services.ThemeService.theme.tokens.primary
             : Services.ThemeService.theme.tokens.surface_variant)
     readonly property color resolvedIconColor: root.pending
         ? Services.ThemeService.theme.tokens.on_primary
         : (!root.actionAvailable ? Services.ThemeService.theme.tokens.on_surface_disabled
-            : (root.checked ? Services.ThemeService.theme.tokens.on_primary_container
+            : (root.checked ? Services.ThemeService.theme.tokens.on_primary
                 : (root.alert ? Services.ThemeService.theme.tokens.error
                     : Services.ThemeService.theme.tokens.on_surface_variant)))
     readonly property color resolvedTitleColor: root.actionAvailable
