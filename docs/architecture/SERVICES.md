@@ -277,8 +277,8 @@ Responsibilities:
 - own do-not-disturb policy
 - invoke actions, inline replies, dismiss, and expire operations
 - sanitize markup and constrain image/resource loading
-- remove individual records from current-session history without dismissing the
-  underlying notification
+- remove individual records from current-session history, retaining native
+  tracking while a popup still needs the notification
 
 History exists only for the current QE process. DND suppresses presentation
 according to urgency policy but does not claim notifications were delivered.
@@ -289,6 +289,12 @@ sender action endpoints available from history. Explicit dismissal and expiry
 remove only the popup from QE history presentation; history is retained
 according to the existing transient and history policies. Notification action
 controls remain separate from card dismissal.
+
+Records and native tracking are retained only while history or a popup needs
+them. History eviction/removal/clear and popup completion release unused records;
+releasing the final consumer untracks (closes) a still-live native notification.
+Retained actionable history keeps its native endpoint available for repeated
+actions. The history limit does not evict visible popups.
 
 Notification cards and popups share the same media-first layout and normalized
 fallback icon policy. A supplied image is preferred; otherwise OpenCode uses

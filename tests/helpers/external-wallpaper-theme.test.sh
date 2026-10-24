@@ -103,4 +103,33 @@ result=$(run_helper "$test_root/part.json")
 grep -q '^STATUS=3$' <<<"$result"
 grep -qx 'background #222222' "$config_root/alpha/themes/wallpaper.conf"
 
+cat >"$test_root/result-helper" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ "${QE_TEST_EXTERNAL_TIMEOUT:-0}" == 1 ]]; then exec sleep 5; fi
+cat -- "$1"
+exit "${QE_TEST_EXTERNAL_EXIT:-0}"
+EOF
+chmod +x "$test_root/result-helper"
+
+run_adapter() {
+    local document=$1 exit_code=$2 expected=$3 valid=$4 output
+    printf '%s\n' "$document" >"$test_root/result.json"
+    output=$(XDG_STATE_HOME="$test_root/state" XDG_DATA_HOME="$test_root/data" \
+        XDG_CACHE_HOME="$test_root/cache" QE_WALLPAPER_EXTERNAL_HELPER="$test_root/result-helper" \
+        QE_TEST_EXTERNAL_RESULT="$test_root/result.json" QE_TEST_EXTERNAL_EXIT="$exit_code" \
+        QE_TEST_EXTERNAL_STATUS="$expected" QE_TEST_EXTERNAL_VALID="$valid" \
+        timeout 5 quickshell -p "$project_root/tests/qml/wallpaper-external-adapter-test.qml" 2>&1)
+    grep -q 'WALLPAPER_EXTERNAL_ADAPTER_TEST_PASSED' <<<"$output"
+}
+run_adapter '{"results":{}}' 0 failed 0
+run_adapter '{"results":[]}' 1 failed 0
+run_adapter '{not-json}' 0 failed 0
+run_adapter '{"schema":"qe-external-theme","version":1,"results":[null]}' 0 failed 0
+run_adapter '{"schema":"qe-external-theme","version":1,"results":[{"id":"kitty","status":"applied"}]}' 1 failed 0
+run_adapter '{"schema":"qe-external-theme","version":1,"results":[{"id":"kitty","status":"applied"}]}' 0 succeeded 1
+run_adapter '{"schema":"qe-external-theme","version":1,"results":[{"id":"kitty","status":"applied"},{"id":"bat","status":"failed","error":"failed"}]}' 3 partial 1
+run_adapter '{"schema":"qe-external-theme","version":1,"results":[{"id":"bat","status":"failed","error":"failed"}]}' 4 failed 1
+QE_TEST_EXTERNAL_TIMEOUT=1 run_adapter '{}' 0 failed 0
+
 printf '%s\n' 'EXTERNAL_WALLPAPER_THEME_HELPER_TEST_PASSED'

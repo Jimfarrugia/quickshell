@@ -1,4 +1,39 @@
 const HEX_PATTERN = /^#[0-9a-fA-F]{6}$/;
+
+export function validateWallpaperExternalResult(document, exitCode) {
+  const reject = error => ({ ok: false, errors: [error], value: null });
+  if (document === null || typeof document !== "object" || Array.isArray(document)
+      || document.schema !== "qe-external-theme" || document.version !== 1
+      || !Array.isArray(document.results) || document.results.length === 0)
+    return reject("external wallpaper theme result: expected a schema-v1 target list");
+
+  const ids = new Set();
+  const results = [];
+  for (const target of document.results) {
+    if (target === null || typeof target !== "object" || Array.isArray(target)
+        || typeof target.id !== "string" || !/^[a-z0-9_]+$/.test(target.id)
+        || ids.has(target.id) || !["applied", "unchanged", "skipped", "failed"].includes(target.status)
+        || (target.error !== undefined && typeof target.error !== "string"))
+      return reject("external wallpaper theme result: malformed or duplicate target");
+    ids.add(target.id);
+    results.push({ id: target.id, status: target.status, error: target.error || "" });
+  }
+  const failedTargets = results.filter(target => target.status === "failed").map(target => target.id);
+  const applied = results.some(target => target.status === "applied");
+  const status = failedTargets.length === 0 ? "succeeded" : applied ? "partial" : "failed";
+  const expectedExit = status === "succeeded" ? 0 : status === "partial" ? 3 : 4;
+  if (exitCode !== expectedExit)
+    return reject(`external wallpaper theme result: ${status} requires exit ${expectedExit}`);
+  return {
+    ok: true, errors: [],
+    value: {
+      status, results, failedTargets,
+      skippedTargets: results.filter(target => target.status === "skipped").length,
+      error: failedTargets.join(", ")
+    }
+  };
+}
+
 const ANSI_KEYS = [
   "background",
   "error",

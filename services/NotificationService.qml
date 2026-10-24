@@ -55,6 +55,15 @@ Singleton {
         return next;
     }
 
+    function releaseUnusedRecords() {
+        const retainedIds = new Set(history.concat(popupNotifications).map(record => record.data.id));
+        const released = records.filter(record => !retainedIds.has(record.data.id));
+        records = records.filter(record => retainedIds.has(record.data.id));
+        for (const record of released) {
+            if (record.native && record.native.tracked) record.native.tracked = false;
+        }
+    }
+
     function accept(nativeNotification) {
         if (!nativeNotification || root.integration === null) return false;
         const data = Notifications.normalizeNotification(nativeNotification, root.limits());
@@ -73,6 +82,7 @@ Singleton {
                 root.schedulePopupExpiry(data.id);
             else
                 root.removePopupExpiry(data.id);
+            root.releaseUnusedRecords();
             return true;
         }
 
@@ -87,6 +97,7 @@ Singleton {
             popupNotifications = popupNotifications.concat([record]);
             if (data.urgency !== "critical") root.schedulePopupExpiry(data.id);
         }
+        root.releaseUnusedRecords();
         return true;
     }
 
@@ -104,6 +115,7 @@ Singleton {
         const index = popupIndex(id);
         if (index >= 0) popupNotifications = popupNotifications.filter((_, popupIndex) => popupIndex !== index);
         root.removePopupExpiry(id);
+        root.releaseUnusedRecords();
     }
 
     function schedulePopupExpiry(id) {
@@ -157,6 +169,7 @@ Singleton {
         const popup = popupIndex(id);
         if (popup >= 0) popupNotifications = popupNotifications.filter((_, index) => index !== popup);
         root.removePopupExpiry(id);
+        root.releaseUnusedRecords();
     }
 
     function dismiss(id) {
@@ -192,10 +205,15 @@ Singleton {
         if (index < 0) return false;
         root.historyAboutToChange();
         history = history.filter((_, entryIndex) => entryIndex !== index);
+        root.releaseUnusedRecords();
         return true;
     }
 
-    function clearHistory() { history = []; }
+    function clearHistory() {
+        root.historyAboutToChange();
+        history = [];
+        root.releaseUnusedRecords();
+    }
 
     function dismissPopups() {
         const ids = popupNotifications.map(record => record.data.id);

@@ -1,8 +1,31 @@
 import assert from "node:assert/strict";
 import {
   generateWallpaperExternalTargets,
-  validateExternalTargetContent
+  validateExternalTargetContent,
+  validateWallpaperExternalResult
 } from "../../utils/ExternalWallpaperTheme.mjs";
+
+const promotion = (results, version = 1) => ({ schema: "qe-external-theme", version, results });
+const applied = { id: "kitty", status: "applied" };
+const failed = { id: "bat", status: "failed", error: "promotion failed" };
+assert.equal(validateWallpaperExternalResult(promotion([applied]), 0).value.status, "succeeded");
+assert.equal(validateWallpaperExternalResult(promotion([applied, failed]), 3).value.status, "partial");
+assert.equal(validateWallpaperExternalResult(promotion([failed]), 4).value.status, "failed");
+assert.equal(validateWallpaperExternalResult(promotion([{ id: "kitty", status: "unchanged" }]), 0).ok, true);
+assert.equal(validateWallpaperExternalResult(promotion([{ id: "kitty", status: "skipped", error: "unavailable" }]), 0).ok, true);
+for (const [document, exitCode] of [
+  [null, 0], [[], 0], [{ results: {} }, 0], [promotion([]), 1], [promotion([]), 0],
+  [promotion([null]), 0], [promotion([applied], 2), 0],
+  [{ ...promotion([applied]), schema: "other" }, 0],
+  [promotion([applied, applied]), 0], [promotion([{ id: "../kitty", status: "applied" }]), 0],
+  [promotion([{ id: "kitty", status: "unknown" }]), 0],
+  [promotion([{ id: "kitty", status: "failed", error: {} }]), 4],
+  [promotion([applied]), 1], [promotion([applied]), 3], [promotion([failed]), 0],
+  [promotion([applied, failed]), 4], [promotion([failed]), 3],
+  [promotion([{ id: "kitty", status: "unchanged" }, failed]), 3]
+]) {
+  assert.equal(validateWallpaperExternalResult(document, exitCode).ok, false, JSON.stringify([document, exitCode]));
+}
 
 const palette = {
   background: "#101820", on_background: "#f4f7fb", surface: "#18232d", on_surface: "#f4f7fb",

@@ -14,6 +14,7 @@ ShellRoot {
     }
 
     function beginWhenReady() {
+        Quickshell.watchFiles = false;
         if (!themeReader.ready || !wallpaperReader.ready || lockController.state !== "idle") return;
         lockController.prerequisitesReady = !themeReader.watchersActive && !wallpaperReader.watchersActive;
         lockController.begin();

@@ -69,6 +69,7 @@ Singleton {
     }
 
     function requestRandomWallpaper() {
+        if (operation === "pending") return false;
         if (wallpaperFiles.status !== FolderListModel.Ready || wallpaperFiles.count === 0) {
             lastError = "no wallpapers are available for the active theme";
             operation = "failed";
@@ -79,8 +80,14 @@ Singleton {
     }
 
     function requestWallpaper(path) {
-        if (!initialized || operation === "pending" || !validPath(path)) {
-            lastError = !validPath(path) ? "wallpaper path is outside the configured wallpaper root" : "wallpaper operation is already pending";
+        if (operation === "pending") return false;
+        if (!initialized) {
+            lastError = "wallpaper service is not initialized";
+            operation = "failed";
+            return false;
+        }
+        if (!validPath(path)) {
+            lastError = "wallpaper path is outside the configured wallpaper root";
             operation = "failed";
             return false;
         }
@@ -113,8 +120,7 @@ Singleton {
             return false;
         }
         if (generationStatus === "pending") {
-            if (sourcePath !== pendingGenerationPath && sourcePath !== generationQueuedPath)
-                generationQueuedPath = sourcePath;
+            generationQueuedPath = sourcePath === pendingGenerationPath ? "" : sourcePath;
             return true;
         }
         if (matugenAdapter === null || matugenAdapter.availability !== "available"

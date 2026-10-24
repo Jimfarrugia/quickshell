@@ -12,6 +12,7 @@ assert.match(source, /Lock\.LockPowerReader\s*\{\s*id:\s*powerReader\b/);
 assert.match(source, /power:\s*powerReader\b/);
 assert.match(source, /now:\s*root\.now\b/);
 assert.match(source, /function scheduleClockUpdate\(\)/);
+assert.match(source, /function beginWhenReady\(\)\s*\{\s*Quickshell\.watchFiles = false;[\s\S]*?lockController\.begin\(\)/);
 assert.match(source, /60000 - millisecondsIntoMinute/);
 assert.doesNotMatch(source, /controller:\s*controller\b/);
 assert.match(surfaceSource, /TextInput\s*\{[\s\S]*?clip:\s*true\b/);

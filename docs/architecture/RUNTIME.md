@@ -69,11 +69,16 @@ session securely locked and visually unavailable. Another process cannot
 reclaim that lock. The recovery path is compositor/session termination from a
 separate TTY. For that reason:
 
-- configuration file watching and soft reload are disabled while locked
+- lock-local configuration watching is detached and Quickshell automatic source
+  watching is disabled before lock acquisition; never manually reload a lock process
 - no unauthenticated IPC may unlock the session
 - authentication and unlock remain in the process that owns `WlSessionLock`
 - the lock process is not automatically restarted after a post-lock crash
 - optional process/command integrations are excluded from the lock process
+
+Waiting at a PAM input prompt has no authentication deadline and consumes no
+failure allowance. Startup work and submitted authentication remain bounded by
+the authentication timeout; helper failures still count toward locked recovery.
 
 ### External processes
 

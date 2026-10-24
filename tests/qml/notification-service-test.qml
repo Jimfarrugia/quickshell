@@ -20,7 +20,7 @@ ShellRoot {
         console.error(`NOTIFICATION_SERVICE_TEST_FAILED: ${message}`);
         done = true;
         testTimer.stop();
-        Qt.quit();
+        Qt.exit(1);
     }
 
     function begin() {
@@ -45,6 +45,7 @@ ShellRoot {
 
         fakeNotification = {
             id: 1,
+            tracked: true,
             appName: "Fixture",
             appIcon: "",
             summary: "First",
@@ -153,6 +154,42 @@ ShellRoot {
         if (Services.NotificationService.removeFromHistory(5))
             return fail("individual history removal succeeded for a missing notification");
 
+        Services.NotificationService.clearHistory();
+        if (Services.NotificationService.records.length !== 0 || fakeNotification.tracked)
+            return fail("clearing history retained unused records or native tracking");
+        Services.NotificationService.setPopupsBlocked(true);
+        const limit = Services.ConfigService.config.notifications.historyLimit;
+        let first = null;
+        for (let id = 10; id < 10 + limit + 20; id++) {
+            const notification = Object.assign({}, fakeNotification, { id: id, tracked: true });
+            if (first === null) first = notification;
+            fakeIntegration.send(notification);
+        }
+        if (Services.NotificationService.records.length !== limit || first.tracked)
+            return fail("history eviction retained unused records or native tracking");
+        const retainedId = Services.NotificationService.history[0].data.id;
+        if (!Services.NotificationService.invokeAction(retainedId, "open")
+                || !Services.NotificationService.invokeAction(retainedId, "open"))
+            return fail("retained history lost repeatable actions");
+        Services.NotificationService.clearHistory();
+        Services.NotificationService.setPopupsBlocked(false);
+        Services.NotificationService.setDnd(false);
+        const popupOnly = Object.assign({}, fakeNotification, { id: 10000, tracked: true, transient: true });
+        fakeIntegration.send(popupOnly);
+        if (Services.NotificationService.records.length !== 1 || !popupOnly.tracked)
+            return fail("popup-only notification was released before popup completion");
+        Services.NotificationService.hidePopup(popupOnly.id);
+        if (Services.NotificationService.records.length !== 0 || popupOnly.tracked)
+            return fail("popup completion retained unused records or native tracking");
+        const both = Object.assign({}, fakeNotification, { id: 10001, tracked: true });
+        fakeIntegration.send(both);
+        Services.NotificationService.removeFromHistory(both.id);
+        if (Services.NotificationService.records.length !== 1 || !both.tracked)
+            return fail("history removal released a visible popup");
+        fakeIntegration.close(both);
+        if (Services.NotificationService.records.length !== 0)
+            return fail("closing a history-free popup retained its record");
+
         done = true;
         testTimer.stop();
         console.log("NOTIFICATION_SERVICE_TEST_PASSED");
@@ -171,8 +208,8 @@ ShellRoot {
         onTriggered: root.fail("notification service test timed out")
     }
 
-    Component.onCompleted: {
+    Component.onCompleted: Qt.callLater(() => {
         Services.NotificationService.stateReady = true;
         begin();
-    }
+    })
 }

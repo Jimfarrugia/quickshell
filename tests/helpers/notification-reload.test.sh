@@ -12,7 +12,9 @@ shell_pid=""
 tracked_watcher_pids=()
 
 cleanup() {
+  local status=$?
   set +e
+  if ((status != 0)); then cat "$log_file" >&2; fi
   if [[ -n "$shell_pid" ]] && kill -0 "$shell_pid" 2>/dev/null; then
     qs kill --pid "$shell_pid" >/dev/null 2>&1 || kill "$shell_pid" 2>/dev/null || true
     wait "$shell_pid" 2>/dev/null || true
@@ -65,7 +67,7 @@ wait_for_single_watcher_tree() {
 
 start_shell() {
   : >"$log_file"
-  quickshell -p "$project_root/tests/qml/notification-integration-test.qml" >"$log_file" 2>&1 &
+  QS_NO_RELOAD_POPUP=1 quickshell -p "$project_root/tests/qml/notification-integration-test.qml" >"$log_file" 2>&1 &
   shell_pid=$!
   for _ in {1..100}; do
     if grep -Fq 'NOTIFICATION_OWNER_QE' "$log_file"; then break; fi
@@ -102,7 +104,7 @@ fi
 
 start_shell
 
-notify-send -a "QE Reload" -t 5000 "Reload one" "first body"
+first_id=$(notify-send -p -a "QE Reload" -t 5000 "Reload one" "first body")
 notify-send -a "QE Reload" -t 5000 "Reload two" "second body"
 read_history_count() {
   local value
@@ -120,7 +122,9 @@ for _ in {1..50}; do
 done
 [[ "$count" -eq 2 ]]
 [[ "$(qs ipc --pid "$shell_pid" call qe-notification-test popupCount)" -le 2 ]]
-[[ "$(qs ipc --pid "$shell_pid" call qe-notification-test popupVisible)" == "true" ]]
+if [[ "${QT_QPA_PLATFORM:-}" != offscreen ]]; then
+  [[ "$(qs ipc --pid "$shell_pid" call qe-notification-test popupVisible)" == "true" ]]
+fi
 
 for _ in {1..3}; do
   previous_wrapper_pid=$CURRENT_WRAPPER_PID
@@ -137,6 +141,12 @@ for _ in {1..3}; do
   [[ "$count" -eq 2 ]]
   [[ "$(qs ipc --pid "$shell_pid" call qe-notification-test popupCount)" -le 2 ]]
 done
+
+[[ "$(qs ipc --pid "$shell_pid" call qe-notification-test recordCount)" -eq 2 ]]
+[[ "$(qs ipc --pid "$shell_pid" call qe-notification-test clearNotifications)" == "true" ]]
+[[ "$(qs ipc --pid "$shell_pid" call qe-notification-test recordCount)" -eq 0 ]]
+replacement_id=$(notify-send -p -r "$first_id" -a "QE Reload" "After cleanup")
+[[ "$replacement_id" -ne "$first_id" ]]
 
 stop_shell
 assert_tracked_watchers_gone

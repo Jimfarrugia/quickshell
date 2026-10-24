@@ -98,6 +98,8 @@ bash tests/helpers/external-wallpaper-theme-service.test.sh
 bash tests/helpers/notification-owner.test.sh
 bash tests/helpers/notification-service.test.sh
 bash tests/helpers/notification-reload.test.sh
+# Headless native reload/retention check on a private DBus (no popup windows):
+QT_QPA_PLATFORM=offscreen bash tests/helpers/notification-reload.test.sh
 bash tests/helpers/notifications.test.sh
 YAZI_TEMPLATE="$HOME/.config/yazi/flavors/flavor.template.toml" \
 QE_PROJECT_ROOT="$PWD" \
@@ -248,7 +250,9 @@ and isOpen contract while the shell remains alive.
 The notification service helper must print `NOTIFICATION_SERVICE_TEST_PASSED` after
 testing bounded markup, actions, progress, replacement updates, DND urgency rules,
 individual history removal, dismissal with history retention, and `lastGeneration` replay without creating
-duplicate history or popups. The live notification helper additionally verifies
+duplicate history or popups. It also checks that history eviction, removal,
+clear, and popup completion release unused records/native tracking without
+losing retained actions or visible popups. The live notification helper additionally verifies
 that low and normal popups expire after five seconds while history remains. The
 owner helper must print `NOTIFICATION_OWNER_HELPER_TEST_PASSED` after
 validating the structured current-owner record, wrapper signal handling, QE
@@ -264,7 +268,11 @@ test.
 The reload helper must print `NOTIFICATION_RELOAD_TEST_PASSED` after real QE-owned
 notifications populate the popup host and history, then a soft reload preserves
 history without duplicate visible or history entries; replayed prior-generation
-notifications are not shown again as new popups. The notification-center
+notifications are not shown again as new popups. After clearing the final history
+and popup consumers, its record count must be zero and replacing a released ID
+must allocate a new native notification. With `QT_QPA_PLATFORM=offscreen`, the
+reload helper still uses a private DBus and exercises native tracking/reload,
+but omits popup-window creation and the visibility assertion. The notification-center
 interaction check must confirm that opening at the newest position clears and
 blocks all popups, including critical ones; scrolling away restores popups, and
 returning to the newest position blocks them again without clearing history.
@@ -317,12 +325,16 @@ The `qe-wallpaper` helper fixture must print `QE_WALLPAPER_HELPER_TEST_PASSED`
 after verifying that the original source is applied through Hyprpaper before
 normalization, a healthy Hyprpaper process is not restarted, post-apply
 generation failure preserves and reapplies the prior LKG artifact. It also
-covers invalid invocation, rejected IPC, and unavailable-daemon recovery.
+covers invalid invocation, rejected IPC, unavailable-daemon recovery, and a
+long-lived spawned daemon that must not inherit the request lock.
 The external-wallpaper helper fixture must print
 `EXTERNAL_WALLPAPER_THEME_HELPER_TEST_PASSED` after promoting generated slot
 files (success plus absent-executable skip), preserving unchanged files and
 Stow-style symlink slots, rejecting invalid specs and paths, and proving
-partial promotion. The external wallpaper theme service
+partial promotion. It also runs the external-wallpaper adapter against malformed
+JSON/schema/targets, inconsistent exits, timeout, and valid success/partial/failure
+results; each must publish `WALLPAPER_EXTERNAL_ADAPTER_TEST_PASSED` and settle the
+service's pending operation. The external wallpaper theme service
 fixture must print `EXTERNAL_WALLPAPER_THEME_TEST_PASSED` after the wallpaper
 generation pipeline produces the full 16-target spec, including imv, mpv, and
 Yazi artifacts, the fake promotion
@@ -336,7 +348,8 @@ twice from atomically replaced `Wallpaper.json` files without a restart.
 The queued generation fixture must print
 `QUEUED_WALLPAPER_GENERATION_TEST_PASSED` after a wallpaper change requested
 while a generation is pending is not dropped: both complete and the published
-theme reflects the latest request. The wallpaper theme select external fixture
+theme reflects the latest request. A separate A → B → A case must clear the
+superseded B intent and publish only A. The wallpaper theme select external fixture
 must print `WALLPAPER_THEME_SELECT_EXTERNAL_TEST_PASSED` after an initial
 generation makes `wallpaper` selectable and selecting it dispatches exactly one
 external `wallpaper` apply with `--skip-gtk`.
@@ -525,7 +538,10 @@ object ID. The controller fixture verifies that validated
 inputs and compositor `secure` gate authentication, and that empty, failed, and
 cancelled responses remain locked. It also covers secure-confirmation timeout,
 PAM startup failure, a non-completing PAM-attempt deadline, bounded attempts, and
-stale-success rejection. The PAM
+stale-success rejection. The controller also verifies idle input waiting does not
+consume failures, while submitted hung attempts still reach bounded locked
+recovery. The entry fixture guards automatic source watching being disabled
+before acquiring the lock. The PAM
 adapter fixture verifies that each context has an immutable attempt ID and that
 an aborted context cannot complete a replacement attempt. The power fixture
 verifies percentage normalization and omission when no laptop battery is
@@ -534,6 +550,12 @@ fixture verifies validated active-theme publication, whole-document config
 fallback, malformed and oversized input rejection, bounded startup fallback,
 opaque-black fallback, and release of discovery/file-watching state before lock
 acquisition.
+
+The source-watch and authentication-deadline fixes passed disposable-compositor
+acceptance on 2026-10-24: editing `lock.qml` kept the acquired lock active, a
+wrong password kept the session locked, and the correct password unlocked it.
+Idle waiting beyond the authentication deadline is covered by the 1 ms controller
+fixture rather than a wall-clock live wait. Do not manually reload a lock process.
 
 Launch destructive disposable-session tests from a terminal created directly by
 that compositor. An existing tmux server can retain another session's

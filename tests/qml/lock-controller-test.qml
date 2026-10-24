@@ -50,6 +50,7 @@ ShellRoot {
         sessionLock: fakeSessionLock
         authenticator: fakeAuthenticator
         retryDelayMs: 1
+        authenticationTimeoutMs: 1
         acquisitionTimeoutMs: 100
         maxFailures: 3
     }
@@ -171,7 +172,7 @@ ShellRoot {
 
     function fail(message) {
         console.error(`LOCK_CONTROLLER_TEST_FAILED: ${message}`);
-        Qt.quit();
+        Qt.exit(1);
     }
 
     function runChecks() {
@@ -234,9 +235,9 @@ ShellRoot {
             if (helperLossController.state !== "awaitingInput"
                     || helperLossAuthenticator.starts !== 2)
                 return root.fail("PAM helper loss did not restore a usable authentication prompt");
-            if (hungController.state !== "recoveryRequired" || !hungSessionLock.locked
-                    || hungAuthenticator.starts !== 2)
-                return root.fail("non-completing PAM attempts were not bounded in locked recovery");
+            if (hungController.state !== "awaitingInput" || !hungSessionLock.locked
+                    || hungAuthenticator.starts !== 1 || hungController.failureCount !== 0)
+                return root.fail("idle password waiting consumed the authentication failure allowance");
             if (root.stage !== 1 || controller.state !== "awaitingInput"
                     || fakeAuthenticator.starts !== 2)
                 return root.fail("failed authentication did not restart after a bounded delay");
@@ -254,6 +255,26 @@ ShellRoot {
             if (fakeSessionLock.locked || controller.state !== "unlocked")
                 return root.fail("successful secure authentication did not release the lock");
 
+            hungController.submit("never completes");
+            hungCheck.start();
+        }
+    }
+
+    Timer {
+        id: hungCheck
+        interval: 10
+        onTriggered: {
+            if (root.stage === 1) {
+                if (hungController.state !== "awaitingInput" || hungController.failureCount !== 1)
+                    return root.fail("submitted authentication timeout did not retry");
+                root.stage = 2;
+                hungController.submit("also never completes");
+                restart();
+                return;
+            }
+            if (hungController.state !== "recoveryRequired" || !hungSessionLock.locked
+                    || hungAuthenticator.starts !== 2)
+                return root.fail("non-completing submitted PAM attempts were not bounded in locked recovery");
             console.log("LOCK_CONTROLLER_TEST_PASSED");
             Qt.quit();
         }

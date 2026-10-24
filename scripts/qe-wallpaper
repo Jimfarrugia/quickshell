@@ -86,7 +86,7 @@ else
     if pgrep -x hyprpaper >/dev/null 2>&1; then
         fail rejected wallpaper-ipc-rejected rejected unchanged unknown 4
     fi
-    nohup hyprpaper >/dev/null 2>&1 &
+    nohup hyprpaper 9>&- >/dev/null 2>&1 &
     daemon_started=true
     ready=0
     for _ in {1..40}; do

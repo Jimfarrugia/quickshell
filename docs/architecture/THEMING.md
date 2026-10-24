@@ -287,7 +287,11 @@ semantic palette plus TextMate syntax file, and a Palette JSON for Neovim), and
 `scripts/promote-external-theme.sh`, which writes each file into the
 app-specific `wallpaper` slot with staging and atomic same-filesystem
 replacement, skipping targets whose executables are absent, preserving unchanged
-files, and reporting per-target results. Stow-managed installations keep these
+files, and reporting per-target results. The adapter validates the
+`qe-external-theme` schema/version, unique target IDs and statuses, and matching
+exit codes (0 succeeded, 3 partial with applied and failed targets, 4 failed
+without applied targets). Malformed or inconsistent output settles as failure,
+never as confirmed promotion. Stow-managed installations keep these
 live slots as ignored, restore-managed symlinks to XDG state; promotion resolves
 the link before replacing the runtime target so the QE repository's authored
 defaults remain separate from runtime state. The explicit `qe-defaults restore`

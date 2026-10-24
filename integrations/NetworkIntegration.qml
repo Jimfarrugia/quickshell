@@ -8,8 +8,6 @@ QtObject {
     readonly property string availability: Networking.backend === NetworkBackendType.None
         || (nativeDeviceSeen && Networking.devices.values.length === 0) ? "unavailable" : "available"
     property bool nativeDeviceSeen: false
-    property int nativeIdentitySerial: 0
-    property var nativeIdentities: []
     readonly property string freshness: availability === "available" ? "current" : "unknown"
     readonly property var lastError: availability === "unavailable" ? {
         code: "NETWORKMANAGER_UNAVAILABLE", boundary: "network", summary: "NetworkManager is unavailable",
@@ -59,15 +57,6 @@ QtObject {
     readonly property bool wifiHardwareEnabled: Networking.wifiHardwareEnabled
     readonly property bool scanning: wifiDevice ? wifiDevice.scannerEnabled : false
 
-    function connectedDevice(type) {
-        const devices = Networking.devices.values.slice().sort((a, b) =>
-            String(a.name || a.address).localeCompare(String(b.name || b.address)));
-        for (let index = 0; index < devices.length; index++) {
-            if (devices[index].type === type && devices[index].connected) return devices[index];
-        }
-        return null;
-    }
-
     function chooseDevice() {
         return selectDeviceFrom(Networking.devices.values);
     }
@@ -89,15 +78,6 @@ QtObject {
             return;
         }
         if (Networking.devices.values.length > 0) nativeDeviceSeen = true;
-    }
-
-    function nativeIdentity(object) {
-        if (!object) return "unknown";
-        for (let index = 0; index < nativeIdentities.length; index++)
-            if (nativeIdentities[index].object === object) return nativeIdentities[index].id;
-        const entry = {object: object, id: `native-${++nativeIdentitySerial}`};
-        nativeIdentities = nativeIdentities.concat([entry]);
-        return entry.id;
     }
 
     function deviceOfType(type) {

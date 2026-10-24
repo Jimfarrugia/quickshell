@@ -49,7 +49,7 @@ QtObject {
         }
         activeAttemptId = authenticator.attemptId;
         state = authenticator.responseRequired ? "awaitingInput" : "authenticating";
-        authenticationTimer.restart();
+        if (state === "authenticating") authenticationTimer.restart();
         return true;
     }
 
@@ -58,6 +58,7 @@ QtObject {
             return false;
         state = "authenticating";
         authenticationSubmitted = true;
+        authenticationTimer.restart();
         authenticator.respond(response);
         return true;
     }
@@ -155,8 +156,10 @@ QtObject {
         function onResponseRequiredChanged() {
             if (root.secure && root.authenticator.responseRequired
                     && (root.state === "startingAuthentication"
-                        || root.state === "authenticating"))
+                        || root.state === "authenticating")) {
+                root.authenticationTimer.stop();
                 root.state = "awaitingInput";
+            }
         }
 
         function onCompleted(result, attemptId) {

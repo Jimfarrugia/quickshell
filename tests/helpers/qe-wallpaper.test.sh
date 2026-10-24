@@ -3,7 +3,13 @@ set -euo pipefail
 
 project_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd -P)
 test_root=$(mktemp -d)
-trap 'rm -rf -- "$test_root"' EXIT
+cleanup() {
+    if [[ -s "$test_root/daemon.pid" ]]; then
+        kill "$(cat "$test_root/daemon.pid")" 2>/dev/null || true
+    fi
+    rm -rf -- "$test_root"
+}
+trap cleanup EXIT
 
 bin_dir="$test_root/bin"
 data_dir="$test_root/data"
@@ -18,6 +24,7 @@ cat >"$bin_dir/hyprctl" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 printf 'hyprctl %s\n' "$*" >>"${TEST_LOG:?}"
+if [[ -n "${FAKE_DAEMON_PID_FILE:-}" && ! -s "$FAKE_DAEMON_PID_FILE" ]]; then exit 1; fi
 if [[ "${FAKE_HYPRCTL_TIMEOUT:-0}" == 1 ]]; then sleep 1; fi
 if [[ "${FAKE_REJECT:-0}" == 1 ]]; then exit 1; fi
 exit 0
@@ -38,11 +45,17 @@ exit "${FAKE_HYPRPAPER_RUNNING:-1}"
 EOF
 cat >"$bin_dir/nohup" <<'EOF'
 #!/usr/bin/env bash
+set -euo pipefail
 printf 'nohup %s\n' "$*" >>"${TEST_LOG:?}"
-exit 0
+exec "$@"
 EOF
 cat >"$bin_dir/hyprpaper" <<'EOF'
 #!/usr/bin/env bash
+set -euo pipefail
+if [[ -n "${FAKE_DAEMON_PID_FILE:-}" ]]; then
+    printf '%s\n' "$$" >"$FAKE_DAEMON_PID_FILE"
+    exec sleep 60
+fi
 exit 0
 EOF
 chmod +x "$bin_dir"/*
@@ -103,5 +116,16 @@ if "$project_root/scripts/qe-wallpaper" "$test_root/missing.png" >"$test_root/mi
     exit 1
 fi
 grep -q '"status":"invalid"' "$test_root/missing-result"
+
+TEST_LOG="$test_root/daemon-log" FAKE_DAEMON_PID_FILE="$test_root/daemon.pid" \
+    PATH="$bin_dir:$PATH" XDG_DATA_HOME="$data_dir" XDG_RUNTIME_DIR="$runtime_dir" \
+    "$project_root/scripts/qe-wallpaper" "$test_root/source.png" >"$test_root/daemon-result"
+jq -e '.status == "success" and .daemonStarted' "$test_root/daemon-result" >/dev/null
+kill -0 "$(cat "$test_root/daemon.pid")"
+flock -n "$runtime_dir/qe-wallpaper.lock" true
+timeout 3 env TEST_LOG="$test_root/second-log" FAKE_HYPRPAPER_RUNNING=0 \
+    PATH="$bin_dir:$PATH" XDG_DATA_HOME="$data_dir" XDG_RUNTIME_DIR="$runtime_dir" \
+    "$project_root/scripts/qe-wallpaper" "$test_root/source.png" >"$test_root/second-result"
+jq -e '.status == "success"' "$test_root/second-result" >/dev/null
 
 printf '%s\n' QE_WALLPAPER_HELPER_TEST_PASSED

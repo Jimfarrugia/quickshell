@@ -11,6 +11,7 @@ ShellRoot {
     property int succeededCount: 0
     readonly property string firstImage: Quickshell.env("QE_TEST_WALLPAPER_A")
     readonly property string secondImage: Quickshell.env("QE_TEST_WALLPAPER_B")
+    readonly property bool returnToFirst: Quickshell.env("QE_TEST_RETURN_TO_A") === "1"
 
     MatugenAdapter {
         id: matugenAdapter
@@ -55,6 +56,11 @@ ShellRoot {
             return fail("first generation request was rejected");
         if (!Services.WallpaperService.requestGeneration(secondImage))
             return fail("queued generation request was dropped while one was pending");
+        if (returnToFirst) {
+            if (!Services.WallpaperService.requestGeneration(firstImage)
+                    || Services.WallpaperService.generationQueuedPath !== "")
+                return fail("A to B to A retained the superseded B generation");
+        }
     }
 
     Connections {
@@ -75,10 +81,10 @@ ShellRoot {
                 return root.fail(Services.WallpaperService.lastError);
             if (Services.WallpaperService.generationStatus !== "succeeded") return;
             root.succeededCount++;
-            if (root.succeededCount === 2) {
+            if (root.succeededCount === (root.returnToFirst ? 1 : 2)) {
                 generatedTheme.reload();
                 const document = JSON.parse(generatedTheme.text());
-                if (document.tokens.primary !== "#a0d0ff")
+                if (document.tokens.primary !== (root.returnToFirst ? "#9ecaff" : "#a0d0ff"))
                     return root.fail(`final generated primary was ${document.tokens.primary}`);
                 console.log("QUEUED_WALLPAPER_GENERATION_TEST_PASSED");
                 Qt.quit();

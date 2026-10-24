@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../services" as Services
+import "../utils/ExternalWallpaperTheme.mjs" as ExternalWallpaperTheme
 
 Scope {
     id: root
@@ -48,25 +49,18 @@ Scope {
             const boundaryError = raw.timedOut ? "external wallpaper theme promotion timed out"
                 : raw.cancelled ? "external wallpaper theme promotion was cancelled"
                 : raw.errorCode || raw.parseError || "external wallpaper theme promotion failed";
-            let status = "failed";
-            let results = [];
-            let failedTargets = [];
-            let skippedTargets = 0;
-            if (raw.parsed !== null && raw.parsed.results !== undefined) {
-                results = raw.parsed.results;
-                failedTargets = results.filter(target => target.status === "failed").map(target => target.id);
-                skippedTargets = results.filter(target => target.status === "skipped").length;
-                status = failedTargets.length === 0 ? "succeeded" : "partial";
-            }
+            const validation = !raw.timedOut && !raw.cancelled && !raw.errorCode && !raw.parseError
+                ? ExternalWallpaperTheme.validateWallpaperExternalResult(raw.parsed, raw.exitCode)
+                : { ok: false, errors: [boundaryError], value: null };
             const result = {
                 operationId: raw.operationId,
-                contractValid: status !== "failed" || raw.exitCode !== 2,
-                success: raw.exitCode === 0 || (raw.exitCode === 3 && status === "partial"),
-                status,
-                results,
-                failedTargets,
-                skippedTargets,
-                error: status === "failed" ? boundaryError : failedTargets.join(", ") || "",
+                contractValid: validation.ok,
+                success: validation.ok && validation.value.status !== "failed",
+                status: validation.ok ? validation.value.status : "failed",
+                results: validation.ok ? validation.value.results : [],
+                failedTargets: validation.ok ? validation.value.failedTargets : [],
+                skippedTargets: validation.ok ? validation.value.skippedTargets : 0,
+                error: validation.ok ? validation.value.error : validation.errors.join("; "),
                 stderr: raw.stderr,
                 timedOut: raw.timedOut
             };

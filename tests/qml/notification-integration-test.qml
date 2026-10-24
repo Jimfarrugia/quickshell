@@ -2,7 +2,6 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "integrations" as Integrations
-import "modules/notifications" as Notifications
 import "services" as Services
 
 ShellRoot {
@@ -40,12 +39,22 @@ ShellRoot {
         restoreMode: Binding.RestoreBindingOrValue
     }
 
-    Notifications.NotificationPopupHost { id: popupHost }
+    LazyLoader {
+        id: popupHost
+        active: Quickshell.env("QT_QPA_PLATFORM") !== "offscreen"
+        source: active ? Qt.resolvedUrl("modules/notifications/NotificationPopupHost.qml").toString() : ""
+    }
 
     function owner(): string { return integration.owner; }
     function count(): int { return notificationCount; }
     function ids(): string { return JSON.stringify(receivedIds); }
     function historyCount(): int { return Services.NotificationService.history.length; }
+    function recordCount(): int { return Services.NotificationService.records.length; }
+    function clearNotifications(): bool {
+        Services.NotificationService.dismissPopups();
+        Services.NotificationService.clearHistory();
+        return Services.NotificationService.records.length === 0;
+    }
     function popupCount(): int { return Services.NotificationService.popupNotifications.length; }
     function actionCount(): int {
         let count = 0;
@@ -62,7 +71,7 @@ ShellRoot {
     function invokeAction(identifier: string): bool {
         return Services.NotificationService.invokeAction(lastActionId, identifier);
     }
-    function popupVisible(): bool { return popupHost.visible; }
+    function popupVisible(): bool { return popupHost.item !== null && popupHost.item.visible; }
     function reload(): bool {
         Quickshell.reload(false);
         return true;
@@ -74,6 +83,8 @@ ShellRoot {
         function count(): int { return root.count(); }
         function ids(): string { return root.ids(); }
         function historyCount(): int { return root.historyCount(); }
+        function recordCount(): int { return root.recordCount(); }
+        function clearNotifications(): bool { return root.clearNotifications(); }
         function popupCount(): int { return root.popupCount(); }
         function actionCount(): int { return root.actionCount(); }
         function actionReady(): bool { return root.actionReady(); }
