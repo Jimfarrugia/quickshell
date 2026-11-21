@@ -2,17 +2,11 @@
 
 ## How to use this file
 
-This file owns concrete developer commands, expected success markers, special
-test conditions, and routing from changed areas to appropriate validation.
-Completed phase acceptance evidence is historical and is not required to choose
-tests for maintenance work.
-
-Start with the affected subsystem below and apply the risk model in
-`docs/architecture/TESTING.md`. Run the broader command catalogue only when a
-cross-cutting, high-risk, or checkpoint scope warrants it. A code change does not
-automatically require a new automated test or a repository-wide validation run.
-Test filenames that still contain `phaseN` are retained implementation names, not
-instructions to load or replay the historical phase plan.
+Start with the affected area in the routing table below. Run the broader command
+catalogue only for cross-cutting, high-risk, or checkpoint work; a code change
+does not automatically require a new test or a repository-wide run. Test
+filenames containing `phaseN` are historical names, not instructions to replay
+the phase plan.
 
 ### Change-to-validation routing
 
@@ -46,8 +40,8 @@ instructions to load or replay the historical phase plan.
   repository-wide lint as appropriate.
 
 When an existing test fails only because an intentional color, token, spacing,
-border, radius, or decorative choice changed, reassess that assertion against
-`docs/architecture/TESTING.md` rather than automatically re-baselining it.
+border, radius, or decorative choice changed, reconsider that assertion (see
+the Tests section of `CODING_STANDARDS.md`) rather than re-baselining it.
 
 ## Command catalogue
 

@@ -2,17 +2,9 @@
 
 Status: Production baseline complete; maintenance and refinement mode
 
-This document is the small, always-relevant architecture map for the Quickshell
-Environment (QE). It owns cross-cutting invariants and routes agents to the
-minimum domain architecture needed for a change. Detailed current contracts live
-under `docs/architecture/`; they are authoritative without being default reading.
-
-`docs/STATUS.md` owns the current production baseline, known limitations, active
-maintenance direction, deferred capabilities, and live risk triggers.
-`docs/adr/` owns accepted architectural decisions and rationale.
-`docs/VALIDATION.md` owns concrete developer validation commands and expected
-markers. Historical phase-era architecture and planning snapshots are preserved
-under `docs/history/` and are non-authoritative.
+This document is the cross-cutting architecture map for the Quickshell
+Environment (QE). Detailed current contracts live under `docs/architecture/`;
+accepted decisions and their rationale live in `docs/adr/`.
 
 ## Scope
 
@@ -26,13 +18,9 @@ maintenance: styling, UI refinement, small modules, bug fixes, and bounded
 capability additions. A maintenance task does not need phase history unless it is
 reconstructing provenance or rollback evidence.
 
-## Documentation authority and routing
+## Domain documents
 
-Authority does not imply mandatory reading. `AGENTS.md` defines the context
-routing rules and agents should expand context only when the requested change
-crosses a documented boundary.
-
-| Change touches | Authoritative detail |
+| Change touches | Detail |
 | --- | --- |
 | Installation, packages, deployment ownership, defaults seed, Dunst cutover, activation receipts | `docs/architecture/INSTALLATION.md` |
 | Repository layers, configuration, paths, persistent/shared state | `docs/architecture/PROJECT_MODEL.md` |
@@ -41,13 +29,11 @@ crosses a documented boundary.
 | Native/DBus/IPC/file/command adapters, polling, retries, degraded state | `docs/architecture/INTEGRATIONS.md` |
 | Shell/lock processes, reload/restart, transient surfaces, supervision, logging | `docs/architecture/RUNTIME.md` |
 | Credentials, PAM/lock safety, sensitive rendering or operations | `docs/architecture/SECURITY.md` |
-| Test layering or acceptance strategy | `docs/architecture/TESTING.md` |
-
-If authoritative documents conflict, do not silently infer precedence. Treat the
-claim as disputed, inspect implementation/runtime evidence, and resolve the
-conflict explicitly.
 
 ## Architectural Principles
+
+The enforceable rules derived from these principles are in
+`CODING_STANDARDS.md`.
 
 ### One owner per independently editable value
 
@@ -115,34 +101,6 @@ reports availability and staleness. A failed Bluetooth adapter must not block
 the bar, audio, launcher, or lock process. Security-critical lock failures are
 handled separately and never fail open.
 
-## Cross-cutting implementation invariants
-
-- Dependency direction is presentation/modules -> domain services -> integration
-  adapters -> external systems.
-- Presentation QML must not construct system commands, parse command output,
-  write shared external state, or own long-lived external subscriptions.
-- Shared long-lived state and operations belong to a domain service. View-local
-  presentation state remains local.
-- Each external boundary is normalized by an integration adapter that exposes
-  availability, freshness/error state, and requested-versus-confirmed operation
-  semantics as appropriate.
-- Use QML for reactive state and Qt object lifetime, JavaScript for pure
-  transformations, and scripts only for reviewed stable external contracts.
-- Prefer native Quickshell/Qt/Wayland/DBus/IPC facilities over commands.
-- Polling is exceptional and must be registered in
-  `docs/architecture/INTEGRATIONS.md` before a new poller is accepted.
-- Authored inputs, generated artifacts, caches, requested state, confirmed live
-  state, and last-known-good data are distinct categories and must not be
-  presented as interchangeable.
-- Use project-relative and XDG-resolved paths; never hard-code a user home or
-  checkout location.
-- The persistent shell and secure lock remain separate processes. The lock stays
-  minimal, compositor-enforced, and isolated from persistent-shell services.
-- Never expose unlock through QE IPC and never replace `WlSessionLock` with a
-  fullscreen imitation.
-- Never log or persist PAM responses, network secrets, provider credentials, or
-  equivalent sensitive material.
-
 ## Current platform topology
 
 ```text
@@ -162,22 +120,3 @@ The persistent shell owns long-lived desktop integrations and user-facing
 surfaces. The lock process is intentionally separate because authentication and
 session-lock failure semantics are security-sensitive. Detailed lifecycle and
 routing contracts are in `docs/architecture/RUNTIME.md`.
-
-## Architectural change rule
-
-A tactical implementation change does not require an ADR merely because it edits
-architecture-owned code. Update architecture only when current ownership,
-boundaries, contracts, lifecycle, security, failure behavior, or durable
-structure changes. Add or revise an ADR only for a significant architectural
-choice with meaningful alternatives and consequences. Never silently deviate
-from an accepted ADR.
-
-When such a change is required:
-
-1. describe the concrete problem and evidence;
-2. identify affected contracts, risks, and users;
-3. compare the proposed replacement with meaningful alternatives;
-4. update the affected architecture domain;
-5. add or revise the ADR when the decision is significant;
-6. update `docs/STATUS.md` only if the current baseline, limitation, backlog, or
-   live risk trigger changes.
