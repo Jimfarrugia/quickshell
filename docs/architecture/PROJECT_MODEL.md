@@ -45,13 +45,10 @@ Authoritative for repository dependency boundaries, configuration and path owner
 |   |-- VALIDATION.md
 |   |-- USER_GUIDE.md
 |   `-- history/               # non-authoritative completed/historical records
-|-- .opencode/
-|   |-- commands/
-|   |   `-- docs-maintain.md
-|   `-- skills/
-|       `-- qe-doc-maintenance/
-|           `-- SKILL.md
-`-- AGENTS.md
+|-- .claude/settings.json      # enables the mattpocock-skills plugin
+|-- AGENTS.md                  # agent navigation pointers
+|-- CODING_STANDARDS.md        # rules changes are reviewed against
+`-- GLOSSARY.md                # domain vocabulary
 ```
 
 The split between `components/` and `modules/` is intentional:

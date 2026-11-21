@@ -104,11 +104,4 @@ constraints, or decision provenance.
 - `docs/history/PHASES_07-11.md` — completed dashboard/control-center evidence.
 - `docs/history/PHASES_12-13.md` — completed secure-lock and production-hardening evidence.
 - `docs/history/INITIAL_SYSTEM_INVENTORY.md` — original environment inventory.
-
-## Status update rule
-
-Update this file when a change alters the production baseline, a known limitation
-or escape hatch, an accepted deferred/backlog item, or a live risk trigger. Pure
-implementation refactors and styling changes normally require no status update.
-Architecture, ADR, validation, and user-guide updates are governed by their own
-authority boundaries.
+- `docs/history/INSTALLATION_PLAN.md` — completed installer implementation plan.
