@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "../utils/Validation.mjs" as Validation
 
 // Bounded structured helper contract for thermal discovery and disk capacity.
 // Invokes scripts/qe-system-metrics.sh with a stable JSON stdout contract.
@@ -33,11 +34,12 @@ QtObject {
       availability = "available";
       freshness = "current";
       lastError = null;
+      const document = Validation.toPlainJson(result.parsed);
       if (thermal) {
-        thermalSensors = result.parsed.sensors || [];
-        thermalRead({ ok: true, data: result.parsed });
+        thermalSensors = document.sensors || [];
+        thermalRead({ ok: true, data: document });
       }
-      else diskRead({ ok: true, data: result.parsed });
+      else diskRead({ ok: true, data: document });
     } else {
       availability = "degraded";
       freshness = "stale";

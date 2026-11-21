@@ -133,6 +133,13 @@ export function parseJson(text, boundary) {
   }
 }
 
+// A JSON document received through a QML `var` signal (such as CommandRunner's
+// result.parsed) is a converted copy whose arrays fail Array.isArray. A deep
+// JSON round trip restores plain arrays and objects; Array.from is shallow.
+export function toPlainJson(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
 export function validateConfig(document) {
   const value = copyDefaults();
   const errors = [];

@@ -42,6 +42,16 @@ Commands do not run through `sh -c` unless shell semantics are the purpose of a
 reviewed helper script. Secrets never appear in arguments when a native API can
 avoid it, logs, state files, or diagnostic UI.
 
+Values received through a QML `var` signal are converted copies, not the
+sender's values. On Qt 6.12 / Quickshell 0.3.2, nested arrays arrive as
+sequence wrappers that fail `Array.isArray` and are not `Array.prototype`
+instances, and plain objects lose their identity; `QObject`s keep theirs. An
+adapter that hands `CommandRunner`'s `result.parsed` document to a validator,
+mapper, or other contract check first normalizes it with
+`Validation.toPlainJson()` from `utils/Validation.mjs`. Shared validators stay
+strict and expect plain JavaScript. Do not rely on `Array.isArray`, prototypes,
+or object identity for any other `var`-signal payload without normalizing it.
+
 ### Polling policy
 
 Polling is allowed only for values lacking reliable events. Every poller must be

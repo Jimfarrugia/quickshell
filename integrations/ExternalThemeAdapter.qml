@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../utils/ExternalTheme.mjs" as ExternalTheme
+import "../utils/Validation.mjs" as Validation
 
 Scope {
     id: root
@@ -88,7 +89,8 @@ Scope {
                 : raw.errorCode || raw.parseError || "external theme apply failed";
             let validation = { ok: false, errors: [boundaryError], value: null };
             if (raw.parsed !== null)
-                validation = ExternalTheme.validateExternalThemeResult(raw.parsed, root.requestedThemeId, raw.exitCode);
+                validation = ExternalTheme.validateExternalThemeResult(
+                    Validation.toPlainJson(raw.parsed), root.requestedThemeId, raw.exitCode);
             const result = {
                 operationId: raw.operationId,
                 contractValid: validation.ok,
