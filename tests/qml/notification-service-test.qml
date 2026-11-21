@@ -23,6 +23,11 @@ ShellRoot {
         Qt.exit(1);
     }
 
+    function heldNative(id) {
+        const record = Services.NotificationService.records.find(entry => entry.data.id === id);
+        return record ? record.native : null;
+    }
+
     function begin() {
         if (done || started || !Services.NotificationService.stateReady) return;
         started = true;
@@ -154,18 +159,28 @@ ShellRoot {
         if (Services.NotificationService.removeFromHistory(5))
             return fail("individual history removal succeeded for a missing notification");
 
+        // The fake integration's var signals deliver copies of these plain JS
+        // fixtures, so release and tracking are observed on the native the
+        // service holds, never on the object the test sent.
+        const cleared = root.heldNative(1);
+        if (cleared === null || cleared.tracked !== true)
+            return fail("history notification was not tracked before clearing");
         Services.NotificationService.clearHistory();
-        if (Services.NotificationService.records.length !== 0 || fakeNotification.tracked)
+        if (Services.NotificationService.records.length !== 0 || cleared.tracked)
             return fail("clearing history retained unused records or native tracking");
         Services.NotificationService.setPopupsBlocked(true);
         const limit = Services.ConfigService.config.notifications.historyLimit;
-        let first = null;
+        let evicted = null;
         for (let id = 10; id < 10 + limit + 20; id++) {
             const notification = Object.assign({}, fakeNotification, { id: id, tracked: true });
-            if (first === null) first = notification;
             fakeIntegration.send(notification);
+            if (evicted === null) {
+                evicted = root.heldNative(id);
+                if (evicted === null || evicted.tracked !== true)
+                    return fail("history notification was not tracked before eviction");
+            }
         }
-        if (Services.NotificationService.records.length !== limit || first.tracked)
+        if (Services.NotificationService.records.length !== limit || evicted.tracked)
             return fail("history eviction retained unused records or native tracking");
         const retainedId = Services.NotificationService.history[0].data.id;
         if (!Services.NotificationService.invokeAction(retainedId, "open")
@@ -176,15 +191,18 @@ ShellRoot {
         Services.NotificationService.setDnd(false);
         const popupOnly = Object.assign({}, fakeNotification, { id: 10000, tracked: true, transient: true });
         fakeIntegration.send(popupOnly);
-        if (Services.NotificationService.records.length !== 1 || !popupOnly.tracked)
+        const popupOnlyNative = root.heldNative(popupOnly.id);
+        if (Services.NotificationService.records.length !== 1
+                || popupOnlyNative === null || !popupOnlyNative.tracked)
             return fail("popup-only notification was released before popup completion");
         Services.NotificationService.hidePopup(popupOnly.id);
-        if (Services.NotificationService.records.length !== 0 || popupOnly.tracked)
+        if (Services.NotificationService.records.length !== 0 || popupOnlyNative.tracked)
             return fail("popup completion retained unused records or native tracking");
         const both = Object.assign({}, fakeNotification, { id: 10001, tracked: true });
         fakeIntegration.send(both);
+        const bothNative = root.heldNative(both.id);
         Services.NotificationService.removeFromHistory(both.id);
-        if (Services.NotificationService.records.length !== 1 || !both.tracked)
+        if (Services.NotificationService.records.length !== 1 || bothNative === null || !bothNative.tracked)
             return fail("history removal released a visible popup");
         fakeIntegration.close(both);
         if (Services.NotificationService.records.length !== 0)
