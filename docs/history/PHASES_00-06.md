@@ -7,7 +7,7 @@ records that previously lived in `docs/PLAN.md`. The material is retained so
 token optimization does not destroy the project's audit trail.
 
 For current work, read `AGENTS.md` and the relevant live sections of
-`docs/PLAN.md`, `docs/ARCHITECTURE.md`, and `docs/DECISIONS.md`. Consult this
+`docs/PLAN.md`, `docs/ARCHITECTURE.md`, and `docs/adr/`. Consult this
 file only when earlier implementation evidence or rollback history is relevant.
 
 ## Archived Phase 6 completion handoff

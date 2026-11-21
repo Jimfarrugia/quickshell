@@ -6,7 +6,7 @@ This file preserves the discovery inventory that previously lived in
 `docs/PLAN.md`. It describes the environment and migration starting point before
 completed QE cutovers. Current architecture is authoritative in
 `docs/ARCHITECTURE.md`; current roadmap/status is authoritative in
-`docs/PLAN.md`; accepted decisions are authoritative in `docs/DECISIONS.md`.
+`docs/PLAN.md`; accepted decisions are authoritative in `docs/adr/`.
 
 Do not load this file by default for implementation work.
 

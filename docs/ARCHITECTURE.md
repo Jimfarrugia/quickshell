@@ -9,7 +9,7 @@ under `docs/architecture/`; they are authoritative without being default reading
 
 `docs/STATUS.md` owns the current production baseline, known limitations, active
 maintenance direction, deferred capabilities, and live risk triggers.
-`docs/DECISIONS.md` owns accepted architectural decisions and rationale.
+`docs/adr/` owns accepted architectural decisions and rationale.
 `docs/VALIDATION.md` owns concrete developer validation commands and expected
 markers. Historical phase-era architecture and planning snapshots are preserved
 under `docs/history/` and are non-authoritative.

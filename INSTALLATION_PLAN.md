@@ -1036,7 +1036,7 @@ Add:
 - `docs/architecture/INSTALLATION.md` as the durable installation contract;
 - one narrow installation routing row in `AGENTS.md`;
 - one installation route in `docs/ARCHITECTURE.md`;
-- one ADR in `docs/DECISIONS.md` covering the durable ownership boundary:
+- one ADR in `docs/adr/` covering the durable ownership boundary:
   - QE owns requirements and generic deployment;
   - Arch Setup owns orchestration and base preparation;
   - dotfiles owns user/session policy;

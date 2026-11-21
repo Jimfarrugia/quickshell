@@ -8,7 +8,7 @@ future completed phases and related milestone records in this range should be
 appended losslessly as they finish.
 
 For current work, read `AGENTS.md` and the relevant live sections of
-`docs/PLAN.md`, `docs/ARCHITECTURE.md`, and `docs/DECISIONS.md`. Consult this
+`docs/PLAN.md`, `docs/ARCHITECTURE.md`, and `docs/adr/`. Consult this
 file only when earlier implementation evidence or rollback history is relevant.
 
 ## Archived Phase 7: Launcher and help
@@ -25,7 +25,7 @@ active-monitor placement, a centered 35%-wide content-sized overlay panel with
 up to six visible result rows, persistent successful launch counts, deterministic
 search ranking, modified vim-style
 navigation, and explicit launch-failure handling. See ADR-029, ADR-030, and
-ADR-031 in `docs/DECISIONS.md`.
+ADR-031 in `docs/adr/`.
 
 Prerequisites:
 
@@ -34,7 +34,7 @@ Prerequisites:
 
 Relevant decisions: ADR-011 (native integration before commands), ADR-016
 (namespaced transient-surface IPC), and ADR-021 (vim-style selectable-surface
-navigation) in `docs/DECISIONS.md`.
+navigation) in `docs/adr/`.
 
 Scope:
 
@@ -98,7 +98,7 @@ Prerequisites:
 Relevant decisions: ADR-011 (native integration before commands), ADR-013
 (requested-only idle inhibition), ADR-016 (namespaced transient-surface IPC),
 ADR-026/027 (sidebar surface and styling), and ADR-033 (dashboard surface
-foundation) in `docs/DECISIONS.md`.
+foundation) in `docs/adr/`.
 
 Scope:
 
@@ -164,7 +164,7 @@ Prerequisites:
 - native Bluetooth pairing-agent capability investigation
 
 Relevant decision: ADR-011 (native integration before commands) in
-`docs/DECISIONS.md`.
+`docs/adr/`.
 
 Scope:
 
@@ -225,7 +225,7 @@ Prerequisites:
 - agreed v1 boundary for connection types and secrets
 
 Relevant decisions: ADR-011 (native integration before commands) and ADR-034
-(network dashboard v1 boundary) in `docs/DECISIONS.md`.
+(network dashboard v1 boundary) in `docs/adr/`.
 
 Scope:
 

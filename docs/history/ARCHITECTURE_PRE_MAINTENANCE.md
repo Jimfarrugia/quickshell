@@ -12,7 +12,7 @@ surfaces and deployment choices are tracked in `docs/PLAN.md`
 This document is the authoritative description of the Quickshell Environment
 (QE) architecture, ownership boundaries, runtime topology, and service
 contracts. `docs/PLAN.md` is authoritative for roadmap, sequence, project status,
-active/future phase scope, risks, and polling policy. `docs/DECISIONS.md` is the
+active/future phase scope, risks, and polling policy. `docs/adr/` is the
 authoritative architectural decision log. `AGENTS.md` defines how implementation
 agents select the minimum relevant documentation for a task.
 
@@ -32,7 +32,7 @@ Documentation has deliberately separate authority domains:
 - `docs/PLAN.md` is authoritative for roadmap, project status, active/future
   phase scope, prerequisites, acceptance criteria, risks, deferred work, and
   polling policy.
-- `docs/DECISIONS.md` is the authoritative architectural decision log and
+- `docs/adr/` is the authoritative architectural decision log and
   rationale. Accepted ADRs remain there unless explicitly superseded or revised.
 - `docs/VALIDATION.md` is the developer validation catalogue and expected-result
   reference.

@@ -41,7 +41,7 @@ Authoritative for repository dependency boundaries, configuration and path owner
 |   |-- ARCHITECTURE.md
 |   |-- architecture/           # selectively loaded domain architecture
 |   |-- STATUS.md
-|   |-- DECISIONS.md
+|   |-- adr/                   # accepted architecture decisions, one file each
 |   |-- VALIDATION.md
 |   |-- USER_GUIDE.md
 |   `-- history/               # non-authoritative completed/historical records

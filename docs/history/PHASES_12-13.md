@@ -8,7 +8,7 @@ future completed Phase 13 material should be appended losslessly when that phase
 finishes.
 
 For current work, read `AGENTS.md` and the relevant live sections of
-`docs/PLAN.md`, `docs/ARCHITECTURE.md`, and `docs/DECISIONS.md`. Consult this
+`docs/PLAN.md`, `docs/ARCHITECTURE.md`, and `docs/adr/`. Consult this
 file only when earlier implementation evidence or rollback history is relevant.
 
 ## Archived Phase 12: Secure lock replacement
@@ -149,7 +149,7 @@ the affected graphical session from a separate TTY restored login recovery, and
 output attach/detach preserved lock coverage.
 
 Relevant decisions: ADR-002 (separate lock process), ADR-011 (native integration
-before commands), and ADR-041 (`login` PAM service) in `docs/DECISIONS.md`.
+before commands), and ADR-041 (`login` PAM service) in `docs/adr/`.
 
 Scope:
 

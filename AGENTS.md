@@ -15,7 +15,7 @@ Read the smallest authoritative set that covers the requested change.
    risk trigger. Do not load it for a purely local styling change.
 4. Read `docs/ARCHITECTURE.md` for cross-cutting invariants when the change is
    more than presentation-local, then follow only the relevant domain route.
-5. Read only ADRs in `docs/DECISIONS.md` that are explicitly referenced by the
+5. Read only ADRs in `docs/adr/` that are explicitly referenced by the
    affected code/docs or whose affected area overlaps a proposed architectural
    change.
 6. Before testing, read the relevant routing row/subsection in
@@ -54,7 +54,7 @@ because a document is authoritative.
   maintenance direction, deferred capabilities, and live risk triggers.
 - `docs/ARCHITECTURE.md` — compact cross-cutting architecture and routing map.
 - `docs/architecture/*.md` — detailed current architecture by domain.
-- `docs/DECISIONS.md` — accepted architectural decisions and rationale.
+- `docs/adr/` — accepted architectural decisions and rationale.
 - `docs/VALIDATION.md` — validation routing, commands, and expected markers.
 - `GLOSSARY.md` — durable QE vocabulary only.
 - `docs/USER_GUIDE.md` — stable user-facing guidance.
@@ -102,7 +102,7 @@ Do not update documentation merely because code changed. Classify the impact:
 | Pure styling/local implementation/refactor with unchanged contracts | Usually none |
 | Production baseline, known limitation, fallback, accepted backlog/deferred item, or live risk changed | Update `docs/STATUS.md` |
 | Ownership, boundary, service contract, lifecycle, failure, security, or durable structure changed | Update the affected architecture domain |
-| Significant architectural choice with meaningful alternatives/consequences | Add/revise an ADR in `docs/DECISIONS.md` |
+| Significant architectural choice with meaningful alternatives/consequences | Add/revise an ADR in `docs/adr/` |
 | Test command/routing/expected marker changed | Update `docs/VALIDATION.md` |
 | Durable domain vocabulary changed | Update `GLOSSARY.md` |
 | Stable user-facing workflow changed | Update `docs/USER_GUIDE.md` when the task includes/approves guide maintenance |

@@ -16,7 +16,7 @@ registry for the Quickshell Environment (QE).
 
 `docs/ARCHITECTURE.md` is authoritative for current system architecture,
 boundaries, ownership, lifecycle, failure, and security contracts.
-`docs/DECISIONS.md` is the authoritative architectural decision log and rationale.
+`docs/adr/` is the authoritative architectural decision log and rationale.
 Historical implementation evidence and superseded working context live under
 `docs/history/` and are not authoritative for current behavior.
 
@@ -82,7 +82,7 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
 - Phase 12 is complete. QE owns the compositor-enforced lock, manual/idle/
   before-sleep paths, and native PAM authentication through `qe-lock`; Hyprlock
   is installed but retired. Current lock ownership, failure, and recovery
-  constraints are in `docs/ARCHITECTURE.md` and `docs/DECISIONS.md`; detailed
+  constraints are in `docs/ARCHITECTURE.md` and `docs/adr/`; detailed
   implementation and acceptance evidence is in
   `docs/history/PHASES_12-13.md`.
 - Phases 9 and 10 are complete. Bluetooth uses native adapter/device lifecycle
@@ -91,7 +91,7 @@ the disputed claim, collect evidence, and resolve the conflict explicitly.
   operations, one deterministic active-device view, and explicit
   `nm-connection-editor` fallback; wired state is read-only. Detailed acceptance
   and rollback evidence is in `docs/history/PHASES_07-11.md`, and the network
-  boundary is recorded in `docs/DECISIONS.md` as ADR-034.
+  boundary is recorded in `docs/adr/` as ADR-034.
 - Quickshell 0.3.1 does not repopulate all native devices after a NetworkManager
   restart. The dashboard therefore exposes a temporary `Restart QE` recovery
   action for `NETWORKMANAGER_UNAVAILABLE`, using the guarded
@@ -165,7 +165,7 @@ decision.
 
 ## 4. Accepted Requirements and Active Constraints
 
-The full accepted-decision rationale is in `docs/DECISIONS.md`. The following
+The full accepted-decision rationale is in `docs/adr/`. The following
 items remain useful live constraints:
 
 - Use a persistent QE process and a separate lock process.
@@ -435,7 +435,7 @@ Prerequisites:
 
 Relevant decisions: ADR-010 (defer production supervision until runtime
 evidence exists), ADR-045 (production supervision and deployment), and ADR-046
-(retire the complete legacy fallback) in `docs/DECISIONS.md`.
+(retire the complete legacy fallback) in `docs/adr/`.
 
 Scope:
 
@@ -589,7 +589,7 @@ When implementation reveals a reason to change an accepted decision:
 4. Document consequences and compatibility impact.
 5. Update `docs/ARCHITECTURE.md` if current boundaries, ownership, lifecycle,
    security, or failure policy change.
-6. Add or update the relevant ADR in `docs/DECISIONS.md`.
+6. Add or update the relevant ADR in `docs/adr/`.
 7. Obtain user clarification before changing scope, security, state ownership,
    external behavior, or a previously accepted decision.
 
