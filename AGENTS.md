@@ -10,8 +10,8 @@ shell; `lock.qml` is the isolated secure lock.
   `docs/architecture/*.md` file covers each domain.
 - `docs/STATUS.md`: production baseline, known limitations, deferred work, and
   live risk triggers.
-- `docs/VALIDATION.md`: lint/test commands, what to run for each changed area,
-  and expected markers.
+- `tests/qe-check`: `lint [paths]`, `unit`, `test <path>`, `all` (headless
+  suite). `docs/VALIDATION.md` says what to run for each changed area.
 - `CODING_STANDARDS.md`: the rules changes are reviewed against.
 - `docs/USER_GUIDE.md` is user-facing; `docs/history/` is non-authoritative
   provenance.
@@ -21,6 +21,9 @@ shell; `lock.qml` is the isolated secure lock.
 - Never exercise notification-ownership, service-supervision, credential, or
   lock changes on the primary session; use the isolation/recovery procedure in
   the matching `docs/VALIDATION.md` section.
+- Run tests only through `tests/qe-check`: a bare `quickshell -p` test run
+  writes live QE state. `tests/qe-check live` starts shells in the current
+  session; use it only when those boundaries changed.
 - Verify Quickshell APIs against the installed version's metadata and matching
   upstream docs/source before relying on them.
 

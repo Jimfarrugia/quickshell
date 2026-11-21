@@ -1,7 +1,10 @@
 # QE Coding Standards
 
 Rules changes are reviewed against. Rationale lives in `docs/ARCHITECTURE.md`,
-the domain docs under `docs/architecture/`, and `docs/adr/`.
+the domain docs under `docs/architecture/`, and `docs/adr/`. `tests/qe-check lint`
+already enforces the mechanical parts (Qt 6 `qmllint` errors, `shellcheck`, no
+`Quickshell.Io` or `execDetached` in `modules/` or `components/`, no literal
+`/home/<user>/` paths), so review the rest.
 
 ## Architecture
 
@@ -37,7 +40,6 @@ the domain docs under `docs/architecture/`, and `docs/adr/`.
   timeouts; bound logs; define exit-code semantics.
 - Use project-relative and XDG-resolved paths. Never hard-code a user home or
   checkout location.
-- New or modified shell helpers pass `shellcheck`.
 
 ## Security
 
@@ -64,6 +66,8 @@ the domain docs under `docs/architecture/`, and `docs/adr/`.
   still owns the contract. Coverage percentage and test count are not goals.
 - Adapter/helper tests cover the malformed/timeout/retry/stale cases that
   boundary actually owns, not every generic failure.
+- Tests never read or write the live session's state: a helper that starts QE
+  points the `XDG_*` directories it uses at a temporary root.
 
 ## Scope and documentation
 

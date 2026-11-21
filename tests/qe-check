@@ -1,0 +1,348 @@
+#!/usr/bin/env bash
+# QE developer checks: lint, unit tests, single tests, and the headless suite.
+set -euo pipefail
+
+usage() {
+    cat <<'EOF'
+usage: tests/qe-check <command> [paths...]
+
+  lint [paths...]   Qt 6 qmllint, shellcheck, and boundary checks
+                    (all tracked files when no paths are given)
+  unit              JavaScript and Python unit tests (about a second)
+  test <path>...    run test files: tests/js/*.mjs, tests/python/*.py,
+                    tests/helpers/*.test.sh, tests/qml/*-test.qml
+  all               lint plus every headless test
+  live [paths...]   tests that start a full shell.qml or need live daemons in
+                    the current session (opt-in; see docs/VALIDATION.md)
+EOF
+}
+
+orig=$PWD
+root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+cd -- "$root"
+
+# /usr/bin/qmllint is the Qt 5 linter: it cannot parse Qt 6 QML and only checks syntax.
+qmllint=${QE_QMLLINT:-/usr/lib/qt6/bin/qmllint}
+qml_timeout=${QE_QML_TIMEOUT:-10}
+# Some __pycache__ files are tracked; do not rewrite them on every run.
+export PYTHONDONTWRITEBYTECODE=1
+
+# Needs an isolated session: stops Dunst and drives the live compositor.
+manual_helpers=(notifications.test.sh)
+# Start a full shell.qml in the current session (sharing production's state path
+# when run from the managed checkout) or need live daemons; only run via `live`.
+live_helpers=(theme-selector-ipc.test.sh dashboard-ipc.test.sh control-center-ipc.test.sh
+    wallpaper-selector-ipc.test.sh qe-launch.test.sh)
+live_qml=(network-address-test.qml)
+
+work=$(mktemp -d)
+trap 'rm -rf -- "$work"' EXIT
+# QE keeps global state (e.g. active-theme.json) under XDG_STATE_HOME, and several
+# tests select themes; never let a test write the live session's state.
+export XDG_STATE_HOME=$work/state
+mkdir -p -- "$XDG_STATE_HOME"
+
+passed=0
+failed=()
+
+report() { # name ok|fail log
+    if [[ $2 == ok ]]; then
+        passed=$((passed + 1))
+        printf 'ok    %s\n' "$1"
+    else
+        failed+=("$1")
+        printf 'FAIL  %s\n' "$1"
+        [[ -s $3 ]] && tail -n 30 -- "$3" | sed 's/^/      /'
+    fi
+    return 0
+}
+
+summary() {
+    printf '\n%d passed, %d failed\n' "$passed" "${#failed[@]}"
+    if ((${#failed[@]})); then
+        printf '  %s\n' "${failed[@]}"
+        exit 1
+    fi
+}
+
+in_list() { # needle list...
+    local needle=$1 item
+    shift
+    for item; do [[ $item == "$needle" ]] && return 0; done
+    return 1
+}
+
+logfile() { printf '%s/%s.log' "$work" "${1//\//_}"; }
+
+# Resolve a user-supplied path to a repo-relative one; fails for missing or outside paths.
+relpath() {
+    local p=$1 abs
+    [[ $p == /* ]] || p=$orig/$p
+    abs=$(realpath -e -- "$p" 2>/dev/null) || return 1
+    [[ $abs == "$root"/* ]] || return 1
+    printf '%s\n' "${abs#"$root"/}"
+}
+
+is_shell() {
+    [[ $1 == defaults/* ]] && return 1 # captured generated theme artifacts, not scripts
+    [[ $1 == *.sh ]] || head -n 1 -- "$1" | grep -qE '^#!.*\b(ba|da)?sh\b'
+}
+
+# ---- lint ---------------------------------------------------------------
+
+lint_qml() {
+    local log out rc=0 f
+    log=$(logfile qmllint)
+    (($#)) || return 0
+    if [[ ! -x $qmllint ]]; then
+        echo "Qt 6 qmllint not found at $qmllint (set QE_QMLLINT)" >"$log"
+        report qmllint fail "$log"
+        return 0
+    fi
+    out=$("$qmllint" "$@" 2>&1) || rc=$?
+    local warnings
+    warnings=$(grep -c '^Warning:' <<<"$out" || true)
+    if ((rc == 0)); then
+        # Warnings do not fail the gate; show them only for explicitly named files.
+        ((single)) && [[ -n $out ]] && printf '%s\n' "$out"
+        report "qmllint ($# files, $warnings warnings)" ok "$log"
+        return 0
+    fi
+    : >"$log"
+    for f; do
+        "$qmllint" "$f" >>"$log" 2>&1 || echo "^ qmllint exit $? for $f" >>"$log"
+    done
+    grep -B 3 '^\^ qmllint exit' "$log" >"$log.errors" || true
+    report "qmllint ($# files)" fail "$log.errors"
+}
+
+lint_shell() {
+    local log
+    log=$(logfile shellcheck)
+    (($#)) || return 0
+    if shellcheck "$@" >"$log" 2>&1; then
+        report "shellcheck ($# files)" ok "$log"
+    else
+        report "shellcheck ($# files)" fail "$log"
+    fi
+}
+
+lint_boundaries() { # paths...
+    local log f
+    local -a presentation=()
+    log=$(logfile boundaries)
+    : >"$log"
+    (($#)) || return 0
+    for f; do
+        [[ $f == modules/*.qml || $f == components/*.qml ]] && presentation+=("$f")
+    done
+    if ((${#presentation[@]})); then
+        grep -nHE '^[[:space:]]*import[[:space:]]+Quickshell\.Io\b|execDetached' -- "${presentation[@]}" \
+            | sed 's/$/  <- presentation QML must not run commands or own IO (CODING_STANDARDS.md)/' >>"$log" || true
+    fi
+    grep -nHIE '/home/[a-z_][a-z0-9_.-]*/' -- "$@" \
+        | sed 's/$/  <- hard-coded home path; resolve via HOME or XDG/' >>"$log" || true
+    if [[ -s $log ]]; then
+        report "boundaries ($# files)" fail "$log"
+    else
+        report "boundaries ($# files)" ok "$log"
+    fi
+}
+
+cmd_lint() {
+    local -a qml=() sh=() other=()
+    local p rel
+    if (($# == 0)); then
+        single=0
+        mapfile -t qml < <(git ls-files '*.qml')
+        while IFS= read -r p; do
+            [[ -f $p ]] || continue # tests/qml/* holds symlinks to directories
+            other+=("$p")
+            is_shell "$p" && sh+=("$p")
+        done < <(git ls-files | grep -vE '^docs/|\.md$')
+    else
+        single=1
+        for p; do
+            rel=$(relpath "$p") || continue # deleted or outside the repo
+            [[ -f $rel ]] || continue
+            [[ $rel == *.qml ]] && qml+=("$rel")
+            is_shell "$rel" && sh+=("$rel")
+            [[ $rel == docs/* || $rel == *.md ]] || other+=("$rel")
+        done
+    fi
+    lint_qml "${qml[@]}"
+    lint_shell "${sh[@]}"
+    lint_boundaries "${other[@]}"
+}
+
+# ---- tests --------------------------------------------------------------
+
+run_js() {
+    local log
+    log=$(logfile "$1")
+    if node "$1" >"$log" 2>&1; then report "$1" ok "$log"; else report "$1" fail "$log"; fi
+}
+
+run_py() {
+    local log
+    log=$(logfile "$1")
+    if python3 -m unittest "$1" >"$log" 2>&1; then report "$1" ok "$log"; else report "$1" fail "$log"; fi
+}
+
+run_helper() {
+    local f=$1 log
+    local -a extra_env=("XDG_STATE_HOME=$(mktemp -d -p "$work")") # tests share no state
+    log=$(logfile "$f")
+    # Uses a private DBus; offscreen skips popup windows in the current session.
+    [[ ${f##*/} == notification-reload.test.sh ]] && extra_env+=(QT_QPA_PLATFORM=offscreen)
+    if env "${extra_env[@]}" bash "$f" >"$log" 2>&1; then
+        report "$f" ok "$log"
+    else
+        report "$f" fail "$log"
+    fi
+}
+
+# A QML test passes when it prints its single *_PASSED marker; exit 124 is
+# accepted because Qt.quit() can leave the process for the timeout to reap.
+run_qml() {
+    local f=$1 base log marker rc=0 path=$1
+    local -a markers=() extra_env=("XDG_STATE_HOME=$(mktemp -d -p "$work")") # tests share no state
+    base=${f##*/}
+    log=$(logfile "$f")
+    mapfile -t markers < <(grep -oE '[A-Z0-9_]+_PASSED' "$f" | sort -u)
+    if ((${#markers[@]} != 1)); then
+        echo "expected exactly one *_PASSED marker in $f, found ${#markers[@]}" >"$log"
+        report "$f" fail "$log"
+        return 0
+    fi
+    marker=${markers[0]}
+    case $base in
+    foundation-service-test.qml)
+        # The second run must load what the first run persisted. Start from an
+        # existing non-gruvbox state: on an empty root, first-run default seeding
+        # races the test's own write.
+        local state
+        state=$(mktemp -d -p "$work")
+        mkdir -p -- "$state/quickshell"
+        printf '{\n  "schemaVersion": 1,\n  "activeThemeId": "poimandres"\n}\n' >"$state/quickshell/active-theme.json"
+        extra_env=("XDG_STATE_HOME=$state")
+        env "${extra_env[@]}" timeout "$qml_timeout" quickshell -p "$f" >"$log.seed" 2>&1 || true
+        ;;
+    matugen-adapter-test.qml)
+        : >"$work/matugen-wallpaper.png"
+        extra_env+=("QE_MATUGEN=$root/tests/fixtures/matugen/fake-matugen.sh"
+            "QE_TEST_WALLPAPER=$work/matugen-wallpaper.png")
+        ;;
+    theme-degradation-test.qml)
+        # Only in a disposable copy: never replace an authored theme in the working tree.
+        mkdir -p "$work/relocated"
+        tar -C "$root" --exclude=./.git --exclude=./.opencode -cf - . | tar -C "$work/relocated" -xf -
+        cp -- tests/fixtures/themes/missing-token.json "$work/relocated/themes/poimandres.json"
+        path=$work/relocated/$f
+        ;;
+    esac
+    env "${extra_env[@]}" timeout "$qml_timeout" quickshell -p "$path" >"$log" 2>&1 || rc=$?
+    if grep -q "$marker" "$log" && ((rc == 0 || rc == 124)); then
+        report "$f" ok "$log"
+    else
+        echo "exit $rc; expected marker $marker" >>"$log"
+        report "$f" fail "$log"
+    fi
+}
+
+# Helpers that drive a QML test; the QML test is not run directly when wrapped.
+wrappers_of() { grep -lF -- "$1" tests/helpers/*.test.sh 2>/dev/null || true; }
+
+run_path() { # repo-relative test path, honoring tiers unless $allow_live
+    local f=$1 base w
+    local -a wrappers=()
+    base=${f##*/}
+    case $f in
+    tests/js/*.mjs) run_js "$f" ;;
+    tests/python/*.py) run_py "$f" ;;
+    tests/helpers/*.test.sh)
+        if in_list "$base" "${manual_helpers[@]}"; then
+            echo "skip  $f (manual: isolated session only, see docs/VALIDATION.md)"
+        elif in_list "$base" "${live_helpers[@]}" && ((!allow_live)); then
+            echo "skip  $f (live: run with tests/qe-check live $f)"
+        else
+            run_helper "$f"
+        fi
+        ;;
+    tests/qml/*.qml)
+        mapfile -t wrappers < <(wrappers_of "$base")
+        if ((${#wrappers[@]})); then
+            for w in "${wrappers[@]}"; do run_path "$w"; done
+        elif in_list "$base" "${live_qml[@]}" && ((!allow_live)); then
+            echo "skip  $f (live: run with tests/qe-check live $f)"
+        else
+            run_qml "$f"
+        fi
+        ;;
+    *)
+        echo "not a recognized test path: $f" >&2
+        exit 2
+        ;;
+    esac
+}
+
+cmd_unit() {
+    local f
+    for f in tests/js/*.test.mjs; do run_js "$f"; done
+    for f in tests/python/test_*.py; do run_py "$f"; done
+}
+
+cmd_test() {
+    local p rel
+    (($#)) || { usage >&2; exit 2; }
+    for p; do
+        rel=$(relpath "$p") || { echo "no such test: $p" >&2; exit 2; }
+        run_path "$rel"
+    done
+}
+
+cmd_all() {
+    local f base
+    cmd_lint
+    cmd_unit
+    for f in tests/helpers/*.test.sh; do
+        base=${f##*/}
+        in_list "$base" "${manual_helpers[@]}" "${live_helpers[@]}" || run_helper "$f"
+    done
+    for f in tests/qml/*-test.qml; do
+        base=${f##*/}
+        [[ -z $(wrappers_of "$base") ]] || continue
+        in_list "$base" "${live_qml[@]}" || run_qml "$f"
+    done
+}
+
+cmd_live() {
+    local f log rc=0
+    allow_live=1
+    echo "Starting full QE shells and live-daemon tests in the current session."
+    if (($#)); then
+        cmd_test "$@"
+        return 0
+    fi
+    for f in "${live_helpers[@]}"; do run_helper "tests/helpers/$f"; done
+    for f in "${live_qml[@]}"; do run_qml "tests/qml/$f"; done
+    # The persistent shell must still be alive when the timeout fires.
+    log=$(logfile shell.qml)
+    timeout 5 quickshell -p shell.qml >"$log" 2>&1 || rc=$?
+    if ((rc == 124)); then report "shell.qml smoke" ok "$log"; else report "shell.qml smoke (exit $rc)" fail "$log"; fi
+}
+
+single=0
+allow_live=0
+command=${1:-}
+(($#)) && shift
+case $command in
+lint) cmd_lint "$@" ;;
+unit) cmd_unit ;;
+test) cmd_test "$@" ;;
+all) cmd_all ;;
+live) cmd_live "$@" ;;
+-h | --help | help) usage; exit 0 ;;
+*) usage >&2; exit 2 ;;
+esac
+summary

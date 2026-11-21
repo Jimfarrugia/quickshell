@@ -36,7 +36,8 @@ Authoritative for repository dependency boundaries, configuration and path owner
 |   |-- fixtures/             # adapter inputs and malformed-data cases
 |   |-- js/                   # JavaScript tests
 |   |-- helpers/              # shell/helper contract tests
-|   `-- qml/                  # QML/Qt tests
+|   |-- qml/                  # QML/Qt tests
+|   `-- qe-check              # lint and test runner (tests/qe-check --help)
 |-- docs/
 |   |-- ARCHITECTURE.md
 |   |-- architecture/           # selectively loaded domain architecture
@@ -46,7 +47,8 @@ Authoritative for repository dependency boundaries, configuration and path owner
 |   |-- VALIDATION.md
 |   |-- USER_GUIDE.md
 |   `-- history/               # non-authoritative completed/historical records
-|-- .claude/settings.json      # enables the mattpocock-skills plugin
+|-- .claude/settings.json      # project plugins and the edit-time lint hook
+|-- .githooks/pre-commit       # lint staged files and run unit tests
 |-- AGENTS.md                  # agent navigation pointers
 |-- CODING_STANDARDS.md        # rules changes are reviewed against
 `-- GLOSSARY.md                # domain vocabulary

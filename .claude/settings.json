@@ -2,5 +2,20 @@
   "enabledPlugins": {
     "mattpocock-skills@claude-plugins-official": true,
     "ponytail@ponytail": false
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); [ -n \"$f\" ] || exit 0; out=$(\"$CLAUDE_PROJECT_DIR/tests/qe-check\" lint \"$f\" 2>&1) || jq -n --arg r \"$out\" '{decision: \"block\", reason: (\"tests/qe-check lint failed for the edited file:\\n\" + $r)}'",
+            "timeout": 60,
+            "statusMessage": "Linting edited file"
+          }
+        ]
+      }
+    ]
   }
 }

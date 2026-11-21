@@ -2,11 +2,17 @@
 
 ## How to use this file
 
-Start with the affected area in the routing table below. Run the broader command
-catalogue only for cross-cutting, high-risk, or checkpoint work; a code change
-does not automatically require a new test or a repository-wide run. Test
-filenames containing `phaseN` are historical names, not instructions to replay
-the phase plan.
+Run every check through `tests/qe-check` from the repository root (see the
+Command reference below). Start with the affected area in the routing table and
+run single tests; use `tests/qe-check all` only for cross-cutting, high-risk, or
+checkpoint work. A code change does not automatically require a new test or a
+repository-wide run. Test filenames containing `phaseN` are historical names,
+not instructions to replay the phase plan.
+
+Do not run QML tests with a bare `quickshell -p`: QE keeps global state such as
+`active-theme.json` under `XDG_STATE_HOME`, several tests select themes, and a
+bare run writes the live session's state. The runner gives every test a fresh
+temporary `XDG_STATE_HOME`.
 
 ### Change-to-validation routing
 
@@ -36,128 +42,53 @@ the phase plan.
 - **Service/integration/persistence/security/lifecycle change:** run focused
   contract tests and the relevant failure/recovery paths; broaden to integration
   or shell smoke where the changed boundary warrants it.
-- **Cross-cutting/release-style checkpoint:** use the broader catalogue and
-  repository-wide lint as appropriate.
+- **Cross-cutting/release-style checkpoint:** `tests/qe-check all`.
 
 When an existing test fails only because an intentional color, token, spacing,
 border, radius, or decorative choice changed, reconsider that assertion (see
 the Tests section of `CODING_STANDARDS.md`) rather than re-baselining it.
 
-## Command catalogue
-
-Run from the project root. This file is stored under `docs/`, but all commands
-below are intended to be run from the repository root:
+## Command reference
 
 ```sh
-node tests/js/validation.test.mjs
-node tests/js/lock-entry.test.mjs
-node tests/js/schema.test.mjs
-node tests/js/theme-semantics.test.mjs
-node tests/js/system-metrics.test.mjs
-node tests/js/brightness.test.mjs
-node tests/js/external-theme.test.mjs
-node tests/js/matugen.test.mjs
-node tests/js/external-wallpaper-theme.test.mjs
-node tests/js/launcher.test.mjs
-node tests/js/help.test.mjs
-node tests/js/ai-quota.test.mjs
-python3 -m unittest tests/python/test_ai_quota.py
-bash tests/helpers/system-metrics-helper.test.sh
-bash tests/helpers/brightness-helper.test.sh
-bash tests/helpers/single-instance.test.sh
-bash tests/helpers/run-qe.test.sh
-bash tests/helpers/qe-doctor.test.sh
-bash tests/helpers/qe-entrypoints.test.sh
-bash tests/helpers/theme-hot-reload.test.sh
-bash tests/helpers/theme-selector-ipc.test.sh
-bash tests/helpers/dashboard-ipc.test.sh
-bash tests/helpers/control-center-ipc.test.sh
-bash tests/helpers/monitor-layout.test.sh
-bash tests/helpers/monitor-layout-config.test.sh
-bash tests/helpers/wallpaper-random.test.sh
-bash tests/helpers/qe-wallpaper.test.sh
-bash tests/helpers/ai-quota-persistence.test.sh
-bash tests/helpers/external-theme-adapter.test.sh
-bash tests/helpers/wallpaper-cache.test.sh
-bash tests/helpers/wallpaper-service.test.sh
-bash tests/helpers/wallpaper-promotion.test.sh
-bash tests/helpers/wallpaper-generation-failure.test.sh
-bash tests/helpers/wallpaper-selector-ipc.test.sh
-bash tests/helpers/qe-launch.test.sh
-bash tests/helpers/qe-defaults.test.sh
-bash tests/helpers/installer.test.sh
-bash tests/helpers/activation.test.sh
-bash tests/helpers/external-wallpaper-theme.test.sh
-bash tests/helpers/external-wallpaper-theme-service.test.sh
-bash tests/helpers/notification-owner.test.sh
-bash tests/helpers/notification-service.test.sh
-bash tests/helpers/notification-reload.test.sh
-# Headless native reload/retention check on a private DBus (no popup windows):
-QT_QPA_PLATFORM=offscreen bash tests/helpers/notification-reload.test.sh
-bash tests/helpers/notifications.test.sh
+tests/qe-check lint [paths...]   # Qt 6 qmllint, shellcheck, boundary checks
+tests/qe-check unit              # JavaScript and Python unit tests
+tests/qe-check test <path>...    # one or more test files; wrapped QML tests run via their helper
+tests/qe-check all               # lint + unit + every headless helper and QML test
+tests/qe-check live [paths...]   # opt-in tests that use the current session (below)
+```
+
+A QML test passes when it prints its single `*_PASSED` marker; exit code `124`
+is accepted because `Qt.quit()` can leave the process for the timeout to reap.
+A QML test that a `tests/helpers/*.test.sh` script drives is run through that
+helper. `lint` uses `/usr/lib/qt6/bin/qmllint` (override with `QE_QMLLINT`):
+`/usr/bin/qmllint` is the Qt 5 linter, which cannot parse Qt 6 QML. Lint fails
+on errors only; the existing warning baseline is reported as a count. The
+boundary check rejects `Quickshell.Io` imports and `execDetached` in `modules/`
+and `components/`, and literal `/home/<user>/` paths outside `docs/`.
+
+A Claude Code hook runs `tests/qe-check lint` on every file an agent edits, and
+`.githooks/pre-commit` (enabled with `git config core.hooksPath .githooks`)
+lints staged files and runs `unit`.
+
+`tests/qe-check live` starts a full `shell.qml` against the current Wayland
+session and session bus (the selector, dashboard, control-center, and launch IPC
+helpers), runs the NetworkManager address test, and smoke-tests `shell.qml`,
+which must still be running when the 5 second timeout fires. Run it only when
+those boundaries changed, and not while a disposable-session procedure is in
+progress.
+
+Not automated:
+
+```sh
+# Live notification acceptance: isolated or explicitly approved session only.
+tests/qe-check test tests/helpers/notifications.test.sh
+# Theme-switcher contracts live in the sibling repository.
 YAZI_TEMPLATE="$HOME/.config/yazi/flavors/flavor.template.toml" \
 QE_PROJECT_ROOT="$PWD" \
   bash ../theme-switcher/tests/test_yazi.sh
 bash ../theme-switcher/tests/test_media_themes.sh
-bash tests/helpers/window-opacity.test.sh
-bash tests/helpers/repeated-wallpaper-generation.test.sh
-bash tests/helpers/generated-theme-hot-reload.test.sh
-bash tests/helpers/queued-wallpaper-generation.test.sh
-bash tests/helpers/wallpaper-theme-select-external.test.sh
-bash tests/helpers/restored-wallpaper-theme.test.sh
-# Routine QML work: lint the changed/affected files directly, for example:
-# qmllint components/ChangedComponent.qml modules/bar/ChangedModule.qml
-# Broader checkpoint/cross-cutting lint:
-qmllint $(find . -maxdepth 1 -name '*.qml') $(find components lock modules services tests -name '*.qml') $(find integrations -maxdepth 1 -name '*.qml' ! -name 'ThemeSelectorIpc.qml' ! -name 'WallpaperSelectorIpc.qml' ! -name 'PaletteViewerIpc.qml')
-timeout 5 quickshell -p tests/qml/command-runner-test.qml
-# Run the next command twice without changing XDG_STATE_HOME between runs.
-timeout 5 quickshell -p tests/qml/foundation-service-test.qml
-timeout 5 quickshell -p tests/qml/foundation-service-test.qml
-timeout 5 quickshell -p tests/qml/phase2-service-test.qml
-timeout 5 quickshell -p tests/qml/phase3-service-test.qml
-timeout 5 quickshell -p tests/qml/workspaces-test.qml
-timeout 5 quickshell -p tests/qml/system-metrics-adapter-test.qml
-timeout 5 quickshell -p tests/qml/system-metrics-helper-adapter-test.qml
-timeout 5 quickshell -p tests/qml/metric-bar-module-test.qml
-timeout 5 quickshell -p tests/qml/brightness-service-test.qml
-timeout 5 quickshell -p tests/qml/brightness-adapter-test.qml
-timeout 5 quickshell -p tests/qml/bluetooth-service-test.qml
-timeout 5 quickshell -p tests/qml/bluetooth-integration-test.qml
-timeout 5 quickshell -p tests/qml/bluetooth-adapter-test.qml
-timeout 5 quickshell -p tests/qml/bluetooth-dashboard-test.qml
-timeout 5 quickshell -p tests/qml/idle-service-test.qml
-timeout 5 quickshell -p tests/qml/idle-inhibitor-integration-test.qml
-timeout 5 quickshell -p tests/qml/tray-tint-test.qml
-timeout 5 quickshell -p tests/qml/theme-selector-test.qml
-timeout 5 quickshell -p tests/qml/wallpaper-selector-test.qml
-timeout 5 quickshell -p tests/qml/segmented-toggle-test.qml
-timeout 5 quickshell -p tests/qml/palette-viewer-test.qml
-timeout 5 quickshell -p tests/qml/dashboard-shell-test.qml
-timeout 5 quickshell -p tests/qml/control-center-test.qml
-timeout 5 quickshell -p tests/qml/control-center-state-test.qml
-timeout 5 quickshell -p tests/qml/control-center-command-test.qml
-timeout 5 quickshell -p tests/qml/monitor-layout-service-test.qml
-timeout 5 quickshell -p tests/qml/audio-dashboard-test.qml
-timeout 7 quickshell -p tests/qml/network-dashboard-test.qml
-timeout 5 quickshell -p tests/qml/network-address-test.qml
-timeout 5 quickshell -p tests/qml/ai-quota-service-test.qml
-timeout 5 quickshell -p tests/qml/ai-quota-adapter-test.qml
-timeout 5 quickshell -p tests/qml/ai-quota-bar-test.qml
-timeout 5 quickshell -p tests/qml/ai-quota-dashboard-test.qml
-timeout 5 quickshell -p tests/qml/ai-quota-multi-consumer-test.qml
-timeout 5 quickshell -p tests/qml/lock-controller-test.qml
-timeout 5 quickshell -p tests/qml/lock-pam-adapter-test.qml
-timeout 5 quickshell -p tests/qml/lock-theme-reader-test.qml
-timeout 5 quickshell -p tests/qml/lock-wallpaper-reader-test.qml
-timeout 5 quickshell -p tests/qml/lock-power-reader-test.qml
-timeout 5 quickshell -p tests/qml/launcher-usage-test.qml
-timeout 5 quickshell -p tests/qml/launcher-selection-test.qml
-timeout 5 quickshell -p tests/qml/launcher-dashboard-action-test.qml
-timeout 5 quickshell -p tests/qml/external-theme-service-test.qml
-timeout 5 quickshell -p tests/qml/osd-service-test.qml
-timeout 5 quickshell -p tests/qml/phase6-action-test.qml
-timeout 5 env QE_MATUGEN=<absolute-path-to-fixture> quickshell -p tests/qml/matugen-adapter-test.qml
-timeout 5 quickshell -p shell.qml
+systemd-analyze --user verify install/assets/qe-shell.service
 ```
 
 ## Expected markers and special conditions
@@ -184,13 +115,11 @@ timeout/network backoff, provider rate limits remain enforced, and
 suspend/resume cancellation produces one fresh cycle. The dashboard shell test
 verifies the AI quota header refresh control and its service request.
 
-Of the timeout-wrapped commands, exit code `124` is acceptable when a headless
-QML test has already printed its success marker; the `shell.qml` smoke test
-must return `124` because it proves the persistent shell remained alive. The
-command-runner test must print `COMMAND_TEST_PASSED`. Run the foundation
-test twice with the same XDG state root: the first run may print
-`FOUNDATION_THEME_SEEDED`; the second must print
-`FOUNDATION_PERSISTENCE_TEST_PASSED`.
+The command-runner test must print `COMMAND_TEST_PASSED`. The runner runs the
+foundation test twice against one temporary state root seeded with a
+non-`gruvbox` theme: the first run prints `FOUNDATION_THEME_SEEDED`, the second
+must print `FOUNDATION_PERSISTENCE_TEST_PASSED`. On an empty state root, first-run
+default seeding races the test's own write, so the seed is required.
 The live procfs adapter test must print `SYSTEM_METRICS_ADAPTER_TEST_PASSED`.
 The live brightness adapter test must print `BRIGHTNESS_ADAPTER_TEST_PASSED` and
 does not perform a brightness write.
@@ -364,7 +293,7 @@ The authored defaults command contract is tested in isolated XDG and HOME
 directories:
 
 ```sh
-tests/helpers/qe-defaults.test.sh
+tests/qe-check test tests/helpers/qe-defaults.test.sh
 ```
 
 It must print `QE_DEFAULTS_TEST_PASSED` after staged capture, pending-operation
@@ -379,33 +308,17 @@ repeating the JavaScript validation and shell smoke test there. QE state created
 by a development run is isolated under Quickshell's per-shell XDG state path and
 can be removed after QE is stopped.
 
-Headless QML test configurations are validated by their success markers. With
-the installed Quickshell build, `Qt.quit()` may emit a warning and leave the
-process for the timeout to reap, so exit code `124` is acceptable for these
-test configurations as well as for the persistent `shell.qml` smoke test.
-
-`integrations/ThemeSelectorIpc.qml` and `integrations/WallpaperSelectorIpc.qml`
-use Quickshell typed IPC functions that `qmllint 1.0` cannot parse (the process
-exits 255 without diagnostics), so the lint command above excludes them; both
-files are instead verified by the theme-selector and wallpaper-selector IPC
-runtime tests.
-
-Catalog degradation is tested only in a disposable relocated copy: replace that
-copy's `themes/poimandres.json` with
-`tests/fixtures/themes/missing-token.json`, then run:
-
-```sh
-timeout 5 quickshell -p tests/qml/theme-degradation-test.qml
-```
-
-The test must print `THEME_DEGRADATION_TEST_PASSED`. Never replace an authored
-theme in the working project for this test.
+Catalog degradation runs only in a disposable relocated copy whose
+`themes/poimandres.json` is replaced with
+`tests/fixtures/themes/missing-token.json`; the runner builds that copy. The
+test must print `THEME_DEGRADATION_TEST_PASSED`. Never replace an authored theme
+in the working project for this test.
 
 The live NetworkManager IPv4 test is opt-in because it requires `nmcli`, a
 running NetworkManager daemon, and an IPv4 loopback address:
 
 ```sh
-timeout 5 quickshell -p tests/qml/network-address-test.qml
+tests/qe-check live tests/qml/network-address-test.qml
 ```
 
 It must print `NETWORK_ADDRESS_TEST_PASSED`.
@@ -419,15 +332,15 @@ authentication failure, timeout/error paths, wired read-only behavior, and
 dashboard rendering without touching a real connection or exposing a credential:
 
 ```sh
-timeout 7 quickshell -p tests/qml/network-dashboard-test.qml
+tests/qe-check test tests/qml/network-dashboard-test.qml
 ```
 
 It must print `NETWORK_DASHBOARD_TEST_PASSED`. Also run the existing dashboard
 and service tests after network changes:
 
 ```sh
-timeout 7 quickshell -p tests/qml/dashboard-shell-test.qml
-timeout 7 quickshell -p tests/qml/phase2-service-test.qml
+tests/qe-check test tests/qml/dashboard-shell-test.qml
+tests/qe-check test tests/qml/phase2-service-test.qml
 ```
 
 The fixture must also prove that unrelated mutations are rejected while one is
@@ -454,9 +367,9 @@ and theme bindings, degraded-state projection, defaults confirmation, and lazy
 lifecycle behavior:
 
 ```sh
-timeout 5 quickshell -p tests/qml/control-center-test.qml
-timeout 5 quickshell -p tests/qml/control-center-state-test.qml
-timeout 5 quickshell -p tests/qml/control-center-command-test.qml
+tests/qe-check test tests/qml/control-center-test.qml
+tests/qe-check test tests/qml/control-center-state-test.qml
+tests/qe-check test tests/qml/control-center-command-test.qml
 ```
 
 The fixtures must print `CONTROL_CENTER_TEST_PASSED`,
@@ -485,9 +398,9 @@ schema-v1 scale defaults, schema-v2 independent scales, all scale-adjusted edge
 positions, mirrored scales, and rejection of invalid scale state:
 
 ```sh
-bash tests/helpers/monitor-layout.test.sh
-bash tests/helpers/monitor-layout-config.test.sh
-timeout 5 quickshell -p tests/qml/monitor-layout-service-test.qml
+tests/qe-check test tests/helpers/monitor-layout.test.sh
+tests/qe-check test tests/helpers/monitor-layout-config.test.sh
+tests/qe-check test tests/qml/monitor-layout-service-test.qml
 ```
 
 The commands must print `MONITOR_LAYOUT_HELPER_TEST_PASSED`,
@@ -517,11 +430,11 @@ reader without acquiring `ext-session-lock-v1`:
 
 ```sh
 node tests/js/lock-entry.test.mjs
-timeout 5 quickshell -p tests/qml/lock-controller-test.qml
-timeout 5 quickshell -p tests/qml/lock-pam-adapter-test.qml
-timeout 5 quickshell -p tests/qml/lock-theme-reader-test.qml
-timeout 5 quickshell -p tests/qml/lock-wallpaper-reader-test.qml
-timeout 5 quickshell -p tests/qml/lock-power-reader-test.qml
+tests/qe-check test tests/qml/lock-controller-test.qml
+tests/qe-check test tests/qml/lock-pam-adapter-test.qml
+tests/qe-check test tests/qml/lock-theme-reader-test.qml
+tests/qe-check test tests/qml/lock-wallpaper-reader-test.qml
+tests/qe-check test tests/qml/lock-power-reader-test.qml
 ```
 
 They must print `LOCK_ENTRY_TEST_PASSED`, `LOCK_CONTROLLER_TEST_PASSED`,
@@ -615,7 +528,7 @@ to five minutes. The two QE command values were reapplied, Hyprland reported no
 config errors, Hypridle restarted normally, and the final `Super+Backspace` QE
 smoke passed.
 
-Run `qmllint` over all QML after lock changes. Do not run
+Run `tests/qe-check lint` after lock changes. Do not run
 `quickshell -p lock.qml` in the primary session as a smoke test. Protocol,
 hot-plug, suspend/resume, PAM, and crash tests require a disposable test
 environment and a pre-confirmed TTY recovery path. Current safety boundaries are
@@ -631,10 +544,10 @@ shellcheck install.sh scripts/install/qe-install.sh \
   scripts/lib/qe-installation.sh scripts/qe-theme-switcher \
   scripts/qe-defaults scripts/run-qe.sh scripts/qe-doctor \
   tests/helpers/installer.test.sh tests/helpers/activation.test.sh
-bash tests/helpers/installer.test.sh
-bash tests/helpers/qe-defaults.test.sh
-bash tests/helpers/activation.test.sh
-bash tests/helpers/qe-doctor.test.sh
+tests/qe-check test tests/helpers/installer.test.sh
+tests/qe-check test tests/helpers/qe-defaults.test.sh
+tests/qe-check test tests/helpers/activation.test.sh
+tests/qe-check test tests/helpers/qe-doctor.test.sh
 systemd-analyze --user verify install/assets/qe-shell.service
 ```
 
@@ -648,11 +561,11 @@ Validate the launch helper and static unit before live cutover:
 
 ```sh
 shellcheck scripts/run-qe.sh tests/helpers/run-qe.test.sh
-bash tests/helpers/run-qe.test.sh
+tests/qe-check test tests/helpers/run-qe.test.sh
 shellcheck scripts/qe-doctor tests/helpers/qe-doctor.test.sh
-bash tests/helpers/qe-doctor.test.sh
+tests/qe-check test tests/helpers/qe-doctor.test.sh
 shellcheck tests/helpers/qe-entrypoints.test.sh
-bash tests/helpers/qe-entrypoints.test.sh
+tests/qe-check test tests/helpers/qe-entrypoints.test.sh
 systemd-analyze --user verify install/assets/qe-shell.service
 ```
 

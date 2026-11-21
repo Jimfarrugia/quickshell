@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Lint staged files and run the fast unit tests before each commit.
+set -euo pipefail
+
+root=$(git rev-parse --show-toplevel)
+mapfile -t staged < <(git diff --cached --name-only --diff-filter=ACMR)
+
+# shortcut: lints the working-tree copy of each staged file, not the staged blob,
+# so partially staged hunks (git add -p) can slip past; run the full gate before pushing.
+if ((${#staged[@]})); then
+    "$root/tests/qe-check" lint "${staged[@]}"
+fi
+"$root/tests/qe-check" unit
