@@ -1060,7 +1060,7 @@ Update only affected sections of:
 - `docs/USER_GUIDE.md` with concise user-facing installation and recovery steps.
 
 Add `activation deferred`, `ready installation`, and `activation failure` to
-`CONTEXT.md` only if those terms remain part of the implemented external domain
+`GLOSSARY.md` only if those terms remain part of the implemented external domain
 contract. Keep implementation detail and status out of the glossary.
 
 Do not add phase documents, a second ADR, or a separate design-history document.

@@ -23,7 +23,7 @@ Read the smallest authoritative set that covers the requested change.
 7. Verify uncertain/version-sensitive Quickshell APIs against the installed
    version metadata and matching official documentation/source before use.
 
-`CONTEXT.md` is glossary-only. Read it when QE domain terminology is unclear or
+`GLOSSARY.md` is glossary-only. Read it when QE domain terminology is unclear or
 an invoked skill requires it. `docs/USER_GUIDE.md` is user-facing and is not
 normal implementation context. `docs/history/` is non-authoritative and should
 be read only for provenance, rollback history, superseded constraints, or old
@@ -56,7 +56,7 @@ because a document is authoritative.
 - `docs/architecture/*.md` — detailed current architecture by domain.
 - `docs/DECISIONS.md` — accepted architectural decisions and rationale.
 - `docs/VALIDATION.md` — validation routing, commands, and expected markers.
-- `CONTEXT.md` — durable QE vocabulary only.
+- `GLOSSARY.md` — durable QE vocabulary only.
 - `docs/USER_GUIDE.md` — stable user-facing guidance.
 - `docs/history/` — non-authoritative historical evidence.
 
@@ -104,7 +104,7 @@ Do not update documentation merely because code changed. Classify the impact:
 | Ownership, boundary, service contract, lifecycle, failure, security, or durable structure changed | Update the affected architecture domain |
 | Significant architectural choice with meaningful alternatives/consequences | Add/revise an ADR in `docs/DECISIONS.md` |
 | Test command/routing/expected marker changed | Update `docs/VALIDATION.md` |
-| Durable domain vocabulary changed | Update `CONTEXT.md` |
+| Durable domain vocabulary changed | Update `GLOSSARY.md` |
 | Stable user-facing workflow changed | Update `docs/USER_GUIDE.md` when the task includes/approves guide maintenance |
 
 When the user explicitly invokes `/docs-maintain`, load the project-local

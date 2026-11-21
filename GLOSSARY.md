@@ -1,6 +1,6 @@
 # Quickshell Environment
 
-This context defines the domain language for the Quickshell Environment (QE),
+This glossary defines the domain language for the Quickshell Environment (QE),
 the persistent desktop shell and its user-facing surfaces.
 
 ## Language

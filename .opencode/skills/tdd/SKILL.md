@@ -7,7 +7,7 @@ description: Test-driven development. Use when the user wants test-first work, m
 
 TDD is the red → green loop. This skill is the reference that makes that loop produce tests worth keeping: what a good test is, where tests go, the anti-patterns, and the rules of the loop. Every section applies on every cycle: consult them before and during the loop, not after.
 
-When exploring the codebase, read `CONTEXT.md` (if it exists) so test names and interface vocabulary match the project's domain language, and respect ADRs in the area you're touching. Project-local testing policy takes precedence over this technique: if the repository determines that automated coverage is not warranted, do not invent a seam merely to perform TDD; return to normal implementation.
+When exploring the codebase, read `GLOSSARY.md` (if it exists) so test names and interface vocabulary match the project's domain language, and respect ADRs in the area you're touching. Project-local testing policy takes precedence over this technique: if the repository determines that automated coverage is not warranted, do not invent a seam merely to perform TDD; return to normal implementation.
 
 ## What a good test is
 

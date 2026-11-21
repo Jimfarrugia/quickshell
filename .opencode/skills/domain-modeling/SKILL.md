@@ -7,7 +7,7 @@ description: Maintain QE domain vocabulary and architectural decisions.
 
 Actively build and sharpen the project's domain model as you design. This is the
 *active* discipline: challenge terms, probe edge cases, and write durable
-vocabulary or decisions down when they crystallize. Merely reading `CONTEXT.md`
+vocabulary or decisions down when they crystallize. Merely reading `GLOSSARY.md`
 for vocabulary is not this skill.
 
 ## QE document ownership
@@ -16,7 +16,7 @@ QE is a single-context repository with two distinct durable stores:
 
 ```text
 /
-├── CONTEXT.md          # domain glossary only
+├── GLOSSARY.md          # domain glossary only
 └── docs/
     └── DECISIONS.md    # authoritative architectural decision log
 ```
@@ -25,7 +25,7 @@ Do not create `docs/adr/`, per-context ADR directories, or another decision log.
 `AGENTS.md` defines the repository's document authority and always takes
 precedence over generic skill conventions.
 
-Create `CONTEXT.md` lazily only if it does not exist and a durable term needs to
+Create `GLOSSARY.md` lazily only if it does not exist and a durable term needs to
 be recorded. `docs/DECISIONS.md` already exists; add to it only when an ADR is
 warranted and the decision has actually been accepted.
 
@@ -34,13 +34,13 @@ warranted and the decision has actually been accepted.
 ### Challenge against the glossary
 
 When the user uses a term that conflicts with the existing language in
-`CONTEXT.md`, call it out immediately. Distinguish a genuine terminology change
+`GLOSSARY.md`, call it out immediately. Distinguish a genuine terminology change
 from a one-off conversational synonym.
 
 ### Sharpen fuzzy language
 
 When the user uses vague or overloaded terms, propose a precise canonical term.
-Prefer terminology already established by `CONTEXT.md` and
+Prefer terminology already established by `GLOSSARY.md` and
 `docs/ARCHITECTURE.md`.
 
 ### Discuss concrete scenarios
@@ -54,13 +54,13 @@ When the user states how something works, check whether the implementation and
 relevant authoritative documentation agree. If they conflict, surface the
 disagreement rather than silently rewriting the glossary or an ADR.
 
-### Update CONTEXT.md inline
+### Update GLOSSARY.md inline
 
-When a durable term is resolved, update `CONTEXT.md` at that point rather than
+When a durable term is resolved, update `GLOSSARY.md` at that point rather than
 batching glossary work. Use the format in
 [CONTEXT-FORMAT.md](./CONTEXT-FORMAT.md).
 
-`CONTEXT.md` is a glossary and nothing else. Keep it free of:
+`GLOSSARY.md` is a glossary and nothing else. Keep it free of:
 
 - project or phase status;
 - implementation steps or file-level design;

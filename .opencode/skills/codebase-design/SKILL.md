@@ -9,7 +9,7 @@ Design **deep modules**: a lot of behaviour behind a small interface, placed at 
 
 ## Project vocabulary takes precedence
 
-This skill provides an **analysis vocabulary**, not a replacement architecture vocabulary. In QE, `CONTEXT.md` and `docs/ARCHITECTURE.md` are authoritative for names and meanings. Preserve QE's established terms such as **component**, **module**, **domain service**, **integration adapter**, and **external boundary**. Do not rename or reinterpret those concepts merely to fit this skill.
+This skill provides an **analysis vocabulary**, not a replacement architecture vocabulary. In QE, `GLOSSARY.md` and `docs/ARCHITECTURE.md` are authoritative for names and meanings. Preserve QE's established terms such as **component**, **module**, **domain service**, **integration adapter**, and **external boundary**. Do not rename or reinterpret those concepts merely to fit this skill.
 
 Use **depth**, **interface**, **seam**, **leverage**, **locality**, and the deletion test as analytical concepts that can be applied to a QE component, module, service, or adapter. Use the generic **module** and **adapter** definitions below only when no more precise project term exists. A QE **external boundary** is not the same thing as a deep-module **seam**.
 

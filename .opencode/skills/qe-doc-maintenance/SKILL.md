@@ -28,7 +28,7 @@ The governing principle is:
 | `docs/architecture/*.md` | Detailed current architecture by domain |
 | `docs/DECISIONS.md` | Accepted ADRs and rationale |
 | `docs/VALIDATION.md` | Test routing, commands, expected markers, special conditions |
-| `CONTEXT.md` | Durable QE terminology only |
+| `GLOSSARY.md` | Durable QE terminology only |
 | `docs/USER_GUIDE.md` | Stable user-facing workflows |
 | `docs/history/` | Non-authoritative inventories, completed execution/acceptance records, rollback evidence, superseded working context |
 
@@ -62,7 +62,7 @@ current task already establishes the decision needed to resolve it.
 | Cross-cutting invariant/routing changed | Update root `docs/ARCHITECTURE.md` and `AGENTS.md` only as needed |
 | Significant architectural choice with alternatives/consequences | Add/revise an ADR; never treat housekeeping as permission to alter an accepted ADR |
 | Test routing/command/expected marker changed | Update `docs/VALIDATION.md` |
-| Durable domain term changed | Update `CONTEXT.md` |
+| Durable domain term changed | Update `GLOSSARY.md` |
 | Stable user-facing workflow changed | Update `docs/USER_GUIDE.md` only when the current task includes/approves guide maintenance |
 | Completed implementation chronology, acceptance transcript, rollback evidence, superseded plan | Preserve under `docs/history/`, not live status/architecture |
 
@@ -125,7 +125,7 @@ documentation around them or preserve low-value assertions solely for history.
 
 ### 5. Keep the glossary narrow
 
-`CONTEXT.md` contains durable QE language and conceptual distinctions only. Move
+`GLOSSARY.md` contains durable QE language and conceptual distinctions only. Move
 or remove status, implementation shape, transient version facts, tests, risks,
 and architectural rationale from the glossary when they appear.
 
