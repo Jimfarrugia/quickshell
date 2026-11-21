@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import "services" as Services
+import "components" as Components
 import "fixtures/qml" as Fixtures
 import "modules/bar" as BarModules
 import "modules/aiquota" as AiQuotaModules
@@ -9,7 +10,7 @@ ShellRoot {
     id: root
     Fixtures.FakeAiQuotaAdapter { id: fake }
     Binding { target: Services.AiQuotaService; property: "adapter"; value: fake; restoreMode: Binding.RestoreBindingOrValue }
-    QtObject { id: controller; function open(id, screen, side) {} function toggle(id, screen, side) {} }
+    Components.DashboardController { id: controller }
     BarModules.AiQuotaModule { id: bar; dashboardController: controller; sourceScreen: "monitor-test"; visible: true }
     Loader {
         id: dashboardLoader
