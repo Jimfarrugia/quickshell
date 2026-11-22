@@ -329,8 +329,9 @@ It must print `NETWORK_ADDRESS_TEST_PASSED`.
 The fixture dashboard test exercises native-shaped Wi-Fi state, active-device
 selection, stable duplicate saved/unprofiled identities, security gating and
 fallback, serialized operations, scan lifecycle, daemon loss/recovery,
-authentication failure, timeout/error paths, wired read-only behavior, and
-dashboard rendering without touching a real connection or exposing a credential:
+authentication failure, timeout/error paths, wired read-only behavior,
+password drafts that survive scan refreshes, and dashboard rendering without
+touching a real connection or exposing a credential:
 
 ```sh
 tests/qe-check test tests/qml/network-dashboard-test.qml

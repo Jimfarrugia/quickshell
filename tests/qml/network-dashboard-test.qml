@@ -18,6 +18,35 @@ ShellRoot {
     }
     Loader { source: "modules/network/NetworkDashboard.qml"; onLoaded: root.runChecks(item) }
     function fail(message) { console.error(`NETWORK_DASHBOARD_TEST_FAILED: ${message}`); Qt.quit(); }
+    function visiblePasswordFields(item) {
+        let found = [];
+        for (const child of item.children) {
+            if (child.echoMode === TextInput.Password && child.visible) found.push(child);
+            found = found.concat(visiblePasswordFields(child));
+        }
+        return found;
+    }
+    function checkPasswordDraftSurvivesScan(dashboard) {
+        const target = Services.NetworkService.networks[1];
+        dashboard.pskKey = target.key;
+        const fields = visiblePasswordFields(dashboard);
+        if (fields.length !== 1) return `expected one open password field, found ${fields.length}`;
+        fields[0].insert(0, "draft-pass");
+        // Scan results change the visible list: an access point leaves range, then returns.
+        const scanned = fake.wifiDevice.networks.values.slice();
+        for (const values of [scanned.slice(0, -1), scanned]) {
+            fake.wifiDevice.networks.values = values;
+            const afterScan = visiblePasswordFields(dashboard);
+            if (afterScan.length !== 1 || afterScan[0].text !== "draft-pass")
+                return "password draft was lost when a scan refreshed the network list";
+        }
+        dashboard.pskKey = Services.NetworkService.networks[2].key;
+        const other = visiblePasswordFields(dashboard);
+        if (other.length !== 1 || other[0].text !== "")
+            return "password draft carried over to another network";
+        dashboard.pskKey = "";
+        return "";
+    }
     function runChecks(dashboard) {
         const wifi = {type: DeviceType.Wifi, connected: true, name: "wifi-z"};
         const wired = {type: DeviceType.Wired, connected: true, name: "wired-a"};
@@ -49,6 +78,8 @@ ShellRoot {
                 return fail(`status and visible networks did not use the selected device (${Services.NetworkService.selectedDeviceLabel}/${Services.NetworkService.interfaceName})`);
             if (!dashboard || !dashboard.visible)
                 return fail("dashboard did not render");
+            const draftError = root.checkPasswordDraftSurvivesScan(dashboard);
+            if (draftError) return fail(draftError);
             if (!Services.NetworkService.setWifiEnabled(false) || fake.wifiEnabled)
                 return fail("Wi-Fi toggle was not requested");
             if (Services.NetworkService.networks[0].network.security === undefined)

@@ -10,7 +10,11 @@ ColumnLayout {
     spacing: Services.ConfigService.config.appearance.spacing
     property string confirmForgetKey: ""
     property string pskKey: ""
+    // Password draft for the pskKey row. Scan results replace NetworkService.networks
+    // and the Repeater rebuilds every row, so the draft cannot live in the delegate.
+    property string pskDraft: ""
     property string selectedProfileKey: ""
+    onPskKeyChanged: pskDraft = ""
     readonly property bool networkManagerUnavailable: Services.NetworkService.lastError
         && Services.NetworkService.lastError.code === "NETWORKMANAGER_UNAVAILABLE"
 
@@ -339,7 +343,9 @@ ColumnLayout {
                             Layout.preferredHeight: 36
                             echoMode: TextInput.Password
                             implicitWidth: Math.ceil(passwordMetrics.width + leftPadding + rightPadding + 2)
-                            Component.onCompleted: Qt.callLater(forceActiveFocus)
+                            text: root.pskKey === row.key ? root.pskDraft : ""
+                            onTextEdited: if (root.pskKey === row.key) root.pskDraft = text
+                            Component.onCompleted: if (root.pskKey === row.key) Qt.callLater(forceActiveFocus)
                             onVisibleChanged: if (visible) Qt.callLater(forceActiveFocus)
                             Keys.onEscapePressed: event => {
                                 if (Services.SurfaceService.dashboardController)
@@ -366,8 +372,7 @@ ColumnLayout {
                             tooltipText: "Confirm"
                             enabled: !pending
                             onClicked: {
-                                Services.NetworkService.connect(root.selectedRow(row), psk.text);
-                                psk.clear();
+                                Services.NetworkService.connect(root.selectedRow(row), root.pskDraft);
                                 root.pskKey = "";
                             }
                         }
