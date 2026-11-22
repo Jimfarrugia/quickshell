@@ -26,6 +26,15 @@ When set to `yes`, PRs run through the same labels and states as issues, using t
 
 GitHub shares one number space across issues and PRs, so a bare `#42` may be either: resolve with `gh pr view 42` and fall back to `gh issue view 42`.
 
+## Closing work
+
+**The tracker closes work by landing on local `master`, not through PRs.** Local `master` in the main checkout is the source of the running shell; GitHub is only a backup remote, pushed by the user.
+
+- **Land**: on the work branch, `git rebase master`, run `tests/qe-check` as `docs/VALIDATION.md` requires, then from the main checkout `git merge --ff-only <branch>`. Remove the worktree and delete the branch afterwards.
+- **Don't** open PRs, push, or merge on GitHub. When a skill says to open or ready a PR (e.g. `/implement-spec`'s draft PR), skip it and report the landed commits instead.
+- **Resolve a ticket**: `gh issue close <n> --comment "Landed on local master in <sha>"`. The commit link resolves once the user pushes.
+- **Not yet landed** (e.g. AGENTS.md safety areas that need the user's approval before running live): leave the issue open and comment with the branch name and validation status.
+
 ## When a skill says "publish to the issue tracker"
 
 Create a GitHub issue.
