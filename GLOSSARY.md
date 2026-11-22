@@ -91,6 +91,23 @@ The bar module associated with a dashboard and used as its primary launch
 point; its bar position determines the dashboard's anchored side.
 _Avoid_: Trigger widget, dashboard button
 
+**Dashboard catalogue**:
+The authoritative list of QE dashboards with each one's stable identity and
+title; every catalogued dashboard has a dashboard action and a namespaced IPC
+target.
+_Avoid_: Dashboard registry
+
+**Header action**:
+A control a dashboard contributes to the dashboard shell's header for its own
+capability, such as the Wi-Fi toggle or the AI usage refresh.
+_Avoid_: Toolbar button
+
+**Fallback tool**:
+The external application a dashboard opens for capabilities outside its native
+boundary: pavucontrol for audio, Blueman for Bluetooth, and
+`nm-connection-editor` for networks.
+_Avoid_: Settings app
+
 **Known Bluetooth device**:
 A Bluetooth device whose confirmed BlueZ state is paired or bonded.
 
@@ -168,3 +185,34 @@ when needed, exists only for that attempt and is not a profile edit.
 When a saved personal Wi-Fi profile is retried with a new PSK, NetworkManager
 may update that profile through its native API; QE does not retain ownership of,
 persist, or log the credential.
+
+**AI quota provider**:
+A subscription service whose remaining usage QE reports: Claude, OpenAI
+(Codex/ChatGPT), or OpenCode Go.
+_Avoid_: Account, vendor, model
+
+**Quota window**:
+A provider's usage allowance over a fixed period (five-hour, weekly, or OpenCode
+Go's monthly), reported as a remaining percentage with a reset time.
+_Avoid_: Limit, bucket
+
+**Refresh cycle**:
+One logical pending AI quota operation that attempts each eligible provider in
+turn; requests arriving during a cycle coalesce into at most one follow-up
+cycle, with manual and resume requests outranking polling.
+_Avoid_: Poll, fetch
+
+**Refresh cycle outcome**:
+The result of a completed refresh cycle: failed when every attempted provider
+failed, otherwise succeeded. It holds until a later cycle completes; a cycle
+that is cancelled or attempts no provider leaves it unchanged.
+
+**Provider backoff**:
+A per-provider delay after a transient failure during which automatic refresh
+cycles skip that provider; a manual refresh may retry a QE-generated timeout or
+network failure once, but never a provider rate limit.
+
+**Quota consumer**:
+A visible QE surface, such as the AI quota bar module or the AI Usage dashboard,
+whose presence keeps AI quota polling active; polling stops when none remain.
+_Avoid_: Subscriber, listener
