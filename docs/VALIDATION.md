@@ -76,7 +76,8 @@ session and session bus (the selector, dashboard, control-center, and launch IPC
 helpers), runs the NetworkManager address test, and smoke-tests `shell.qml`,
 which must still be running when the 5 second timeout fires. Run it only when
 those boundaries changed, and not while a disposable-session procedure is in
-progress.
+progress. `.claude/settings.json` denies it, and bare `quickshell`, to agents;
+`qs`, `systemctl`, and `git push` always ask for confirmation.
 
 Not automated:
 

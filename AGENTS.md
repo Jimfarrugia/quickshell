@@ -22,8 +22,9 @@ shell; `lock.qml` is the isolated secure lock.
   lock changes on the primary session; use the isolation/recovery procedure in
   the matching `docs/VALIDATION.md` section.
 - Run tests only through `tests/qe-check`: a bare `quickshell -p` test run
-  writes live QE state. `tests/qe-check live` starts shells in the current
-  session; use it only when those boundaries changed.
+  writes live QE state. Bare `quickshell` and `tests/qe-check live` (which
+  starts shells in the current session) are denied to agents; when those
+  boundaries changed, ask the user to run `tests/qe-check live`.
 - Verify Quickshell APIs against the installed version's metadata and matching
   upstream docs/source before relying on them.
 

@@ -3,6 +3,18 @@
     "mattpocock-skills@claude-plugins-official": true,
     "ponytail@ponytail": false
   },
+  "permissions": {
+    "deny": [
+      "Bash(quickshell *)",
+      "Bash(tests/qe-check live *)",
+      "Bash(./tests/qe-check live *)"
+    ],
+    "ask": [
+      "Bash(qs *)",
+      "Bash(systemctl *)",
+      "Bash(git push *)"
+    ]
+  },
   "hooks": {
     "PostToolUse": [
       {
