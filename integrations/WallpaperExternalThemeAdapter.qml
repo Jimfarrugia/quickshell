@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import "../services" as Services
 import "../utils/ExternalWallpaperTheme.mjs" as ExternalWallpaperTheme
+import "../utils/Validation.mjs" as Validation
 
 Scope {
     id: root
@@ -50,7 +51,7 @@ Scope {
                 : raw.cancelled ? "external wallpaper theme promotion was cancelled"
                 : raw.errorCode || raw.parseError || "external wallpaper theme promotion failed";
             const validation = !raw.timedOut && !raw.cancelled && !raw.errorCode && !raw.parseError
-                ? ExternalWallpaperTheme.validateWallpaperExternalResult(raw.parsed, raw.exitCode)
+                ? ExternalWallpaperTheme.validateWallpaperExternalResult(Validation.toPlainJson(raw.parsed), raw.exitCode)
                 : { ok: false, errors: [boundaryError], value: null };
             const result = {
                 operationId: raw.operationId,

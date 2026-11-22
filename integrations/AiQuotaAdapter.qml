@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../utils/AiQuota.mjs" as AiQuota
+import "../utils/Validation.mjs" as Validation
 
 QtObject {
     id: root
@@ -178,7 +179,7 @@ QtObject {
         requestInFlight = false;
         pendingProvider = "";
         if (result.success && result.parsed !== null) {
-            const checked = AiQuota.validateQuotaDocument(result.parsed, [id]);
+            const checked = AiQuota.validateQuotaDocument(Validation.toPlainJson(result.parsed), [id]);
             if (checked.ok) {
                 const sourceError = checked.value.providers[id].error;
                 root.backoff(id, sourceError ? sourceError.code : null,

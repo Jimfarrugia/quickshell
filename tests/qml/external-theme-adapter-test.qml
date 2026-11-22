@@ -16,7 +16,7 @@ ShellRoot {
 
     function fail(message) {
         console.error(`EXTERNAL_THEME_ADAPTER_TEST_FAILED: ${message}`);
-        Qt.quit();
+        Qt.exit(1);
     }
 
     function begin() {

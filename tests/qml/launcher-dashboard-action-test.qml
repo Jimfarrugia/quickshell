@@ -1,26 +1,12 @@
 import QtQuick
 import Quickshell
 import "services" as Services
+import "components" as Components
 
 ShellRoot {
     id: root
     property int attempts: 0
-    QtObject {
-        id: controller
-        property bool visible: false
-        property string activeId: ""
-        property var sourceScreen: null
-        function toggle(id, screen, side) {
-            if (visible && activeId === id) {
-                visible = false;
-                activeId = "";
-            } else {
-                visible = true;
-                activeId = id;
-                sourceScreen = screen;
-            }
-        }
-    }
+    Components.DashboardController { id: controller }
 
     function fail(message) {
         console.error(`LAUNCHER_DASHBOARD_ACTION_TEST_FAILED: ${message}`);

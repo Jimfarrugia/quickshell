@@ -6,27 +6,7 @@ PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 FAKE_SWITCHER="$PROJECT_DIR/tests/fixtures/external-theme/fake-switcher.sh"
 TEST_QML="$PROJECT_DIR/tests/qml/external-theme-adapter-test.qml"
 
-run_case() {
-  local mode="$1"
-  QE_THEME_SWITCHER="$FAKE_SWITCHER" FAKE_EXTERNAL_MODE="$mode" EXPECT_EXTERNAL="$mode" \
-    timeout 5 quickshell -p "$TEST_QML"
-}
-
-run_case success
-run_case partial
-run_case malformed
-run_case timeout
-QE_THEME_SWITCHER="$FAKE_SWITCHER" EXPECT_EXTERNAL=invalid-id \
-  timeout 5 quickshell -p "$TEST_QML"
-
-QE_THEME_SWITCHER="/missing/qe-theme-switcher" EXPECT_EXTERNAL=unavailable \
-  timeout 5 quickshell -p "$TEST_QML"
-
 state_root="$(mktemp -d)"
-log_file="$state_root/state-watch.log"
-mkdir -p "$state_root/state/theme-switcher"
-printf '%s\n' '{"schema":"theme-switcher","version":1,"mode":"machine","requestedTheme":"gruvbox","skipGtk":false,"status":"success","timestamp":"2026-08-25T12:00:00Z","persisted":true,"error":null,"results":[]}' \
-  >"$state_root/state/theme-switcher/active-theme.json"
 cleanup() {
   if [[ -n "${state_pid:-}" ]]; then
     kill "$state_pid" 2>/dev/null || true
@@ -35,6 +15,34 @@ cleanup() {
   rm -rf "$state_root"
 }
 trap cleanup EXIT
+
+# Each case must print its own _PASSED marker; exiting cleanly is not a pass.
+expect_case() {
+  local expected="$1" log="$state_root/$1.log" rc=0
+  shift
+  env "$@" EXPECT_EXTERNAL="$expected" timeout 5 quickshell -p "$TEST_QML" >"$log" 2>&1 || rc=$?
+  cat -- "$log"
+  if ((rc != 0 && rc != 124)) || ! grep -q "EXTERNAL_THEME_ADAPTER_${expected^^}_PASSED" "$log"; then
+    printf 'external theme adapter %s case failed (exit %d)\n' "$expected" "$rc" >&2
+    exit 1
+  fi
+}
+
+run_case() {
+  expect_case "$1" QE_THEME_SWITCHER="$FAKE_SWITCHER" FAKE_EXTERNAL_MODE="$1"
+}
+
+run_case success
+run_case partial
+run_case malformed
+run_case timeout
+expect_case invalid-id QE_THEME_SWITCHER="$FAKE_SWITCHER"
+expect_case unavailable QE_THEME_SWITCHER="/missing/qe-theme-switcher"
+
+log_file="$state_root/state-watch.log"
+mkdir -p "$state_root/state/theme-switcher"
+printf '%s\n' '{"schema":"theme-switcher","version":1,"mode":"machine","requestedTheme":"gruvbox","skipGtk":false,"status":"success","timestamp":"2026-08-25T12:00:00Z","persisted":true,"error":null,"results":[]}' \
+  >"$state_root/state/theme-switcher/active-theme.json"
 
 XDG_STATE_HOME="$state_root/state" QE_THEME_SWITCHER="$FAKE_SWITCHER" \
   EXPECT_EXTERNAL=state timeout 5 quickshell -p "$TEST_QML" >"$log_file" 2>&1 &

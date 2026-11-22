@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "../utils/Validation.mjs" as Validation
 
 Scope {
     id: root
@@ -43,7 +44,7 @@ Scope {
         maxStderrBytes: 16384
         expectJson: true
         onFinished: raw => {
-            const payload = raw.parsed;
+            const payload = Validation.toPlainJson(raw.parsed);
             const contractValid = payload !== null
                 && payload.schema === "qe-wallpaper"
                 && payload.version === 1

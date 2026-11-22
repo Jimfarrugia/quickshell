@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import "../services" as Services
+import "../utils/Validation.mjs" as Validation
 
 Scope {
     id: root
@@ -13,7 +14,7 @@ Scope {
 
     function validateResult(result) {
         if (!result.success) return result;
-        const state = result.parsed;
+        const state = Validation.toPlainJson(result.parsed);
         const validMode = state && ["mirror", "extended", "unknown"].includes(state.mode);
         const validDirection = state && ["left", "up", "right", "down", "unknown"].includes(state.direction);
         const validSelectedMode = state && ["mirror", "extended"].includes(state.selectedMode);

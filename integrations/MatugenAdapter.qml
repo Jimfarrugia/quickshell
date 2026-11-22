@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../utils/Matugen.mjs" as Matugen
+import "../utils/Validation.mjs" as Validation
 
 Scope {
     id: root
@@ -55,7 +56,7 @@ Scope {
         maxStderrBytes: 8192
         expectJson: true
         onFinished: raw => {
-            root.opacitySnapshot = raw.success && raw.parsed !== null ? raw.parsed : {};
+            root.opacitySnapshot = raw.success && raw.parsed !== null ? Validation.toPlainJson(raw.parsed) : {};
             runner.command = [root.executable, "image", imagePath, "--json", "hex", "-m", variant,
                 "--prefer", "saturation", "--dry-run"];
             runner.operationId = generationOperationId;
@@ -79,7 +80,7 @@ Scope {
             else if (raw.cancelled)
                 mapped.errors = ["Matugen generation was cancelled"];
             else if (raw.parsed !== null)
-                mapped = Matugen.mapMatugenTheme(raw.parsed, runner.variant, root.opacitySnapshot);
+                mapped = Matugen.mapMatugenTheme(Validation.toPlainJson(raw.parsed), runner.variant, root.opacitySnapshot);
             else
                 mapped.errors = [raw.parseError || raw.errorCode || "Matugen generation failed"];
             const result = {

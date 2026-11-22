@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import "integrations" as Integrations
 import "services" as Services
+import "utils/Validation.mjs" as Validation
 
 ShellRoot {
     id: root
@@ -55,11 +56,23 @@ ShellRoot {
                 maxStdoutBytes = 32768;
                 command = ["/usr/bin/cat", Services.PathsService.shellPath("fixtures/command/valid.json")];
                 start();
-            } else {
+            } else if (root.stage === 5) {
                 if (!result.success || result.parsed.status !== "ok")
                     return root.fail("valid structured result was rejected");
                 root.confirmedState = result.parsed.status;
                 if (root.confirmedState !== "ok") return root.fail("valid result did not update confirmed state");
+                root.stage = 6;
+                command = ["/usr/bin/cat", Services.PathsService.shellPath("fixtures/command/arrays.json")];
+                start();
+            } else {
+                // Arrays inside the finished(var) payload arrive as sequence
+                // wrappers; adapters normalize before contract checks.
+                const document = result.success ? Validation.toPlainJson(result.parsed) : null;
+                if (!Array.isArray(document) || !Array.isArray(document[0].results)
+                        || !Array.isArray(document[0].results[1]) || !Array.isArray(document[1]))
+                    return root.fail("normalized structured result did not contain plain arrays");
+                if (JSON.stringify(document) !== '[{"results":[["a"],["b","c"]]},[1,2]]')
+                    return root.fail("normalized structured result changed the helper's document");
                 console.log("COMMAND_TEST_PASSED");
                 Qt.quit();
             }
