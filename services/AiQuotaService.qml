@@ -9,23 +9,23 @@ import "../utils/AiQuota.mjs" as AiQuota
 Singleton {
     id: root
 
-    readonly property var providerIds: ["claude", "openai", "opencode"]
+    readonly property var providerIds: AiQuota.providerIds
     property int consumerCount: 0
     property string selectedProvider: "openai"
     property bool stateReady: false
-    property var providers: ({
-        openai: AiQuota.blankProvider("openai"),
-        opencode: AiQuota.blankProvider("opencode"),
-        claude: AiQuota.blankProvider("claude")
-    })
+    property var providers: AiQuota.blankProviders()
     readonly property string availability: aggregate("availability", "unavailable")
     readonly property string freshness: aggregate("freshness", "unknown")
     readonly property var lastUpdated: latestUpdate()
     readonly property var lastError: firstError()
-    readonly property string operation: adapter.busy ? "pending" : "idle"
+    // idle | pending | succeeded | failed: pending during a refresh cycle, then
+    // the last refresh cycle outcome (failed when every attempted provider failed).
+    readonly property string operation: adapter.operation
     readonly property bool polling: consumerCount > 0
     readonly property int refreshIntervalMs: 300000
     readonly property string tooltipText: tooltip()
+    // Test seam: tests swap in FakeAiQuotaAdapter. Production callers use the
+    // functions below, never the adapter directly.
     property var adapter: Integrations.AiQuotaAdapter { id: realAdapter }
 
     function provider(id) { return providers[id] || AiQuota.blankProvider(id); }
@@ -57,11 +57,17 @@ Singleton {
     function publish(result) {
         providers = AiQuota.mergeQuotaResult(providers, result, Date.now());
     }
-    function registerConsumer() { consumerCount++; updateAdapter(); }
+    // Quota consumers register through AiQuotaConsumer. The first consumer
+    // activates the adapter, which starts a startup cycle; a later consumer
+    // applies the five-minute due check instead.
+    function registerConsumer() {
+        consumerCount++;
+        if (consumerCount > 1) refreshIfDue("poll");
+        updateAdapter();
+    }
     function unregisterConsumer() { consumerCount = Math.max(0, consumerCount - 1); updateAdapter(); }
     function updateAdapter() { adapter.active = consumerCount > 0; }
-    function requestCycle(reason) { return adapter.requestCycle(reason); }
-    function refresh() { return requestCycle("manual"); }
+    function refresh() { return adapter.requestCycle("manual"); }
     function refreshIfDue(reason) {
         markStale();
         if (!polling) return false;
@@ -71,7 +77,7 @@ Singleton {
             return !(attempt instanceof Date) || !Number.isFinite(attempt.getTime())
                 || attempt.getTime() > now || now - attempt.getTime() >= refreshIntervalMs;
         });
-        return due ? requestCycle(reason || "poll") : false;
+        return due ? adapter.requestCycle(reason || "poll") : false;
     }
     function cycleProvider() {
         const index = providerIds.indexOf(selectedProvider);

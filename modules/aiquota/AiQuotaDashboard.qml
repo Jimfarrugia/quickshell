@@ -21,18 +21,7 @@ ColumnLayout {
     }
     spacing: Services.ConfigService.config.appearance.spacing
     property var providerIds: Services.AiQuotaService.providerIds
-    property bool registered: false
-
-    function updateConsumer() {
-        if (visible && !registered) {
-            Services.AiQuotaService.refreshIfDue("poll");
-            Services.AiQuotaService.registerConsumer();
-            registered = true;
-        } else if (!visible && registered) {
-            Services.AiQuotaService.unregisterConsumer();
-            registered = false;
-        }
-    }
+    Services.AiQuotaConsumer { active: root.visible }
 
     component Caption: Text {
         color: Services.ThemeService.theme.tokens.on_surface_subdued
@@ -197,7 +186,4 @@ ColumnLayout {
         width: root.width
         elide: Text.ElideRight
     }
-    onVisibleChanged: updateConsumer()
-    Component.onCompleted: updateConsumer()
-    Component.onDestruction: if (registered) Services.AiQuotaService.unregisterConsumer()
 }

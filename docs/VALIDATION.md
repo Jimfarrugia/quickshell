@@ -110,10 +110,17 @@ tests use a fake adapter and must prove shared provider selection, consumer
 registration, independent weekly/five-hour/monthly rendering, dashboard routing,
 five-minute due checks on resume and dashboard opening, and stale/unavailable
 states without accessing live
-credentials. The adapter test also verifies that the pending indicator remains
-active across sequential provider requests, manual refresh retries local
-timeout/network backoff, provider rate limits remain enforced, and
-suspend/resume cancellation produces one fresh cycle. The dashboard shell test
+credentials. The AI quota scheduler JavaScript test must print
+`AI_QUOTA_SCHEDULER_TEST_PASSED`; it owns the refresh-cycle contract: catalogue
+order, one pending operation across sequential provider requests, coalescing and
+reason priority, per-provider backoff with `Retry-After`, manual retry of local
+timeout/network backoff but never a provider rate limit, suspend/resume
+cancellation producing one fresh cycle, and the refresh cycle outcome (failed
+only when every attempted provider failed; cancelled or empty cycles leave it
+unchanged). The adapter QML test (`AI_QUOTA_ADAPTER_TEST_PASSED`) covers only
+the wiring: helper commands, published results, start failure, sleep/wake
+lines, and deactivation cancel. The Python helper test pins the helper's
+provider allowlist to the catalogue in `utils/AiQuota.mjs`. The dashboard shell test
 verifies the AI quota dashboard's refresh header action and its service request.
 
 The command-runner test must print `COMMAND_TEST_PASSED`. The runner runs the

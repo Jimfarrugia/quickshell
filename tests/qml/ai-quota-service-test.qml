@@ -39,6 +39,10 @@ ShellRoot {
         if (Services.AiQuotaService.operation !== "pending")
             return fail("service did not expose the adapter refresh cycle as pending");
         fake.busy = false;
+        fake.outcome = "failed";
+        if (Services.AiQuotaService.operation !== "failed")
+            return fail("service did not expose a failed refresh cycle outcome");
+        fake.outcome = "idle";
         Services.AiQuotaService.registerConsumer();
         fake.busy = true;
         const requestsBeforeBusyResume = fake.requestReasons.length;

@@ -574,9 +574,19 @@ primary scale may be changed.
 
 ### AI quota service
 
-`AiQuotaService` owns the normalized quota projection for OpenAI Codex/ChatGPT,
-OpenCode Go, and the Claude subscription. `AiQuotaAdapter` owns the bounded helper process, sequential
-provider eligibility, and per-provider retry/backoff state. The helper owns the
+`AiQuotaService` owns the normalized quota projection for the Claude
+subscription, OpenAI Codex/ChatGPT, and OpenCode Go. `utils/AiQuota.mjs` is the
+provider catalogue; providers are displayed and attempted in its order, and the
+helper keeps its own allowlist pinned to it by a test. `AiQuotaAdapter` owns the
+bounded helper process and the refresh scheduler state, including sequential
+provider eligibility and per-provider retry/backoff state; the scheduler's
+transitions are pure functions in `utils/AiQuotaScheduler.mjs`, and the adapter
+only performs the effects they return. The service's `operation` is `pending`
+during a refresh cycle and otherwise the last refresh cycle outcome: `failed`
+when every attempted provider failed, else `succeeded` (`idle` before the first
+cycle); a cancelled cycle or one that attempts no provider leaves it unchanged.
+Surfaces become quota consumers through `AiQuotaConsumer { active: visible }`.
+The helper owns the
 HTTPS requests, provider response parsing, and read-only credential lookup. The
 service exposes independent `fiveHour` and `weekly` windows for each
 provider and an additional `monthly` window for OpenCode Go. Each exposed
@@ -602,12 +612,13 @@ Quota data is consumer-scoped polling because the provider endpoints have no
 usable event source. The adapter also subscribes to systemd-logind's
 `PrepareForSleep` signal through `dbus-monitor` while a consumer exists. On
 resume, the service requests a refresh when any provider has no attempt or its
-last attempt is at least five minutes old. Opening the dashboard applies the
-same due check when another consumer is already active; dashboard-only activation
-uses the adapter's existing startup refresh instead of queuing a duplicate. A
-pre-sleep event cancels an in-flight helper without recording a provider failure;
-an overdue resume request is coalesced and starts only after cancellation has
-completed. One
+last attempt is at least five minutes old. Registering a quota consumer, such
+as opening the dashboard, applies the same due check when another consumer is
+already active; the first consumer uses the adapter's startup refresh instead
+of queuing a duplicate. A pre-sleep event cancels an in-flight helper without
+recording a provider failure; an overdue resume request is coalesced and starts
+only after cancellation has completed, and a request queued while asleep runs
+on wake in place of the resume check. One
 singleton adapter operation serves all bars and the dashboard; a sequential
 provider refresh cycle remains one logical pending operation between helper
 processes. Requests arriving during a cycle are coalesced, with manual and

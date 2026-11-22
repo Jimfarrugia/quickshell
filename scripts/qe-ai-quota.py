@@ -13,6 +13,9 @@ import urllib.request
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 
+# Provider allowlist at the credential seam; tests pin it to the provider
+# catalogue in utils/AiQuota.mjs.
+PROVIDERS = ("claude", "openai", "opencode")
 MAX_AUTH_BYTES = 1024 * 1024
 MAX_RESPONSE_BYTES = 256 * 1024
 REQUEST_TIMEOUT = 8
@@ -364,8 +367,10 @@ def run(provider_filter=None):
         return cache[0]
 
     providers = {}
-    for provider, parser, url in (("openai", parse_openai, OPENAI_URL), ("opencode", parse_opencode, OPENCODE_URL),
-                                  ("claude", parse_claude, CLAUDE_URL)):
+    sources = {"claude": (parse_claude, CLAUDE_URL), "openai": (parse_openai, OPENAI_URL),
+               "opencode": (parse_opencode, OPENCODE_URL)}
+    for provider in PROVIDERS:
+        parser, url = sources[provider]
         if provider_filter and provider != provider_filter:
             continue
         credentials, credential_error = provider_credentials(provider, opencode_auth)
@@ -380,7 +385,7 @@ def run(provider_filter=None):
 
 if __name__ == "__main__":
     selected = None
-    if len(sys.argv) == 3 and sys.argv[1] == "--provider" and sys.argv[2] in ("openai", "opencode", "claude"):
+    if len(sys.argv) == 3 and sys.argv[1] == "--provider" and sys.argv[2] in PROVIDERS:
         selected = sys.argv[2]
     elif len(sys.argv) != 1:
         sys.exit(2)

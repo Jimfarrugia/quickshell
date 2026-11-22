@@ -2,29 +2,25 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../utils/AiQuota.mjs" as AiQuota
+import "../utils/AiQuotaScheduler.mjs" as Scheduler
 import "../utils/Validation.mjs" as Validation
 
+// Runs the AI quota helper for the refresh scheduler. This adapter owns the
+// scheduler state, including per-provider backoff; the transitions are pure
+// (utils/AiQuotaScheduler.mjs) and this object only performs their effects.
 QtObject {
     id: root
     property bool active: false
     property string helperPath: Quickshell.shellPath("scripts/qe-ai-quota.py")
-    property var providerIds: ["openai", "opencode", "claude"]
-    property var nextAllowedAt: ({ openai: 0, opencode: 0, claude: 0 })
-    property var failureStreak: ({ openai: 0, opencode: 0, claude: 0 })
-    property var backoffCodes: ({ openai: "", opencode: "", claude: "" })
-    property var cycleProviders: []
-    property bool cycleActive: false
-    property string cycleReason: ""
-    property string queuedReason: ""
-    property string pendingProvider: ""
-    property bool requestInFlight: false
-    property bool sleeping: false
-    property string cancellationReason: ""
-    property bool busy: false
+    readonly property var helperCommand: ["/usr/bin/python3", root.helperPath]
+    property var schedule: Scheduler.initialState(AiQuota.providerIds)
+    readonly property bool busy: Scheduler.isBusy(schedule)
+    readonly property string operation: Scheduler.operation(schedule)
+    readonly property bool sleeping: schedule.sleeping
     property bool wakeWatcherEnabled: true
     property bool wakeWatcherDesired: false
     property var runner: CommandRunner {
-        command: ["/usr/bin/python3", root.helperPath]
+        command: root.helperCommand
         expectJson: true
         timeoutMs: 20000
         maxStdoutBytes: 262144
@@ -33,177 +29,49 @@ QtObject {
     signal refreshed(var result)
     signal resumed()
 
-    function consumeSleepLine(line) {
-        if (typeof line !== "string") return;
-        const value = line.trim();
-        if (value === "boolean true") {
-            if (sleeping) return;
-            sleeping = true;
-            cycleProviders = [];
-            cycleActive = false;
-            if (requestInFlight) {
-                cancellationReason = "sleep";
-                runner.cancel();
-            } else {
-                pendingProvider = "";
-                updateBusy();
-            }
-        } else if (value === "boolean false" && sleeping) {
-            sleeping = false;
+    // Effects may dispatch further events (a failed start, the service's resume
+    // check); the new state is committed before any effect runs.
+    function dispatch(event) {
+        const next = Scheduler.reduce(schedule, event, Date.now());
+        schedule = next.state;
+        for (const effect of next.effects) perform(effect);
+        return next.accepted;
+    }
+    function perform(effect) {
+        if (effect.type === "start") {
+            runner.command = Array.from(root.helperCommand).concat(["--provider", effect.providerId]);
+            if (!runner.start()) dispatch({ type: "startFailed", providerId: effect.providerId });
+        } else if (effect.type === "cancel") {
+            runner.cancel();
+        } else if (effect.type === "publish") {
+            refreshed(effect.result);
+        } else if (effect.type === "resumed") {
             resumed();
         }
     }
-    function updateBusy() {
-        busy = cycleActive || requestInFlight || queuedReason !== "";
-    }
-    function queueReason(reason) {
-        if (reason === "poll" && (queuedReason !== "" || cycleActive)) return;
-        if (queuedReason !== "" && reasonPriority(reason) <= reasonPriority(queuedReason)) return;
-        queuedReason = reason;
-        updateBusy();
-    }
-    function reasonPriority(reason) {
-        return { poll: 0, startup: 1, resume: 2, manual: 3 }[reason] || 0;
-    }
-    function requestCycle(reason) {
-        reason = reason || "poll";
-        if (!active) return false;
-        if (sleeping || requestInFlight || cycleActive) {
-            queueReason(reason);
-            return true;
-        }
-        if (queuedReason !== "") {
-            if (reasonPriority(queuedReason) > reasonPriority(reason)) reason = queuedReason;
-            queuedReason = "";
-        }
-        cycleReason = reason;
-        cycleProviders = providerIds.slice();
-        cycleActive = true;
-        continueCurrentCycle();
-        return true;
-    }
+
+    function requestCycle(reason) { return dispatch({ type: "request", reason: reason || "poll" }); }
     function refresh() { return requestCycle("manual"); }
-    function isEligible(id) {
-        if (Date.now() >= nextAllowedAt[id]) return true;
-        return cycleReason === "manual"
-            && (backoffCodes[id] === "TIMEOUT" || backoffCodes[id] === "NETWORK_ERROR");
-    }
-    function continueCurrentCycle() {
-        if (!active || sleeping || requestInFlight || !cycleActive) {
-            updateBusy();
-            return;
-        }
-        while (cycleProviders.length > 0) {
-            const id = cycleProviders.shift();
-            if (!isEligible(id)) continue;
-            pendingProvider = id;
-            requestInFlight = true;
-            runner.command = ["/usr/bin/python3", root.helperPath, "--provider", id];
-            if (runner.start()) {
-                updateBusy();
-                return;
-            }
-            requestInFlight = false;
-            pendingProvider = "";
-            refreshed({ ok: false, error: "FAILED_TO_START", providerId: id });
-            Qt.callLater(() => root.continueCurrentCycle());
-            return;
-        }
-        cycleProviders = [];
-        cycleActive = false;
-        cycleReason = "";
-        pendingProvider = "";
-        updateBusy();
-        drainQueuedCycle();
-    }
-    function drainQueuedCycle() {
-        if (!active || sleeping || requestInFlight || cycleActive || queuedReason === "") return;
-        const reason = queuedReason;
-        queuedReason = "";
-        requestCycle(reason);
-    }
-    function clearInactiveState() {
-        queuedReason = "";
-        cycleProviders = [];
-        cycleActive = false;
-        cycleReason = "";
-        pendingProvider = "";
-        if (!requestInFlight) updateBusy();
-    }
-    function completeCancellation() {
-        const reason = cancellationReason;
-        cancellationReason = "";
-        requestInFlight = false;
-        pendingProvider = "";
-        if (reason === "deactivate") {
-            clearInactiveState();
-            return;
-        }
-        cycleProviders = [];
-        cycleActive = false;
-        cycleReason = "";
-        updateBusy();
-        drainQueuedCycle();
-    }
-    function backoff(id, code, retryAfter) {
-        const transient = ["TIMEOUT", "NETWORK_ERROR", "RATE_LIMITED"].indexOf(code) !== -1;
-        const next = Object.assign({}, nextAllowedAt);
-        const streak = Object.assign({}, failureStreak);
-        const codes = Object.assign({}, backoffCodes);
-        if (!transient) {
-            next[id] = 0;
-            streak[id] = 0;
-            codes[id] = "";
-        } else {
-            streak[id] = Math.min(3, (streak[id] || 0) + 1);
-            const delay = retryAfter !== null && retryAfter !== undefined
-                ? retryAfter * 1000 : [600000, 1200000, 1800000][streak[id] - 1];
-            next[id] = Date.now() + delay;
-            codes[id] = code;
-        }
-        nextAllowedAt = next;
-        failureStreak = streak;
-        backoffCodes = codes;
-    }
-    function failureCode(result) {
-        return result.timedOut ? "TIMEOUT" : (result.parseError ? "INVALID_RESPONSE" : "NETWORK_ERROR");
+
+    function consumeSleepLine(line) {
+        if (typeof line !== "string") return;
+        const value = line.trim();
+        if (value === "boolean true") dispatch({ type: "sleep" });
+        else if (value === "boolean false") dispatch({ type: "wake" });
     }
     function publish(result) {
-        if (!requestInFlight) return;
-        if (result.cancelled) {
-            if (cancellationReason !== "") completeCancellation();
-            return;
-        }
-        const id = pendingProvider;
-        if (!id) return;
-        requestInFlight = false;
-        pendingProvider = "";
-        if (result.success && result.parsed !== null) {
-            const checked = AiQuota.validateQuotaDocument(Validation.toPlainJson(result.parsed), [id]);
-            if (checked.ok) {
-                const sourceError = checked.value.providers[id].error;
-                root.backoff(id, sourceError ? sourceError.code : null,
-                    sourceError ? sourceError.retryAfterSeconds : null);
-                refreshed({ ok: true, data: checked.value, providerId: id });
-                Qt.callLater(() => root.continueCurrentCycle());
-                return;
-            }
-        }
-        const code = failureCode(result);
-        root.backoff(id, code, null);
-        refreshed({ ok: false, error: code, providerId: id });
-        Qt.callLater(() => root.continueCurrentCycle());
+        const parsed = result.parsed;
+        dispatch({
+            type: "finished",
+            result: { cancelled: result.cancelled === true, success: result.success === true,
+                timedOut: result.timedOut === true, parseError: result.parseError === true },
+            document: result.success === true && parsed !== null && parsed !== undefined
+                ? Validation.toPlainJson(parsed) : null
+        });
     }
     onActiveChanged: {
         wakeWatcherDesired = active && wakeWatcherEnabled;
-        if (active) requestCycle("startup");
-        else {
-            sleeping = false;
-            queuedReason = "";
-            cancellationReason = requestInFlight ? "deactivate" : "";
-            if (requestInFlight) runner.cancel();
-            else clearInactiveState();
-        }
+        dispatch({ type: active ? "activate" : "deactivate" });
     }
     property Process wakeWatcher: Process {
         command: ["dbus-monitor", "--system",

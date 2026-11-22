@@ -4,22 +4,12 @@ import "../../services" as Services
 import "../../utils/AiQuota.mjs" as AiQuota
 
 BarChip {
+    id: root
     property var sourceScreen: null
     property string sourceSide: "left"
     readonly property var selected: Services.AiQuotaService.provider(Services.AiQuotaService.selectedProvider)
     readonly property bool current: selected.weekly.status === "ok"
-    property bool registered: false
-
-    function updateConsumer() {
-        const shouldRegister = visible;
-        if (shouldRegister && !registered) {
-            Services.AiQuotaService.registerConsumer();
-            registered = true;
-        } else if (!shouldRegister && registered) {
-            Services.AiQuotaService.unregisterConsumer();
-            registered = false;
-        }
-    }
+    Services.AiQuotaConsumer { active: root.visible }
 
     text: current ? `${AiQuota.formatPercent(selected.weekly.remainingPercent)}%` : "--"
     icon: "robot_2"
@@ -44,7 +34,4 @@ BarChip {
     configuredFontSize: Services.ConfigService.config.appearance.fontSize
     onClicked: Services.SurfaceService.toggleDashboard("ai-quota", sourceScreen, sourceSide)
     onSecondaryClicked: Services.AiQuotaService.cycleProvider()
-    onVisibleChanged: updateConsumer()
-    Component.onCompleted: updateConsumer()
-    Component.onDestruction: if (registered) Services.AiQuotaService.unregisterConsumer()
 }

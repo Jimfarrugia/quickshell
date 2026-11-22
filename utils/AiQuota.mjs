@@ -1,5 +1,9 @@
-const PROVIDERS = ["openai", "opencode", "claude"];
-const PROVIDER_LABELS = { openai: "OpenAI", opencode: "OpenCode Go", claude: "Claude" };
+// Provider catalogue, in display order; refresh cycles attempt providers in the
+// same order. scripts/qe-ai-quota.py keeps its own allowlist at the credential
+// seam, and tests/python/test_ai_quota.py pins it to this list.
+const PROVIDERS = ["claude", "openai", "opencode"];
+const PROVIDER_LABELS = { claude: "Claude", openai: "OpenAI", opencode: "OpenCode Go" };
+export const providerIds = Object.freeze(PROVIDERS.slice());
 const WINDOWS = ["fiveHour", "weekly"];
 const ERROR_CODES = ["AUTH_MISSING", "AUTH_INVALID", "AUTH_EXPIRED", "UNAUTHORIZED", "NOT_ENTITLED", "RATE_LIMITED", "TIMEOUT", "NETWORK_ERROR", "INVALID_RESPONSE"];
 const validDate = value => typeof value === "string" && Number.isFinite(new Date(value).getTime());
@@ -115,6 +119,12 @@ export function blankProvider(id) {
   return { id: id, label: providerLabel(id), availability: "unknown",
     freshness: "unknown", lastUpdated: null, lastAttempt: null, lastError: null,
     fiveHour: blankWindow(), weekly: blankWindow(), monthly: blankWindow() };
+}
+
+export function blankProviders() {
+  const providers = {};
+  PROVIDERS.forEach(id => { providers[id] = blankProvider(id); });
+  return providers;
 }
 
 function providerOf(providers, id) {

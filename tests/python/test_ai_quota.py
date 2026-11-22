@@ -2,6 +2,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import sqlite3
 import tempfile
 import unittest
@@ -16,6 +17,13 @@ spec.loader.exec_module(quota)
 
 
 class AiQuotaTests(unittest.TestCase):
+    def test_provider_allowlist_matches_catalogue(self):
+        with open("utils/AiQuota.mjs", encoding="utf-8") as source:
+            match = re.search(r"^const PROVIDERS = \[([^\]]*)\];", source.read(), re.MULTILINE)
+        self.assertIsNotNone(match, "provider catalogue not found in utils/AiQuota.mjs")
+        catalogue = tuple(re.findall(r'"([a-z0-9_-]+)"', match.group(1)))
+        self.assertEqual(quota.PROVIDERS, catalogue)
+
     def test_opencode_windows(self):
         result = quota.parse_opencode({"usage": {
             "rolling": {"percent": 3.4, "resetsAt": "2026-09-04T05:00:00Z"},
