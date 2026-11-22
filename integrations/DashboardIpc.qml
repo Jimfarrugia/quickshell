@@ -1,6 +1,10 @@
+pragma ComponentBehavior: Bound
+
+import QtQml
 import Quickshell
 import Quickshell.Io
 import "../services" as Services
+import "../utils/Dashboards.mjs" as Dashboards
 
 Scope {
     id: root
@@ -16,36 +20,28 @@ Scope {
         function open(id: string): void {
             root.openDashboard(id);
         }
-        function close(): void { controller.close(); }
+        function close(): void { root.controller.close(); }
         function toggle(id: string): void {
             root.toggleDashboard(id);
         }
         function isOpen(id: string): bool {
-            return controller.isOpen(id);
+            return root.controller.isOpen(id);
         }
     }
 
-    IpcHandler {
-        target: "qe-audio"
-        function open(): void { root.openDashboard("audio"); }
-        function close(): void { if (controller.isOpen("audio")) controller.close(); }
-        function toggle(): void { root.toggleDashboard("audio"); }
-        function isOpen(): bool { return controller.isOpen("audio"); }
-    }
-
-    IpcHandler {
-        target: "qe-ai-quota"
-        function open(): void { root.openDashboard("ai-quota"); }
-        function close(): void { if (controller.isOpen("ai-quota")) controller.close(); }
-        function toggle(): void { root.toggleDashboard("ai-quota"); }
-        function isOpen(): bool { return controller.isOpen("ai-quota"); }
-    }
-
-    IpcHandler {
-        target: "qe-network"
-        function open(): void { root.openDashboard("network"); }
-        function close(): void { if (controller.isOpen("network")) controller.close(); }
-        function toggle(): void { root.toggleDashboard("network"); }
-        function isOpen(): bool { return controller.isOpen("network"); }
+    // One namespaced target per catalogued dashboard (ADR-016, ADR-033).
+    Variants {
+        model: Dashboards.dashboardIds
+        delegate: Component {
+            IpcHandler {
+                id: handler
+                required property string modelData
+                target: Dashboards.ipcTarget(modelData)
+                function open(): void { root.openDashboard(handler.modelData); }
+                function close(): void { if (root.controller.isOpen(handler.modelData)) root.controller.close(); }
+                function toggle(): void { root.toggleDashboard(handler.modelData); }
+                function isOpen(): bool { return root.controller.isOpen(handler.modelData); }
+            }
+        }
     }
 }

@@ -22,7 +22,7 @@ ShellRoot {
     readonly property string defaultTheme: Services.DefaultsService.defaultTheme
     readonly property string activeTheme: Services.ThemeService.activeThemeId
 
-    BarHost { dashboardController: dashboardController }
+    BarHost {}
     ThemeSelectorIpc {}
     WallpaperSelectorIpc {}
     PaletteViewerIpc {}

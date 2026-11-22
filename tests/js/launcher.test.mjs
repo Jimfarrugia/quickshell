@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { boundedUsage, curatedDashboardActions, isEligible, normalize, rank, validateUsage } from "../../utils/Launcher.mjs";
+import { dashboardIds } from "../../utils/Dashboards.mjs";
 
 const entry = (id, name, extra = {}) => ({ id, name, command: [name.toLowerCase()], ...extra });
 
@@ -21,6 +22,10 @@ assert.deepEqual(rank(apps, "browser", { a: { launchCount: 1 }, z: { launchCount
 assert.deepEqual(rank(apps, "", { a: { launchCount: 2 }, z: { launchCount: 2 } }).map(item => item.id), ["a", "z", "b"]);
 assert.deepEqual(rank(apps, "missing"), []);
 assert.deepEqual(rank(curatedDashboardActions.concat(apps), "audio").map(item => item.id), ["qe-dashboard-audio"]);
+// Every catalogued dashboard has a dashboard action.
+assert.deepEqual(curatedDashboardActions.map(action => action.actionId), dashboardIds);
+assert.ok(curatedDashboardActions.every(isEligible));
+assert.deepEqual(rank(curatedDashboardActions.concat(apps), "wifi").map(item => item.id), ["qe-dashboard-network"]);
 assert.equal(validateUsage({ schemaVersion: 1, entries: { ok: { launchCount: 2 }, bad: { launchCount: -1 } } }), null);
 assert.equal(validateUsage({ schemaVersion: 2, entries: {} }), null);
 const many = Object.fromEntries(Array.from({ length: 513 }, (_, index) => [`id-${index}`, { launchCount: index }]));

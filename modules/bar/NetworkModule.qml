@@ -3,7 +3,6 @@ import "../../services" as Services
 
 BarChip {
     property var sourceScreen: null
-    property var dashboardController
     property string sourceSide: "left"
     readonly property bool wifiConnected: Services.NetworkService.connectionType === "wifi"
     readonly property bool wiredConnected: Services.NetworkService.connectionType === "wired"
@@ -24,11 +23,5 @@ BarChip {
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
     configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily
     configuredFontSize: Services.ConfigService.config.appearance.fontSize
-    onClicked: if (dashboardController) {
-        if (dashboardController.isOpen("network")) dashboardController.close();
-        else {
-            Services.SurfaceService.closeControlCenter();
-            dashboardController.open("network", sourceScreen, sourceSide);
-        }
-    }
+    onClicked: Services.SurfaceService.toggleDashboard("network", sourceScreen, sourceSide)
 }

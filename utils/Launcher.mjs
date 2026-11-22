@@ -1,3 +1,5 @@
+import { dashboardActions } from "./Dashboards.mjs";
+
 function text(value) {
     return String(value || "");
 }
@@ -75,14 +77,4 @@ export function boundedUsage(usage, ids) {
     return bounded;
 }
 
-export const curatedDashboardActions = Object.freeze([
-    Object.freeze({
-        id: "qe-dashboard-audio",
-        name: "Audio Dashboard",
-        genericName: "QE audio controls",
-        comment: "Toggle the QE audio dashboard",
-        keywords: ["audio", "sound", "volume", "dashboard", "qe"],
-        icon: "equalizer",
-        actionId: "audio"
-    })
-]);
+export const curatedDashboardActions = dashboardActions;

@@ -492,21 +492,29 @@ the shell. Open dashboards take exclusive keyboard focus and close on Escape,
 outside click, or source-module toggle. Surfaces are instantiated lazily and
 recreated from current service state when reopened.
 
-The shared header contains the feature title and feature controls. The
-clickable `settings` icon opens the feature's fallback application and exposes a
-feature-specific hover tooltip such as `Open pavucontrol`. The AI quota header
-also exposes a `refresh` control that requests one quota refresh cycle and is
-disabled while that cycle is pending. Audio v1 owns native
+The dashboard catalogue (`utils/Dashboards.mjs`) is the authoritative list of
+dashboards and owns each one's id and title. The shell knows dashboard ids only
+through its id-to-content map, which a test keeps equal to the catalogue. The
+shared header shows the catalogued title and whatever the active dashboard's
+content declares: `headerActions` (a component holding its header actions) and
+`fallbackTooltip` with `openFallback()`, which show the clickable `settings`
+icon for the feature's fallback tool with a hover tooltip such as
+`Open pavucontrol`. The AI quota dashboard declares a `refresh` header action
+that requests one quota refresh cycle and is disabled while that cycle is
+pending. Content teardown runs on every close path (source-module toggle, IPC,
+Escape, outside click, or replacement), so cleanup such as stopping Bluetooth
+discovery lives in the dashboard's own content. Audio v1 owns native
 output/input selection, default-device state, levels, mute, and common stream
 volume/mute controls. Unsupported routing remains delegated to `pavucontrol`.
 
 Dashboard content depends on domain services only. Service loss, missing
 devices, stale state, and fallback-launch failures remain visible as local
 degraded states without closing the dashboard or blocking unrelated surfaces.
-Each implemented dashboard exposes the standard namespaced IPC target
-(`qe-audio`, `qe-network`, and so on) with `open`, `close`, `toggle`, and
-`isOpen`; launcher entries are built-in curated QE actions and the help catalog
-remains display-only.
+Every catalogued dashboard gets the standard namespaced IPC target
+(`qe-audio`, `qe-bluetooth`, `qe-network`, `qe-ai-quota`) with `open`, `close`,
+`toggle`, and `isOpen`, plus a launcher dashboard action that toggles it; both
+are generated from the catalogue. Source modules toggle through
+`SurfaceService.toggleDashboard`. The help catalog remains display-only.
 
 ### Control center
 

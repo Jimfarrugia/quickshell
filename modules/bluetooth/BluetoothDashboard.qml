@@ -6,6 +6,59 @@ import "../../components" as Components
 
 ColumnLayout {
     id: root
+    // Dashboard shell contract (components/DashboardShell.qml).
+    readonly property string fallbackTooltip: "Open Blueman"
+    function openFallback() { Services.BluetoothService.launchFallback(); }
+    property Component headerActions: Component {
+        RowLayout {
+            spacing: 6
+            Components.IconButton {
+                iconName: "power_settings_new"
+                toggleable: true
+                checked: Services.BluetoothService.enabled
+                enabled: Services.BluetoothService.availability === "available"
+                tooltipText: Services.BluetoothService.enabled
+                    ? "Disable Bluetooth" : "Enable Bluetooth"
+                tooltipBelow: true
+                onToggled: Services.BluetoothService.setEnabled(checked)
+            }
+            Components.IconButton {
+                iconName: "explore"
+                toggleable: true
+                checked: Services.BluetoothService.discoverable
+                enabled: Services.BluetoothService.enabled
+                tooltipText: Services.BluetoothService.discoverable
+                    ? "Disable Discoverable Mode" : "Enable Discoverable Mode"
+                tooltipBelow: true
+                onToggled: Services.BluetoothService.setDiscoverable(checked)
+            }
+            Components.IconButton {
+                iconName: "join_right"
+                toggleable: true
+                checked: Services.BluetoothService.pairable
+                enabled: Services.BluetoothService.enabled
+                tooltipText: Services.BluetoothService.pairable
+                    ? "Disable Pairable Mode" : "Enable Pairable Mode"
+                tooltipBelow: true
+                onToggled: Services.BluetoothService.setPairable(checked)
+            }
+            Components.IconButton {
+                iconName: Services.BluetoothService.discovering ? "stop" : "search"
+                toggleable: true
+                checked: Services.BluetoothService.discovering
+                enabled: Services.BluetoothService.enabled
+                tooltipText: Services.BluetoothService.discovering
+                    ? "Stop Searching" : "Search for Devices"
+                tooltipBelow: true
+                onToggled: Services.BluetoothService.setDiscovering(checked)
+            }
+        }
+    }
+    // Runs on every close path: bar toggle, IPC, Escape, outside click, replacement.
+    Component.onDestruction: {
+        if (Services.BluetoothService.discovering) Services.BluetoothService.setDiscovering(false);
+        Services.BluetoothService.operationError = "";
+    }
     spacing: Services.ConfigService.config.appearance.spacing
     property var forgettingAddresses: []
 

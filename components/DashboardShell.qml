@@ -9,7 +9,14 @@ import "../modules/bluetooth"
 import "../modules/network"
 import "../modules/aiquota"
 import "../components" as Components
+import "../utils/Dashboards.mjs" as Dashboards
 
+// Hosts the active dashboard's content. Titles come from the dashboard
+// catalogue; the content root may declare live presentation:
+//   property Component headerActions   header actions shown beside the title
+//   property string fallbackTooltip    non-empty shows the fallback tool button
+//   function openFallback()            launches the fallback tool
+// Content teardown (Component.onDestruction) runs on every close path.
 PanelWindow {
     id: root
 
@@ -22,29 +29,30 @@ PanelWindow {
     property real testBarHeight: Services.ConfigService.config.bar.height
     property real contentHeightOverride: -1
     readonly property real surfaceX: surface.x
+    property Component contentComponent: null
+    default property alias contentData: contentColumn.data
+
     readonly property real surfaceY: surface.y
     readonly property real surfaceWidth: surface.width
     readonly property real surfaceHeight: surface.height
-    readonly property alias aiQuotaRefreshControl: aiQuotaRefreshButton
     readonly property bool keyboardTargetFocused: keyTarget.activeFocus
     readonly property bool keyboardTargetRequested: keyTarget.focus
-    readonly property string featureTitle: controller && controller.activeId === "audio" ? "Audio"
-            : (controller && controller.activeId === "bluetooth" ? "Bluetooth"
-            : (controller && controller.activeId === "network" ? "Network"
-                : (controller && controller.activeId === "ai-quota" ? "AI Usage" : title)))
+    readonly property string activeId: controller ? controller.activeId : ""
+    readonly property string featureTitle: Dashboards.dashboardTitle(activeId) || title
+    // One content component per catalogued dashboard id.
+    readonly property var contents: ({
+        "audio": audioDashboard,
+        "bluetooth": bluetoothDashboard,
+        "network": networkDashboard,
+        "ai-quota": aiQuotaDashboard
+    })
+    readonly property var content: loader.item
 
     function dismiss() {
-        if (root.controller && root.controller.activeId === "bluetooth"
-                && Services.BluetoothService.discovering)
-            Services.BluetoothService.setDiscovering(false);
-        if (root.controller && root.controller.activeId === "bluetooth")
-            Services.BluetoothService.operationError = "";
         if (root.controller) root.controller.close();
     }
     function dismissFromOutside() { root.dismiss(); }
     function dismissFromEscape() { root.dismiss(); }
-    property Component contentComponent: null
-    default property alias contentData: contentColumn.data
 
     visible: true
     screen: controller && typeof controller.sourceScreen === "object"
@@ -111,100 +119,22 @@ PanelWindow {
                     text: root.featureTitle
                     color: Services.ThemeService.theme.tokens.on_surface
                     font.family: Services.ConfigService.config.appearance.fontFamily
-                font.pixelSize: 22
-                font.weight: Font.DemiBold
-            }
-            RowLayout {
-                visible: !!root.controller && root.controller.activeId === "network"
-                spacing: 6
-                Components.IconButton {
-                    iconName: "wifi"
-                    toggleable: true
-                    pending: Services.NetworkService.wifiTogglePending
-                    checked: Services.NetworkService.wifiTogglePending
-                        ? Services.NetworkService.pendingWifiEnabled
-                        : Services.NetworkService.wifiEnabled
-                    enabled: Services.NetworkService.availability === "available"
-                        && Services.NetworkService.wifiHardwareEnabled
-                    tooltipText: Services.NetworkService.wifiEnabled
-                        ? "Disable Wi-Fi" : "Enable Wi-Fi"
-                    tooltipBelow: true
-                    onToggled: Services.NetworkService.setWifiEnabled(checked)
+                    font.pixelSize: 22
+                    font.weight: Font.DemiBold
+                }
+                Loader {
+                    id: headerActions
+                    sourceComponent: root.content && root.content.headerActions
+                        ? root.content.headerActions : null
+                    visible: item !== null
                 }
                 Components.IconButton {
-                    iconName: "wifi_find"
-                    enabled: Services.NetworkService.availability === "available"
-                    tooltipText: "Scan for networks"
-                    tooltipBelow: true
-                    onClicked: Services.NetworkService.refreshScan()
-                }
-            }
-            RowLayout {
-                visible: !!root.controller && root.controller.activeId === "bluetooth"
-                spacing: 6
-                Components.IconButton {
-                    iconName: "power_settings_new"
-                    toggleable: true
-                    checked: Services.BluetoothService.enabled
-                    enabled: Services.BluetoothService.availability === "available"
-                    tooltipText: Services.BluetoothService.enabled
-                        ? "Disable Bluetooth" : "Enable Bluetooth"
-                    tooltipBelow: true
-                    onToggled: Services.BluetoothService.setEnabled(checked)
-                }
-                Components.IconButton {
-                    iconName: "explore"
-                    toggleable: true
-                    checked: Services.BluetoothService.discoverable
-                    enabled: Services.BluetoothService.enabled
-                    tooltipText: Services.BluetoothService.discoverable
-                        ? "Disable Discoverable Mode" : "Enable Discoverable Mode"
-                    tooltipBelow: true
-                    onToggled: Services.BluetoothService.setDiscoverable(checked)
-                }
-                Components.IconButton {
-                    iconName: "join_right"
-                    toggleable: true
-                    checked: Services.BluetoothService.pairable
-                    enabled: Services.BluetoothService.enabled
-                    tooltipText: Services.BluetoothService.pairable
-                        ? "Disable Pairable Mode" : "Enable Pairable Mode"
-                    tooltipBelow: true
-                    onToggled: Services.BluetoothService.setPairable(checked)
-                }
-                Components.IconButton {
-                    iconName: Services.BluetoothService.discovering ? "stop" : "search"
-                    toggleable: true
-                    checked: Services.BluetoothService.discovering
-                    enabled: Services.BluetoothService.enabled
-                    tooltipText: Services.BluetoothService.discovering
-                        ? "Stop Searching" : "Search for Devices"
-                    tooltipBelow: true
-                    onToggled: Services.BluetoothService.setDiscovering(checked)
-                }
-            }
-            Components.IconButton {
-                id: aiQuotaRefreshButton
-                objectName: "ai-quota-refresh"
-                visible: !!root.controller && root.controller.activeId === "ai-quota"
-                iconName: "refresh"
-                pending: Services.AiQuotaService.operation === "pending"
-                enabled: Services.AiQuotaService.operation !== "pending"
-                tooltipText: "Refresh usage"
-                tooltipBelow: true
-                onClicked: Services.AiQuotaService.refresh()
-            }
-            Components.IconButton {
-                    id: settingsButton
-                visible: !!root.controller && ["audio", "bluetooth", "network"].indexOf(root.controller.activeId) >= 0
+                    id: fallbackButton
+                    visible: !!(root.content && root.content.fallbackTooltip)
                     iconName: "settings"
-                    tooltipText: root.controller && root.controller.activeId === "bluetooth"
-                    ? "Open Blueman" : (root.controller && root.controller.activeId === "network"
-                        ? "Open NetworkManager editor" : "Open pavucontrol")
+                    tooltipText: visible ? root.content.fallbackTooltip : ""
                     tooltipBelow: true
-                    onClicked: root.controller && root.controller.activeId === "bluetooth"
-                    ? Services.BluetoothService.launchFallback() : (root.controller && root.controller.activeId === "network"
-                        ? Services.NetworkService.openFallback() : Services.AudioService.launchFallback())
+                    onClicked: root.content.openFallback()
                 }
             }
 
@@ -227,11 +157,7 @@ PanelWindow {
                         Layout.preferredHeight: item ? item.implicitHeight : 0
                         active: !!root.controller && root.controller.visible
                         sourceComponent: root.contentComponent
-                            || (root.controller && root.controller.activeId === "audio"
-                             ? audioDashboard : (root.controller && root.controller.activeId === "bluetooth"
-                             ? bluetoothDashboard : (root.controller && root.controller.activeId === "network"
-                             ? networkDashboard : (root.controller && root.controller.activeId === "ai-quota"
-                                 ? aiQuotaDashboard : unavailableDashboard))))
+                            || root.contents[root.activeId] || unavailableDashboard
                     }
                 }
             }

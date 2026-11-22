@@ -26,11 +26,17 @@ done
 
 targets="$(qs ipc --pid "$shell_pid" show)"
 [[ "$targets" == *"target qe-dashboard"* ]]
-[[ "$targets" == *"target qe-audio"* ]]
-[[ "$targets" == *"target qe-ai-quota"* ]]
+# One generated target per catalogued dashboard (utils/Dashboards.mjs).
+for target in qe-audio qe-bluetooth qe-network qe-ai-quota; do
+    [[ "$targets" == *"target $target"* ]]
+    [[ "$(qs ipc --pid "$shell_pid" call "$target" isOpen)" == "false" ]]
+done
 [[ "$(qs ipc --pid "$shell_pid" call qe-dashboard isOpen audio)" == "false" ]]
-[[ "$(qs ipc --pid "$shell_pid" call qe-audio isOpen)" == "false" ]]
-[[ "$(qs ipc --pid "$shell_pid" call qe-ai-quota isOpen)" == "false" ]]
+
+qs ipc --pid "$shell_pid" call qe-bluetooth toggle
+[[ "$(qs ipc --pid "$shell_pid" call qe-bluetooth isOpen)" == "true" ]]
+qs ipc --pid "$shell_pid" call qe-bluetooth close
+[[ "$(qs ipc --pid "$shell_pid" call qe-bluetooth isOpen)" == "false" ]]
 
 qs ipc --pid "$shell_pid" call qe-dashboard open audio
 [[ "$(qs ipc --pid "$shell_pid" call qe-dashboard isOpen audio)" == "true" ]]

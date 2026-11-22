@@ -5,7 +5,6 @@ import "../../utils/AiQuota.mjs" as AiQuota
 
 BarChip {
     property var sourceScreen: null
-    property var dashboardController
     property string sourceSide: "left"
     readonly property var selected: Services.AiQuotaService.provider(Services.AiQuotaService.selectedProvider)
     readonly property bool current: selected.weekly.status === "ok"
@@ -43,13 +42,7 @@ BarChip {
     configuredFontFamily: Services.ConfigService.config.appearance.monospaceFontFamily
     configuredIconFontFamily: Services.ConfigService.config.appearance.iconFontFamily
     configuredFontSize: Services.ConfigService.config.appearance.fontSize
-    onClicked: if (dashboardController) {
-        if (dashboardController.isOpen("ai-quota")) dashboardController.close();
-        else {
-            Services.SurfaceService.closeControlCenter();
-            dashboardController.open("ai-quota", sourceScreen, sourceSide);
-        }
-    }
+    onClicked: Services.SurfaceService.toggleDashboard("ai-quota", sourceScreen, sourceSide)
     onSecondaryClicked: Services.AiQuotaService.cycleProvider()
     onVisibleChanged: updateConsumer()
     Component.onCompleted: updateConsumer()

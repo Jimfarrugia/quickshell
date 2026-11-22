@@ -2,10 +2,23 @@ import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import "../../services" as Services
+import "../../components" as Components
 import "../../utils/AiQuota.mjs" as AiQuota
 
 ColumnLayout {
     id: root
+    // Dashboard shell contract (components/DashboardShell.qml).
+    property Component headerActions: Component {
+        Components.IconButton {
+            objectName: "ai-quota-refresh"
+            iconName: "refresh"
+            pending: Services.AiQuotaService.operation === "pending"
+            enabled: Services.AiQuotaService.operation !== "pending"
+            tooltipText: "Refresh usage"
+            tooltipBelow: true
+            onClicked: Services.AiQuotaService.refresh()
+        }
+    }
     spacing: Services.ConfigService.config.appearance.spacing
     property var providerIds: Services.AiQuotaService.providerIds
     property bool registered: false

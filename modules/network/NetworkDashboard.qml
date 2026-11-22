@@ -7,6 +7,35 @@ import "../../components" as Components
 
 ColumnLayout {
     id: root
+    // Dashboard shell contract (components/DashboardShell.qml).
+    readonly property string fallbackTooltip: "Open NetworkManager editor"
+    function openFallback() { Services.NetworkService.openFallback(); }
+    property Component headerActions: Component {
+        RowLayout {
+            spacing: 6
+            Components.IconButton {
+                iconName: "wifi"
+                toggleable: true
+                pending: Services.NetworkService.wifiTogglePending
+                checked: Services.NetworkService.wifiTogglePending
+                    ? Services.NetworkService.pendingWifiEnabled
+                    : Services.NetworkService.wifiEnabled
+                enabled: Services.NetworkService.availability === "available"
+                    && Services.NetworkService.wifiHardwareEnabled
+                tooltipText: Services.NetworkService.wifiEnabled
+                    ? "Disable Wi-Fi" : "Enable Wi-Fi"
+                tooltipBelow: true
+                onToggled: Services.NetworkService.setWifiEnabled(checked)
+            }
+            Components.IconButton {
+                iconName: "wifi_find"
+                enabled: Services.NetworkService.availability === "available"
+                tooltipText: "Scan for networks"
+                tooltipBelow: true
+                onClicked: Services.NetworkService.refreshScan()
+            }
+        }
+    }
     spacing: Services.ConfigService.config.appearance.spacing
     property string confirmForgetKey: ""
     property string pskKey: ""

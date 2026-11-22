@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell as QS
 import "services" as Services
 import "fixtures/qml" as Fixtures
+import "utils/Dashboards.mjs" as Dashboards
 
 ShellRoot {
     id: root
@@ -39,6 +40,15 @@ ShellRoot {
         return { left: side === "left" ? inset : Number(width) - inset - resultWidth,
             top: barEdge === "top" ? gap : Number(height) - gap - resultHeight,
             width: resultWidth, height: resultHeight, contentInset: inset };
+    }
+    function findByObjectName(item, name) {
+        if (!item) return null;
+        if (item.objectName === name) return item;
+        for (const child of item.children) {
+            const found = findByObjectName(child, name);
+            if (found) return found;
+        }
+        return null;
     }
     function fail(message) {
         console.error(`DASHBOARD_SHELL_TEST_FAILED: ${message}`);
@@ -121,11 +131,16 @@ ShellRoot {
                 || shell.surfaceY !== 340)
             return fail("instantiated shell did not constrain narrow no-bar output");
 
+        const mapped = Object.keys(shell.contents).sort().join(",");
+        if (mapped !== Dashboards.dashboardIds.slice().sort().join(","))
+            return fail(`shell content map ${mapped} does not match the dashboard catalogue`);
+
+        shell.contentComponent = null;
         controller.open("ai-quota", "monitor-1", "right");
         if (shell.featureTitle !== "AI Usage") return fail("AI quota dashboard title was not updated");
-        const refreshButton = shell.aiQuotaRefreshControl;
+        const refreshButton = findByObjectName(shell.contentItem, "ai-quota-refresh");
         if (!refreshButton || !refreshButton.visible || refreshButton.iconName !== "refresh")
-            return fail("AI quota refresh action was not available");
+            return fail("AI quota refresh header action was not available");
         const refreshCalls = fakeQuotaAdapter.refreshCalls;
         refreshButton.clicked();
         if (fakeQuotaAdapter.refreshCalls !== refreshCalls + 1)

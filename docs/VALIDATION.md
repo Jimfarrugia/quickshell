@@ -114,7 +114,7 @@ credentials. The adapter test also verifies that the pending indicator remains
 active across sequential provider requests, manual refresh retries local
 timeout/network backoff, provider rate limits remain enforced, and
 suspend/resume cancellation produces one fresh cycle. The dashboard shell test
-verifies the AI quota header refresh control and its service request.
+verifies the AI quota dashboard's refresh header action and its service request.
 
 The command-runner test must print `COMMAND_TEST_PASSED`. The runner runs the
 foundation test twice against one temporary state root seeded with a
@@ -165,9 +165,12 @@ The external theme service test uses a fake adapter and must print
 theme through a truthful external partial-failure result.
 The dashboard shell fixture must print `DASHBOARD_SHELL_TEST_PASSED` after
 checking production-controller routing, geometry, dismissal, focus request,
-and lazy recreation. The dashboard IPC helper must print
-`DASHBOARD_IPC_TEST_PASSED` after checking the namespaced open, close, toggle,
-and isOpen contract while the shell remains alive.
+lazy recreation, and that its content map matches the dashboard catalogue. The
+Bluetooth dashboard test must print `BLUETOOTH_DASHBOARD_TEST_PASSED` after
+proving that closing the dashboard stops discovery and clears the operation
+error. The dashboard IPC helper must print `DASHBOARD_IPC_TEST_PASSED` after
+checking the namespaced open, close, toggle, and isOpen contract on every
+catalogued dashboard's target while the shell remains alive.
 
 ### Notification tests
 

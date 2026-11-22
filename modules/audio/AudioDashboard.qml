@@ -6,6 +6,9 @@ import "../../components" as Components
 
 ColumnLayout {
     id: root
+    // Dashboard shell contract (components/DashboardShell.qml).
+    readonly property string fallbackTooltip: "Open pavucontrol"
+    function openFallback() { Services.AudioService.launchFallback(); }
     spacing: 0
 
     function labelFor(node) {
