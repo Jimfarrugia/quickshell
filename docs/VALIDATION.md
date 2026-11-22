@@ -160,6 +160,11 @@ stable-ID merging, category ordering, invalid-entry rejection, and global search
 The wallpaper selector test must print `WALLPAPER_SELECTOR_TEST_PASSED` after
 verifying responsive breakpoints, exact 16:9 card sizing after grid gaps, and
 focused-filename publication.
+The heading combo box test (the picker shared by the wallpaper selector and
+palette viewer) must print `HEADING_COMBO_BOX_TEST_PASSED` after driving real key
+events through the h/j/k/l, q, Escape, and Enter contract with the popup closed and
+open, click selection, and the `selectedId`/`selected` round trip. It needs a
+Wayland session that gives the test window keyboard focus.
 The external theme service test uses a fake adapter and must print
 `EXTERNAL_THEME_SERVICE_TEST_PASSED` after QE commits first and retains that
 theme through a truthful external partial-failure result.

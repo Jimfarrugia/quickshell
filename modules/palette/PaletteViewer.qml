@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls.Basic
 import QtQuick.Layouts
 import Quickshell
 import "../../components" as Components
@@ -126,166 +125,21 @@ FloatingWindow {
                     font.letterSpacing: 1.5
                 }
 
-                ComboBox {
-                        id: themeMenu
-                        implicitHeight: 26
-                        topPadding: 0
-                        bottomPadding: 0
-                        implicitWidth: contentItem.implicitWidth
-                        model: root.availableThemes
-                        textRole: "name"
-                        valueRole: "id"
-                        currentIndex: Math.max(0, root.availableThemes.findIndex(
-                            theme => theme.id === root.viewedThemeId))
-                        displayText: `Theme: ${currentText}`
-                        focus: root.focusTarget === "dropdown"
-                        font.family: Services.ConfigService.config.appearance.fontFamily
-                        font.pixelSize: 22
-                        font.weight: Font.DemiBold
-                        onActivated: {
-                            root.viewedThemeId = currentValue;
-                            root.focusTarget = "dropdown";
-                        }
-                        onActiveFocusChanged: if (activeFocus) root.focusTarget = "dropdown"
-
-                        Keys.onEscapePressed: {
-                            if (themeMenu.popup.visible) themeMenu.popup.close();
-                            else Services.SurfaceService.closePaletteViewer();
-                        }
-                        Keys.onPressed: function(event) {
-                            if (event.modifiers !== Qt.NoModifier) return;
-                            if (event.key === Qt.Key_Q) {
-                                Services.SurfaceService.closePaletteViewer();
-                                event.accepted = true;
-                            } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                themeMenu.popup.open();
-                                event.accepted = true;
-                            } else if (!themeMenu.popup.visible && event.key === Qt.Key_L) {
-                                themeMenu.popup.open();
-                                event.accepted = true;
-                            } else if (!themeMenu.popup.visible && event.key === Qt.Key_J) {
-                                root.focusItem("toggle");
-                                event.accepted = true;
-                            }
-                        }
-                        Keys.onReleased: function(event) {
-                            if (event.modifiers === Qt.NoModifier
-                                    && (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)) {
-                                event.accepted = true;
-                            }
-                        }
-
-                        indicator: Item {
-                            implicitWidth: 0
-                            implicitHeight: 0
-                        }
-
-                        contentItem: Text {
-                            leftPadding: 0
-                            text: themeMenu.displayText
-                            color: themeMenu.hovered || themeMenu.activeFocus
-                                ? Services.ThemeService.theme.tokens.link
-                                : Services.ThemeService.theme.tokens.on_surface_subdued
-                            font: themeMenu.font
-                            verticalAlignment: Text.AlignVCenter
-                        }
-
-                        background: Rectangle {
-                            color: "transparent"
-                            radius: Services.ConfigService.config.appearance.radius
-                        }
-
-                        delegate: ItemDelegate {
-                            id: themeDelegate
-                            required property var modelData
-                            required property int index
-                            readonly property bool selectedOption: themeMenu.currentIndex === index
-                            width: themeMenu.width
-                            implicitHeight: 38
-                            highlighted: themeOptions.currentIndex === index
-                            text: modelData.name
-                            contentItem: Text {
-                                text: themeDelegate.modelData.name
-                                color: themeDelegate.selectedOption
-                                    ? Services.ThemeService.theme.tokens.on_primary
-                                    : Services.ThemeService.theme.tokens.on_surface
-                                font.family: themeMenu.font.family
-                                font.weight: themeMenu.font.weight
-                                font.pixelSize: 14
-                                verticalAlignment: Text.AlignVCenter
-                                leftPadding: 12
-                            }
-                            background: Rectangle {
-                                color: themeDelegate.selectedOption
-                                    ? Services.ThemeService.theme.tokens.primary
-                                    : (themeDelegate.highlighted || themeDelegate.hovered
-                                        ? Services.ThemeService.theme.tokens.surface_hover
-                                        : Services.ThemeService.theme.tokens.surface)
-                            }
-                        }
-
-                        popup: Popup {
-                            id: themePopup
-                            y: themeMenu.height
-                            width: themeMenu.width
-                            padding: 4
-                            focus: true
-                            onOpened: Qt.callLater(themeOptions.forceActiveFocus)
-                            onClosed: Qt.callLater(themeMenu.forceActiveFocus)
-
-                            contentItem: ListView {
-                                id: themeOptions
-                                clip: true
-                                focus: true
-                                implicitHeight: contentHeight
-                                model: themeMenu.popup.visible ? themeMenu.delegateModel : null
-                                currentIndex: themeMenu.highlightedIndex
-                                Keys.onEscapePressed: themePopup.close()
-                                Keys.onPressed: function(event) {
-                                    if (event.modifiers !== Qt.NoModifier && event.key !== Qt.Key_Escape)
-                                        return;
-                                    if (event.key === Qt.Key_Q) {
-                                        Services.SurfaceService.closePaletteViewer();
-                                        event.accepted = true;
-                                    } else if (event.key === Qt.Key_Escape) {
-                                        themePopup.close();
-                                        event.accepted = true;
-                                    } else if (event.key === Qt.Key_J) {
-                                        currentIndex = Math.min(currentIndex + 1, count - 1);
-                                        event.accepted = true;
-                                    } else if (event.key === Qt.Key_H) {
-                                        themePopup.close();
-                                        event.accepted = true;
-                                    } else if (event.key === Qt.Key_L) {
-                                        root.viewedThemeId = root.availableThemes[currentIndex].id;
-                                        themePopup.close();
-                                        event.accepted = true;
-                                    } else if (event.key === Qt.Key_K) {
-                                        currentIndex = Math.max(currentIndex - 1, 0);
-                                        event.accepted = true;
-                                    } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                                        root.viewedThemeId = root.availableThemes[currentIndex].id;
-                                        themeMenu.popup.close();
-                                        event.accepted = true;
-                                    }
-                                }
-                                Keys.onReleased: function(event) {
-                                    if (event.modifiers === Qt.NoModifier
-                                            && (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)) {
-                                        event.accepted = true;
-                                    }
-                                }
-                            }
-
-                            background: Rectangle {
-                                color: Services.ThemeService.theme.tokens.surface
-                                border.width: Services.ConfigService.config.appearance.borderWidth
-                                border.color: Services.ThemeService.theme.tokens.outline_variant
-                                radius: Services.ConfigService.config.appearance.radius
-                            }
-                            }
-                        }
+                Components.HeadingComboBox {
+                    id: themeMenu
+                    model: root.availableThemes
+                    selectedId: root.viewedThemeId
+                    prefix: "Theme"
+                    focus: root.focusTarget === "dropdown"
+                    onSelected: value => {
+                        root.viewedThemeId = value;
+                        root.focusTarget = "dropdown";
                     }
+                    onActiveFocusChanged: if (activeFocus) root.focusTarget = "dropdown"
+                    onDismissRequested: Services.SurfaceService.closePaletteViewer()
+                    onLeaveDown: root.focusItem("toggle")
+                }
+            }
 
             Components.SegmentedToggle {
                 id: modeToggle
