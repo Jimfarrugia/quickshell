@@ -95,6 +95,10 @@ ShellRoot {
                 - root.objectFor(dashboard, "openai-section").mapToItem(dashboard, 0, 0).y
                 - root.objectFor(dashboard, "openai-section").height - 20) > 0.5)
                 root.fail("provider sections were not separated by 20px");
+            else if (Math.abs(root.objectFor(dashboard, "openai-section").mapToItem(dashboard, 0, 0).y
+                - root.objectFor(dashboard, "claude-section").mapToItem(dashboard, 0, 0).y
+                - root.objectFor(dashboard, "claude-section").height - 20) > 0.5)
+                root.fail("Claude section was not shown first, above OpenAI");
             else if (Math.abs(root.objectFor(dashboard, "openai-heading").mapToItem(dashboard, 0, 0).y
                 - root.objectFor(dashboard, "openai-section").mapToItem(dashboard, 0, 0).y - 12) > 0.5
                 || Math.abs(root.objectFor(dashboard, "openai-5-hour Limit-heading").mapToItem(dashboard, 0, 0).y
