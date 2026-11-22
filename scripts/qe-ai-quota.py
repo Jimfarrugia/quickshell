@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only quota adapter for OpenCode's locally owned credentials."""
+"""Read-only quota adapter for OpenCode's and Claude Code's locally owned credentials."""
 
 import json
 import math
@@ -19,6 +19,8 @@ REQUEST_TIMEOUT = 8
 DATABASE_TIMEOUT = 1
 OPENAI_URL = "https://chatgpt.com/backend-api/wham/usage"
 OPENCODE_URL = "https://opencode.ai/zen/go/v1/usage"
+CLAUDE_URL = "https://api.anthropic.com/api/oauth/usage"
+CLAUDE_HEADERS = {"anthropic-beta": "oauth-2025-04-20"}
 INVALID_CREDENTIAL = object()
 
 
@@ -134,6 +136,39 @@ def parse_openai(document):
     return result
 
 
+def claude_window(source):
+    if not isinstance(source, dict):
+        return None
+    used = clamp_percent(source.get("utilization"))
+    if used is None:
+        return None
+    if source.get("resets_at") is None and used == 0:
+        # A window that has not started yet reports no reset time.
+        reset = None
+    else:
+        reset = iso_time(source.get("resets_at"))
+        if reset is None:
+            return None
+    return {"status": "ok", "usedPercent": used, "remainingPercent": max(0, min(100, 100 - used)),
+            "resetsAt": reset, "error": None}
+
+
+def parse_claude(document):
+    if not isinstance(document, dict):
+        return failed_provider("INVALID_RESPONSE", False)
+    result = {"status": "ok", "lastUpdated": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+              "fiveHour": empty_window(), "weekly": empty_window(), "error": None}
+    for target, source_name in (("fiveHour", "five_hour"), ("weekly", "seven_day")):
+        window = claude_window(document.get(source_name))
+        if window is None:
+            window = empty_window()
+            window["error"] = error("INVALID_RESPONSE", False)
+            result["status"] = "error"
+            result["error"] = window["error"]
+        result[target] = window
+    return result
+
+
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         return None
@@ -154,8 +189,9 @@ def retry_after_seconds(headers):
     return max(1, min(3600, retry))
 
 
-def request_json(url, token, account_id=None):
-    headers = {"Authorization": f"Bearer {token}", "User-Agent": "qe-ai-quota/1"}
+def request_json(url, token, account_id=None, extra_headers=None):
+    headers = dict(extra_headers or {})
+    headers.update({"Authorization": f"Bearer {token}", "User-Agent": "qe-ai-quota/1"})
     if account_id:
         headers["ChatGPT-Account-Id"] = account_id
     request = urllib.request.Request(url, headers=headers, method="GET")
@@ -186,6 +222,11 @@ def auth_path():
 def credential_db_path():
     data_home = os.environ.get("XDG_DATA_HOME") or os.path.join(os.path.expanduser("~"), ".local", "share")
     return os.path.join(data_home, "opencode", "opencode.db")
+
+
+def claude_credentials_path():
+    config_dir = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.join(os.path.expanduser("~"), ".claude")
+    return os.path.join(config_dir, ".credentials.json")
 
 
 def load_auth(path):
@@ -288,24 +329,50 @@ def provider_auth(document, provider):
     return (record["key"], None), None
 
 
+def claude_auth(document):
+    record = document.get("claudeAiOauth") if isinstance(document, dict) else None
+    if not isinstance(record, dict):
+        return None, error("AUTH_MISSING", False)
+    if not safe_secret(record.get("accessToken")):
+        return None, error("AUTH_INVALID", False)
+    expires = record.get("expiresAt")
+    if not isinstance(expires, (int, float)) or isinstance(expires, bool) or not math.isfinite(expires):
+        return None, error("AUTH_INVALID", False)
+    if expires <= time.time() * 1000 + 60000:
+        return None, error("AUTH_EXPIRED", True)
+    return (record["accessToken"], None, CLAUDE_HEADERS), None
+
+
 def safe_secret(value):
     return isinstance(value, str) and 0 < len(value) <= 8192 and all(32 <= ord(char) < 127 for char in value)
 
 
+def provider_credentials(provider, opencode_auth):
+    if provider == "claude":
+        document, failure = load_auth(claude_credentials_path())
+        return (None, failure) if failure else claude_auth(document)
+    auth, auth_error = opencode_auth()
+    return (None, auth_error) if auth_error else provider_auth(auth, provider)
+
+
 def run(provider_filter=None):
-    auth, auth_error = load_credentials()
+    cache = []
+
+    def opencode_auth():
+        if not cache:
+            cache.append(load_credentials())
+        return cache[0]
+
     providers = {}
-    for provider, parser, url in (("openai", parse_openai, OPENAI_URL), ("opencode", parse_opencode, OPENCODE_URL)):
+    for provider, parser, url in (("openai", parse_openai, OPENAI_URL), ("opencode", parse_opencode, OPENCODE_URL),
+                                  ("claude", parse_claude, CLAUDE_URL)):
         if provider_filter and provider != provider_filter:
             continue
-        if auth_error:
-            providers[provider] = failed_provider(auth_error["code"], auth_error["retryable"], auth_error["retryAfterSeconds"])
-            continue
-        credentials, credential_error = provider_auth(auth, provider)
+        credentials, credential_error = provider_credentials(provider, opencode_auth)
         if credential_error:
             providers[provider] = failed_provider(credential_error["code"], credential_error["retryable"], credential_error["retryAfterSeconds"])
             continue
-        document, request_error = request_json(url, credentials[0], credentials[1])
+        document, request_error = request_json(url, *credentials)
         providers[provider] = failed_provider(request_error["code"], request_error["retryable"], request_error["retryAfterSeconds"]) if request_error else parser(document)
     print(json.dumps({"schemaVersion": 1, "observedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"), "providers": providers}, separators=(",", ":")))
     return 0
@@ -313,7 +380,7 @@ def run(provider_filter=None):
 
 if __name__ == "__main__":
     selected = None
-    if len(sys.argv) == 3 and sys.argv[1] == "--provider" and sys.argv[2] in ("openai", "opencode"):
+    if len(sys.argv) == 3 and sys.argv[1] == "--provider" and sys.argv[2] in ("openai", "opencode", "claude"):
         selected = sys.argv[2]
     elif len(sys.argv) != 1:
         sys.exit(2)

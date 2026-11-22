@@ -9,13 +9,14 @@ import "../utils/AiQuota.mjs" as AiQuota
 Singleton {
     id: root
 
-    readonly property var providerIds: ["openai", "opencode"]
+    readonly property var providerIds: ["openai", "opencode", "claude"]
     property int consumerCount: 0
     property string selectedProvider: "openai"
     property bool stateReady: false
     property var providers: ({
         openai: AiQuota.blankProvider("openai"),
-        opencode: AiQuota.blankProvider("opencode")
+        opencode: AiQuota.blankProvider("opencode"),
+        claude: AiQuota.blankProvider("claude")
     })
     readonly property string availability: aggregate("availability", "unavailable")
     readonly property string freshness: aggregate("freshness", "unknown")

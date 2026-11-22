@@ -1,4 +1,5 @@
-const PROVIDERS = ["openai", "opencode"];
+const PROVIDERS = ["openai", "opencode", "claude"];
+const PROVIDER_LABELS = { openai: "OpenAI", opencode: "OpenCode Go", claude: "Claude" };
 const WINDOWS = ["fiveHour", "weekly"];
 const ERROR_CODES = ["AUTH_MISSING", "AUTH_INVALID", "AUTH_EXPIRED", "UNAUTHORIZED", "NOT_ENTITLED", "RATE_LIMITED", "TIMEOUT", "NETWORK_ERROR", "INVALID_RESPONSE"];
 const validDate = value => typeof value === "string" && Number.isFinite(new Date(value).getTime());
@@ -31,7 +32,7 @@ export function validateWindow(value) {
         || value.usedPercent !== clampPercent(value.usedPercent)
         || value.remainingPercent !== clampPercent(value.remainingPercent)
         || Math.abs(value.remainingPercent - (100 - value.usedPercent)) > 0.01
-        || !validDate(value.resetsAt)) return { ok: false };
+        || !(validDate(value.resetsAt) || (value.resetsAt === null && value.usedPercent === 0))) return { ok: false };
     return { ok: true, value: { status: "ok", usedPercent: clampPercent(value.usedPercent), remainingPercent: clampPercent(value.remainingPercent), resetsAt: value.resetsAt, error: null } };
   }
   if (error.value === null) return { ok: false };
@@ -96,7 +97,7 @@ export function formatTimeUntil(value, now = Date.now()) {
   return `${minutes}m`;
 }
 
-export function providerLabel(id) { return id === "opencode" ? "OpenCode Go" : "OpenAI"; }
+export function providerLabel(id) { return PROVIDER_LABELS[id] || "OpenAI"; }
 
 // ----- provider state reducer -----
 // Pure transforms that fold a refresh result (or failure) into the normalized
@@ -120,18 +121,21 @@ function providerOf(providers, id) {
   return providers[id] || blankProvider(id);
 }
 
-export function safeErrorSummary(code) {
-  if (code === "AUTH_EXPIRED") return "Run an OpenCode request with an openai/... model to refresh the login";
-  if (code === "AUTH_MISSING") return "OpenCode credentials are not configured";
-  if (code === "NOT_ENTITLED") return "OpenCode Go is not enabled for this account";
+export function safeErrorSummary(code, providerId) {
+  const claude = providerId === "claude";
+  if (code === "AUTH_EXPIRED") return claude
+    ? "Run Claude Code to refresh the login"
+    : "Run an OpenCode request with an openai/... model to refresh the login";
+  if (code === "AUTH_MISSING") return claude ? "Claude Code credentials are not configured" : "OpenCode credentials are not configured";
+  if (code === "NOT_ENTITLED") return claude ? "Claude subscription usage is not available for this login" : "OpenCode Go is not enabled for this account";
   if (code === "RATE_LIMITED") return "Quota service rate limited";
   if (code === "UNAUTHORIZED") return "Provider authentication was rejected";
   return "Provider quota is temporarily unavailable";
 }
 
-export function providerError(code, now) {
+export function providerError(code, now, providerId) {
   const retryable = ["TIMEOUT", "NETWORK_ERROR", "RATE_LIMITED", "AUTH_EXPIRED"].indexOf(code) !== -1;
-  return { code: code, boundary: "ai-quota", summary: safeErrorSummary(code), detail: "",
+  return { code: code, boundary: "ai-quota", summary: safeErrorSummary(code, providerId), detail: "",
     timestamp: new Date(now), retryable: retryable, operationId: null };
 }
 
@@ -142,7 +146,7 @@ export function publishProviderFailure(providers, providerId, code, now) {
     const age = current.lastUpdated instanceof Date ? now - current.lastUpdated.getTime() : Infinity;
     const hasValue = current.fiveHour.status === "ok" || current.weekly.status === "ok";
     const stale = hasValue && age >= STALE_AFTER_MS;
-    const failure = providerError(code, now);
+    const failure = providerError(code, now, id);
     const windows = {};
     ["fiveHour", "weekly", "monthly"].forEach(name => {
       windows[name] = Object.assign({}, current[name], {
@@ -187,18 +191,18 @@ export function mergeQuotaResult(providers, result, now) {
     const fiveHour = goodFiveHour
       ? Object.assign({}, source.fiveHour, { freshness: "current", lastUpdated: updateTime })
       : (retainedFiveHour
-        ? Object.assign({}, current.fiveHour, { error: providerError(source.fiveHour.error?.code || "NETWORK_ERROR", now), freshness: fiveHourAge >= STALE_AFTER_MS ? "stale" : "current" })
+        ? Object.assign({}, current.fiveHour, { error: providerError(source.fiveHour.error?.code || "NETWORK_ERROR", now, id), freshness: fiveHourAge >= STALE_AFTER_MS ? "stale" : "current" })
         : source.fiveHour);
     const weekly = goodWeekly
       ? Object.assign({}, source.weekly, { freshness: "current", lastUpdated: updateTime })
       : (retainedWeekly
-        ? Object.assign({}, current.weekly, { error: providerError(source.weekly.error?.code || "NETWORK_ERROR", now), freshness: weeklyAge >= STALE_AFTER_MS ? "stale" : "current" })
+        ? Object.assign({}, current.weekly, { error: providerError(source.weekly.error?.code || "NETWORK_ERROR", now, id), freshness: weeklyAge >= STALE_AFTER_MS ? "stale" : "current" })
         : source.weekly);
     const monthly = hasMonthly
       ? (goodMonthly
         ? Object.assign({}, source.monthly, { freshness: "current", lastUpdated: updateTime })
         : (retainedMonthly
-          ? Object.assign({}, current.monthly, { error: providerError(source.monthly.error?.code || "NETWORK_ERROR", now), freshness: monthlyAge >= STALE_AFTER_MS ? "stale" : "current" })
+          ? Object.assign({}, current.monthly, { error: providerError(source.monthly.error?.code || "NETWORK_ERROR", now, id), freshness: monthlyAge >= STALE_AFTER_MS ? "stale" : "current" })
           : source.monthly))
       : current.monthly;
     next[id] = Object.assign({}, current, {
@@ -209,7 +213,7 @@ export function mergeQuotaResult(providers, result, now) {
         : "unknown",
       lastUpdated: sourceUpdated,
       lastAttempt: new Date(now),
-      lastError: source.error ? providerError(source.error.code, now) : null,
+      lastError: source.error ? providerError(source.error.code, now, id) : null,
       fiveHour: fiveHour,
       weekly: weekly,
       monthly: monthly

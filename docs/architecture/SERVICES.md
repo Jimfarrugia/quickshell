@@ -566,14 +566,15 @@ primary scale may be changed.
 
 ### AI quota service
 
-`AiQuotaService` owns the normalized quota projection for OpenAI Codex/ChatGPT
-and OpenCode Go. `AiQuotaAdapter` owns the bounded helper process, sequential
+`AiQuotaService` owns the normalized quota projection for OpenAI Codex/ChatGPT,
+OpenCode Go, and the Claude subscription. `AiQuotaAdapter` owns the bounded helper process, sequential
 provider eligibility, and per-provider retry/backoff state. The helper owns the
 HTTPS requests, provider response parsing, and read-only credential lookup. The
 service exposes independent `fiveHour` and `weekly` windows for each
 provider and an additional `monthly` window for OpenCode Go. Each exposed
 window has remaining/used percentages, reset time, availability, freshness,
-and a safe error record.
+and a safe error record. A Claude window that has not started yet has zero
+usage and no reset time; the dashboard says it starts with the next request.
 
 The helper reads OpenCode's current read-only credential database at
 `${XDG_DATA_HOME:-$HOME/.local/share}/opencode/opencode.db` as the unprivileged
@@ -581,7 +582,11 @@ desktop user, selecting the active OpenAI credential and mapping the
 `opencode-go` record to the OpenCode Go provider. It supports the older
 `auth.json` store as a fallback. QE never writes, refreshes, removes, or
 migrates either store. Expired OpenAI OAuth access is unavailable until OpenCode
-refreshes its own credential. Tokens, account identifiers, headers, raw upstream
+refreshes its own credential. For the Claude provider the helper reads Claude
+Code's own credential file at `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/.credentials.json`
+under the same owner-only, no-symlink, size-bounded rules (ADR-051), independently
+of the OpenCode store. Expired Claude access is unavailable until Claude Code
+refreshes it. Tokens, account identifiers, headers, raw upstream
 responses, and refresh tokens never enter QML state, process arguments,
 diagnostics, logs, fixtures, or QE state.
 

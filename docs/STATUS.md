@@ -43,7 +43,7 @@ are not a requirement to load old phase records.
 | Audio routing | Common levels/defaults/mute/stream controls are supported, not a full PipeWire graph editor | Keep `pavucontrol` available for advanced routing |
 | Idle inhibition | QE persists and exposes requested state; compositor-active inhibition is not presented as independently confirmed state | Preserve requested-versus-confirmed semantics |
 | Mirror -> extended transition | Changing an already-connected mirror to extended may not create a new Qt `QScreen` | Reconnect the output or restart QE for that transition |
-| AI quota | Provider usage endpoints and OpenCode credential storage are external contracts that may change without notice | Preserve strict normalized validation, read-only credential ownership, provider-local degradation, and stale state |
+| AI quota | Provider usage endpoints and OpenCode/Claude Code credential storage are external contracts that may change without notice | Preserve strict normalized validation, read-only credential ownership, provider-local degradation, and stale state |
 | External desktop themes | QE and external desktop theme selections are intentionally independent scopes and best-effort propagation can partially fail | Preserve per-target status and never roll back a successful QE theme selection solely because external apply failed |
 | Generated wallpaper artifacts | Runtime `Wallpaper` artifacts can predate a theme-schema/template refinement even when authored sources are current | Regenerate or restore generated runtime artifacts before deploying a theme-contract change; keep authored defaults and generated runtime data separate |
 

@@ -21,9 +21,15 @@ const window = { status: "ok", usedPercent: 25, remainingPercent: 75,
   resetsAt: "2026-09-08T00:00:00Z", error: null };
 const document = { schemaVersion: 1, observedAt: "2026-09-04T00:00:00Z", providers: {
   openai: { status: "ok", lastUpdated: "2026-09-04T00:00:00Z", fiveHour: window, weekly: window, error: null },
-  opencode: { status: "ok", lastUpdated: "2026-09-04T00:00:00Z", fiveHour: window, weekly: window, error: null }
+  opencode: { status: "ok", lastUpdated: "2026-09-04T00:00:00Z", fiveHour: window, weekly: window, error: null },
+  claude: { status: "ok", lastUpdated: "2026-09-04T00:00:00Z", fiveHour: window, weekly: window, error: null }
 } };
 assert.equal(validateQuotaDocument(document).ok, true);
+assert.equal(validateAiQuotaState({ schemaVersion: 1, selectedProvider: "claude" }).ok, true);
+// A window that has not started has no reset time, which is only valid with zero usage.
+const unstarted = { ...window, usedPercent: 0, remainingPercent: 100, resetsAt: null };
+assert.equal(validateQuotaDocument({ ...document, providers: { ...document.providers, claude: { ...document.providers.claude, fiveHour: unstarted } } }).ok, true);
+assert.equal(validateQuotaDocument({ ...document, providers: { ...document.providers, claude: { ...document.providers.claude, fiveHour: { ...window, resetsAt: null } } } }).ok, false);
 assert.equal(validateQuotaDocument({ ...document, providers: { openai: document.providers.openai } }).ok, false);
 assert.equal(validateQuotaDocument({ ...document, providers: { ...document.providers, openai: { ...document.providers.openai, weekly: { ...window, remainingPercent: 101 } } } }).ok, false);
 assert.equal(validateQuotaDocument({ ...document, providers: { ...document.providers, openai: { ...document.providers.openai, status: "unexpected" } } }).ok, false);
@@ -45,6 +51,9 @@ const blankProviders = { openai: blankProvider("openai"), opencode: blankProvide
 
 // Error summaries and retryability.
 assert.equal(safeErrorSummary("AUTH_MISSING"), "OpenCode credentials are not configured");
+assert.equal(safeErrorSummary("AUTH_MISSING", "claude"), "Claude Code credentials are not configured");
+assert.equal(providerError("AUTH_EXPIRED", now, "claude").summary, "Run Claude Code to refresh the login");
+assert.equal(publishProviderFailure({}, "claude", "AUTH_EXPIRED", now).claude.label, "Claude");
 assert.equal(providerError("TIMEOUT", now).retryable, true);
 assert.equal(providerError("INVALID_RESPONSE", now).retryable, false);
 assert.equal(providerError("AUTH_EXPIRED", now).boundary, "ai-quota");

@@ -102,9 +102,11 @@ ColumnLayout {
             objectName: `${limitRow.providerId}-${limitRow.label}-details`
             Layout.fillWidth: true
             Layout.minimumWidth: 0
-            text: parent.limit.status === "ok"
-                ? `Resets in <b>${AiQuota.formatTimeUntil(parent.limit.resetsAt)}</b> on <b>${AiQuota.formatReset(parent.limit.resetsAt)}</b>`
-                : (parent.limit.error ? parent.limit.error.code : "No confirmed data")
+            text: parent.limit.status !== "ok"
+                ? (parent.limit.error ? parent.limit.error.code : "No confirmed data")
+                : (parent.limit.resetsAt
+                    ? `Resets in <b>${AiQuota.formatTimeUntil(parent.limit.resetsAt)}</b> on <b>${AiQuota.formatReset(parent.limit.resetsAt)}</b>`
+                    : "Starts with your next request")
             textFormat: Text.RichText
             color: parent.limit.status === "ok" && parent.limit.freshness !== "stale"
                 ? Services.ThemeService.theme.tokens.on_surface_subdued

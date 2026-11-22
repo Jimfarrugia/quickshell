@@ -8,10 +8,10 @@ QtObject {
     id: root
     property bool active: false
     property string helperPath: Quickshell.shellPath("scripts/qe-ai-quota.py")
-    property var providerIds: ["openai", "opencode"]
-    property var nextAllowedAt: ({ openai: 0, opencode: 0 })
-    property var failureStreak: ({ openai: 0, opencode: 0 })
-    property var backoffCodes: ({ openai: "", opencode: "" })
+    property var providerIds: ["openai", "opencode", "claude"]
+    property var nextAllowedAt: ({ openai: 0, opencode: 0, claude: 0 })
+    property var failureStreak: ({ openai: 0, opencode: 0, claude: 0 })
+    property var backoffCodes: ({ openai: "", opencode: "", claude: "" })
     property var cycleProviders: []
     property bool cycleActive: false
     property string cycleReason: ""

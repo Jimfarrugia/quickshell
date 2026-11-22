@@ -21,7 +21,10 @@ ShellRoot {
                 weekly: { status: "ok", usedPercent: 40, remainingPercent: 60, resetsAt: "2026-09-11T00:00:00Z", error: null } },
             opencode: { status: "ok", lastUpdated: new Date().toISOString(), error: null,
                 fiveHour: { status: "ok", usedPercent: 10, remainingPercent: 90, resetsAt: "2026-09-04T05:00:00Z", error: null },
-                weekly: { status: "ok", usedPercent: 20, remainingPercent: 80, resetsAt: "2026-09-11T00:00:00Z", error: null } }
+                weekly: { status: "ok", usedPercent: 20, remainingPercent: 80, resetsAt: "2026-09-11T00:00:00Z", error: null } },
+            claude: { status: "ok", lastUpdated: new Date().toISOString(), error: null,
+                fiveHour: { status: "ok", usedPercent: 0, remainingPercent: 100, resetsAt: null, error: null },
+                weekly: { status: "ok", usedPercent: 35, remainingPercent: 65, resetsAt: "2026-09-11T00:00:00Z", error: null } }
         }
     })
     property bool done: false

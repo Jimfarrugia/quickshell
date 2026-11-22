@@ -70,6 +70,8 @@ ShellRoot {
             } else if (root.stage === 1 && fakeRunner.running && fakeRunner.command[3] === "opencode") {
                 fakeRunner.finish({ success: true, parsed: root.document("opencode",
                     { code: "RATE_LIMITED", retryable: true, retryAfterSeconds: 3600 }), cancelled: false });
+            } else if ((root.stage === 2 || root.stage === 4) && fakeRunner.running && fakeRunner.command[3] === "claude") {
+                fakeRunner.finish({ success: true, parsed: root.document("claude"), cancelled: false });
             } else if (root.stage === 2 && !adapter.busy) {
                 if (adapter.failureStreak.openai !== 0 || adapter.failureStreak.opencode !== 1)
                     return root.fail("failure state was not scoped per provider");
@@ -101,7 +103,7 @@ ShellRoot {
                     return root.fail("resume did not start a fresh OpenAI request");
                 fakeRunner.finish({ success: true, parsed: root.document("openai"), cancelled: false });
             } else if (root.stage === 4 && !adapter.busy) {
-                if (fakeRunner.startCalls !== 4)
+                if (fakeRunner.startCalls !== 6)
                     return root.fail(`resume/manual cycles were duplicated or dropped (${fakeRunner.startCalls})`);
                 adapter.active = false;
                 console.log("AI_QUOTA_ADAPTER_TEST_PASSED");

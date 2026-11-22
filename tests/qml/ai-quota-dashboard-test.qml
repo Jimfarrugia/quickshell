@@ -27,7 +27,10 @@ ShellRoot {
             opencode: { status: "ok", lastUpdated: new Date().toISOString(), error: null,
                 fiveHour: { status: "ok", usedPercent: 10, remainingPercent: 90, resetsAt: "2026-09-04T05:00:00Z", error: null },
                 weekly: { status: "ok", usedPercent: 20, remainingPercent: 80, resetsAt: "2026-09-11T00:00:00Z", error: null },
-                monthly: { status: "ok", usedPercent: 30, remainingPercent: 70, resetsAt: "2026-10-01T00:00:00Z", error: null } }
+                monthly: { status: "ok", usedPercent: 30, remainingPercent: 70, resetsAt: "2026-10-01T00:00:00Z", error: null } },
+            claude: { status: "ok", lastUpdated: new Date().toISOString(), error: null,
+                fiveHour: { status: "ok", usedPercent: 0, remainingPercent: 100, resetsAt: null, error: null },
+                weekly: { status: "ok", usedPercent: 35, remainingPercent: 65, resetsAt: "2026-09-11T00:00:00Z", error: null } }
         }
     })
     property bool done: false
@@ -67,11 +70,17 @@ ShellRoot {
                 || root.objectFor(dashboard, "openai-Weekly Limit-details").textFormat !== Text.RichText
                 || root.textFor(dashboard, "openai-Weekly Limit-details").indexOf("<b>") < 0) return root.fail("reset details did not use the requested format");
             if (dashboard.implicitHeight <= 0) root.fail("dashboard has no content height");
-            else if (Services.AiQuotaService.tooltipText.indexOf("OpenCode Go") < 0) root.fail("tooltip omitted the second provider");
+            else if (Services.AiQuotaService.tooltipText.indexOf("OpenCode Go") < 0
+                || Services.AiQuotaService.tooltipText.indexOf("Claude: 65% remaining") < 0) root.fail("tooltip omitted a provider");
             else if (root.objectFor(dashboard, "openai-freshness").visible) return root.fail(`current provider label was displayed (${Services.AiQuotaService.provider("openai").freshness})`);
             else if (root.textFor(dashboard, "openai-Weekly Limit-remaining").indexOf("60%") < 0
                 || root.textFor(dashboard, "opencode-5-hour Limit-remaining").indexOf("90%") < 0
-                || root.textFor(dashboard, "opencode-Monthly Limit-remaining").indexOf("70%") < 0) root.fail("dashboard omitted independent quota values");
+                || root.textFor(dashboard, "opencode-Monthly Limit-remaining").indexOf("70%") < 0
+                || root.textFor(dashboard, "claude-Weekly Limit-remaining").indexOf("65%") < 0) root.fail("dashboard omitted independent quota values");
+            else if (root.textFor(dashboard, "claude-provider") !== "Claude"
+                || root.textFor(dashboard, "claude-5-hour Limit-details") !== "Starts with your next request"
+                || root.objectFor(dashboard, "claude-Monthly Limit-progress").parent.visible)
+                root.fail("Claude section did not render its subscription windows");
             else if (root.objectFor(dashboard, "openai-Weekly Limit-details").width
                 > root.objectFor(dashboard, "openai-Weekly Limit-details").parent.width
                 || root.objectFor(dashboard, "openai-Weekly Limit-progress").width
