@@ -76,7 +76,11 @@ have guaranteed foreground pairs.
 
 The bar uses a separate optical hierarchy from action controls. Ordinary text
 and percentages use `on_surface_subdued`; ordinary compact icons and uniformly
-tinted tray icons use `on_surface_indicator`. The SSID and clock time retain
+tinted tray icons use `on_surface_indicator`. Tray tint is masked by icon
+alpha, except that an icon drawn on an opaque square (all four corners opaque,
+such as Tailscale's) is masked by its luminance distance from the corner color;
+`modules/bar/shaders/tray-tint.frag.qsb` is generated from the adjacent
+`.frag` source. The SSID and clock time retain
 deliberate `primary` emphasis. Confirmed domain states override the neutral
 indicator: Bluetooth connectivity uses `success`, mute and DND suppression use
 `warning`, idle inhibition uses `primary`, stale values use `warning`, confirmed

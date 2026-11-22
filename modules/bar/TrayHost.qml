@@ -1,5 +1,4 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
 import "../../services" as Services
 
 Row {
@@ -44,11 +43,13 @@ Row {
                 visible: !trayItem.themedIcon
             }
 
-            ColorOverlay {
+            // Uniform tint that also handles icons drawn on an opaque square.
+            ShaderEffect {
                 anchors.fill: nativeIcon
-                source: nativeIcon
                 visible: trayItem.themedIcon
-                color: trayItem.tintColor
+                property var source: nativeIcon
+                property color tint: trayItem.tintColor
+                fragmentShader: Qt.resolvedUrl("shaders/tray-tint.frag.qsb")
             }
 
             HoverHandler { id: trayHover }
